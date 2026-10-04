@@ -1,11 +1,25 @@
+auto Cartridge::ISViewer::piAddress(u32 address, PIDeviceTiming) -> bool {
+  if(!enabled()) return false;
+  if(address < 0x13ff'0000 || address > 0x13ff'ffff) return false;
+  piAddr = address & 0xffff;
+  return true;
+}
+
+auto Cartridge::ISViewer::piReadHalf(PIDeviceTiming) -> maybe<u16> {
+  u16 data = readHalf(piAddr);
+  piAddr += 2;
+  return data;
+}
+
+auto Cartridge::ISViewer::piWriteHalf(u16 data, PIDeviceTiming) -> void {
+  pi.writeForceFinish();
+  writeHalf(piAddr, data);
+  piAddr += 2;
+}
+
 auto Cartridge::ISViewer::readHalf(u32 address) -> u16 {
   address = (address & 0xffff);
   return ram.read<Half>(address);
-}
-
-auto Cartridge::ISViewer::readWord(u32 address) -> u32 {
-  address = (address & 0xffff);
-  return ram.read<Word>(address);
 }
 
 auto Cartridge::ISViewer::messageChar(char c) -> void {
@@ -39,10 +53,3 @@ auto Cartridge::ISViewer::writeHalf(u32 address, u16 data) -> void {
 
   ram.write<Half>(address, data);
 }
-
-auto Cartridge::ISViewer::writeWord(u32 address, u32 data) -> void {
-  address = (address & 0xffff);
-  writeHalf(address+0, data >> 16);
-  writeHalf(address+2, data & 0xffff);
-}
-

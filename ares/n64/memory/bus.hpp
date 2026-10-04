@@ -2,8 +2,7 @@ template<u32 Size>
 inline auto Bus::read(u32 address, Thread& thread, RBusDevice device) -> u64 {
   static_assert(Size == Byte || Size == Half || Size == Word || Size == Dual);
 
-  if(address <= 0x03ef'ffff) return rdram.ram.read<Size>(address, device);
-  if(address <= 0x03ff'ffff) return rdram.read<Size>(address, thread);
+  if(address <= 0x03ff'ffff) return mi.readRdram<Size>(address, device, thread);
   if(Size == Dual)           return freezeDualRead(address), 0;
   if(address <= 0x0407'ffff) return rsp.read<Size>(address, thread);
   if(address <= 0x040b'ffff) return rsp.status.read<Size>(address, thread);
@@ -31,21 +30,7 @@ inline auto Bus::readBurst(u32 address, u32 *data, Thread& thread) -> bool {
   if constexpr(Size == DCache) device = RBusDevice::VR4300_DCACHE;
   if constexpr(Size == ICache) device = RBusDevice::VR4300_ICACHE;
 
-  if(address <= 0x03ef'ffff) return rdram.ram.readBurst<Size>(address, data, device), true;
-  if(address <= 0x03ff'ffff) {
-    // FIXME: not hardware validated, no idea of the behavior
-    data[0] = rdram.readWord(address | 0x0, thread);
-    data[1] = 0;
-    data[2] = 0;
-    data[3] = 0;
-    if constexpr(Size == ICache) {
-      data[4] = 0;
-      data[5] = 0;
-      data[6] = 0;
-      data[7] = 0;
-    }
-    return true;
-  }
+  if(address <= 0x03ff'ffff) return mi.readRdramBurst<Size>(address, data, device, thread), true;
 
   if(Model::Aleck64()) {
     if(address <= 0xbfff'ffff) return freezeUncached(address), false;
@@ -62,8 +47,7 @@ inline auto Bus::write(u32 address, u64 data, Thread& thread, RBusDevice device)
     cpu.recompiler.invalidateRange(address, Size);
   }
 
-  if(address <= 0x03ef'ffff) return rdram.ram.write<Size>(address, data, device);
-  if(address <= 0x03ff'ffff) return rdram.write<Size>(address, data, thread);
+  if(address <= 0x03ff'ffff) return mi.writeRdram<Size>(address, data, device, thread);
   if(address <= 0x0407'ffff) return rsp.write<Size>(address, data, thread);
   if(address <= 0x040b'ffff) return rsp.status.write<Size>(address, data, thread);
   if(address <= 0x040f'ffff) return freezeUnmapped(address);
@@ -94,12 +78,7 @@ inline auto Bus::writeBurst(u32 address, u32 *data, Thread& thread) -> bool {
     cpu.recompiler.invalidateRange(address, Size == DCache ? 16 : 32);
   }
 
-  if(address <= 0x03ef'ffff) return rdram.ram.writeBurst<Size>(address, data, device), true;
-  if(address <= 0x03ff'ffff) {
-    // FIXME: not hardware validated, but a good guess
-    rdram.writeWord(address | 0x0, data[0], thread);
-    return true;
-  }
+  if(address <= 0x03ff'ffff) return mi.writeRdramBurst<Size>(address, data, device, thread), true;
 
   if(Model::Aleck64()) {
     if(address <= 0xbfff'ffff) return freezeUncached(address), false;

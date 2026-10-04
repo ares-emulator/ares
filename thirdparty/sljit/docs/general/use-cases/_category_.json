@@ -1,0 +1,8 @@
+{
+  "label": "Use Cases",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Examples of use cases where SLJIT shines."
+  }
+}

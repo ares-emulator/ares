@@ -26,6 +26,8 @@ struct pApplication {
   static auto quit() -> void;
   static auto setScreenSaver(bool screenSaver) -> void;
 
+  static auto _activateApplication() -> void;
+
   static auto initialize() -> void;
 };
 

@@ -33,6 +33,8 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   scheduler.enter();
+  controllerPort1.poll();
+  controllerPort2.poll();
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -42,7 +44,7 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.find("NTSC")) {
     information.name = "Atari 2600";
     information.region = Region::NTSC;
-    information.frequency = 3579546;
+    information.frequency = 3579575;
   }
   if(name.find("PAL")) {
     information.name = "Atari 2600";
@@ -71,6 +73,7 @@ auto System::load(Node::System& root, string name) -> bool {
   riot.load(node);
   cpu.load(node);
   tia.load(node);
+  video.load(tia.node);
   cartridgeSlot.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
@@ -80,6 +83,8 @@ auto System::load(Node::System& root, string name) -> bool {
 auto System::save() -> void {
   if(!node) return;
   cartridge.save();
+  controllerPort1.save();
+  controllerPort2.save();
 }
 
 auto System::unload() -> void {
@@ -87,6 +92,7 @@ auto System::unload() -> void {
   save();
   riot.unload();
   cpu.unload();
+  video.unload();
   tia.unload();
   cartridgeSlot.unload();
   controllerPort1.unload();
@@ -98,10 +104,13 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   random.entropy(Random::Entropy::Low);
-  cartridge.power();
+  cartridge.power(reset);
+  controllerPort1.power(reset);
+  controllerPort2.power(reset);
   riot.power(reset);
   cpu.power(reset);
   tia.power(reset);
+  video.power();
   scheduler.power(cpu);
 }
 

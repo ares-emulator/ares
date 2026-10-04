@@ -40,6 +40,7 @@ auto option(string name, string value) -> bool {
   if(name == "OSC Host") { system.oscHost = value; system.updateOsc(); }
   if(name == "OSC Port") { system.oscPort = value.natural(); system.updateOsc(); }
   if(name == "OSC Config") system.loadOscConfig(value);
+  if(name == "Deterministic Entropy") system.deterministicEntropy = value.boolean();
   if(name == "Recompiler") {
     if constexpr(Accuracy::CPU::Recompiler) {
       cpu.recompiler.enabled = value.boolean();
@@ -63,12 +64,13 @@ auto option(string name, string value) -> bool {
       system.configuredControllerPakBankCount = 62;
       system.controllerPakBankCount = 62;
     }
-  }  
+  }
   return true;
 }
 
 System system;
 Queue queue;
+Random random;
 #include "serialization.cpp"
 
 auto System::updateOsc() -> void {
@@ -251,16 +253,16 @@ auto System::initDebugHooks() -> void {
     // This makes sure we return the same value the CPU would get wrt to masking.
     u64 value;
     switch(byteCount) {
-      case Byte: 
+      case Byte:
         value = cpu.readDebug<Byte>(address);
         hexByte(resPtr, value);
         return res;
-      case Half: 
+      case Half:
         value = cpu.readDebug<Half>(address);
         hexByte(resPtr + 0, (value >> 8) & 0xff);
         hexByte(resPtr + 2, value & 0xff);
         return res;
-      case Word: 
+      case Word:
         value = cpu.readDebug<Word>(address);
         hexByte(resPtr + 0, (value >> 24) & 0xff);
         hexByte(resPtr + 2, (value >> 16) & 0xff);
@@ -306,7 +308,8 @@ auto System::initDebugHooks() -> void {
       // read for RCP, so it's the one that's most likely to return the data
       // as the user would expect.
       Thread dummyThread{};
-      for(u32 i : range(byteCount / 4)) {
+      res.resize((byteCount + 3) / 4 * 4 * 2);
+      for (u32 i : range((byteCount + 3) / 4)) {
         u64 value = bus.read<Word>(address & 0x1fff'ffff, dummyThread, RBusDevice::ARES_DEBUGGER);
         hexByte(resPtr + 0, (value >> 24) & 0xff);
         hexByte(resPtr + 2, (value >> 16) & 0xff);
@@ -315,6 +318,7 @@ auto System::initDebugHooks() -> void {
         resPtr += 8;
         address += 4;
       }
+      res.resize(byteCount * 2);
       return res;
     }
     return {};
@@ -327,23 +331,23 @@ auto System::initDebugHooks() -> void {
     // This makes sure we write the same value the CPU would write wrt to masking.
     u64 value;
     switch(data.size()) {
-      case Byte: 
+      case Byte:
         value = (u64)data[0];
         cpu.writeDebug<Byte>(address, value);
-        break;
-      case Half: 
+        return;
+      case Half:
         value = ((u64)data[0]<<8) | ((u64)data[1]<<0);
         cpu.writeDebug<Half>(address, value);
-        break;
-      case Word: 
+        return;
+      case Word:
         value = ((u64)data[0]<<24) | ((u64)data[1]<<16) | ((u64)data[2]<<8) | ((u64)data[3]<<0);
         cpu.writeDebug<Word>(address, value);
-        break;
+        return;
       case Dual:
         value  = ((u64)data[0]<<56) | ((u64)data[1]<<48) | ((u64)data[2]<<40) | ((u64)data[3]<<32);
         value |= ((u64)data[4]<<24) | ((u64)data[5]<<16) | ((u64)data[6]<< 8) | ((u64)data[7]<< 0);
         cpu.writeDebug<Dual>(address, value);
-        break;
+        return;
     }
 
     // Handle writes of different/unaligned sizes only within the RDRAM area,
@@ -407,7 +411,7 @@ auto System::initDebugHooks() -> void {
       cpu.ipu.r[regIdx].u64 = regValue;
       return true;
     }
- 
+
     switch (regIdx)
     {
       case 32: return true; // COP0 status (ignore write)
@@ -506,6 +510,15 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
+
+  if(!reset) {
+    if(deterministicEntropy) {
+      random.entropy(Random::Entropy::High);
+      random.seed((n64)0);
+    } else {
+      random.entropy(Random::Entropy::High);
+    }
+  }
 
   if constexpr(Accuracy::CPU::Recompiler || Accuracy::RSP::Recompiler) {
     ares::Memory::FixedAllocator::get().release();

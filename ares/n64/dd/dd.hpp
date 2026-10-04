@@ -2,7 +2,7 @@
 
 #include <nall/bcd.hpp>
 
-struct DD : Memory::PI<DD> {
+struct DD : PIDeviceMemory {
   Node::Object obj;
   Node::Port port;
   Node::Peripheral node;
@@ -13,6 +13,7 @@ struct DD : Memory::PI<DD> {
   Memory::Writable ms;
   Memory::Writable disk;
   Memory::Writable error;
+  n1 asicAccess;
 
   struct Debugger {
     //debugger.cpp
@@ -74,10 +75,11 @@ struct DD : Memory::PI<DD> {
   auto motorChange() -> void;
 
   //io.cpp
-  auto readHalf(u32 address) -> u16;
-  auto writeHalf(u32 address, u16 data) -> void;
-  auto readWord(u32 address) -> u32;
-  auto writeWord(u32 address, u32 data) -> void;
+  auto piAddress(u32 address, PIDeviceTiming timing) -> bool override;
+  auto piReadHalf(PIDeviceTiming timing) -> maybe<u16> override;
+  auto piWriteHalf(u16 data, PIDeviceTiming timing) -> void override;
+  auto readAsicHalf(u32 address) -> u16;
+  auto writeAsicHalf(u32 address, u16 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

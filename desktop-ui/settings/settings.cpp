@@ -90,6 +90,9 @@ auto Settings::process(bool load) -> void {
   bind(real,    "Audio/Balance", audio.balance);
 
   bind(string,  "Input/Defocus", input.defocus);
+  bind(string,  "Input/DigitalToAnalog", input.digitalToAnalog);
+  bind(natural, "Input/DigitalToAnalogTime", input.digitalToAnalogTime);
+  input.digitalToAnalogTime = max(100u, min(1000u, input.digitalToAnalogTime));
 
   bind(boolean, "Boot/Fast", boot.fast);
   bind(boolean, "Boot/Debugger", boot.debugger);
@@ -120,6 +123,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Developer/DebugServerEnabled", developer.debugServerEnabled);
   bind(boolean, "Developer/DebugServerUseIPv4", developer.debugServerUseIPv4);
   bind(boolean, "Developer/HomebrewMode", developer.homebrewMode);
+  bind(boolean, "Developer/DeterministicEntropy", developer.deterministicEntropy);
   bind(boolean, "Developer/ForceInterpreter", developer.forceInterpreter);
 
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);

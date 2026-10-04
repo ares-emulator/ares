@@ -33,8 +33,14 @@ struct CPU : Thread {
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
+  static constexpr u64 CountMask = (1ull << 33) - 1;
+
   auto main() -> void;
   auto synchronize() -> void;
+  auto stepCount(u64 clocks) -> void;
+  auto flushCount() -> void;
+  auto pendingCount() const -> u64 { return (Thread::clock - countClock) >> 1; }
+  auto effectiveCount() const -> u64 { return (scc.count + pendingCount()) & CountMask; }
   auto forceSynchronize() -> void;
   auto setInterruptPending(u32 bit, bool value) -> void;
   auto interruptPoll() -> void;
@@ -46,6 +52,7 @@ struct CPU : Thread {
   auto instructionPrologue(u64 address, u32 instruction) -> void;
   template<bool Recompiled> auto instructionEpilogue() -> void;
   auto raiseCoprocessor1Exception() -> void;
+  auto icacheFillLine(u64 vaddr, u32 paddr) -> void;
 
   auto power(bool reset) -> void;
 
@@ -693,8 +700,13 @@ struct CPU : Thread {
 
     //28
     struct TagLo {
-      n2  primaryCacheState;
-      n32 physicalAddress;
+      auto primaryCacheState() const -> n2 { return value.bit(6,7); }
+      auto physicalAddress() const -> n32 { return value.bit(8,27) << 12; }
+
+      auto setPrimaryCacheState(n2 state) -> void { value.bit(6,7) = state; }
+      auto setPhysicalAddress(n32 address) -> void { value.bit(8,27) = address >> 12; }
+
+      n32 value;
     } tagLo;
 
     //30: Error Exception Program Counter
@@ -1058,6 +1070,9 @@ struct CPU : Thread {
       auto watchpointsActive() const -> bool { return data.bit(25); }
       auto setWatchpointsActive(bool value) -> void { data.bit(25) = value; }
 
+      auto rdramMapIdentity() const -> bool { return data.bit(26); }
+      auto setRdramMapIdentity(bool value) -> void { data.bit(26) = value; }
+
       n64 data = 0;
     };
 
@@ -1106,7 +1121,7 @@ struct CPU : Thread {
     }
 
     auto isRdramAddress(u32 address) const -> bool {
-      return address < RdramSize;
+      return address < rdram.ram.size;
     }
 
     auto rdramAddress(u32 address) const -> u32 {
@@ -1140,6 +1155,11 @@ struct CPU : Thread {
       if(!section) return;
       if(!section->lineBlocks[sectionLineIndex(address)]) return;
       sectionDirty[index] = 1;
+      // If the code is modifying the current block, we need to end it, as we
+      // have recompiled the previous version of the code.
+      if(activeBlock && activeBlock->sectionDirty == &sectionDirty[index]) {
+        self.pipeline.state |= Pipeline::EndBlock;
+      }
     }
 
     auto invalidateRange(u32 address, u32 length) -> void {
@@ -1151,7 +1171,12 @@ struct CPU : Thread {
       u32 firstSection = u32(start >> SectionShift);
       u32 lastSection  = u32(end >> SectionShift);
       for(u32 sidx = firstSection; sidx <= lastSection; sidx++) {
-        if(sectionDirty[sidx]) continue;
+        if(sectionDirty[sidx]) {
+          if(activeBlock && activeBlock->sectionDirty == &sectionDirty[sidx]) {
+            self.pipeline.state |= Pipeline::EndBlock;
+          }
+          continue;
+        }
         auto section = sections[sidx];
         if(!section) continue;
         u32 firstLine = 0;
@@ -1161,6 +1186,9 @@ struct CPU : Thread {
         for(u32 line = firstLine; line <= lastLine; line++) {
           if(section->lineBlocks[line]) {
             sectionDirty[sidx] = 1;
+            if(activeBlock && activeBlock->sectionDirty == &sectionDirty[sidx]) {
+              self.pipeline.state |= Pipeline::EndBlock;
+            }
             break;
           }
         }
@@ -1223,6 +1251,7 @@ struct CPU : Thread {
     std::vector<u8> sectionDirty;
   } recompiler{*this};
   s64 jitClockTarget = 0;
+  s64 countClock = 0;
 
   struct Disassembler {
     CPU& self;

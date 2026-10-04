@@ -202,13 +202,13 @@ auto CPU::decoderSCC(u32 instruction) -> void {
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC0, RT, RDn);
   op(0x01, DMFC0, RT, RDn);
-  br(0x02, INVALID);  //CFC0
+  case 0x02: return;  //CFC0
   br(0x03, INVALID);
   op(0x04, MTC0, RT, RDn);
   op(0x05, DMTC0, RT, RDn);
-  br(0x06, INVALID);  //CTC0
+  case 0x06: return;  //CTC0
   br(0x07, INVALID);
-  br(0x08, INVALID);  //BC0
+  case 0x08: return;  //BC0
   br(0x09, INVALID);
   br(0x0a, INVALID);
   br(0x0b, INVALID);
@@ -223,6 +223,7 @@ auto CPU::decoderSCC(u32 instruction) -> void {
   op(0x02, TLBWI);
   op(0x06, TLBWR);
   op(0x08, TLBP);
+  br(0x10, INVALID);  //RFE
   br(0x18, ERET);
   op(0x20, XDETECT, XRD, XCODE);
   op(0x25, XLOG, XRD, XRT, XCODE);
@@ -232,8 +233,6 @@ auto CPU::decoderSCC(u32 instruction) -> void {
   op(0x2a, XEXCEPTION, XRT);
   op(0x2c, XIOCTL, XCODE);
   }
-
-  //undefined instructions do not throw a reserved instruction exception
 }
 
 auto CPU::decoderFPU(u32 instruction) -> void {
@@ -246,14 +245,16 @@ auto CPU::decoderFPU(u32 instruction) -> void {
   op(0x05, DMTC1, RT, FS);
   op(0x06, CTC1, RT, RDn);
   br(0x07, DCTC1, RT, RDn);
-  br(0x08, BC1, OP >> 16 & 1, OP >> 17 & 1, IMMi16);
-  br(0x09, INVALID);
-  br(0x0a, INVALID);
-  br(0x0b, INVALID);
-  br(0x0c, INVALID);
-  br(0x0d, INVALID);
-  br(0x0e, INVALID);
-  br(0x0f, INVALID);
+  case 0x08:
+    if((OP >> 16 & 31) >= 4) return COP1UNIMPLEMENTED();
+    return BC1(OP >> 16 & 1, OP >> 17 & 1, IMMi16);
+  br(0x09, COP1UNIMPLEMENTED);
+  br(0x0a, COP1UNIMPLEMENTED);
+  br(0x0b, COP1UNIMPLEMENTED);
+  br(0x0c, COP1UNIMPLEMENTED);
+  br(0x0d, COP1UNIMPLEMENTED);
+  br(0x0e, COP1UNIMPLEMENTED);
+  br(0x0f, COP1UNIMPLEMENTED);
   }
 
   if((OP >> 21 & 31) == 16)
@@ -368,7 +369,7 @@ auto CPU::decoderFPU(u32 instruction) -> void {
   op(0x25, FCVT_L_L, FD, FS);
   }
 
-  //undefined instructions do not throw a reserved instruction exception
+  COP1UNIMPLEMENTED();
 }
 
 auto CPU::decoderCOP2(u32 instruction) -> void {

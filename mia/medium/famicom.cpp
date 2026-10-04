@@ -66,6 +66,9 @@ auto Famicom::load(string location) -> LoadResult {
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
     Medium::load(node, ".eeprom");
   }
+  if(auto node = document["game/board/memory(type=EEPROM,content=External)"]) {
+    Medium::load(node, ".external.eeprom");
+  }
   if(auto node = document["game/board/memory(type=RAM,content=Character)"]) {
     Medium::load(node, ".chr");
   }
@@ -81,6 +84,9 @@ auto Famicom::save(string location) -> bool {
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
     Medium::save(node, ".eeprom");
+  }
+  if(auto node = document["game/board/memory(type=EEPROM,content=External)"]) {
+    Medium::save(node, ".external.eeprom");
   }
   if(auto node = document["game/board/memory(type=Flash,content=Program)"]) {
     Pak::save("program.flash", ".flash");
@@ -101,8 +107,7 @@ auto Famicom::analyze(std::vector<u8>& data) -> string {
   string manifest = Medium::manifestDatabase(digest);
   if(manifest) return manifest;
 
-  //Check for Famicom Disk System copyright string (identifies BIOS)
-  if(data.size() == 8_KiB && Hash::SHA256({data.data() + 0xd37, 224}).digest() == "0ff60f81f193b001ecccc6a280cddba4b99830755aa658c089d566046adfb034") {
+  if(data.size() == 8_KiB) {
     return analyzeFDS(data);
   }
 
@@ -178,6 +183,7 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
   string system = "Regular";
   bool battery = (data[6] & 0x02) != 0;
   bool eepromMapper = false;
+  bool externalEEPROM = false;
   bool prgromFlash = false;
 
   string region = "NTSC-J, NTSC-U, PAL"; //iNES 1.0 requires database to detect region
@@ -549,7 +555,14 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
   case  85:
     s += "  board:  KONAMI-VRC-7\n";
     s += "    chip type=VRC7\n";
-    s += "      pinout a0=4\n";
+    switch(submapper) {
+      case 0: case 2:
+        s += "      pinout a0=4\n";
+        break;
+      case 1:
+        s += "      pinout a0=3\n";
+        break;
+    }
     if(!iNes2) prgram = 8192;
     break;
 
@@ -666,10 +679,10 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
     break;
 
   case 157:
-    // TODO: Implement external EEPROM support.
-    // For now, we force values on this mapper.
-    s += "  board:  BANDAI-LZ93D50\n";
+    s += "  board:  BANDAI-DATACH\n";
     s += "    chip type=LZ93D50\n";
+    //NES 2.0 describes the cartridge EEPROM, not Datach's internal 256 bytes.
+    externalEEPROM = iNes2 ? prgnvram == 128 : battery;
     prgnvram = 256;
     eepromMapper = true;
     break;
@@ -823,6 +836,13 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
     s += "      type: EEPROM\n";
     s +={"      size: 0x", hex(eeprom), "\n"};
     s += "      content: Save\n";
+  }
+
+  if(externalEEPROM) {
+    s += "    memory\n";
+    s += "      type: EEPROM\n";
+    s += "      size: 0x80\n";
+    s += "      content: External\n";
   }
 
   return s;

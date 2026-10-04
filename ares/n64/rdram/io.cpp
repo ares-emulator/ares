@@ -1,127 +1,65 @@
 auto RDRAM::readWord(u32 address, Thread& thread) -> u32 {
-  u32 chipID = address >> 13 & 3;
-  auto& chip = chips[chipID];
-  address = (address & 0x3ff) >> 2;
-  u32 data = 0;
+  n1 broadcast = address >> 19 & 1;
+  u32 select = address >> 10 & 0x1ff;
+  u32 offset = address & 0x3ff;
 
-  if(address == 0) {
-    //RDRAM_DEVICE_TYPE
-    data = chip.deviceType;
+  if(broadcast || !ri.active()) {
+    debugger.io(Read, select, 0, 0);
+    return 0;
   }
 
-  if(address == 1) {
-    //RDRAM_DEVICE_ID
-    data = chip.deviceID;
+  if(offset >= 0x200) {
+    auto chip = selectChip(select, false);
+    u32 data = chip ? (u32)chip->row : 0;
+    debugger.io(Read, chip ? chipIndex(chip) : select, 10, data);
+    return data;
   }
 
-  if(address == 2) {
-    //RDRAM_DELAY
-    data = chip.delay;
+  u32 index = (offset >> 2) & 15;
+  auto chip = selectChip(select, false);
+  if(!chip) {
+    debugger.io(Read, select, index, 0);
+    return 0;
   }
 
-  if(address == 3) {
-    //RDRAM_MODE
-    data = chip.mode ^ 0xc0c0c0c0;
-  }
-
-  if(address == 4) {
-    //RDRAM_REF_INTERVAL
-    data = chip.refreshInterval;
-  }
-
-  if(address == 5) {
-    //RDRAM_REF_ROW
-    data = chip.refreshRow;
-  }
-
-  if(address == 6) {
-    //RDRAM_RAS_INTERVAL
-    data = chip.rasInterval;
-  }
-
-  if(address == 7) {
-    //RDRAM_MIN_INTERVAL
-    data = chip.minInterval;
-  }
-
-  if(address == 8) {
-    //RDRAM_ADDRESS_SELECT
-    data = chip.addressSelect;
-  }
-
-  if(address == 9) {
-    //RDRAM_DEVICE_MANUFACTURER
-    data = chip.deviceManufacturer;
-  }
-
-  if(address == 10) {
-    //RDRAM_CURRENT_CONTROL
-    data = chip.currentControl;
-  }
-
-  debugger.io(Read, chipID, address, data);
+  u32 data = readRegister(*chip, index);
+  debugger.io(Read, chipIndex(chip), index, data);
   return data;
 }
 
-auto RDRAM::writeWord(u32 address, u32 data, Thread& thread) -> void {
-  u32 chipID = address >> 13 & 3;
-  auto& chip = chips[chipID];
-  address = (address & 0x3ff) >> 2;
+auto RDRAM::writeWord(u32 address, u32 data, Thread& thread, u8 repeatLength) -> void {
+  n1 broadcast = address >> 19 & 1;
+  u32 select = address >> 10 & 0x1ff;
+  u32 offset = address & 0x3ff;
 
-  if(address == 0) {
-    //RDRAM_DEVICE_TYPE
-    chip.deviceType = data;
+  if(!ri.active()) return;
+
+  if(offset >= 0x200) {
+    if(broadcast) {
+      for(auto& chip : chips) {
+        if(chip.present) chip.row = data;
+      }
+    } else if(auto chip = selectChip(select, false)) {
+      chip->row = data;
+    }
+    debugger.io(Write, select, 10, data);
+    return;
   }
 
-  if(address == 1) {
-    //RDRAM_DEVICE_ID
-    chip.deviceID = data;
+  u32 index = (offset >> 2) & 15;
+
+  if(broadcast) {
+    for(auto& chip : chips) {
+      if(!chip.present) continue;
+      writeRegister(chip, index, data, repeatLength);
+    }
+    debugger.io(Write, 0xff, index, data);
+    return;
   }
 
-  if(address == 2) {
-    //RDRAM_DELAY
-    chip.delay = data;
-  }
+  auto chip = selectChip(select, false);
+  if(!chip) return;
 
-  if(address == 3) {
-    //RDRAM_MODE
-    chip.mode = data;
-  }
-
-  if(address == 4) {
-    //RDRAM_REF_INTERVAL
-    chip.refreshInterval = data;
-  }
-
-  if(address == 5) {
-    //RDRAM_REF_ROW
-    chip.refreshRow = data;
-  }
-
-  if(address == 6) {
-    //RDRAM_RAS_INTERVAL
-    chip.rasInterval = data;
-  }
-
-  if(address == 7) {
-    //RDRAM_MIN_INTERVAL
-    chip.minInterval = data;
-  }
-
-  if(address == 8) {
-    //RDRAM_ADDRESS_SELECT
-    chip.addressSelect = data;
-  }
-
-  if(address == 9) {
-    //RDRAM_DEVICE_MANUFACTURER
-    chip.deviceManufacturer = data;
-  }
-
-  if(address == 10) {
-    //RDRAM_CURRENT_CONTROL
-    chip.currentControl = data;
-  }
-
-  debugger.io(Write, chipID, address, data);
+  writeRegister(*chip, index, data, repeatLength);
+  debugger.io(Write, chipIndex(chip), index, data);
 }

@@ -59,9 +59,12 @@ struct InputMouseXlib {
 
   auto assign(u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
-    if(group.input(inputID).value() == value) return;
-    input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
-    group.input(inputID).setValue(value);
+    auto& target = group.input(inputID);
+    if(target.value() != value) {
+      input.doChange(hid, groupID, inputID, target.value(), value);
+      target.setValue(value);
+    }
+    if(groupID == HID::Mouse::GroupID::Axis) hid->motion(inputID).move(value);
   }
 
   auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
@@ -150,8 +153,8 @@ struct InputMouseXlib {
     hid->setProductID(HID::Mouse::GenericProductID);
     hid->setPathID(0);
 
-    hid->axes().append("X");
-    hid->axes().append("Y");
+    hid->appendAxis("X");
+    hid->appendAxis("Y");
 
     hid->buttons().append("Left");
     hid->buttons().append("Middle");

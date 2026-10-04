@@ -1,0 +1,19 @@
+auto Harmony::serialize(serializer& s) -> void {
+  ARM7TDMI::serialize(s);
+  Thread::serialize(s);
+  s(runs);
+  s(timer1Control);
+  s(timer1Counter);
+  s(systickControl);
+  s(systickReload);
+  s(systickCounter);
+  s(systickCalibration);
+  s(mamControl);
+  s(callCycles);
+  s(instructions);
+  s(running);
+  s(irqDrivenAudio);
+  s(callPending);
+  s(pendingIrqDrivenAudio);
+  s(faulted);
+}

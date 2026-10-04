@@ -10,7 +10,7 @@ auto Cartridge::RTC::load() -> void {
     present = 1;
     n64 timestamp = ram.read<Dual>(24);
     if(!~timestamp) {
-      time_t t = (time_t)0;
+      time_t t = time(0);
       struct tm tmm = *localtime(&t);
       ram.write<Byte>(16, BCD::encode(tmm.tm_sec));
       ram.write<Byte>(17, BCD::encode(tmm.tm_min));
@@ -20,10 +20,11 @@ auto Cartridge::RTC::load() -> void {
       ram.write<Byte>(21, BCD::encode(tmm.tm_mon + 1));
       ram.write<Byte>(22, BCD::encode(tmm.tm_year % 100));
       ram.write<Byte>(23, BCD::encode(tmm.tm_year / 100));
+    } else {
+      time_t now = time(0);
+      time_t saved = (time_t)timestamp;
+      if(now > saved) advance((int)(now - saved));
     }
-
-    timestamp = time(0) - timestamp;
-    advance(timestamp);
   }
 }
 

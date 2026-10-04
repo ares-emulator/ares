@@ -10,7 +10,21 @@ namespace ares {
 auto S3511A::load() -> void {
   n64 timestamp = 0;
   for(auto n : range(8)) timestamp.byte(n) = data[8 + n];
-  if(!timestamp || !(timestamp + 1)) return initRegs(false);  //new save file
+  if(!timestamp || !(timestamp + 1)) {  //new save file
+    time_t t = time(0);
+    struct tm tmm = *localtime(&t);
+    year()        = BCD::encode(tmm.tm_year % 100);
+    month()       = BCD::encode(tmm.tm_mon + 1);
+    day()         = BCD::encode(tmm.tm_mday);
+    weekday()     = tmm.tm_wday;
+    hour()        = BCD::encode(tmm.tm_hour);
+    minute()      = BCD::encode(tmm.tm_min);
+    second()      = BCD::encode(tmm.tm_sec);
+    status()      = 0x82;
+    alarmHour()   = 0x00;
+    alarmMinute() = 0x80;
+    return;
+  }
 
   if(status() & 0x15) {
     //these status bits are always 0; reset state on invalid status.
@@ -18,9 +32,10 @@ auto S3511A::load() -> void {
     return;
   }
 
-  timestamp = time(0) - timestamp;
-  //prevent insurmountable slowdown by limiting skips to 5 years
-  if(timestamp < 60*60*24*365*5) {
+  time_t now = time(0);
+  time_t saved = (time_t)timestamp;
+  if(now > saved) {
+    timestamp = now - saved;
     while(timestamp--) tickSecond();
   }
 }

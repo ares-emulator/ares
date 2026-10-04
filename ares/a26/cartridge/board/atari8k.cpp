@@ -1,9 +1,8 @@
 struct Atari8k : Interface {
-  using Interface::Interface;
+  Atari8k(Cartridge& cartridge, bool hasSaraRam = false) : Interface(cartridge), saraRam(hasSaraRam) {}
   Memory::Readable<n8> rom;
-  Memory::Writable<n8> ram;
+  SaraRam saraRam;
   n1 bank;
-  bool hasRam;
 
   auto load() -> void override {
     Interface::load(rom, "program.rom");
@@ -15,40 +14,33 @@ struct Atari8k : Interface {
   auto unload() -> void override {
   }
 
-  auto read(n16 address) -> n8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address == 0x1ff8) bank = 0;
     if(address == 0x1ff9) bank = 1;
 
     if(address.bit(12)) {
-      if(hasRam && address >= 0x1080 && address <= 0x10ff) return ram.read(address & 0x7f);
+      if(saraRam.readable(address)) return saraRam.read(address, data);
       return rom.read((bank * 0x1000) + (address & 0xfff));
     }
 
-    return 0xff;
+    return data;
   }
    
-  auto write(n16 address, n8 data) -> bool override {
+  auto write(n16 address, n8 data) -> n8 override {
     if(address == 0x1ff8) bank = 0;
     if(address == 0x1ff9) bank = 1;
 
-    if(address >= 0x1000 && address <= 0x107f) {
-      hasRam = true;
-      ram.write(address & 0x7f, data);
-      return true;
-    }
-
-    return false;
+    saraRam.write(address, data);
+    return data;
   }
 
-  auto power() -> void override {
-    bank = 0;
-    hasRam = 0;
-    ram.allocate(128);
+  auto power(bool reset) -> void override {
+    bank = 1;
+    saraRam.power();
   }
 
   auto serialize(serializer& s) -> void override {
     s(bank);
-    s(hasRam);
-    s(ram);
+    saraRam.serialize(s);
   }
 };

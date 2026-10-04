@@ -15,6 +15,8 @@ auto PI::load(Node::Object parent) -> void {
 }
 
 auto PI::unload() -> void {
+  devices.clear();
+  busDevice = -1;
   debugger = {};
   node.reset();
 }
@@ -23,6 +25,8 @@ auto PI::power(bool reset) -> void {
   io = {};
   bsd1 = {};
   bsd2 = {};
+  busDevice = -1;
+  busTiming = {};
 }
 
 }

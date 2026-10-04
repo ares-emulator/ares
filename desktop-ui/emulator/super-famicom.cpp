@@ -3,6 +3,7 @@ struct SuperFamicom : Emulator {
   auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
+  auto portMenu(Menu& portMenu, ares::Node::Port port) -> void override;
 
   std::shared_ptr<mia::Pak> gb, bs, stA, stB;
 };
@@ -106,7 +107,52 @@ SuperFamicom::SuperFamicom() {
     ports.push_back(port);
   }
 
+  for(auto id : range(4)) {
+    InputPort port{string{"Multitap Port ", 1 + id}};
+    InputDevice device{"Gamepad"};
+    device.digital("Up",     virtualPorts[1 + id].pad.up);
+    device.digital("Down",   virtualPorts[1 + id].pad.down);
+    device.digital("Left",   virtualPorts[1 + id].pad.left);
+    device.digital("Right",  virtualPorts[1 + id].pad.right);
+    device.digital("B",      virtualPorts[1 + id].pad.south);
+    device.digital("A",      virtualPorts[1 + id].pad.east);
+    device.digital("Y",      virtualPorts[1 + id].pad.west);
+    device.digital("X",      virtualPorts[1 + id].pad.north);
+    device.digital("L",      virtualPorts[1 + id].pad.l_bumper);
+    device.digital("R",      virtualPorts[1 + id].pad.r_bumper);
+    device.digital("Select", virtualPorts[1 + id].pad.select);
+    device.digital("Start",  virtualPorts[1 + id].pad.start);
+    port.append(device);
+    ports.push_back(port);
+  }
+
   inputBlacklist = {"Justifiers", "Super Multitap"};
+}
+
+auto SuperFamicom::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
+  if(port != root->find<ares::Node::Port>("Controller Port 2")) return;
+
+  MenuRadioItem item{&portMenu};
+  item.setText("Super Multitap");
+  if(auto group = portMenu.action(0)->group()) group.append(item);
+  if(auto connected = port->connected()) {
+    if(connected->name() == "Super Multitap") item.setChecked();
+  }
+  item.onActivate([=] {
+    Program::Guard guard;
+    if(auto multitap = port->allocate("Super Multitap")) {
+      u32 id = 0;
+      for(auto socket : ares::Node::enumerate<ares::Node::Port>(multitap)) {
+        string name{"Multitap Port ", ++id};
+        socket->setName(name);
+        socket->setSupported({"Gamepad"});
+        socket->allocate("Gamepad");
+        socket->connect();
+      }
+      port->connect();
+    }
+    presentation.refreshSystemMenu();
+  });
 }
 
 auto SuperFamicom::load() -> LoadResult {
@@ -121,6 +167,7 @@ auto SuperFamicom::load() -> LoadResult {
   if(result != successful) return result;
 
   ares::SuperFamicom::option("Pixel Accuracy", settings.video.pixelAccuracy);
+  ares::SuperFamicom::option("Deterministic Entropy", settings.developer.deterministicEntropy);
 
   auto region = Emulator::region();
   if(!ares::SuperFamicom::load(root, {"[Nintendo] Super Famicom (", region, ")"})) return otherError;

@@ -101,7 +101,8 @@ computeStateKey() includes:
 - privilege and addressing-mode context;
 - floating-point mode and exception-control bits;
 - watchpoint activity;
-- GP/SP-derived predicates used by memory fast paths.
+- GP/SP-derived predicates used by memory fast paths;
+- RDRAM DeviceId identity mapping (direct ram.data access is only safe when true).
 
 Lookup identity uses both stateKey and vaddrPage. Using both is important:
 different virtual mappings can share the same physical cache section, but still
@@ -246,7 +247,7 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   stateKey.setFpuDivisionByZeroEnabled(self.fpu.csr.enable.divisionByZero());
   stateKey.setFpuInvalidOperationEnabled(self.fpu.csr.enable.invalidOperation());
   const u64 cachedBase = 0xffff'ffff'8000'0000ull;
-  const u64 cachedEnd  = 0xffff'ffff'807f'ffffull;
+  const u64 cachedEnd  = cachedBase + rdram.ram.size - 1;
   auto gp = self.ipu.r[28].u64;
   auto sp = self.ipu.r[29].u64;
   bool gpCached = gp >= cachedBase && gp <= cachedEnd;
@@ -257,6 +258,7 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   stateKey.setSpAligned4((sp & 3) == 0);
   stateKey.setSpAligned8((sp & 7) == 0);
   stateKey.setWatchpointsActive(GDB::server.hasWatchpoints());
+  stateKey.setRdramMapIdentity(rdram.mapIdentity);
   return stateKey;
 }
 
@@ -279,7 +281,6 @@ auto CPU::Recompiler::updateStackPointerStateKey(s16 offset) -> void {
 }
 
 auto CPU::Recompiler::section(u32 address) -> Section* {
-  assert(isRdramAddress(address));
   if(!isRdramAddress(address)) return nullptr;
   auto index = sectionIndex(address);
   auto& section = sections[index];
@@ -602,7 +603,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
   };
 
   // Phase 3: begin host emission.
-  beginFunction(3, 3, 6);
+  beginFunction(3, 3, 6, 2);
   slowPaths.clear();
   emitDeferredCycles = 0;
 
@@ -811,18 +812,22 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
       const u32 burst = (slow.icachePaddr & ~0xfffu) | ((lineIndex << 5) & 0xfe0u);
       const u32 tagKey = (slow.icachePaddr & ~0xfffu) | 1u;
       const bool sdram = Model::Aleck64() && burst > 0xbfff'ffffu;
-      const sljit_sw ramDataField = sdram ? (sljit_sw)(uintptr_t)&aleck64.sdram.data
-                                           : (sljit_sw)(uintptr_t)&rdram.ram.data;
-      const u32 ramByteOff = sdram ? (burst & 0xffffffu) : burst;
-      if(system.homebrewMode) {
-        add64(ProfileIcacheMissesMem, ProfileIcacheMissesMem, imm(1));
-        if(!sdram) add64(mem0(RdramRbusIcacheReadsAddr), mem0(RdramRbusIcacheReadsAddr), imm(ICache));
+      if(!emitStateKey.rdramMapIdentity() || (!sdram && burst + 0x1f >= rdram.ram.size)) {
+        callf(&CPU::icacheFillLine, imm64(slow.vaddr), imm(slow.icachePaddr));
+      } else {
+        const sljit_sw ramDataField = sdram ? (sljit_sw)(uintptr_t)&aleck64.sdram.data
+                                             : (sljit_sw)(uintptr_t)&rdram.ram.data;
+        const u32 ramByteOff = sdram ? (burst & 0xffffffu) : burst;
+        if(system.homebrewMode) {
+          add64(ProfileIcacheMissesMem, ProfileIcacheMissesMem, imm(1));
+          if(!sdram) add64(mem0(RdramRbusIcacheReadsAddr), mem0(RdramRbusIcacheReadsAddr), imm(ICache));
+        }
+        emitCpuStep(96);
+        mov32(IcacheTagKeyMem(lineIndex), imm(tagKey));
+        mov64(reg(1), mem0(ramDataField));
+        mov128(IcacheLineWordsMem(lineIndex, 0x00), mem(reg(1), sljit_sw(ramByteOff + 0x00)));
+        mov128(IcacheLineWordsMem(lineIndex, 0x10), mem(reg(1), sljit_sw(ramByteOff + 0x10)));
       }
-      emitCpuStep(96);
-      mov32(IcacheTagKeyMem(lineIndex), imm(tagKey));
-      mov64(reg(1), mem0(ramDataField));
-      mov128(IcacheLineWordsMem(lineIndex, 0x00), mem(reg(1), sljit_sw(ramByteOff + 0x00)));
-      mov128(IcacheLineWordsMem(lineIndex, 0x10), mem(reg(1), sljit_sw(ramByteOff + 0x10)));
     } else {
       // Generic opcode slow path.
       emitPcMode = slow.runtimePc ? EmitPcMode::Runtime : EmitPcMode::JitTime;

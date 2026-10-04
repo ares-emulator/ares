@@ -1,10 +1,15 @@
 auto PI::dmaRead() -> void {
   io.readLength = (io.readLength | 1) + 1;
 
-  u32 lastCacheline = 0xffff'ffff;
+  auto& bsd = bsdForAddress(io.pbusAddress);
+  u32 pageMask = (1 << (bsd.pageSize + 2)) - 1;
+  busAddress(io.pbusAddress);
+
   for(u32 address = 0; address < io.readLength; address += 2) {
+    u32 cursor = io.pbusAddress + address;
+    if(address && (cursor & pageMask) == 0) busAddress(cursor);
     u16 data = rdram.ram.read<Half>(io.dramAddress + address, RBusDevice::PI_DMA);
-    busWrite<Half>(io.pbusAddress + address, data);
+    busWriteHalf(data);
   }
 }
 
@@ -18,26 +23,34 @@ auto PI::dmaWrite() -> void {
     cpu.recompiler.invalidateRange(io.dramAddress, (length + 1) & ~1);
   }
 
-  while (length > 0) {
+  auto& bsd = bsdForAddress(io.pbusAddress);
+  u32 pageMask = (1 << (bsd.pageSize + 2)) - 1;
+  bool addressSelected = false;
+
+  while(length > 0) {
     i32 misalign = io.dramAddress & 7;
     i32 distEndOfRow = 0x800-(io.dramAddress&0x7ff);
     i32 blockLen = min(maxBlockSize-misalign, distEndOfRow);
     i32 curLen = min(length, blockLen);
 
-    for (int i=0; i<curLen; i+=2) {
-      u16 data = busRead<Half>(io.pbusAddress);
+    for(int i=0; i<curLen; i+=2) {
+      if(!addressSelected || (io.pbusAddress & pageMask) == 0) {
+        busAddress(io.pbusAddress);
+        addressSelected = true;
+      }
+      u16 data = busReadHalf();
       mem[i+0] = data >> 8;
       mem[i+1] = data >> 0;
       io.pbusAddress += 2;
       length -= 2;
     }
 
-    if (firstBlock && curLen < 127-misalign) {
-      for (i32 i = 0; i < curLen-misalign; i++) {
+    if(firstBlock && curLen < 127-misalign) {
+      for(i32 i = 0; i < curLen-misalign; i++) {
         rdram.ram.write<Byte>(io.dramAddress++, mem[i], RBusDevice::PI_DMA);
       }
     } else {
-      for (i32 i = 0; i < curLen-misalign; i+=2) {
+      for(i32 i = 0; i < curLen-misalign; i+=2) {
         rdram.ram.write<Byte>(io.dramAddress++, mem[i+0], RBusDevice::PI_DMA);
         rdram.ram.write<Byte>(io.dramAddress++, mem[i+1], RBusDevice::PI_DMA);
       }
@@ -60,12 +73,7 @@ auto PI::dmaDuration(bool read) -> u32 {
   auto len = read ? io.readLength : io.writeLength;
   len = (len | 1) + 1;
 
-  BSD bsd;
-  switch (io.pbusAddress.bit(24,31)) {
-    case 0x05:               bsd = bsd2; break; 
-    case range8(0x08, 0x0F): bsd = bsd2; break;
-    default:                 bsd = bsd1; break;
-  }
+  auto& bsd = bsdForAddress(io.pbusAddress);
 
   auto pageShift = bsd.pageSize + 2;
   auto pageSize = 1 << pageShift;
@@ -79,19 +87,19 @@ auto PI::dmaDuration(bool read) -> u32 {
   auto numBuffers = 0;
   auto partialBytes = 0;
 
-  if (pbusFirstPage == pbusLastPage) {
-    if (len == 128) numBuffers = 1;
+  if(pbusFirstPage == pbusLastPage) {
+    if(len == 128) numBuffers = 1;
     else partialBytes = len;
   } else {
     bool fullFirst = (pbusFirst & pageMask) == 0;
     bool fullLast  = ((pbusLast + 2) & pageMask) == 0;
 
-    if (fullFirst) numBuffers++;
+    if(fullFirst) numBuffers++;
     else           partialBytes += pageSize - (pbusFirst & pageMask);
-    if (fullLast)  numBuffers++;
+    if(fullLast)  numBuffers++;
     else           partialBytes += (pbusLast & pageMask) + 2;
 
-    if (pbusFirstPage + 1 < pbusLastPage)
+    if(pbusFirstPage + 1 < pbusLastPage)
       numBuffers += (pbusPages - 2) * pageSize / 128;
   }
 

@@ -1,3 +1,4 @@
+#include <array>
 #include <span>
 
 #include <nall/nall.hpp>
@@ -32,6 +33,8 @@ enum ResultEnum {
   romNotFoundInDatabase,
   romNotFound,
   invalidROM,
+  unsupportedMedia,
+  wrongMediaType,
   couldNotParseManifest,
   noFirmware,
   otherError
@@ -41,6 +44,7 @@ struct LoadResult {
   ResultEnum result;
 
   string info;
+  string mediaType;
   string firmwareType;
   string firmwareSystemName;
   string firmwareRegion;

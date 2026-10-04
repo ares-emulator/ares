@@ -356,13 +356,13 @@
   }
 
   template<typename T, typename U>
-  auto fcmp32(T x, U y) -> void {
-    sljit_emit_fop1(compiler, SLJIT_CMP_F32, x.fst, x.snd, y.fst, y.snd);
+  auto fcmp32(T x, U y, sljit_s32 flags) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CMP_F32 | flags, x.fst, x.snd, y.fst, y.snd);
   }
 
   template<typename T, typename U>
-  auto fcmp64(T x, U y) -> void {
-    sljit_emit_fop1(compiler, SLJIT_CMP_F64, x.fst, x.snd, y.fst, y.snd);
+  auto fcmp64(T x, U y, sljit_s32 flags) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CMP_F64 | flags, x.fst, x.snd, y.fst, y.snd);
   }
 
   template<typename T, typename U>
@@ -420,7 +420,7 @@
   }
 
   auto mov128(mem dst, mem src) -> void {
-    static constexpr sljit_s32 kSimdTmp = SLJIT_FR(6);
+    static constexpr sljit_s32 kSimdTmp = SLJIT_TMP_DEST_VREG;
     static constexpr sljit_s32 kSimdType = SLJIT_SIMD_REG_128 | SLJIT_SIMD_ELEM_8 | SLJIT_SIMD_MEM_UNALIGNED;
     sljit_emit_simd_mov(compiler, SLJIT_SIMD_LOAD | kSimdType, kSimdTmp, src.fst, src.snd);
     sljit_emit_simd_mov(compiler, SLJIT_SIMD_STORE | kSimdType, kSimdTmp, dst.fst, dst.snd);

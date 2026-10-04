@@ -128,28 +128,23 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x00: {  //icache index invalidate
     auto& line = icache.line(access.vaddr);
+    line.tagKey = access.paddr & ~0xfff;
     line.setValid(false);
     break;
   }
 
   case 0x04: {  //icache load tag
     auto& line = icache.line(access.vaddr);
-    scc.tagLo.primaryCacheState = line.valid() ? 2 : 0;
-    scc.tagLo.physicalAddress   = line.tagKey & ~0xfffu;
+    scc.tagLo.value = 0;
+    scc.tagLo.setPrimaryCacheState(line.valid() ? 2 : 0);
+    scc.tagLo.setPhysicalAddress(line.tagKey);
     break;
   }
 
   case 0x08: {  //icache store tag
     auto& line = icache.line(access.vaddr);
-    const bool v = scc.tagLo.primaryCacheState.bit(1);
-    if(v) {
-      line.tagKey = scc.tagLo.physicalAddress & ~0xfffu;
-      line.setValid(true);
-    } else {
-      line.tagKey = 0;
-    }
-    if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE CPCS=1");
-    if(scc.tagLo.primaryCacheState == 0b11) debug(unusual, "[CPU] CACHE CPCS=3");
+    line.tagKey = scc.tagLo.physicalAddress();
+    line.setValid(scc.tagLo.primaryCacheState().bit(1));
     break;
   }
 
@@ -177,49 +172,48 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x01: {  //dcache index write back invalidate
     auto& line = dcache.line(access.vaddr);
-    if(line.valid() && line.dirty) {
+    bool valid = line.valid();
+    if(valid && line.dirty) {
       line.writeBack();
       profile.dcacheWritebacks++;
     }
+    if(valid) line.tagKey = access.paddr & ~0xfff;
     line.setValid(false);
     break;
   }
 
   case 0x05: {  //dcache index load tag
     auto& line = dcache.line(access.vaddr);
-    scc.tagLo.primaryCacheState = line.valid() << 1 | (line.dirty != 0);
-    scc.tagLo.physicalAddress   = line.tagKey & ~0xfffu;
+    scc.tagLo.value = 0;
+    scc.tagLo.setPrimaryCacheState(line.valid() ? 3 : 0);
+    scc.tagLo.setPhysicalAddress(line.tagKey);
     break;
   }
 
   case 0x09: {  //dcache index store tag
     auto& line = dcache.line(access.vaddr);
-    line.tagKey = scc.tagLo.physicalAddress & ~0xfffu;
-    line.setValid(scc.tagLo.primaryCacheState.bit(1));
-    line.dirty = scc.tagLo.primaryCacheState.bit(0);
-    if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE DPCS=1");
-    if(scc.tagLo.primaryCacheState == 0b10) debug(unusual, "[CPU] CACHE DPCS=2");
+    line.tagKey = scc.tagLo.physicalAddress();
+    line.setValid(scc.tagLo.primaryCacheState().bit(1));
     break;
   }
 
   case 0x0d: {  //dcache create dirty exclusive
     auto& line = dcache.line(access.vaddr);
-    if(!line.hit(access.paddr) && line.dirty) {
-      line.writeBack();
-      profile.dcacheWritebacks++;
+    if(!line.hit(access.paddr)) {
+      if(line.valid() && line.dirty) {
+        line.writeBack();
+        profile.dcacheWritebacks++;
+      }
+      line.dirty = 0;
     }
     line.tagKey = access.paddr & ~0xfff;
     line.setValid(true);
-    line.dirty  = 1;
     break;
   }
 
   case 0x11: {  //dcache hit invalidate
     auto& line = dcache.line(access.vaddr);
-    if(line.hit(access.paddr)) {
-      line.setValid(false);
-      line.dirty = 0;
-    }
+    if(line.hit(access.paddr)) line.setValid(false);
     break;
   }
 
@@ -240,6 +234,7 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
     if(line.hit(access.paddr)) {
       if(line.dirty) {
         line.writeBack();
+        line.dirty = 0;
         profile.dcacheWritebacks++;
       }
     }
@@ -670,7 +665,6 @@ auto CPU::SB(cr64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::SC(r64& rt, cr64& rs, s16 imm) -> void {
   if(scc.llbit) {
-    scc.llbit = 0;
     rt.u64 = write<Word>(rs.u64 + imm, rt.u32);
   } else {
     rt.u64 = 0;
@@ -680,7 +674,6 @@ auto CPU::SC(r64& rt, cr64& rs, s16 imm) -> void {
 auto CPU::SCD(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   if(scc.llbit) {
-    scc.llbit = 0;
     rt.u64 = write<Dual>(rs.u64 + imm, rt.u64);
   } else {
     rt.u64 = 0;

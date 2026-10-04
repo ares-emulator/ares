@@ -14,23 +14,23 @@ struct Tigervision : Interface {
   auto unload() -> void override {
   }
 
-  auto read(n16 address) -> n8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address.bit(12)) {
       if(bank != nextBank) bank = nextBank;
       if(address <= 0x17ff) return rom.read((bank * 0x800) + (address & 0x7ff));
       return rom.read((rom.size() - 0x800) + (address & 0x7ff));
     }
 
-    return 0xff;
+    return data;
   }
    
-  auto write(n16 address, n8 data) -> bool override {
+  auto write(n16 address, n8 data) -> n8 override {
     if(address.bit(12) && bank != nextBank) bank = nextBank;
     if(address <= 0x3f) nextBank = data;
-    return false;
+    return data;
   }
 
-  auto power() -> void override {
+  auto power(bool reset) -> void override {
     bank = 0;
     nextBank = 0;
   }

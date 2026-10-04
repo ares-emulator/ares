@@ -213,6 +213,10 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
     if((test.opcode & 0x0000000F) == 0x0000000F) return skip;
   }
 
+  //tests/v1/arm_ldm_stm.json
+  //r15 base register writeback should not occur for STM
+  if(!thumb && (test.opcode & 0b00001000000111110000000000000000) == 0b0000'1'000000'01111'0000000000000000) return skip;
+
   //tests/v1/arm_ldr_str_immediate_offset.json
   //r15 tests incorrectly apply +4 offset on writeback to rn
   if(!thumb && (test.opcode & 0b00001110000011110000000000000000) == 0b0000'010'00000'1111'0000000000000000) {

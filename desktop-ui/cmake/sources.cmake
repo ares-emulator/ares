@@ -60,6 +60,7 @@ target_sources(
   PRIVATE
     emulator/arcade.cpp
     emulator/atari-2600.cpp
+    emulator/atari-5200.cpp
     emulator/colecovision.cpp
     emulator/emulator.cpp
     emulator/emulator.hpp

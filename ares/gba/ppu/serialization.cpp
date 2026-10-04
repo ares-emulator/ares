@@ -26,6 +26,7 @@ auto PPU::serialize(serializer& s) -> void {
 
   s(pramAccessed);
   s(vramAccessedBG);
+  s(vramAccessedOBJ);
   s(oamAccessed);
 }
 
@@ -72,6 +73,8 @@ auto PPU::Objects::serialize(serializer& s) -> void {
   s(objIndex);
   s(active);
   s(activeCycle);
+  s(vramStageReady);
+  s(vramStageActive);
 
   s(state);
 }

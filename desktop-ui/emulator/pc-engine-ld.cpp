@@ -2,7 +2,6 @@ struct PCEngineLD : PCEngine {
   PCEngineLD();
   auto load() -> LoadResult override;
   auto load(Menu) -> void override;
-  auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto changeDiskState(const string state) -> void;
@@ -10,7 +9,6 @@ struct PCEngineLD : PCEngine {
   std::shared_ptr<mia::Pak> hucard;
   u32 internalBiosId = 0;
   maybe<u32> hucardBiosId;
-  sTimer discTrayTimer;
 };
 
 PCEngineLD::PCEngineLD() {
@@ -93,7 +91,6 @@ auto PCEngineLD::load() -> LoadResult {
   }
 
   connectPorts();
-  discTrayTimer = Timer{};
 
   return successful;
 }
@@ -123,24 +120,19 @@ auto PCEngineLD::load(Menu menu) -> void {
 
 auto PCEngineLD::changeDiskState(const string state) -> void {
   Program::Guard guard;
-  discTrayTimer->setEnabled(false);
   save();
   auto tray = root->find<ares::Node::Port>("PC Engine LD/Disc Tray");
   tray->disconnect();
 
   if(state == "No Disc") return;
 
-  discTrayTimer->onActivate([&, state] {
-    discTrayTimer->setEnabled(false);
-    auto tray = root->find<ares::Node::Port>("PC Engine LD/Disc Tray");
-    tray->allocate(state);
-    tray->connect();
-  }).setInterval(3000).setEnabled();
-}
-
-auto PCEngineLD::unload() -> void {
-  Emulator::unload();
-  discTrayTimer.reset();
+  // There's deliberately no delay for a disc change, as the change mechanism on the LaserActive is BIOS controlled and
+  // can only safely happen when the drive is already ejected, with a manual close step to be performed afterwards, so
+  // there's no need for a delay for the system to "detect" a disc change. Putting a delay in risks the user pressing a
+  // button to "close" the tray before the disc change has actually been actioned, which would prevent a TOC read
+  // occurring correctly with the new disc.
+  tray->allocate(state);
+  tray->connect();
 }
 
 auto PCEngineLD::save() -> bool {

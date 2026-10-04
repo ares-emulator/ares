@@ -7,6 +7,7 @@ auto PPU::cycleSpriteEvaluation() -> void {
     } else {
       soam[sprite.oamTempCounter++] = sprite.oamData;
     }
+    if (io.lx == 64) sprite.oamTempCounter = 0;
     return;
   }
 

@@ -353,6 +353,8 @@ struct RDP : Thread, Memory::RCP<RDP> {
     } test;
 
   } io{*this};
+
+  n1 mapIdentityWarned;
 };
 
 extern RDP rdp;

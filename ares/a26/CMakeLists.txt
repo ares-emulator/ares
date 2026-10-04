@@ -1,4 +1,4 @@
-ares_components(mos6502)
+ares_components(arm7tdmi armv6m m24c mos6502)
 
 ares_add_sources(
   CORE #
@@ -10,6 +10,9 @@ ares_add_sources(
     controller/controller.cpp
     cartridge/cartridge.cpp
     cpu/cpu.cpp
+    elf/elf.cpp
+    harmony/harmony.cpp
+    video/video.cpp
     tia/tia.cpp
     riot/riot.cpp
 )
@@ -19,6 +22,7 @@ ares_add_sources(
     a26
   INCLUDED #
     a26.hpp
+    persistent-memory.hpp
     CMakeLists.txt
 )
 
@@ -36,9 +40,46 @@ ares_add_sources(
     cartridge/board/board.cpp
     cartridge/board/board.hpp
     cartridge/board/commavid.cpp
+    cartridge/board/cdf.cpp
+    cartridge/board/bus.cpp
+    cartridge/board/chetiry.cpp
+    cartridge/board/fa2.cpp
+    cartridge/board/dpc-plus.cpp
+    cartridge/board/elf.cpp
     cartridge/board/linear.cpp
+    cartridge/board/movie-cart.cpp
     cartridge/board/parker-bros.cpp
     cartridge/board/tigervision.cpp
+)
+
+ares_add_sources(
+  CORE #
+    a26
+  INCLUDED #
+    movie-cart/format.hpp
+)
+
+ares_add_sources(
+  CORE #
+    a26
+  INCLUDED #
+    elf/elf.hpp
+    elf/queue.cpp
+    elf/parser.cpp
+    elf/linker.cpp
+    elf/memory.cpp
+    elf/vcslib.cpp
+    elf/runtime.cpp
+)
+
+ares_add_sources(
+  CORE #
+    a26
+  INCLUDED #
+    harmony/harmony.hpp
+    harmony/memory.cpp
+    harmony/serialization.cpp
+    harmony/timing.cpp
 )
 
 ares_add_sources(
@@ -50,6 +91,25 @@ ares_add_sources(
     controller/port.hpp
     controller/gamepad/gamepad.cpp
     controller/gamepad/gamepad.hpp
+    controller/booster-grip/booster-grip.cpp
+    controller/booster-grip/booster-grip.hpp
+    controller/sega-genesis/sega-genesis.cpp
+    controller/sega-genesis/sega-genesis.hpp
+    controller/joy2b-plus/joy2b-plus.cpp
+    controller/joy2b-plus/joy2b-plus.hpp
+    controller/savekey/savekey.cpp
+    controller/savekey/savekey.hpp
+    controller/atarivox/atarivox.cpp
+    controller/atarivox/atarivox.hpp
+    controller/atarivox/speakjet.cpp
+    controller/atarivox/speakjet.hpp
+    controller/kidvid/audio.cpp
+    controller/kidvid/audio.hpp
+    controller/kidvid/kidvid.cpp
+    controller/kidvid/kidvid.hpp
+    controller/kidvid/tables.hpp
+    controller/quadtari/quadtari.cpp
+    controller/quadtari/quadtari.hpp
 )
 
 ares_add_sources(
@@ -85,14 +145,29 @@ ares_add_sources(
   CORE #
     a26
   INCLUDED #
+    video/color.cpp
+    video/receiver.cpp
+    video/serialization.cpp
+    video/video.hpp
+)
+
+ares_add_sources(
+  CORE #
+    a26
+  INCLUDED #
     tia/audio.cpp
+    tia/analog.cpp
     tia/ball.cpp
-    tia/color.cpp
+    tia/collision.cpp
     tia/io.cpp
     tia/missile.cpp
+    tia/objects.cpp
     tia/player.cpp
     tia/playfield.cpp
+    tia/priority.cpp
     tia/serialization.cpp
+    tia/timing.cpp
     tia/tia.hpp
+    tia/trigger.cpp
     tia/write-queue.cpp
 )

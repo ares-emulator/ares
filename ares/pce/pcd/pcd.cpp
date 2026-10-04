@@ -132,7 +132,7 @@ auto PCD::connect() -> void {
   session.decode(subchannel, 96);
 
   drive.laserdiscLoaded = false;
-  if ((pak->attribute("system") == "LDROM2") && (ld.mmi.media().size() > 0)) {
+  if (ld.mmi.media().size() > 0) {
     drive.laserdiscLoaded = ld.mmi.media()[0].type.match("LD");
   }
 }
@@ -217,7 +217,7 @@ auto PCD::power() -> void {
   }
 
   if(Model::LaserActive()) {
-    ld.power();
+    ld.power(false);
   }
 }
 

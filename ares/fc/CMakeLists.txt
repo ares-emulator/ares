@@ -14,6 +14,7 @@ ares_add_sources(
   UNITY #
     fc.cpp
   PRIMARY #
+    vs/unisystem.cpp
     system/system.cpp
     controller/controller.cpp
     expansion/expansion.cpp
@@ -25,6 +26,18 @@ ares_add_sources(
 )
 
 ares_add_sources(CORE fc INCLUDED fc.hpp CMakeLists.txt)
+
+ares_add_sources(
+  CORE #
+    fc
+  INCLUDED #
+    vs/unisystem.hpp
+    vs/controls.cpp
+    vs/dip-switches.cpp
+    vs/io.cpp
+    vs/standard-input.cpp
+    vs/zapper-input.cpp
+)
 
 ares_add_sources(
   CORE #
@@ -60,6 +73,7 @@ ares_add_sources(
     cartridge/board/ave-nina-001.cpp
     cartridge/board/ave-nina-06.cpp
     cartridge/board/bandai-74161.cpp
+    cartridge/board/bandai-datach.cpp
     cartridge/board/bandai-fcg.cpp
     cartridge/board/bandai-karaoke.cpp
     cartridge/board/bandai-lz93d50.cpp
@@ -121,6 +135,22 @@ ares_add_sources(
     cartridge/board/unl-sc127.cpp
     cartridge/board/unl-txc.cpp
     cartridge/board/unrom-512.cpp
+    cartridge/board/vs-unisystem.cpp
+)
+
+ares_add_sources(
+  CORE #
+    fc
+  INCLUDED #
+    cartridge/board/vs/board.cpp
+    cartridge/board/vs/board.hpp
+    cartridge/board/vs/mmc1.cpp
+    cartridge/board/vs/namco-108.cpp
+    cartridge/board/vs/protection.hpp
+    cartridge/board/vs/standard.cpp
+    cartridge/board/vs/sunsoft-3.cpp
+    cartridge/board/vs/unrom.cpp
+    cartridge/board/vs/vrc1.cpp
 )
 
 ares_add_sources(
@@ -212,9 +242,10 @@ ares_add_sources(
   CORE #
     fc
   INCLUDED #
-    ppu/color.cpp
     ppu/debugger.cpp
     ppu/memory.cpp
+    ppu/model.cpp
+    ppu/model.hpp
     ppu/ppu.hpp
     ppu/render.cpp
     ppu/scroll.cpp

@@ -1,6 +1,7 @@
 namespace Systems {
   #include "arcade.cpp"
   #include "atari-2600.cpp"
+  #include "atari-5200.cpp"
   #include "colecovision.cpp"
   #include "myvision.cpp"
   #include "famicom.cpp"
@@ -40,6 +41,7 @@ namespace Systems {
 auto System::create(string name) -> std::shared_ptr<Pak> {
   if(name == "Arcade") return std::make_shared<Systems::Arcade>();
   if(name == "Atari 2600") return std::make_shared<Systems::Atari2600>();
+  if(name == "Atari 5200") return std::make_shared<Systems::Atari5200>();
   if(name == "ColecoVision") return std::make_shared<Systems::ColecoVision>();
   if(name == "MyVision") return std::make_shared<Systems::MyVision>();
   if(name == "Famicom") return std::make_shared<Systems::Famicom>();

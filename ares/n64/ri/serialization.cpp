@@ -5,6 +5,8 @@ auto RI::serialize(serializer& s) -> void {
   s(io.select);
   s(io.refresh);
   s(io.latency);
-  s(io.readError);
-  s(io.writeError);
+  s(io.error);
+  s(io.bankStatus);
+  s(io.currentLoaded);
+  s(refreshWarned);
 }

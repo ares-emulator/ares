@@ -925,6 +925,7 @@ auto Presentation::refreshSystemMenu() -> void {
       peripheralItem.setText("Nothing");
       if(!port->connected()) peripheralItem.setChecked();
       peripheralItem.onActivate([=, this] {
+        Program::Guard guard;
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
         port->disconnect();
         refreshSystemMenu();
@@ -939,6 +940,7 @@ auto Presentation::refreshSystemMenu() -> void {
       peripheralItem.setAttribute<ares::Node::Port>("port", port);
       peripheralItem.setText(peripheral);
       peripheralItem.onActivate([=, this] {
+        Program::Guard guard;
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
         port->disconnect();
         port->allocate(peripheralItem.text());

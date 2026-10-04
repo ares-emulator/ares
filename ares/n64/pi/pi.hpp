@@ -13,34 +13,6 @@ struct PI : Memory::RCP<PI> {
     } tracer;
   } debugger;
 
-  //pi.cpp
-  auto load(Node::Object) -> void;
-  auto unload() -> void;
-  auto power(bool reset) -> void;
-
-  //dma.cpp
-  auto dmaRead() -> void;
-  auto dmaWrite() -> void;
-  auto dmaFinished() -> void;
-  auto dmaDuration(bool read) -> u32;
-
-  //io.cpp
-  auto ioRead(u32 address) -> u32;
-  auto ioWrite(u32 address, u32 data) -> void;
-
-  //bus.hpp
-  auto readWord(u32 address, Thread& thread) -> u32;
-  auto writeWord(u32 address, u32 data, Thread& thread) -> void;
-  auto writeFinished() -> void;
-  auto writeForceFinish() -> u32;
-  template <u32 Size>
-  auto busRead(u32 address) -> u32;
-  template <u32 Size>
-  auto busWrite(u32 address, u32 data) -> void;
-  
-  //serialization.cpp
-  auto serialize(serializer&) -> void;
-
   struct IO {
     n1  dmaBusy;
     n1  ioBusy;
@@ -60,6 +32,45 @@ struct PI : Memory::RCP<PI> {
     n4 pageSize;
     n2 releaseDuration;
   } bsd1, bsd2;
+
+  struct DeviceEntry {
+    u32 priority;
+    PIDevice* device;
+  };
+  std::vector<DeviceEntry> devices;
+
+  s32 busDevice = -1;
+  PIDeviceTiming busTiming;
+
+  //pi.cpp
+  auto load(Node::Object) -> void;
+  auto unload() -> void;
+  auto power(bool reset) -> void;
+
+  //dma.cpp
+  auto dmaRead() -> void;
+  auto dmaWrite() -> void;
+  auto dmaFinished() -> void;
+  auto dmaDuration(bool read) -> u32;
+
+  //io.cpp
+  auto ioRead(u32 address) -> u32;
+  auto ioWrite(u32 address, u32 data) -> void;
+
+  //bus.hpp
+  auto attach(PIDevice& device, u32 priority) -> void;
+  auto detach(PIDevice& device) -> void;
+  auto bsdForAddress(u32 address) -> BSD&;
+  auto busAddress(u32 address) -> void;
+  auto busReadHalf() -> u16;
+  auto busWriteHalf(u16 data) -> void;
+  auto readWord(u32 address, Thread& thread) -> u32;
+  auto writeWord(u32 address, u32 data, Thread& thread) -> void;
+  auto writeFinished() -> void;
+  auto writeForceFinish() -> u32;
+
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
 };
 
 extern PI pi;

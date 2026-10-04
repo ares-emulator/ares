@@ -1,9 +1,13 @@
 #pragma once
 
 #include <ares/ares.hpp>
+#include <array>
 #include <vector>
 
 #include <component/processor/mos6502/mos6502.hpp>
+#include <component/processor/arm7tdmi/arm7tdmi.hpp>
+#include <component/processor/armv6m/armv6m.hpp>
+#include <component/eeprom/m24c/m24c.hpp>
 
 namespace ares::Atari2600 {
   #include <ares/inline.hpp>
@@ -16,11 +20,15 @@ namespace ares::Atari2600 {
     static inline auto SECAM() -> bool;
   };
 
+  #include <a26/movie-cart/format.hpp>
+  #include <a26/persistent-memory.hpp>
   #include <a26/controller/controller.hpp>
   #include <a26/system/system.hpp>
+  #include <a26/elf/elf.hpp>
+  #include <a26/harmony/harmony.hpp>
   #include <a26/cartridge/cartridge.hpp>
   #include <a26/cpu/cpu.hpp>
+  #include <a26/video/video.hpp>
   #include <a26/tia/tia.hpp>
   #include <a26/riot/riot.hpp>
 }
-

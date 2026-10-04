@@ -131,6 +131,14 @@ NSTimer* applicationTimer = nullptr;
 
 namespace hiro {
 
+auto pApplication::_activateApplication() -> void {
+  @autoreleasepool {
+    // Promote to regular GUI application to gain focus when launched from a frontend
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    [NSApp activateIgnoringOtherApps:YES];
+  }
+}
+
 auto pApplication::exit() -> void {
   quit();
   ::exit(EXIT_SUCCESS);

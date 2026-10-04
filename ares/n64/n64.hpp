@@ -86,6 +86,7 @@ namespace ares::Nintendo64 {
       SI_BUS_Write,
       RTC_Tick,
       EEPROM_Write,
+      Flash_Complete,
       DD_Clock_Tick,
       DD_MECHA_Response,
       DD_BM_Request,
@@ -119,7 +120,6 @@ namespace ares::Nintendo64 {
     //Virtual devices (internal to Ares)
     ARES_DEBUGGER = NUM_RBUS_HW_DEVICES,
     ARES_JIT,
-    ARES_IPL3,
     ARES_FLASH,
 
     NUM_RBUS_DEVICES,
@@ -127,6 +127,7 @@ namespace ares::Nintendo64 {
 
   #include <n64/accuracy.hpp>
   #include <n64/memory/memory.hpp>
+  #include <n64/pi/device.hpp>
   #include <n64/system/system.hpp>
   #include <n64/cartridge/cartridge.hpp>
   #include <n64/cic/cic.hpp>
@@ -145,5 +146,6 @@ namespace ares::Nintendo64 {
   #include <n64/rsp/rsp.hpp>
   #include <n64/rdp/rdp.hpp>
   #include <n64/memory/bus.hpp>
+  #include <n64/mi/bus.hpp>
   #include <n64/pi/bus.hpp>
 }

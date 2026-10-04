@@ -2,13 +2,11 @@ struct MegaLD : Emulator {
   MegaLD();
   auto load() -> LoadResult override;
   auto load(Menu) -> void override;
-  auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto changeDiskState(const string state) -> void;
 
   u32 regionID = 0;
-  sTimer discTrayTimer;
 };
 
 MegaLD::MegaLD() {
@@ -79,7 +77,6 @@ auto MegaLD::load() -> LoadResult {
     port->connect();
   }
 
-  discTrayTimer = Timer{};
   return successful;
 }
 
@@ -108,25 +105,19 @@ auto MegaLD::load(Menu menu) -> void {
 
 auto MegaLD::changeDiskState(const string state) -> void {
   Program::Guard guard;
-  discTrayTimer->setEnabled(false);
   save();
   auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
   tray->disconnect();
 
   if(state == "No Disc") return;
 
-  discTrayTimer->onActivate([&, state] {
-    Program::Guard guard;
-    discTrayTimer->setEnabled(false);
-    auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
-    tray->allocate(state);
-    tray->connect();
-  }).setInterval(3000).setEnabled();
-}
-
-auto MegaLD::unload() -> void {
-  Emulator::unload();
-  discTrayTimer.reset();
+  // There's deliberately no delay for a disc change, as the change mechanism on the LaserActive is BIOS controlled and
+  // can only safely happen when the drive is already ejected, with a manual close step to be performed afterwards, so
+  // there's no need for a delay for the system to "detect" a disc change. Putting a delay in risks the user pressing a
+  // button to "close" the tray before the disc change has actually been actioned, which would prevent a TOC read
+  // occurring correctly with the new disc.
+  tray->allocate(state);
+  tray->connect();
 }
 
 auto MegaLD::save() -> bool {

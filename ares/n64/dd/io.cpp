@@ -1,4 +1,62 @@
-auto DD::readHalf(u32 address) -> u16 {
+auto DD::piAddress(u32 address, PIDeviceTiming timing) -> bool {
+  if(!timing.fasterThan(min)) return false;
+  asicAccess = false;
+  if(address < 0x0500'0000) return false;
+
+  if(address <= 0x0500'03ff) {
+    piView = {c2s.data, c2s.size};
+    piViewOffset = address & 0x3ff;
+    piViewWritable = true;
+    return true;
+  }
+  if(address <= 0x0500'04ff) {
+    piView = {ds.data, ds.size};
+    piViewOffset = address & 0xff;
+    piViewWritable = true;
+    return true;
+  }
+  if(address <= 0x0500'057f) {
+    asicAccess = true;
+    piViewOffset = address;
+    return true;
+  }
+  if(address <= 0x0500'05bf) {
+    piView = {ms.data, ms.size};
+    piViewOffset = address & 0x3f;
+    piViewWritable = true;
+    return true;
+  }
+  if(address <= 0x05ff'ffff) return false;
+  if(address <= 0x063f'ffff) {
+    piView = {iplrom.data, iplrom.size};
+    piViewOffset = address - 0x0600'0000;
+    piViewWritable = false;
+    return true;
+  }
+  return false;
+}
+
+auto DD::piReadHalf(PIDeviceTiming timing) -> maybe<u16> {
+  if(asicAccess) {
+    u16 data = readAsicHalf(piViewOffset);
+    debugger.io(Read, (piViewOffset & 0x7f) >> 2, data);
+    piViewOffset += 2;
+    return data;
+  }
+  return PIDeviceMemory::piReadHalf(timing);
+}
+
+auto DD::piWriteHalf(u16 data, PIDeviceTiming timing) -> void {
+  if(asicAccess) {
+    writeAsicHalf(piViewOffset, data);
+    debugger.io(Write, (piViewOffset & 0x7f) >> 2, data);
+    piViewOffset += 2;
+    return;
+  }
+  return PIDeviceMemory::piWriteHalf(data, timing);
+}
+
+auto DD::readAsicHalf(u32 address) -> u16 {
   address = (address & 0x7f) >> 1;
   n16 data = 0;
 
@@ -126,7 +184,7 @@ auto DD::readHalf(u32 address) -> u16 {
   return data;
 }
 
-auto DD::writeHalf(u32 address, u16 data_) -> void {
+auto DD::writeAsicHalf(u32 address, u16 data_) -> void {
   address = (address & 0x7f) >> 1;
   n16 data = data_;
 
@@ -241,20 +299,4 @@ auto DD::writeHalf(u32 address, u16 data_) -> void {
   //ASIC_TEST_PIN_SEL
   if(address == 36) {
   }
-}
-
-auto DD::readWord(u32 address) -> u32 {
-  address = (address & 0x7f);
-  n32 data;
-  data.bit(16,31) = readHalf(address + 0);
-  data.bit( 0,15) = readHalf(address + 2);
-  debugger.io(Read, address >> 2, data);
-  return (u32)data;
-}
-
-auto DD::writeWord(u32 address, u32 data) -> void {
-  address = (address & 0x7f);
-  writeHalf(address + 0, data >> 16);
-  writeHalf(address + 2, data & 0xffff);
-  debugger.io(Write, address >> 2, data);
 }

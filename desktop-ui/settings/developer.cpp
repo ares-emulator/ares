@@ -51,6 +51,12 @@ auto DeveloperSettings::construct() -> void {
   homebrewModeLayout.setAlignment(0.5).setPadding(12_sx, 0);
     homebrewModeHint.setText("Activate system-specific features to help homebrew developers").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  deterministicEntropy.setText("Deterministic Entropy").setChecked(settings.developer.deterministicEntropy).onToggle([&] {
+    settings.developer.deterministicEntropy = deterministicEntropy.checked();
+  });
+  deterministicEntropyLayout.setAlignment(0.5).setPadding(12_sx, 0);
+    deterministicEntropyHint.setText("Seed hardware RNG to zero for reproducible power-on state").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
   forceInterpreter.setText("Force Interpreter").setChecked(settings.developer.forceInterpreter).onToggle([&] {
     settings.developer.forceInterpreter = forceInterpreter.checked();
   });

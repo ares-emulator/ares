@@ -51,7 +51,7 @@ struct M24C {
   auto erase(u8 fill = 0xff) -> void;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
+  auto serialize(serializer&, bool memory = true) -> void;
 
   struct Line {
     auto lo()   const -> bool { return !latch && !value; }
@@ -100,6 +100,8 @@ private:
   n8   input;
   n8   output;
   n1   response;
+  n8   page[4];
+  n4   pending;
 };
 
 }

@@ -323,11 +323,12 @@ struct MCD : M68000, Thread {
     auto getFirstTrack() -> n7;
     auto getLastTrack() -> n7;
     auto getCurrentTrack() -> n7;
-    auto getCurrentSector() -> s32;
+    auto getCurrentSectorAsABA() -> s32;
     auto getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void;
     auto getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void;
     auto getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void;
     auto getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void;
+    auto abaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32;
     auto lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32;
     auto isTrackAudio(n7 track) -> bool;
     auto isDiscLoaded() -> bool;
@@ -396,15 +397,15 @@ struct MCD : M68000, Thread {
     auto latchSeekTargetFromCurrentState() -> bool;
     auto performSeekWithLatchedState() -> void;
     auto updateStopPointWithCurrentState() -> void;
-    auto zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn = false) -> s32;
-    auto lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32;
+    auto zeroBasedFrameIndexFromABA(s32 aba, bool processLeadIn = false) -> s32;
+    auto abaFromZeroBasedFrameIndex(s32 frameIndex) -> s32;
     auto VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void;
-    auto handleStopPointReached(s32 lba) -> void;
-    auto updateCurrentVideoFrameNumber(s32 lba) -> void;
+    auto handleStopPointReached(s32 aba) -> void;
+    auto updateCurrentVideoFrameNumber(s32 aba) -> void;
     auto loadCurrentVideoFrameIntoBuffer() -> void;
     auto videoFramePrefetchThread() -> void;
     auto decodeBiphaseCodeFromScanline(int lineNo) -> u32;
-    auto power(bool reset) -> void;
+    auto power(bool reset, bool gateArrayReset) -> void;
     auto scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void;
 
     //serialization.cpp

@@ -92,7 +92,8 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
   }
   if(emitSlowPath || emitStateKey.watchpointsActive() || (require64 && reservedInstruction64())
   || (store && size == Dual && (partialLeft || partialRight) && system.homebrewMode)
-  || (floating && !emitStateKey.coprocessor1Enabled())) {
+  || (floating && !emitStateKey.coprocessor1Enabled())
+  || !emitStateKey.rdramMapIdentity()) {
     return fallback();
   }
 
@@ -121,10 +122,11 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
   add64(reg(0), mem(Rs), imm(i16));
   sljit_jump* addressMismatch = nullptr;
   sljit_jump* addressOutOfRange = nullptr;
+  const u32 rdramLimit = rdram.ram.size - 1;
   if(!rangeKnown) {
     if(extendedAddressing) {
       sub64(reg(1), reg(0), imm((sljit_sw)0xffff'ffff'8000'0000ull));
-      cmp64(reg(1), imm(0x007f'ffff), set_ugt);
+      cmp64(reg(1), imm(rdramLimit), set_ugt);
     } else {
       mov64_s32(reg(1), reg(0));
       cmp64(reg(0), reg(1), set_z);
@@ -132,7 +134,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
     addressMismatch = jump(extendedAddressing ? flag_ugt : flag_nz);
     if(!extendedAddressing) {
       sub32(reg(1), reg(0), imm((sljit_sw)0x8000'0000u));
-      cmp32(reg(1), imm(0x007f'ffff), set_ugt);
+      cmp32(reg(1), imm(rdramLimit), set_ugt);
     }
     addressOutOfRange = !extendedAddressing ? jump(flag_ugt) : nullptr;
   }
@@ -358,7 +360,6 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
         mov32_u16(mem(reg(2), DcacheLineDirtyOff), imm(1));
       }
     }
-    if(storeConditional && (size == Word || size == Dual)) mov32_u8(SccLlbit, imm(0));
   } else if(floating) {
     and32(reg(3), reg(0), imm(size == Dual ? 0x08 : 0x0c));
     add64(reg(3), reg(2), reg(3));
@@ -2129,8 +2130,13 @@ auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> EmitExecute
     return EmitExecuteResult::MayFault;
   }
 
+  //CFC0
+  case 0x02: {
+    return EmitExecuteResult::Linear;
+  }
+
   //INVALID
-  case range2(0x02, 0x03): {
+  case 0x03: {
     setupCallf();
     callf(&CPU::INVALID);
     return EmitExecuteResult::MayFault;
@@ -2150,8 +2156,25 @@ auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> EmitExecute
     return EmitExecuteResult::MayFault;
   }
 
+  //CTC0
+  case 0x06: {
+    return EmitExecuteResult::Linear;
+  }
+
   //INVALID
-  case range10(0x06, 0x0f): {
+  case 0x07: {
+    setupCallf();
+    callf(&CPU::INVALID);
+    return EmitExecuteResult::MayFault;
+  }
+
+  //BC0
+  case 0x08: {
+    return EmitExecuteResult::Linear;
+  }
+
+  //INVALID
+  case range7(0x09, 0x0f): {
     setupCallf();
     callf(&CPU::INVALID);
     return EmitExecuteResult::MayFault;
@@ -2186,6 +2209,13 @@ auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> EmitExecute
   case 0x08: {
     setupCallf();
     callf(&CPU::TLBP);
+    return EmitExecuteResult::MayFault;
+  }
+
+  //RFE
+  case 0x10: {
+    setupCallf();
+    callf(&CPU::INVALID);
     return EmitExecuteResult::MayFault;
   }
 

@@ -59,6 +59,8 @@ struct Settings : Markup::Node {
   struct Input {
     string driver;
     string defocus = "Pause";
+    string digitalToAnalog = "Immediate";
+    u32 digitalToAnalogTime = 500;
   } input;
 
   struct Boot {
@@ -105,6 +107,7 @@ struct Settings : Markup::Node {
     bool debugServerEnabled = false; // if enabled, server starts with ares
     bool debugServerUseIPv4 = false; // forces IPv4 over IPv6
     bool homebrewMode = false;
+    bool deterministicEntropy = false;
     bool forceInterpreter = false;
   } developer;
 
@@ -217,6 +220,7 @@ struct AudioSettings : VerticalLayout {
 
 struct InputSettings : VerticalLayout {
   auto construct() -> void;
+  auto refreshDigitalToAnalog() -> void;
   auto systemChange() -> void;
   auto portChange() -> void;
   auto deviceChange() -> void;
@@ -236,6 +240,16 @@ struct InputSettings : VerticalLayout {
     RadioLabel inputDefocusBlock{&inputDefocusLayout, Size{0, 0}};
     RadioLabel inputDefocusAllow{&inputDefocusLayout, Size{0, 0}};
     Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
+  HorizontalLayout digitalToAnalogLayout{this, Size{~0, 0}};
+    Label digitalToAnalogLabel{&digitalToAnalogLayout, Size{0, 0}};
+    RadioLabel digitalToAnalogImmediate{&digitalToAnalogLayout, Size{0, 0}};
+    RadioLabel digitalToAnalogGradualReturn{&digitalToAnalogLayout, Size{0, 0}};
+    RadioLabel digitalToAnalogGradualHold{&digitalToAnalogLayout, Size{0, 0}};
+    Group digitalToAnalogGroup{&digitalToAnalogImmediate, &digitalToAnalogGradualReturn, &digitalToAnalogGradualHold};
+  HorizontalLayout digitalToAnalogTimeLayout{this, Size{~0, 0}};
+    Label digitalToAnalogTimeLabel{&digitalToAnalogTimeLayout, Size{0, 0}};
+    HorizontalSlider digitalToAnalogTimeSlider{&digitalToAnalogTimeLayout, Size{~0, 0}};
+    Label digitalToAnalogTimeValue{&digitalToAnalogTimeLayout, Size{60, 0}};
   HorizontalLayout indexLayout{this, Size{~0, 0}};
     ComboButton systemList{&indexLayout, Size{~0, 0}};
     ComboButton portList{&indexLayout, Size{~0, 0}};
@@ -447,6 +461,9 @@ struct DeveloperSettings : VerticalLayout {
   HorizontalLayout homebrewModeLayout{this, Size{~0, 0}, 5};
     CheckLabel homebrewMode{&homebrewModeLayout, Size{0, 0}, 5};
     Label homebrewModeHint{&homebrewModeLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout deterministicEntropyLayout{this, Size{~0, 0}, 5};
+    CheckLabel deterministicEntropy{&deterministicEntropyLayout, Size{0, 0}, 5};
+    Label deterministicEntropyHint{&deterministicEntropyLayout, Size{~0, layoutVertSize}};
   HorizontalLayout forceInterpreterLayout{this, Size{~0, 0}, 5};
     CheckLabel forceInterpreter{&forceInterpreterLayout, Size{0, 0}, 5};
     Label forceInterpreterHint{&forceInterpreterLayout, Size{0, layoutVertSize}};

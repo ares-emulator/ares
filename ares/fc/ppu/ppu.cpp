@@ -3,15 +3,17 @@
 namespace ares::Famicom {
 
 PPU ppu;
+#include "model.cpp"
 #include "memory.cpp"
 #include "render.cpp"
-#include "color.cpp"
 #include "debugger.cpp"
 #include "sprite.cpp"
 #include "scroll.cpp"
 #include "serialization.cpp"
 
 auto PPU::load(Node::Object parent) -> void {
+  model = createBaseModel();
+
   ciram.allocate(2048);
   cgram.allocate(32);
   oam.allocate(256);
@@ -23,7 +25,7 @@ auto PPU::load(Node::Object parent) -> void {
   screen->colors(1 << 9, std::bind_front(&PPU::color, this));
   screen->setSize(283, displayHeight());
   screen->setScale(1.0, 1.0);
-  (Region::PAL() || Region::Dendy()) ? screen->setAspect(55.0, 43.0) : screen->setAspect(8.0, 7.0);
+  screen->setAspect(model->raster.aspectX, model->raster.aspectY);
   screen->refreshRateHint(system.frequency() / rate(), 341, vlines());
 
   debugger.load(node);
@@ -39,6 +41,7 @@ auto PPU::unload() -> void {
   cgram.reset();
   oam.reset();
   soam.reset();
+  model.reset();
 }
 
 auto PPU::main() -> void {
@@ -55,7 +58,7 @@ auto PPU::step(u32 clocks) -> void {
     if (enable() && io.ly == L - 1)
       cyclePrepareSpriteEvaluation();
 
-    if (enable() && (io.ly < 240 || (Region::PAL() && io.ly >= 264 && io.ly <= L - 2)))
+    if(enable() && model->raster.evaluatesSprites(io.ly))
       cycleSpriteEvaluation();
 
     if (enable() && (io.ly < 240 || io.ly == L - 1))
@@ -97,18 +100,9 @@ auto PPU::frame() -> void {
     screen->setSize(283, displayHeight());
     screen->setViewport(0, 0, 283, displayHeight());
   } else {
-    int x = 16;
-    int y = 0;
-    int width = 283 - 27;
-    int height = displayHeight() - 2;
-
-    if(Region::PAL()) {
-      x += 2;
-      height -= 46;
-    }
-
-    screen->setSize(width, height);
-    screen->setViewport(x, y, width, height);
+    auto& raster = model->raster;
+    screen->setSize(raster.viewportWidth, raster.viewportHeight);
+    screen->setViewport(raster.viewportX, raster.viewportY, raster.viewportWidth, raster.viewportHeight);
   }
 
   screen->frame();
@@ -116,6 +110,13 @@ auto PPU::frame() -> void {
 }
 
 auto PPU::power(bool reset) -> void {
+  if(!reset && system.model() == System::Model::VsUniSystem) {
+    auto candidate = createVsModel();
+    if(!candidate) return;
+    model = std::move(candidate);
+    screen->resetPalette();
+  }
+
   Thread::create(system.frequency(), std::bind_front(&PPU::main, this));
   screen->power();
 

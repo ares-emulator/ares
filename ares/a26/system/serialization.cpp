@@ -1,4 +1,4 @@
-static const string SerializerVersion = "v140";
+static const string SerializerVersion = "v141";
 
 auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
@@ -42,6 +42,7 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cartridge);
   s(cpu);
   s(tia);
+  s(video);
   s(riot);
   s(controllerPort1);
   s(controllerPort2);

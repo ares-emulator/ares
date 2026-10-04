@@ -10,20 +10,61 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setType("Controller");
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
-  port->setDisconnect([&] { device.reset(); });
-  port->setSupported({"Gamepad"});
+  port->setDisconnect([&] {
+    save();
+    device.reset();
+  });
+  std::vector<string> supported = {
+    "Gamepad", "Paddles", "Driving", "Keyboard",
+    "Booster Grip", "Sega Genesis", "Joy 2B+",
+    "CX-22 Trak-Ball", "CX-80 Trak-Ball", "Atari Mouse", "Amiga Mouse",
+    "XG-1 Light Gun", "MindLink", "SaveKey", "AtariVox", "QuadTari",
+  };
+  if(name == "Controller Port 2") supported.push_back("KidVid Voice Module");
+  port->setSupported(supported);
+  output = 0x0f;
 }
 
 auto ControllerPort::unload() -> void {
   device = {};
   port = {};
+  output = 0x0f;
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Gamepad") device = std::make_unique<Gamepad>(port);
-  if(device) return device->node;
+  auto role = this == &controllerPort2 ? Role::ConsoleRight : Role::ConsoleLeft;
+  device = create(port, name, role);
+  if(device) {
+    device->write(output);
+    return device->node;
+  }
+  return {};
+}
+
+auto ControllerPort::create(Node::Port port, string name, Role role) -> std::unique_ptr<Controller> {
+  auto quadTariChild = role == Role::QuadTariChild;
+  if(name == "Gamepad")             return std::make_unique<Gamepad>    (port);
+  if(name == "Paddles")             return std::make_unique<Paddles>    (port, !quadTariChild);
+  if(name == "Driving")             return std::make_unique<Driving>    (port);
+  if(name == "Keyboard")            return std::make_unique<Keyboard>   (port);
+  if(name == "Booster Grip")        return std::make_unique<BoosterGrip>(port);
+  if(name == "Sega Genesis")        return std::make_unique<SegaGenesis>(port);
+  if(name == "Joy 2B+")             return std::make_unique<Joy2BPlus>  (port);
+  if(name == "CX-22 Trak-Ball")     return std::make_unique<TrakBall>   (port, name);
+  if(name == "CX-80 Trak-Ball")     return std::make_unique<TrakBall>   (port, name);
+  if(name == "Atari Mouse")         return std::make_unique<AtariMouse> (port);
+  if(name == "Amiga Mouse")         return std::make_unique<AmigaMouse> (port);
+  if(name == "XG-1 Light Gun")      return std::make_unique<XG1LightGun>(port);
+  if(name == "MindLink")            return std::make_unique<MindLink>   (port);
+  if(name == "SaveKey")             return std::make_unique<SaveKey>    (port);
+  if(name == "AtariVox")            return std::make_unique<AtariVox>   (port);
+  if(name == "KidVid Voice Module")
+    if(role == Role::ConsoleRight)  return std::make_unique<KidVid>     (port);
+  if(name == "QuadTari")
+    if(!quadTariChild)              return std::make_unique<QuadTari>   (port);
   return {};
 }
 
 auto ControllerPort::serialize(serializer& s) -> void {
+  if(device) device->serialize(s);
 }

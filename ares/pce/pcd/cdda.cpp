@@ -95,7 +95,7 @@ auto PCD::CDDA::clockSample() -> void {
     // Retrieve the next analog audio sample
     i16 analogSampleLeft = 0;
     i16 analogSampleRight = 0;
-    auto analogAudioSamplePos = (drive->lba * 2352) + sample.offset + (pcd.ld.analogAudioLeadingAudioSamples * 4);
+    auto analogAudioSamplePos = (CD::LBAtoABA(drive->lba) * 2352) + sample.offset + (pcd.ld.analogAudioLeadingAudioSamples * 4);
     if ((analogAudioSamplePos + 3) < pcd.ld.analogAudioRawDataView.size()) {
       analogSampleLeft = (i16)((u16)pcd.ld.analogAudioRawDataView[analogAudioSamplePos + 0] | (u16)(pcd.ld.analogAudioRawDataView[analogAudioSamplePos + 1] << 8));
       analogSampleRight = (i16)((u16)pcd.ld.analogAudioRawDataView[analogAudioSamplePos + 2] | (u16)(pcd.ld.analogAudioRawDataView[analogAudioSamplePos + 3] << 8));

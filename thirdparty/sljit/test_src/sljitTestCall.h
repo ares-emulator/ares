@@ -34,13 +34,18 @@ static sljit_sw func4(sljit_sw a, sljit_sw b, sljit_sw c, sljit_sw d)
 	return func(a, b, c) + d;
 }
 
+static sljit_sw func2(sljit_sw a, sljit_sw b)
+{
+	return a + b + 3;
+}
+
 static void test_call1(void)
 {
 	/* Test function call. */
 	executable_code code;
 	struct sljit_compiler* compiler = sljit_create_compiler(NULL);
 	struct sljit_jump* jump = NULL;
-	sljit_sw buf[9];
+	sljit_sw buf[10];
 	sljit_sw res;
 
 	if (verbose)
@@ -56,6 +61,7 @@ static void test_call1(void)
 	buf[6] = 0;
 	buf[7] = 0;
 	buf[8] = SLJIT_FUNC_ADDR(func);
+	buf[9] = 0;
 
 	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, P), 4, 2, 0);
 
@@ -127,6 +133,13 @@ static void test_call1(void)
 	sljit_emit_icall(compiler, SLJIT_CALL, SLJIT_ARGS3(W, W, W, W), SLJIT_MEM1(SLJIT_S0), 8 * sizeof(sljit_sw));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_S0), 8 * sizeof(sljit_sw), SLJIT_RETURN_REG, 0);
 
+	/* buf[9] */
+	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 5);
+	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, 8);
+	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R2, 0, SLJIT_IMM, SLJIT_FUNC_ADDR(func2));
+	sljit_emit_icall(compiler, SLJIT_CALL, SLJIT_ARGS2(W, W, W), SLJIT_R2, 0);
+	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_S0), 9 * sizeof(sljit_sw), SLJIT_RETURN_REG, 0);
+
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
 	code.code = sljit_generate_code(compiler, 0, NULL);
@@ -137,7 +150,7 @@ static void test_call1(void)
 	res = code.func1((sljit_sw)&buf);
 	sljit_free_code(code.code, NULL);
 
-	FAILED(res != -15, "test_call1 case 1 failed\n");
+	FAILED(res != 16, "test_call1 case 1 failed\n");
 	FAILED(buf[0] != 14, "test_call1 case 2 failed\n");
 	FAILED(buf[1] != -8, "test_call1 case 3 failed\n");
 	FAILED(buf[2] != SLJIT_FUNC_ADDR(func) + 42, "test_call1 case 4 failed\n");
@@ -147,6 +160,7 @@ static void test_call1(void)
 	FAILED(buf[6] != 11, "test_call1 case 8 failed\n");
 	FAILED(buf[7] != 5, "test_call1 case 9 failed\n");
 	FAILED(buf[8] != -15, "test_call1 case 10 failed\n");
+	FAILED(buf[9] != 16, "test_call1 case 11 failed\n");
 
 	successful_tests++;
 }
@@ -2075,7 +2089,7 @@ static void test_call13(void)
 	sljit_set_label(jump, sljit_emit_label(compiler));
 
 	/* Forward label. */
-	jump = sljit_emit_mov_addr(compiler,  SLJIT_R0, 0);
+	jump = sljit_emit_op_addr(compiler, SLJIT_MOV_ADDR, SLJIT_R0, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 1);
 	sljit_set_label(jump, sljit_emit_label(compiler));
 
@@ -2090,5 +2104,6 @@ static void test_call13(void)
 	FAILED(i != 65536, "test_call13 case 2 failed\n");
 
 	sljit_free_code(code.code, NULL);
+	sljit_free_code(simple_func, NULL);
 	successful_tests++;
 }

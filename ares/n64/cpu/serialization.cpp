@@ -70,6 +70,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.badVirtualAddress);
   s(scc.count);
   s(scc.compare);
+  s(countClock);
   s(scc.status.interruptEnable);
   s(scc.status.exceptionLevel);
   s(scc.status.errorLevel);
@@ -113,8 +114,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.xcontext.pageTableEntryBase);
   s(scc.parityError.diagnostic);
   s(scc.cacheError.unused);
-  s(scc.tagLo.primaryCacheState);
-  s(scc.tagLo.physicalAddress);
+  s(scc.tagLo.value);
   s(scc.epcError);
   s(scc.latch);
   s(scc.nmiPending);

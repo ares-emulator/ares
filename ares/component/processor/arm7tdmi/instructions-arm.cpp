@@ -190,8 +190,8 @@ auto ARM7TDMI::armInstructionMoveMultiple
     if(!list.bit(m)) continue;
     if(mode == 1) r(m) = read(Word, rn);
     if(mode == 0) {
-      write(Word, rn, r(m) + (!(n == 15 && writeback) && m == 15 ? 4 : 0));
-      if(writeback) r(n) = rnEnd;  //writeback occurs after first access
+      write(Word, rn, r(m) + (m == 15 ? 4 : 0));
+      if(writeback && n != 15) r(n) = rnEnd;  //writeback occurs after first access, but incrementing r15 supersedes this
     }
     rn += 4;
   }

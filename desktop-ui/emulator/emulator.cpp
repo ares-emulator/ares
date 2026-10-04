@@ -72,6 +72,16 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
       errorText = { "There was an error trying to parse the selected ROM. \n",
                     "Your ROM may be corrupt or contain a bad dump. " };
       break;
+    case unsupportedMedia:
+      errorText = { "This title was recognized, but its hardware configuration \n",
+                    "is not currently supported by ares. " };
+      break;
+    case wrongMediaType:
+      errorText = { "The selected ROM media type is ", result.mediaType, " \n",
+                    "which is not supported by this system. Please select \n",
+                    "a compatible ROM for this system, or use the correct \n",
+                    "system to load this ROM. " };
+      break;
     case couldNotParseManifest:
       errorText = { "An error occurred while parsing the database file. You \n",
                     "may need to reinstall ares. " };
@@ -97,7 +107,7 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
       errorText = "An internal error occurred when initializing the emulator core. ";
       break;
   }
-  
+
   if(result.info) {
     errorText = { errorText, result.info };
   }
@@ -292,6 +302,11 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
           auto value = inputNode.effectiveMapping().value();
           return axis->setValue(value);
         }
+        if(auto trigger = input->cast<ares::Node::Input::Trigger>()) {
+          //normalise the full span of a host axis onto the trigger's own range
+          auto value = inputNode.effectiveMapping().value();
+          return trigger->setValue((value + 32768) >> 1);
+        }
         if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
           if(auto target = dynamic_cast<InputRumble*>(&inputNode.effectiveMapping())) {
             return target->rumble(rumble->strongValue(), rumble->weakValue());
@@ -301,7 +316,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
       for(auto& inputPair : inputDevice.pairs) {
         if(inputPair.name != input->name()) continue;
         if(auto axis = input->cast<ares::Node::Input::Axis>()) {
-          auto value = inputPair.effectiveMappingHi().value() - inputPair.effectiveMappingLo().value();
+          auto value = inputPair.value();
           return axis->setValue(value);
         }
       }

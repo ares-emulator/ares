@@ -43,6 +43,7 @@ auto Cartridge::connect() -> void {
   if(auto fp = pak->read("save.flash")) {
     flash.allocate(fp->size());
     flash.load(fp);
+    flash.setModel(pak->attribute("flash/model"));
   }
 
   rtc.load();
@@ -54,6 +55,11 @@ auto Cartridge::connect() -> void {
     isviewer.tracer->setTerminal(true);
   }
 
+  pi.attach(romDevice, 0);
+  if(ram) pi.attach(ramDevice, 1);
+  if(flash) pi.attach(flash, 1);
+  if(isviewer.enabled()) pi.attach(isviewer, 1);
+
   debugger.load(node);
 
   power(false);
@@ -62,6 +68,10 @@ auto Cartridge::connect() -> void {
 auto Cartridge::disconnect() -> void {
   if(!node) return;
   save();
+  pi.detach(romDevice);
+  pi.detach(ramDevice);
+  pi.detach(flash);
+  pi.detach(isviewer);
   debugger.unload(node);
   rom.reset();
   ram.reset();
@@ -91,10 +101,7 @@ auto Cartridge::save() -> void {
 }
 
 auto Cartridge::power(bool reset) -> void {
-  flash.mode = Flash::Mode::Idle;
-  flash.status = 0;
-  flash.source = 0;
-  flash.offset = 0;
+  flash.power(reset);
   isviewer.ram.fill(0);
   rtc.power(reset);
 }

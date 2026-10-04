@@ -48,8 +48,10 @@ auto PCD::Drive::read() -> bool {
 
 //print("* ", reading() ? "data" : "cdda", " read ", lba, " to ", end - 1, "\n");
 
-  pcd.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lba)));
-  pcd.fd->read(sector, 2448);
+  if (pcd.fd) {
+    pcd.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lba)));
+    pcd.fd->read(sector, 2448);
+  }
 
   // Calculate the sector advance amount based on the MegaLD playback modes, if applicable. Note that if a SCSI read
   // command has been issued, the playback modes are ignored, and sectors are advanced linearly until the read is
@@ -154,10 +156,10 @@ auto PCD::Drive::read() -> bool {
     }
 
     if (Model::LaserActive()) {
-      pcd.ld.updateCurrentVideoFrameNumber(lba);
+      pcd.ld.updateCurrentVideoFrameNumber(CD::LBAtoABA(lba));
 
-      if (stopPointEnabled && (lba == targetStopPoint)) {
-        pcd.ld.handleStopPointReached(lba);
+      if (stopPointEnabled && (CD::LBAtoABA(lba) == targetStopPoint)) {
+        pcd.ld.handleStopPointReached(CD::LBAtoABA(lba));
       }
     }
     return true;
@@ -249,8 +251,8 @@ auto PCD::Drive::getCurrentTrack() -> n7 {
   return track;
 }
 
-auto PCD::Drive::getCurrentSector() -> s32 {
-  return lba;
+auto PCD::Drive::getCurrentSectorAsABA() -> s32 {
+  return CD::LBAtoABA(lba);
 }
 
 auto PCD::Drive::getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void {
@@ -282,9 +284,13 @@ auto PCD::Drive::getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8
   flags = session->tracks[track].control;
 }
 
-auto PCD::Drive::lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
+auto PCD::Drive::abaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
   s32 aba = ((((((s32)hour * 60) + (s32)minute) * 60) + (s32)second) * 75) + (s32)frame;
-  return aba - CD::Track1Pregap;
+  return aba;
+}
+
+auto PCD::Drive::lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
+  return CD::ABAtoLBA(abaFromTime(hour, minute, second, frame));
 }
 
 auto PCD::Drive::isTrackAudio(n7 track) -> bool {

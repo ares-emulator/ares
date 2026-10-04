@@ -65,9 +65,26 @@ auto CPU::forceSynchronize() -> void {
   jitClockTarget = 0;
 }
 
+auto CPU::stepCount(u64 clocks) -> void {
+  if(!clocks) return;
+  u64 remaining = (u64)(scc.compare - scc.count) & CountMask;
+  if(remaining && clocks >= remaining) setInterruptPending(Interrupt::Timer, 1);
+  scc.count += clocks;
+  profile.cpuCycles += clocks;
+  if(scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
+}
+
+auto CPU::flushCount() -> void {
+  auto clocks = pendingCount();
+  countClock += clocks << 1;
+  stepCount(clocks);
+}
+
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock;
+  auto counted = countClock;
   Thread::clock = 0;
+  countClock = 0;
   jitClockTarget = 0;
 
    vi.clock -= clocks;
@@ -91,6 +108,7 @@ auto CPU::synchronize() -> void {
     case Queue::SI_BUS_Write:  return si.writeFinished();
     case Queue::RTC_Tick:      return cartridge.rtc.tick();
     case Queue::EEPROM_Write:  return cartridge.eepromFinish();
+    case Queue::Flash_Complete: return cartridge.flash.finish();
     case Queue::DD_Clock_Tick:  return dd.rtc.tickClock();
     case Queue::DD_MECHA_Response:  return dd.mechaResponse();
     case Queue::DD_BM_Request:  return dd.bmRequest();
@@ -99,13 +117,7 @@ auto CPU::synchronize() -> void {
     }
   });
 
-  clocks >>= 1;
-  if(scc.count < scc.compare && scc.count + clocks >= scc.compare) {
-    setInterruptPending(Interrupt::Timer, 1);
-  }
-  scc.count += clocks;
-  profile.cpuCycles += clocks;
-  if (scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
+  stepCount((clocks - counted) >> 1);
 }
 
 auto CPU::setInterruptPending(u32 bit, bool value) -> void {
@@ -150,7 +162,7 @@ auto CPU::instruction() -> bool {
     auto block = recompiler.block(ipu.pc, access.paddr);
     if(block) {
       if(Thread::clock >= jitClockTarget) {
-        s64 timerDelta = (s64)scc.compare - (s64)scc.count;
+        s64 timerDelta = (s64)scc.compare - (s64)effectiveCount();
         if(timerDelta < 0) timerDelta = 0;
         s64 queueDelta = queue.timeToNextEvent();
         if(queueDelta < 0) queueDelta = 0;
@@ -174,6 +186,10 @@ auto CPU::instruction() -> bool {
 
 auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
   debugger.instruction(address, instruction);
+}
+
+auto CPU::icacheFillLine(u64 vaddr, u32 paddr) -> void {
+  icache.line(vaddr).fill(paddr, *this);
 }
 
 template<bool Recompiled>

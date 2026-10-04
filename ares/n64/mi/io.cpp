@@ -3,9 +3,9 @@ auto MI::readWord(u32 address, Thread& thread) -> u32 {
   n32 data;
 
   if(address == 0) {
-    //MI_INIT_MODE
-    data.bit(0,6) = io.initializeLength;
-    data.bit(7)   = io.initializeMode;
+    //MI_MODE
+    data.bit(0,6) = io.repeatLength;
+    data.bit(7)   = io.repeatMode;
     data.bit(8)   = io.ebusTestMode;
     data.bit(9)   = io.rdramRegisterSelect;
   }
@@ -47,17 +47,15 @@ auto MI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
   n32 data = data_;
 
   if(address == 0) {
-    //MI_INIT_MODE
-    io.initializeLength = data.bit(0,6);
-    if(data.bit( 7)) io.initializeMode = 0;
-    if(data.bit( 8)) io.initializeMode = 1;
+    //MI_MODE
+    io.repeatLength = data.bit(0,6);
+    if(data.bit( 7)) io.repeatMode = 0;
+    if(data.bit( 8)) io.repeatMode = 1;
     if(data.bit( 9)) io.ebusTestMode = 0;
     if(data.bit(10)) io.ebusTestMode = 1;
     if(data.bit(11)) mi.lower(MI::IRQ::DP);
     if(data.bit(12)) io.rdramRegisterSelect = 0;
     if(data.bit(13)) io.rdramRegisterSelect = 1;
-
-    if(io.ebusTestMode  ) debug(unimplemented, "[MI::writeWord] ebusTestMode=1");
   }
 
   if(address == 1) {

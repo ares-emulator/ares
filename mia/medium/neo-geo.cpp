@@ -5,7 +5,7 @@
 struct NeoGeo : Mame {
   auto name() -> string override { return "Neo Geo"; }
   auto extensions() -> std::vector<string> override { return {"ng"}; }
-  auto read(string location, string match) -> std::vector<u8>;
+  auto read(string location, string match) -> AssemblyResult;
   auto load(string location) -> LoadResult override;
   auto board() -> string;
   auto save(string location) -> bool override;
@@ -36,7 +36,7 @@ struct NeoGeo : Mame {
   } cmc;
 };
 
-auto NeoGeo::read(string location, string match) -> std::vector<u8> {
+auto NeoGeo::read(string location, string match) -> AssemblyResult {
   // we expect mame style .zip rom images
   if(!location.iendsWith(".zip")) {}
 
@@ -47,11 +47,14 @@ auto NeoGeo::read(string location, string match) -> std::vector<u8> {
     if(match == "voice-a.rom")   return loadRoms(location, info, "ymsnd-adpcma");
     if(match == "voice-b.rom")   return loadRoms(location, info, "ymsnd-adpcmb");
     if(match == "music.rom") {
-      // music rom can be plaintext (audiocpu) or encrypted (audiocrypt)
-      // we must load both types
-      auto music = loadRoms(location, info, "audiocpu");
-      if(music.size() == 0) return loadRoms(location, info, "audiocrypt");
-      return music;
+      // Music ROMs are stored either as plaintext or encrypted data.
+      // Select the declared region so a broken plaintext set is not mistaken
+      // for an encrypted set.
+      if(info["game/audiocpu"]) {
+        auto music = loadRoms(location, info, "audiocpu");
+        if(!music || !music.data.empty()) return music;
+      }
+      return loadRoms(location, info, "audiocrypt");
     }
   }
 
@@ -70,16 +73,27 @@ auto NeoGeo::load(string location) -> LoadResult {
   if(!foundDatabase) return { databaseNotFound, "Neo Geo.bml" };
   this->info = BML::unserialize(manifestDatabaseArcade(Medium::name(location)));
 
-  if(file::exists(location)) {
-    programROM   = NeoGeo::read(location, "program.rom");
-    musicROM     = NeoGeo::read(location, "music.rom");
-    characterROM = NeoGeo::read(location, "character.rom");
-    staticROM    = NeoGeo::read(location, "static.rom");
-    voiceAROM    = NeoGeo::read(location, "voice-a.rom");
-    voiceBROM    = NeoGeo::read(location, "voice-b.rom");
-  }
-  
+  auto programResult   = NeoGeo::read(location, "program.rom");
+  auto musicResult     = NeoGeo::read(location, "music.rom");
+  auto characterResult = NeoGeo::read(location, "character.rom");
+  auto staticResult    = NeoGeo::read(location, "static.rom");
+  auto voiceAResult    = NeoGeo::read(location, "voice-a.rom");
+  auto voiceBResult    = NeoGeo::read(location, "voice-b.rom");
+
   string invalidRomInfo = "Ensure your ROM is in a MAME-compatible .zip format.";
+
+  if(!programResult)   return {invalidROM, assemblyError(programResult)};
+  if(!musicResult)     return {invalidROM, assemblyError(musicResult)};
+  if(!characterResult) return {invalidROM, assemblyError(characterResult)};
+  if(!staticResult)    return {invalidROM, assemblyError(staticResult)};
+  if(!voiceAResult)    return {invalidROM, assemblyError(voiceAResult)};
+
+  programROM   = std::move(programResult.data);
+  musicROM     = std::move(musicResult.data);
+  characterROM = std::move(characterResult.data);
+  staticROM    = std::move(staticResult.data);
+  voiceAROM    = std::move(voiceAResult.data);
+  if(voiceBResult) voiceBROM = std::move(voiceBResult.data);
 
   if(programROM.empty()  ) return { invalidROM, invalidRomInfo };
   if(musicROM.empty()    ) return { invalidROM, invalidRomInfo };

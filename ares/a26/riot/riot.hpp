@@ -10,8 +10,8 @@ struct RIOT : Thread {
   auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
-  auto clockTimer() -> void;
   auto reloadTimer(n8 data, n16 interval, n1 interruptEnable) -> void;
+  auto clockTimer() -> void;
 
   //io.cpp
   auto readRam(n8 address) -> n8;
@@ -20,8 +20,12 @@ struct RIOT : Thread {
   auto writeIo(n8 address, n8 data) -> void;
 
   auto readPortA() -> n8;
-  auto readPortB() -> n8;
   auto writePortA(n8 data) -> void;
+  auto writeDirectionA(n8 data) -> void;
+  auto drivePortA() -> void;
+  auto samplePA7(n1 level) -> void;
+
+  auto readPortB() -> n8;
   auto writePortB(n8 data) -> void;
 
   //serialization.cpp
@@ -33,8 +37,6 @@ struct RIOT : Thread {
     n16 prescaler;
     n1  interruptEnable;
     n1  interruptFlag;
-    n1  underflow;
-    n1  holdZero;
     n1  justWrapped;
   } timer;
 
@@ -42,6 +44,13 @@ struct RIOT : Thread {
     n8 data;
     n8 direction;
   } port[2];
+
+  struct {
+    n1 positiveEdge;
+    n1 interruptEnable;
+    n1 interruptFlag;
+    n1 level;
+  } pa7;
 
   n1 leftDifficulty;
   n1 leftDifficultyLatch;

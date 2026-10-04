@@ -1,5 +1,6 @@
 struct Atari2600 : Emulator {
   Atari2600();
+  auto load(Menu) -> void override;
   auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
@@ -31,10 +32,142 @@ Atari2600::Atari2600() {
     device.digital("Left",       virtualPorts[id].pad.left);
     device.digital("Right",      virtualPorts[id].pad.right);
     device.digital("Fire",       virtualPorts[id].pad.south);
+    port.append(device); }
 
+  { InputDevice device{"Booster Grip"};
+    device.digital("Up",      virtualPorts[id].pad.up);
+    device.digital("Down",    virtualPorts[id].pad.down);
+    device.digital("Left",    virtualPorts[id].pad.left);
+    device.digital("Right",   virtualPorts[id].pad.right);
+    device.digital("Fire",    virtualPorts[id].pad.south);
+    device.digital("Booster", virtualPorts[id].pad.east);
+    device.digital("Trigger", virtualPorts[id].pad.west);
+    port.append(device); }
+
+  { InputDevice device{"Sega Genesis"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("Fire",  virtualPorts[id].pad.south);
+    device.digital("C",     virtualPorts[id].pad.east);
+    port.append(device); }
+
+  { InputDevice device{"Joy 2B+"};
+    device.digital("Up",       virtualPorts[id].pad.up);
+    device.digital("Down",     virtualPorts[id].pad.down);
+    device.digital("Left",     virtualPorts[id].pad.left);
+    device.digital("Right",    virtualPorts[id].pad.right);
+    device.digital("Fire",     virtualPorts[id].pad.south);
+    device.digital("C",        virtualPorts[id].pad.east);
+    device.digital("Button 3", virtualPorts[id].pad.west);
+    port.append(device); }
+
+  { InputDevice device{"Paddles"};
+    device.analog ("Paddle 1 Left",  virtualPorts[id].pad.lstick_left);
+    device.analog ("Paddle 1 Right", virtualPorts[id].pad.lstick_right);
+    device.analog ("Paddle 2 Left",  virtualPorts[id].pad.rstick_left);
+    device.analog ("Paddle 2 Right", virtualPorts[id].pad.rstick_right);
+    device.digital("Paddle 1 Fire",  virtualPorts[id].pad.south);
+    device.digital("Paddle 2 Fire",  virtualPorts[id].pad.east);
+    device.analog ("Paddle 1",       virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    device.analog ("Paddle 2",       virtualPorts[id].pad.rstick_left, virtualPorts[id].pad.rstick_right);
+    port.append(device); }
+
+  { InputDevice device{"Driving"};
+    device.analog ("Wheel Left",  virtualPorts[id].pad.lstick_left);
+    device.analog ("Wheel Right", virtualPorts[id].pad.lstick_right);
+    device.digital("Fire",        virtualPorts[id].pad.south);
+    device.analog ("Wheel",       virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    port.append(device); }
+
+  for(auto name : {"CX-22 Trak-Ball", "CX-80 Trak-Ball", "Atari Mouse", "Amiga Mouse"}) {
+    InputDevice device{name};
+    device.relative("X", virtualPorts[id].mouse.x);
+    device.relative("Y", virtualPorts[id].mouse.y);
+    device.digital ("Fire", virtualPorts[id].mouse.left);
+    port.append(device);
+  }
+
+  { InputDevice device{"XG-1 Light Gun"};
+    device.relative("X",       virtualPorts[id].mouse.x);
+    device.relative("Y",       virtualPorts[id].mouse.y);
+    device.digital ("Trigger", virtualPorts[id].mouse.left);
+    port.append(device); }
+
+  { InputDevice device{"MindLink"};
+    device.relative("X",       virtualPorts[id].mouse.x);
+    device.digital ("Trigger", virtualPorts[id].mouse.left);
+    port.append(device); }
+
+  if(id == 1) {
+    InputDevice device{"KidVid Voice Module"};
+    device.digital("Game 1", virtualPorts[id].pad.one);
+    device.digital("Game 2", virtualPorts[id].pad.two);
+    device.digital("Game 3", virtualPorts[id].pad.three);
+    device.digital("Skip",   virtualPorts[id].pad.six);
+    port.append(device);
+  }
+
+  { InputDevice device{"Keyboard"};
+    device.digital("1", virtualPorts[id].pad.one);
+    device.digital("2", virtualPorts[id].pad.two);
+    device.digital("3", virtualPorts[id].pad.three);
+    device.digital("4", virtualPorts[id].pad.four);
+    device.digital("5", virtualPorts[id].pad.five);
+    device.digital("6", virtualPorts[id].pad.six);
+    device.digital("7", virtualPorts[id].pad.seven);
+    device.digital("8", virtualPorts[id].pad.eight);
+    device.digital("9", virtualPorts[id].pad.nine);
+    device.digital("*", virtualPorts[id].pad.star);
+    device.digital("0", virtualPorts[id].pad.zero);
+    device.digital("#", virtualPorts[id].pad.pound);
     port.append(device); }
 
     ports.push_back(port);
+  }
+
+  auto appendQuadTariPort = [&](string name, u32 id) {
+    InputPort port{name};
+
+    { InputDevice device{"Gamepad"};
+      device.digital("Up",    virtualPorts[id].pad.up);
+      device.digital("Down",  virtualPorts[id].pad.down);
+      device.digital("Left",  virtualPorts[id].pad.left);
+      device.digital("Right", virtualPorts[id].pad.right);
+      device.digital("Fire",  virtualPorts[id].pad.south);
+      port.append(device); }
+
+    { InputDevice device{"Paddles"};
+      device.digital("Paddle 1 Fire", virtualPorts[id].pad.south);
+      device.digital("Paddle 2 Fire", virtualPorts[id].pad.east);
+      port.append(device); }
+
+    { InputDevice device{"Driving"};
+      device.analog ("Wheel Left",  virtualPorts[id].pad.lstick_left);
+      device.analog ("Wheel Right", virtualPorts[id].pad.lstick_right);
+      device.digital("Fire",        virtualPorts[id].pad.south);
+      device.analog ("Wheel",       virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+      port.append(device); }
+
+    ports.push_back(port);
+  };
+
+  appendQuadTariPort("QuadTari Player 1", 0);
+  appendQuadTariPort("QuadTari Player 2", 1);
+  appendQuadTariPort("QuadTari Player 3", 2);
+  appendQuadTariPort("QuadTari Player 4", 3);
+}
+
+auto Atari2600::load(Menu menu) -> void {
+  if(auto phosphor = root->find<ares::Node::Setting::Boolean>("TIA/Screen/Phosphor")) {
+    MenuCheckItem phosphorItem{&menu};
+    phosphorItem.setText("Phosphor").setChecked(phosphor->value()).onToggle([=, this] {
+      Program::Guard guard;
+      if(auto phosphor = root->find<ares::Node::Setting::Boolean>("TIA/Screen/Phosphor")) {
+        phosphor->setValue(phosphorItem.checked());
+      }
+    });
   }
 }
 
@@ -80,5 +213,8 @@ auto Atari2600::save() -> bool {
 auto Atari2600::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Atari 2600") return system->pak;
   if(node->name() == "Atari 2600 Cartridge") return game->pak;
+  if(node->name() == "SaveKey") return system->pak;
+  if(node->name() == "AtariVox") return system->pak;
+  if(node->name() == "KidVid Voice Module") return system->pak;
   return {};
 }

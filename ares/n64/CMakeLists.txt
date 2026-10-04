@@ -135,6 +135,14 @@ ares_add_sources(
   CORE #
     n64
   INCLUDED #
+    controller/gamepad-gcn/gamepad-gcn.cpp
+    controller/gamepad-gcn/gamepad-gcn.hpp
+)
+
+ares_add_sources(
+  CORE #
+    n64
+  INCLUDED #
     controller/mouse/mouse.cpp
     controller/mouse/mouse.hpp
 )
@@ -205,6 +213,7 @@ ares_add_sources(
   INCLUDED #
     pi/bus.hpp
     pi/debugger.cpp
+    pi/device.hpp
     pi/dma.cpp
     pi/io.cpp
     pi/pi.hpp

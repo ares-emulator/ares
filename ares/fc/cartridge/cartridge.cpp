@@ -38,6 +38,7 @@ auto Cartridge::disconnect() -> void {
   board->pak.reset();
   board.reset();
   pak.reset();
+  information = {};
   node.reset();
 }
 

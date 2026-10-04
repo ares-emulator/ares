@@ -1,0 +1,1057 @@
+database
+  revision: 2026-08-05
+
+game
+  sha256: f3c1a48b736a06cf5c181e2d3c6c093512a592c4adf91c3e7e8f3e2bbdc2a126
+  name:    Astro Chase
+  title:   Astro Chase
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+game
+  sha256: 0eaf2b96806f2b6f4f6e0a7dc8887472597b3ad4c48e4a82c49b236637f968ea
+  name:    Ballblazer
+  title:   Ballblazer
+  region:  NTSC
+  board:   Linear32K
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: 1ca70eb59bf139b494f8440ad958794db0f2fa18ee96cbec713426987c853226
+  name:    Beamrider
+  title:   Beamrider
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 3f3a9aa1ed3768be015ecba399655d7eb30b1ed4bfaecce472fba3c7f959967d
+  name:    Berzerk
+  title:   Berzerk
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: a4bfac6b2b477ac111f3668ed162736e6a134ec59c349b9e4407f52e523043fa
+  name:    Blue-Print
+  title:   Blue-Print
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: d5e86a3fb67325d5633050ebbc14df5073497d9791656045559a9816aee65ddf
+  name:    Bounty Bob Strikes Back!
+  title:   Bounty Bob Strikes Back!
+  region:  NTSC
+  board:   DualWindow40K
+    memory
+      type: ROM
+      size: 0xa000
+      content: Program
+
+game
+  sha256: 29d66bb75791a7ced485a49cf2116aa667b32713dc1a67d22430035dde1c4c08
+  name:    Buck Rogers - Planet of Zoom
+  title:   Buck Rogers - Planet of Zoom
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 06312922c2fe951c6980e9fcec041607db6babab7bfd0ca8d0b2c2b0c8964039
+  name:    Centipede
+  title:   Centipede
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 15583375bc28a8d94d8726a9f35ecb095430ccd817e34c169b715d396c3d379a
+  name:    Choplifter!
+  title:   Choplifter!
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 254662bb792fddbfe9846dbdd68a2b78479b4b1f4c77a7b85eae2dabdc9888a7
+  name:    Congo Bongo
+  title:   Congo Bongo
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 1a453b467c75c736ba9e96884721286608976ce7f3d8b81fccc619168955f4d1
+  name:    Countermeasure
+  title:   Countermeasure
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 9095b40ab3b2219a1ce931a99d57de2299a0e641e78005836739323c8a1daca3
+  name:    David Crane's Pitfall II - Lost Caverns
+  title:   David Crane's Pitfall II - Lost Caverns
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 0bc2f5fee89560f286b9c6444642d92ab12b922d1f3a1246c9511ce24ea73507
+  name:    Defender
+  title:   Defender
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: e68dfe857ae9f602403fa990d97e0e9989768e5f110984babaf9960adb199ac1
+  name:    Dig Dug
+  title:   Dig Dug
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 16e4a304548e60b98cf3db125115d8ca11232d4ef8dc7d0ebeb1f06ed764bdd6
+  name:    Frogger
+  title:   Frogger
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 87bdba18b4db61d3701f7c8ce931a9ddc75b5b75892ca69b7e4e419bfa68e46d
+  name:    Frogger II: Threeedeep!
+  title:   Frogger II: Threeedeep!
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 469209803f3c2d9119be2ef4347d25dcb94e6c30930e107cd93a5b94bde16b8c
+  name:    Galaxian
+  title:   Galaxian
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: e017a57cd829e6e57f8cc973713178748d5bf25bb9c4fb4e3aa680fa5639693a
+  name:    Gorf
+  title:   Gorf
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 2940b26dc24edc33a9fb840a9f3ef77be73ab0e223525d4bca7d0e0cf14d4a3e
+  name:    Gremlins
+  title:   Gremlins
+  region:  NTSC
+  board:   Linear32K
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: 8e2a264ee07f486de9b40e74d405acc5405d9d1da5e64a24564d4d769366ba54
+  name:    Gyruss
+  title:   Gyruss
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 34a5c081c26a71ae883cd474c7db7e76aa264a5dbd392424d51f224766bf707f
+  name:    H.E.R.O.
+  title:   H.E.R.O.
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 5ac85a569f6fe178db4e2111f608949045999d5123b047b20ef03feeccfb1b49
+  name:    James Bond
+  title:   James Bond
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 17ba9da3996bbb907dc8bf0abda17c78512507c3de86171db8e9cbc1f4667f07
+  name:    Joust
+  title:   Joust
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 53795541ce22cacb9397475926e28ac545940054172a7720650918ab8f693a81
+  name:    Jungle Hunt
+  title:   Jungle Hunt
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 2468f75c9ae7a96a2eeb9e9a32b62f56740e6a78687cd90e02d694368577c246
+  name:    K-Razy Shoot Out
+  title:   K-Razy Shoot Out
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 2382504eba619372d7f5fb780a7489163bce198376900405f28f6e8fa452030e
+  name:    Kaboom!
+  title:   Kaboom!
+  region:  NTSC
+  board:   Linear4K
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 94b994879aa91434da1e72bff6aa1b9fffb1a50cbe26052ea21eed54c6e16ded
+  name:    Kangaroo
+  title:   Kangaroo
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 2269556b53b9c28a1ed75208605f92ae21ccf5e29fc0cd51b160a50bcc1bb5d0
+  name:    Keystone Kapers
+  title:   Keystone Kapers
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: d8b66ea9b9f4f13584ce349ddefea219c31eee99d0a5565627b9322b4b183cbb
+  name:    Mario Bros.
+  title:   Mario Bros.
+  region:  NTSC
+  board:   Linear32K
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: 75b60c591276918fa0e208086900133484d5edd050c931422cbbc19cb9b23997
+  name:    MegaMania
+  title:   MegaMania
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 73e372b99cdf8f2f30c071dcc0a7ac0bc532ce5300595f166eefa23c46915e77
+  name:    Meteorites
+  title:   Meteorites
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 6207cb90590953dd48db0afeb6b40db6f447a8f0a9d48dc758b0654769a2e871
+  name:    Miner 2049er
+  title:   Miner 2049er
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 792b23a61fd5af990538bf4d7c81bf773079caed875603efca01ca6d6fa4d00b
+  name:    Missile Command
+  title:   Missile Command
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 0dcd83e64083e12a358425f6c256bf2bb384d7f9705784035b183dd1db205e16
+  name:    Montezuma's Revenge
+  title:   Montezuma's Revenge
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 549394b200ea0d58aa5d166d81e7a7439b11c810cd53eee186839dd5239b1ad5
+  name:    Moon Patrol
+  title:   Moon Patrol
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 8d99f09862caf68212d1d22a28e5964c41307ef52d8b8be027feefba675f9e6a
+  name:    Mountain King
+  title:   Mountain King
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 6b0832baf6b9d84e79c9ec4fc41fb4b40930855d44d554f0f237619849841548
+  name:    Mr. Do!'s Castle
+  title:   Mr. Do!'s Castle
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 305181464b8ee3733c0de2c8329ea763143f68cd8413aa02731dec2da21ca1ba
+  name:    Ms. Pac-Man
+  title:   Ms. Pac-Man
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 5097b4763eefd8650781698e36b68bc0c9ae0863916312e6fa4364e4da104080
+  name:    Pac-Man
+  title:   Pac-Man
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 2897aac47fefadd344b5a39e5aaf8bd5d097821cc6321b2d83fa3a04232a2971
+  name:    Pengo
+  title:   Pengo
+  region:  NTSC
+  board:   Linear32K
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: e57563c4f469b58a768c00f3dabcdfa4e52883906ab64263961ed5a033968651
+  name:    Pitfall!
+  title:   Pitfall!
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 700bdbb98aef4494e39bce978e788dcf2c28a49e06f111c57ff29004f54d7f22
+  name:    Pole Position
+  title:   Pole Position
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 2ac41cd4643a81716597de8c4132f421aa9a7d1bec97c30b7706780f66ff9c5c
+  name:    Popeye
+  title:   Popeye
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: dd71b0c2eb40c27bc2e5bf428743e7086f5e23fd23a1125652a9256bcfb55df4
+  name:    Q*bert
+  title:   Q*bert
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 29537d2da46d760cdb98c4c968fe37763e3da32c434b2bf7118e811b7e0d7673
+  name:    Qix
+  title:   Qix
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 7ed12b0ef8746429661006f26acead4a87748e389c89bc19ed2a058bea091857
+  name:    Quest for Quintana Roo
+  title:   Quest for Quintana Roo
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 698e156b564645913aef5a9a874bf21b2f0a4e9dde2005a6bb5f4446c4e4edc0
+  name:    RealSports Baseball
+  title:   RealSports Baseball
+  region:  NTSC
+  board:   Linear32K
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: cc8a5829a923361cd1a6898053f199f7b46a00cb3b3c8ab979c52fd4c95089db
+  name:    RealSports Football
+  title:   RealSports Football
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: b13bbb9e3dc3d47812b7626dcd3483002ca7698c1b2aceb7aa54e09f5dd6de5a
+  name:    RealSports Soccer
+  title:   RealSports Soccer
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 5cb84867d6d781e3688c1d346a1947340f6aaefef0c118179b5c89e92e0843b5
+  name:    RealSports Tennis
+  title:   RealSports Tennis
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 145514c439665e7d37929283039c1e2d4b4713f067ecfd011c303e34531e144d
+  name:    Rescue on Fractalus!
+  title:   Rescue on Fractalus!
+  region:  NTSC
+  board:   Linear32K
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: 65a649a34ae8e2942eec74e6ca849145ad605e5742602339427887656a9317d9
+  name:    River Raid
+  title:   River Raid
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: e70955b742ebba1835ed1f4f95a10e059a1142d0d68a2d81dbeb54a2d7b59016
+  name:    Robotron: 2084
+  title:   Robotron: 2084
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 1d688fc6f572e6fb437530e917ff033f6ed037c09a5c95161482a9a1429b3a22
+  name:    Space Dungeon
+  title:   Space Dungeon
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 5ee4d7c4834fb2faee22e326a51d0131faeddc4988d774c81ce84692143a4a84
+  name:    Space Invaders
+  title:   Space Invaders
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: a7b30ffe1e43e481920e72a5bad30fe81d81d32245c8f0893c42b134eac4eff6
+  name:    Space Shuttle - A Journey Into Space
+  title:   Space Shuttle - A Journey Into Space
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: cffaf52ae0e7755ad908652964598489b66ea3513677114b5d457313260f2c5e
+  name:    Star Raiders
+  title:   Star Raiders
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 09b9b5e1c23453d3d60c00ed0b35f742640eaeda3f036d105dca958b72cdbc28
+  name:    Star Trek
+  title:   Star Trek
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 970d7cdf11f06373828c27ba9cc0a2e01e616b40c59352838fa0ee32d2fae222
+  name:    Star Wars - Return of the Jedi - Death Star Battle
+  title:   Star Wars - Return of the Jedi - Death Star Battle
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 919b65f04ef0c64b3cb551d50bfaa3d923eba4bd33ed17d15af1ed7ad5dc599c
+  name:    Star Wars - The Arcade Game
+  title:   Star Wars - The Arcade Game
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 81d99c73080e57e4066138c44ca34ae9cf5f0fef1ca43f6b3136a36c7435e031
+  name:    Super Breakout
+  title:   Super Breakout
+  region:  NTSC
+  board:   Linear4K
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2b06045c19600011b8adab0209e097af367aba0e72cb678211e7fe98738d2d6d
+  name:    Super Cobra
+  title:   Super Cobra
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 9ffda583a583582991ac504d92741a4fe41da094ab63373425937be94eef086d
+  name:    The Activision Decathlon
+  title:   The Activision Decathlon
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 5493c7d3145c68392c3f12972be30a2db4c75e14a12740d7b3b0abbfe3f36747
+  name:    The Dreadnaught Factor
+  title:   The Dreadnaught Factor
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 871bd42c17733667ddbd3eca844dbf99f330c350c8da3166f004f4a13b018d02
+  name:    Vanguard
+  title:   Vanguard
+  region:  NTSC
+  board:   Linear32K
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: 8483d4bf3a7ff75112ef3dad3d2bde44e0698c27629499c9cad0cc3b9cdedff8
+  name:    Wizard of Wor
+  title:   Wizard of Wor
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 2644685d76ba806f7f078831cd93644d37d9a5ef62561a70ae4345b2021a8f3d
+  name:    Zaxxon
+  title:   Zaxxon
+  region:  NTSC
+  board:   Linear32K
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: 981df40e898891e098493ae4c5c0c6062c8acbb2cad74510b9fdba3b3e57a0c4
+  name:    Zenji
+  title:   Zenji
+  region:  NTSC
+  board:   Linear8K
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 8edbded59f4fa7182b31dbf0a6ef8da3a3bce1fcca12328aca15446ca1bccd79
+  name:    Zone Ranger
+  title:   Zone Ranger
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 73b910172bbb3b124be25ccccbcf0ce3db9ac7b886aa67aa82b3ee6cb1eab06a
+  name:    A.E.
+  title:   A.E.
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 3ec0c3d2ed71af8628025cea938d0bb1403ebf5f71aefb12b03e51b84486f8f3
+  name:    Atari PAM Diagnostics v2.0
+  title:   Atari PAM Diagnostics v2.0
+  region:  NTSC
+  board:   Overlapping16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 3ecbee24baaa079524ff6f8d5d4e78500a665d5752169799099020940b983195
+  name:    Atari PAM Diagnostics v2.3
+  title:   Atari PAM Diagnostics v2.3
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: db6e5251b350e8d09ae53b1f44bb50f6d2c0d6bcec0b5a8b61d6a5b214bfb0d9
+  name:    Battlezone (Prototype)
+  title:   Battlezone (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: e8c863fd55c1a261a86ea812467119ed6f46b99aea668fa30cbe446447fa48ac
+  name:    Blaster (Prototype)
+  title:   Blaster (Prototype)
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 1690a1c9e896e238462bd2c0d39abc9089aac61dcc9fcae53d556fdf979f8b45
+  name:    Buck Rogers - Planet of Zoom (Alternate)
+  title:   Buck Rogers - Planet of Zoom (Alternate)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 29f64b6f3d0daae5a876114cca8faead11f8fd0854f4a69033c66e16a15eaa43
+  name:    Final Legacy (Prototype)
+  title:   Final Legacy (Prototype)
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 53dac12aedfd9efaf11a8619a84f6914f67cf63febddc02ed2c48bdf591c3653
+  name:    Frisky Tom (Prototype)
+  title:   Frisky Tom (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: d922f6e2f1166f76354832741e10228bac50dfb91741399698e70723eb4d9e4b
+  name:    Gyruss (Alternate)
+  title:   Gyruss (Alternate)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 91cb207d0c6a7ee576a32d591814b22c2539aa5410d0c4a543369937e3a2fdfc
+  name:    Jr. Pac-Man (Prototype)
+  title:   Jr. Pac-Man (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 01e6f03012aaade5ab6001f75bc52afe5b403edbc4b932cc80b4ba6f23cf178a
+  name:    The Last Starfighter (Prototype)
+  title:   The Last Starfighter (Prototype)
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: f9ee3a083d89fd78e60d6169888c39faee6bf6b699d371c79bc3f37b00961c3e
+  name:    Looney Tunes Hotel (Prototype)
+  title:   Looney Tunes Hotel (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: f275c21845c71aaa0fe94bbd93e6bc49b5d740601c82e53dfedd9c64a56e0b2f
+  name:    Microgammon SB (Prototype)
+  title:   Microgammon SB (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 3cd0e22123f2add19c9af41f1f283d3f2f5739b260a5183b305d1d5fc8aab771
+  name:    Millipede (Prototype)
+  title:   Millipede (Prototype)
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 9c62ba7e382cb0ddc91623cb114b586b372fd063fe21fd78dd9fcdfeecc9bda3
+  name:    Miniature Golf (Prototype)
+  title:   Miniature Golf (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 6d2c4642e18dadeb6bd9d1a1f2132132241f7e088d37cf480d0f01a8bc9e8ff7
+  name:    RealSports Basketball (1982 Prototype)
+  title:   RealSports Basketball (1982 Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 2f90e50d57d751155cd3553a67e8d92e0ed2880d42fdb7c73bb6295c859cd882
+  name:    Road Runner (Prototype)
+  title:   Road Runner (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: a23784ba01982b33179ba8f07683877b498d2f3d143e143d4694d7f1b640cada
+  name:    Sport Goofy (Prototype)
+  title:   Sport Goofy (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: dc6099476d37cbd85f368bee597492e1f305e1cddab2c17bd6a47c898751a487
+  name:    Star Raiders (Alternate)
+  title:   Star Raiders (Alternate)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 820174485d32ff27811b48b5a1525493fcb6281ddf74f1d1d9cfd874f2918331
+  name:    Star Trek - Strategic Operations Simulator (Alternate)
+  title:   Star Trek - Strategic Operations Simulator (Alternate)
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 4bda10d851864513df0ec47c307c7fcc7ea9b0afc141c6a67ef6ab636c79d61e
+  name:    Stargate (Prototype)
+  title:   Stargate (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 484e2488429eb5b1598566cd832a3e3b0b90cb277b99e8c3dfe7e9fc8ecffaaa
+  name:    Super Pac-Man (Prototype)
+  title:   Super Pac-Man (Prototype)
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 29af287d437a500ca79086e35d93d327cee0136b0655a82204a28d59ae869847
+  name:    Super Pac-Man (Alternate Prototype)
+  title:   Super Pac-Man (Alternate Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: b7283b53cfd6e4972ec3cd04e49ffd20de3195f895ec6a59c92da719f0aa9cce
+  name:    Tempest (Prototype)
+  title:   Tempest (Prototype)
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 2a74517e4eadd286b8c2d507bba0fc5f530ce6746686a95d6a60d22dd10ae6cd
+  name:    Track and Field (Prototype)
+  title:   Track and Field (Prototype)
+  region:  NTSC
+  board:   OneChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 51c902b011785bcf5192d6fafb83e133fdde88952b2b5a0a4f11ecae418d7ace
+  name:    Xari Arena (Prototype 2)
+  title:   Xari Arena (Prototype 2)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: c4c9a5fe83d70df121233e4187225f3ddf6c240464ea6b35b7df4628e3ae08c9
+  name:    Xari Arena (Prototype)
+  title:   Xari Arena (Prototype)
+  region:  NTSC
+  board:   TwoChip16K
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program

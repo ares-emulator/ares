@@ -123,6 +123,7 @@ auto Nintendo64::load(string location) -> LoadResult {
   }
   if(auto node = document["game/board/memory(type=Flash,content=Save)"]) {
     Medium::load(node, ".flash");
+    pak->setAttribute("flash/model", node["model"].string());
   }
   if(auto node = document["game/board/memory(type=RTC,content=Save)"]) {
     Medium::load(node, ".rtc");
@@ -279,6 +280,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   u32 eeprom  = 0;      //512_B or 2_KiB
   u32 sram    = 0;      //32_KiB
   u32 flash   = 0;      //128_KiB
+  string flashModel;
 
   //supported peripherals
   bool cpak = false;                 //Controller Pak (port 1)
@@ -452,26 +454,26 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   if(id == "CDZ") {sram = 96_KiB; rpak = true;}                            //Dezaemon 3D
 
   //128KB Flash
-  if(id == "NCC") {flash = 128_KiB; rpak = true;}                          //Command & Conquer
-  if(id == "NCV") {flash = 128_KiB;}                                       //Cubivore [English translation/patch of Doubutsu Banchou (J)]
-  if(id == "NDA") {flash = 128_KiB; cpak = true;}                          //Derby Stallion 64
-  if(id == "NAF") {flash = 128_KiB; cpak = true; rtc = true;}              //Doubutsu no Mori
-  if(id == "NJF") {flash = 128_KiB; rpak = true;}                          //Jet Force Gemini [Star Twins (J)]
-  if(id == "NKJ") {flash = 128_KiB; rpak = true;}                          //Ken Griffey Jr.'s Slugfest
-  if(id == "NZS") {flash = 128_KiB; rpak = true;}                          //Legend of Zelda: Majora's Mask [Zelda no Densetsu - Mujura no Kamen (J)]
-  if(id == "NM6") {flash = 128_KiB; rpak = true;}                          //Mega Man 64
-  if(id == "NCK") {flash = 128_KiB; rpak = true;}                          //NBA Courtside 2 featuring Kobe Bryant
-  if(id == "NMQ") {flash = 128_KiB; rpak = true;}                          //Paper Mario
-  if(id == "NPN") {flash = 128_KiB;}                                       //Pokemon Puzzle League
-  if(id == "NPF") {flash = 128_KiB;}                                       //Pokemon Snap [Pocket Monsters Snap (J)]
-  if(id == "NPO") {flash = 128_KiB; tpak = true;}                          //Pokemon Stadium
-  if(id == "CP2") {flash = 128_KiB; tpak = true;}                          //Pocket Monsters Stadium 2 (J)
-  if(id == "NP3") {flash = 128_KiB; tpak = true;}                          //Pokemon Stadium 2 [Pocket Monsters Stadium - Kin Gin (J)]
-  if(id == "NRH") {flash = 128_KiB; rpak = true;}                          //Rockman Dash - Hagane no Boukenshin (J)
-  if(id == "NSQ") {flash = 128_KiB; rpak = true;}                          //StarCraft 64
-  if(id == "NT9") {flash = 128_KiB;}                                       //Tigger's Honey Hunt
-  if(id == "NW4") {flash = 128_KiB; cpak = true; rpak = true;}             //WWF No Mercy
-  if(id == "NDP") {flash = 128_KiB;}                                       //Dinosaur Planet (Unlicensed)
+  if(id == "NCC") {flash = 128_KiB; flashModel = "MX29L1100"; rpak = true;}  //Command & Conquer
+  if(id == "NCV") {flash = 128_KiB; flashModel = "Unknown";}                 //Cubivore [English translation/patch of Doubutsu Banchou (J)]
+  if(id == "NDA") {flash = 128_KiB; flashModel = "Unknown";   cpak = true;}  //Derby Stallion 64
+  if(id == "NAF") {flash = 128_KiB; flashModel = "MX29L1100"; cpak = true; rtc = true;}  //Doubutsu no Mori
+  if(id == "NJF") {flash = 128_KiB; flashModel = "MX29L1100"; rpak = true;}  //Jet Force Gemini [Star Twins (J)]
+  if(id == "NKJ") {flash = 128_KiB; flashModel = "Unknown";   rpak = true;}  //Ken Griffey Jr.'s Slugfest
+  if(id == "NZS") {flash = 128_KiB; flashModel = "MX29L1100"; rpak = true;}  //Legend of Zelda: Majora's Mask [Zelda no Densetsu - Mujura no Kamen (J)]
+  if(id == "NM6") {flash = 128_KiB; flashModel = "MX29L1100"; rpak = true;}  //Mega Man 64
+  if(id == "NCK") {flash = 128_KiB; flashModel = "MX29L1100"; rpak = true;}  //NBA Courtside 2 featuring Kobe Bryant
+  if(id == "NMQ") {flash = 128_KiB; flashModel = "Unknown";   rpak = true;}  //Paper Mario
+  if(id == "NPN") {flash = 128_KiB; flashModel = "MX29L1100";}               //Pokemon Puzzle League
+  if(id == "NPF") {flash = 128_KiB; flashModel = "MX29L1100";}               //Pokemon Snap [Pocket Monsters Snap (J)]
+  if(id == "NPO") {flash = 128_KiB; flashModel = "Unknown";   tpak = true;}  //Pokemon Stadium
+  if(id == "CP2") {flash = 128_KiB; flashModel = "Unknown";   tpak = true;}  //Pocket Monsters Stadium 2 (J)
+  if(id == "NP3") {flash = 128_KiB; flashModel = "Unknown";   tpak = true;}  //Pokemon Stadium 2 [Pocket Monsters Stadium - Kin Gin (J)]
+  if(id == "NRH") {flash = 128_KiB; flashModel = "Unknown";   rpak = true;}  //Rockman Dash - Hagane no Boukenshin (J)
+  if(id == "NSQ") {flash = 128_KiB; flashModel = "Unknown";   rpak = true;}  //StarCraft 64
+  if(id == "NT9") {flash = 128_KiB; flashModel = "Unknown";}                 //Tigger's Honey Hunt
+  if(id == "NW4") {flash = 128_KiB; flashModel = "Unknown";   cpak = true; rpak = true;}  //WWF No Mercy
+  if(id == "NDP") {flash = 128_KiB; flashModel = "Unknown";}                 //Dinosaur Planet (Unlicensed)
 
   //Controller Pak
   if(id == "N4W") {cpak = true; rpak = true;}                              //40 Winks (Aftermarket)
@@ -767,8 +769,8 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
     if(config.bit(4,7) == 1) {eeprom = 512;}
     if(config.bit(4,7) == 2) {eeprom = 2_KiB;}
     if(config.bit(4,7) == 3) {sram = 32_KiB;}
-    //if(config.bit(4,7) == 4) {sram = 96_KiB;}   //banked SRAM, not supported yet
-    if(config.bit(4,7) == 5) {flash = 128_KiB;}
+    if(config.bit(4,7) == 4) {sram = 96_KiB;}
+    if(config.bit(4,7) == 5) {flash = 128_KiB; flashModel = "Unknown";}
     if(config.bit(4,7) == 6) {sram = 128_KiB;}
     if(config.bit(0) == 1)   {rtc = true;}
 
@@ -877,6 +879,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   s += "      type: Flash\n";
   s +={"      size: 0x", hex(flash), "\n"};
   s += "      content: Save\n";
+  if(flashModel) s +={"      model: ", flashModel, "\n"};
   }
   if(rtc) {
   s += "    memory\n";

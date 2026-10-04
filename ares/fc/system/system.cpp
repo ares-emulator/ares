@@ -8,6 +8,7 @@ auto enumerate() -> std::vector<string> {
     "[Nintendo] Famicom (NTSC-J)",
     "[Nintendo] Famicom (NTSC-U)",
     "[Nintendo] Famicom (PAL)",
+    "[Nintendo] Vs. UniSystem",
     "[Dendy] Dendy",
   };
 }
@@ -38,6 +39,9 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   scheduler.enter();
+  if(model() == Model::VsUniSystem) vsUniSystem.frame();
+  controllerPort1.frame();
+  controllerPort2.frame();
   auto reset = controls.reset->value();
   platform->input(controls.reset);
   if(!reset && controls.reset->value()) power(true);
@@ -71,6 +75,13 @@ auto System::load(Node::System& root, string name) -> bool {
     information.frequency   = Constants::Colorburst::PAL * 6.0;
     information.cpuDivider  = 15;
   }
+  if(name == "[Nintendo] Vs. UniSystem") {
+    information.model       = Model::VsUniSystem;
+    information.name        = "Famicom";
+    information.region      = Region::NTSCU;
+    information.frequency   = Constants::Colorburst::NTSC * 6.0;
+    information.cpuDivider  = 12;
+  }
 
   node = std::make_shared<Core::System>(information.name);
   node->setAttribute("configuration", name);
@@ -89,9 +100,13 @@ auto System::load(Node::System& root, string name) -> bool {
   apu.load(node);
   ppu.load(node);
   cartridgeSlot.load(node);
-  controllerPort1.load(node);
-  controllerPort2.load(node);
-  expansionPort.load(node);
+  if(model() == Model::VsUniSystem) {
+    vsUniSystem.load(node);
+  } else {
+    controllerPort1.load(node);
+    controllerPort2.load(node);
+    expansionPort.load(node);
+  }
   return true;
 }
 
@@ -107,17 +122,23 @@ auto System::unload() -> void {
   controls.unload();
   cpu.unload();
   apu.unload();
-  ppu.unload();
-  cartridgeSlot.unload();
-  controllerPort1.unload();
-  controllerPort2.unload();
-  expansionPort.unload();
+  if(model() == Model::VsUniSystem) {
+    cartridgeSlot.unload();
+    vsUniSystem.unload();
+    ppu.unload();
+  } else {
+    ppu.unload();
+    cartridgeSlot.unload();
+    controllerPort1.unload();
+    controllerPort2.unload();
+    expansionPort.unload();
+  }
   node = {};
 }
 
 auto System::power(bool reset) -> void {
+  if(model() == Model::VsUniSystem) vsUniSystem.power(reset);
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
   random.entropy(Random::Entropy::Low);
   // The apu should run before the cpu
   apu.power(reset);

@@ -16,6 +16,34 @@ auto InputSettings::construct() -> void {
   if(settings.input.defocus == "Block") inputDefocusBlock.setChecked();
   if(settings.input.defocus == "Allow") inputDefocusAllow.setChecked();
 
+  digitalToAnalogLabel.setText("Digital to analog:").setFont(Font().setBold());
+  digitalToAnalogImmediate.setText("Immediate").onActivate([&] {
+    settings.input.digitalToAnalog = "Immediate";
+    refreshDigitalToAnalog();
+  });
+  digitalToAnalogGradualReturn.setText("Gradual (return to center)").onActivate([&] {
+    settings.input.digitalToAnalog = "GradualReturn";
+    refreshDigitalToAnalog();
+  });
+  digitalToAnalogGradualHold.setText("Gradual (hold position)").onActivate([&] {
+    settings.input.digitalToAnalog = "GradualHold";
+    refreshDigitalToAnalog();
+  });
+  if(settings.input.digitalToAnalog == "GradualReturn") {
+    digitalToAnalogGradualReturn.setChecked();
+  } else if(settings.input.digitalToAnalog == "GradualHold") {
+    digitalToAnalogGradualHold.setChecked();
+  } else {
+    digitalToAnalogImmediate.setChecked();
+  }
+
+  digitalToAnalogTimeLabel.setText("Center-to-edge time:").setFont(Font().setBold());
+  digitalToAnalogTimeSlider.setLength(19).setPosition((settings.input.digitalToAnalogTime - 100) / 50).onChange([&] {
+    settings.input.digitalToAnalogTime = 100 + digitalToAnalogTimeSlider.position() * 50;
+    refreshDigitalToAnalog();
+  });
+  refreshDigitalToAnalog();
+
   systemList.append(ComboButtonItem().setText("Virtual Gamepads"));
   for(auto& emulator : emulators) {
     systemList.append(ComboButtonItem().setText(emulator->name));
@@ -36,6 +64,13 @@ auto InputSettings::construct() -> void {
   spacer.setFocusable();
   assignButton.setText("Assign").onActivate([&] { eventAssign(inputList.selected().cell(0)); });
   clearButton.setText("Clear").onActivate([&] { eventClear(); });
+}
+
+auto InputSettings::refreshDigitalToAnalog() -> void {
+  auto gradual = settings.input.digitalToAnalog != "Immediate";
+  digitalToAnalogTimeLabel.setEnabled(gradual);
+  digitalToAnalogTimeSlider.setEnabled(gradual);
+  digitalToAnalogTimeValue.setEnabled(gradual).setText({settings.input.digitalToAnalogTime, " ms"});
 }
 
 auto InputSettings::systemChange() -> void {

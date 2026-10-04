@@ -6,6 +6,13 @@ namespace ares::Atari2600 {
 #include "atari-2600.cpp"
 #endif
 
+#ifdef CORE_A52
+namespace ares::Atari5200 {
+  auto load(Node::System& node, string name) -> bool;
+}
+#include "atari-5200.cpp"
+#endif
+
 #ifdef CORE_CV
   namespace ares::ColecoVision {
     auto load(Node::System& node, string name) -> bool;
@@ -167,6 +174,10 @@ auto Emulator::construct() -> void {
 
   #ifdef CORE_A26
   emulators.push_back(std::make_shared<Atari2600>());
+  #endif
+
+  #ifdef CORE_A52
+  emulators.push_back(std::make_shared<Atari5200>());
   #endif
 
   #ifdef CORE_WS

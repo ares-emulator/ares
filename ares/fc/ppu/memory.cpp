@@ -30,6 +30,7 @@ auto PPU::readIO(n16 address) -> n8 {
     result.bit(5) = sprite.spriteOverflow;
     result.bit(6) = io.spriteZeroHit;
     result.bit(7) = io.nmiFlag;
+    result = model->status(result);
     scroll.latch = 0;
     io.nmiHold = 0;
     cpu.nmiLine(io.nmiFlag = 0);
@@ -39,8 +40,7 @@ auto PPU::readIO(n16 address) -> n8 {
   case 4:
     result = oam[sprite.oamAddress];
 
-    if (io.ly < 240 || io.ly == vlines() - 1 ||
-        (Region::PAL() && io.ly >= 264 && io.ly <= vlines() - 2))
+    if(model->raster.restrictsOAM(io.ly))
       if (enable())
         result = sprite.oamData;
     break;
@@ -79,7 +79,7 @@ auto PPU::readIO(n16 address) -> n8 {
 auto PPU::writeIO(n16 address, n8 data) -> void {
   io.mdr = data;
 
-  switch(address.bit(0,2)) {
+  switch(model->mapWriteRegister(address.bit(0,2))) {
 
   //PPUCTRL
   case 0:
@@ -122,8 +122,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
     // sprite or background rendering is enabled) do not
     // modify values in OAM, but do perform a glitchy
     // increment of OAMADDR, bumping only the high 6 bits
-    if (io.ly < 240 || io.ly == vlines() - 1 ||
-        (Region::PAL() && io.ly >= 264 && io.ly <= vlines() - 2)) {
+    if(model->raster.restrictsOAM(io.ly)) {
       if (enable()) {
         ++sprite.oamMainCounterIndex;
         sprite.oamMainCounterTiming = 0;

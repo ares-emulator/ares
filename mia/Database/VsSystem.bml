@@ -1,0 +1,6443 @@
+database
+  revision: 0.286 (mame0286)
+  romset: 0.286 (mame0286)
+  drivers: nintendo/vsnes.cpp
+game
+  name:    balonfgt
+  title:   Vs. Balloon Fight (set BF4 A-3)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mds-bf4 a-3.1d
+      offset: 0x0
+      size:   8192
+      crc:    1248a6d6
+      sha1:   0f6c586e8e021a0710ec4e967750b55a74229d74
+    rom
+      name:   mds-bf4 a-3.1c
+      offset: 0x2000
+      size:   8192
+      crc:    14af0e42
+      sha1:   ceb749eca2dfe81fddc6cb57e4aa87a4bfac0316
+    rom
+      name:   mds-bf4 a-3.1b
+      offset: 0x4000
+      size:   8192
+      crc:    a420babf
+      sha1:   ab296a86132bb9103cbb107518b4ac9beb8b2e11
+    rom
+      name:   mds-bf4 a-3.1a
+      offset: 0x6000
+      size:   8192
+      crc:    9c31f94d
+      sha1:   19bccd6b79423f495b0ee49dd3b219ffc4676470
+  gfx1
+    rom
+      name:   mds-bf4 a-3.2b
+      offset: 0x0
+      size:   8192
+      crc:    f27d9aa0
+      sha1:   429a1ad2a07947e4c4809495bfab55bf0f0e428f
+    rom
+      name:   mds-bf4 a-3.2a
+      offset: 0x2000
+      size:   8192
+      crc:    76e6bbf8
+      sha1:   a4cae3a129a787162050187453b1583c8735fb46
+  sub
+    rom
+      name:   mds-bf4 a-3.6d
+      offset: 0x8000
+      size:   8192
+      crc:    ef4ebff1
+      sha1:   17153ad44a402f05f7ddfe3ac364a0e4adb6f16b
+    rom
+      name:   mds-bf4 a-3.6c
+      offset: 0xa000
+      size:   8192
+      crc:    14af0e42
+      sha1:   ceb749eca2dfe81fddc6cb57e4aa87a4bfac0316
+    rom
+      name:   mds-bf4 a-3.6b
+      offset: 0xc000
+      size:   8192
+      crc:    a420babf
+      sha1:   ab296a86132bb9103cbb107518b4ac9beb8b2e11
+    rom
+      name:   mds-bf4 a-3.6a
+      offset: 0xe000
+      size:   8192
+      crc:    3aa5c095
+      sha1:   3815016e5615c9327200150e0181357f16f3d636
+  gfx2
+    rom
+      name:   mds-bf4 a-3.8b
+      offset: 0x0
+      size:   8192
+      crc:    f27d9aa0
+      sha1:   429a1ad2a07947e4c4809495bfab55bf0f0e428f
+    rom
+      name:   mds-bf4 a-3.8a
+      offset: 0x2000
+      size:   8192
+      crc:    76e6bbf8
+      sha1:   a4cae3a129a787162050187453b1583c8735fb46
+  ppu1-palette
+    rom
+      name:   rp2c04-0003.pal
+      offset: 0x0
+      size:   192
+      crc:    fd6c578b
+      sha1:   653182ce0cbaff66a8fc5788e32cc088b6735f2e
+game
+  name:    bnglngby
+  title:   Vs. Raid on Bungeling Bay (RD4-2 B)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unsupported
+    reason: raid-protection
+  prg
+    rom
+      name:   mds-rb4-2 b.6d
+      offset: 0x0
+      size:   8192
+      crc:    d152d8c2
+      sha1:   d127195be8219df1c6f7bdd86658ed26c658470e
+    rom
+      name:   mds-rb4-2 b.6c
+      offset: 0x2000
+      size:   8192
+      crc:    c3383935
+      sha1:   8ed1e8ed36069e5e6f2f3c672aae5e1f3dabbdd0
+    rom
+      name:   mds-rb4-2 b.6b
+      offset: 0x4000
+      size:   8192
+      crc:    e2a24af8
+      sha1:   89cca4188b859882487fe64776c1ca0173fee142
+    rom
+      name:   mds-rb4-2 b.6a
+      offset: 0x6000
+      size:   8192
+      crc:    024ad874
+      sha1:   b02241c3d2ae90ccd5402410fa650741034a2f78
+  gfx1
+    rom
+      name:   mds-rb4-2 b.8b
+      offset: 0x0
+      size:   8192
+      crc:    d3d946ab
+      sha1:   e2ed8af0cf6edb925c1ff47fccb5caabd0b8c09f
+    rom
+      name:   mds-rb4-2 b.8a
+      offset: 0x2000
+      size:   8192
+      crc:    ca08126a
+      sha1:   48b315e3e90b19b2d74dcd88c734dcdf3539d6ca
+  user1
+    rom
+      name:   mds-rb4-2 b.1a
+      offset: 0x0
+      size:   8192
+      crc:    b49939ad
+      sha1:   ebaab2864d9ff9876e9d2666746c4bab57e49ec3
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c
+game
+  name:    btlecity
+  title:   Vs. Battle City
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Credits for 2 Players
+    port: DSW0
+    mask: 0x1
+    default: 0x1
+    option
+      name: 1
+      value: 0x0
+    option
+      name: 2
+      value: 0x1
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x2
+    default: 0x0
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 5
+      value: 0x2
+  dip
+    name: Demo Sounds
+    port: DSW0
+    mask: 0x4
+    default: 0x0
+    option
+      name: Off
+      value: 0x4
+    option
+      name: On
+      value: 0x0
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x8
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x10
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x20
+  dip
+    name: PPU Type
+    port: DSW0
+    mask: 0xc0
+    default: 0x0
+    option
+      name: RP2C04-0001
+      value: 0x0
+    option
+      name: RP2C04-0002
+      value: 0x40
+    option
+      name: RP2C04-0003
+      value: 0x80
+    option
+      name: RP2C04-0004
+      value: 0xc0
+  prg
+    rom
+      name:   bc.1d
+      offset: 0x0
+      size:   8192
+      crc:    6aa87037
+      sha1:   f3313700955498800a3d59c523ba2a4e0cf443bc
+    rom
+      name:   bc.1c
+      offset: 0x2000
+      size:   8192
+      crc:    bdb317db
+      sha1:   a8b3e8deb1e625d764aaffe86a513bc7ede51a46
+    rom
+      name:   bc.1b
+      offset: 0x4000
+      size:   8192
+      crc:    1a0088b8
+      sha1:   ba90d8178a23caedbf0e7188256b7cbfebf35eeb
+    rom
+      name:   bc.1a
+      offset: 0x6000
+      size:   8192
+      crc:    86307c89
+      sha1:   e4e73e4dcaa5c2374d7e3844d6d3fdb192ac9674
+  gfx1
+    rom
+      name:   bc.2b
+      offset: 0x0
+      size:   8192
+      crc:    634f68bd
+      sha1:   db1a18083667fdaf6cdd9ed7666bec6bf6e39f29
+    rom
+      name:   bc.2a
+      offset: 0x2000
+      size:   8192
+      crc:    a9b49a05
+      sha1:   c14706e6a5524f81e79c101e32deef9f3d60de3f
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    cluclu
+  title:   Vs. Clu Clu Land
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x8
+  dip
+    name: Credits for 2 Players
+    port: DSW0
+    mask: 0x10
+    default: 0x10
+    option
+      name: 1
+      value: 0x0
+    option
+      name: 2
+      value: 0x10
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x60
+    default: 0x0
+    option
+      name: 2
+      value: 0x60
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 4
+      value: 0x40
+    option
+      name: 5
+      value: 0x20
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   cl.6d
+      offset: 0x0
+      size:   8192
+      crc:    1e9f97c9
+      sha1:   47d847632145d8160d006f014f9e0a7483783d0e
+    rom
+      name:   cl.6c
+      offset: 0x2000
+      size:   8192
+      crc:    e8b843a7
+      sha1:   03827b31d47d2a8a132bf9944fee724c6c1c6d2e
+    rom
+      name:   cl.6b
+      offset: 0x4000
+      size:   8192
+      crc:    418ee9ea
+      sha1:   a68e8a97899e850884cb9484fe539b86c419f10f
+    rom
+      name:   cl.6a
+      offset: 0x6000
+      size:   8192
+      crc:    5e8a8457
+      sha1:   8e53de132db2e1299bd8f2329758f3ccb096584a
+  gfx1
+    rom
+      name:   cl.8b
+      offset: 0x0
+      size:   8192
+      crc:    960d9a6c
+      sha1:   2569d59fd880cfc2eb4638294d1429ba749f5dcb
+    rom
+      name:   cl.8a
+      offset: 0x2000
+      size:   8192
+      crc:    e3139791
+      sha1:   33d9e6d2a3233ee311c2cef2d0a425ded2cf3b0f
+  ppu1-palette
+    rom
+      name:   rp2c04-0004.pal
+      offset: 0x0
+      size:   192
+      crc:    0c2e8e4d
+      sha1:   0f9090225eb1f08ae5072d40af3e95547cbce05f
+game
+  name:    cstlevna
+  title:   Vs. Castlevania
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: unrom
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x3
+    option
+      name: 4 Coins/1 Credit
+      value: 0x5
+    option
+      name: 3 Coins/1 Credit
+      value: 0x1
+    option
+      name: 2 Coins/1 Credit
+      value: 0x6
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: 2
+      value: 0x8
+    option
+      name: 3
+      value: 0x0
+  dip
+    name: Bonus points
+    port: DSW0
+    mask: 0x30
+    default: 0x0
+    option
+      name: Timer x 4, Hearts x 40
+      value: 0x0
+    option
+      name: Timer x 6, Hearts x 60
+      value: 0x20
+    option
+      name: Timer x 8, Hearts x 80
+      value: 0x10
+    option
+      name: Timer x 9, Hearts x 90
+      value: 0x30
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x40
+  dip
+    name: Unused
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-cv.u7
+      offset: 0x0
+      size:   131072
+      crc:    ffbef374
+      sha1:   9eb3b75e7b45df51b8bcd29df84689a7e8557f4f
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c
+game
+  name:    drmario
+  title:   Vs. Dr. Mario
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: mmc1
+    protection: normal
+    input: standard
+  dip
+    name: Drop Rate Increases After
+    port: DSW0
+    mask: 0x3
+    default: 0x3
+    option
+      name: 7 Pills
+      value: 0x0
+    option
+      name: 8 Pills
+      value: 0x1
+    option
+      name: 9 Pills
+      value: 0x2
+    option
+      name: 10 Pills
+      value: 0x3
+  dip
+    name: Virus Level
+    port: DSW0
+    mask: 0xc
+    default: 0x4
+    option
+      name: 1
+      value: 0x0
+    option
+      name: 3
+      value: 0x4
+    option
+      name: 5
+      value: 0x8
+    option
+      name: 7
+      value: 0xc
+  dip
+    name: Drop Speed Up
+    port: DSW0
+    mask: 0x30
+    default: 0x0
+    option
+      name: Slow
+      value: 0x0
+    option
+      name: Medium
+      value: 0x10
+    option
+      name: Fast
+      value: 0x20
+    option
+      name: Fastest
+      value: 0x30
+  dip
+    name: Free Play
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x40
+  dip
+    name: Demo Sounds
+    port: DSW0
+    mask: 0x80
+    default: 0x80
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   dm-uiprg
+      offset: 0x0
+      size:   65536
+      crc:    d5d7eac4
+      sha1:   cd74c3a7a2fc7c25420037ae5f4a25307aff6587
+  gfx1
+    rom
+      name:   dm-u3chr
+      offset: 0x0
+      size:   32768
+      crc:    91871aa5
+      sha1:   32a4299ead7b37f49877dc9597653b07a73ddbf3
+  ppu1-palette
+    rom
+      name:   rp2c04-0003.pal
+      offset: 0x0
+      size:   192
+      crc:    fd6c578b
+      sha1:   653182ce0cbaff66a8fc5788e32cc088b6735f2e
+game
+  name:    duckhunt
+  title:   Vs. Duck Hunt (set DH3 E)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: zapper
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x3
+    option
+      name: 4 Coins/1 Credit
+      value: 0x5
+    option
+      name: 3 Coins/1 Credit
+      value: 0x1
+    option
+      name: 2 Coins/1 Credit
+      value: 0x6
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x18
+    default: 0x8
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x8
+    option
+      name: Medium
+      value: 0x10
+    option
+      name: Hard
+      value: 0x18
+  dip
+    name: Misses per game
+    port: DSW0
+    mask: 0x20
+    default: 0x20
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 5
+      value: 0x20
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0xc0
+    default: 0x0
+    option
+      name: 30000
+      value: 0x0
+    option
+      name: 50000
+      value: 0x40
+    option
+      name: 80000
+      value: 0x80
+    option
+      name: 100000
+      value: 0xc0
+  prg
+    rom
+      name:   mds-dh3 e.1d or 6d
+      offset: 0x0
+      size:   8192
+      crc:    3f51f0ed
+      sha1:   984d8a5cecddde776ffd4f718ee0ca7a9959228b
+    rom
+      name:   mds-dh3 e.1c or 6c
+      offset: 0x2000
+      size:   8192
+      crc:    8bc7376c
+      sha1:   d90d663c5e5b6d5247089c8ba618912305049b19
+    rom
+      name:   mds-dh3 e.1b or 6b
+      offset: 0x4000
+      size:   8192
+      crc:    a042b6e1
+      sha1:   df571c31a6a52df56869eda0621f7615a625e66d
+    rom
+      name:   mds-dh3 e.1a or 6a
+      offset: 0x6000
+      size:   8192
+      crc:    1906e3ab
+      sha1:   bff68829a96e2d251dd12129f84bdf1dbdf61d06
+  gfx1
+    rom
+      name:   mds-dh3 e.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    0c52ec28
+      sha1:   c8fb6a5d4c13a7075d313326e2da9ce88780a88d
+    rom
+      name:   mds-dh3 e.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    3d238df3
+      sha1:   e868ef3d5357ef5294e4faeecc9dbf801c5253e8
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    excitebk
+  title:   Vs. Excitebike (set EB4-3 E)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Bonus Bike
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 100k and Every 50k
+      value: 0x0
+    option
+      name: Every 100k
+      value: 0x10
+    option
+      name: 100k Only
+      value: 0x8
+    option
+      name: None
+      value: 0x18
+  dip
+    name: 1st Half Qualifying Time
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x20
+  dip
+    name: 2nd Half Qualifying Time
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x40
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-eb4-3e.1d
+      offset: 0x0
+      size:   8192
+      crc:    f58a392e
+      sha1:   ca721e47e5dbe72d6f231d9b20b1ca33304c5370
+    rom
+      name:   mds-eb4-3e.1c
+      offset: 0x2000
+      size:   8192
+      crc:    6ae01102
+      sha1:   f3f49644f7e2887e14655e8934c7c75d4b92968e
+    rom
+      name:   mds-eb4-3e.1b
+      offset: 0x4000
+      size:   8192
+      crc:    fbc53465
+      sha1:   81c9ebac895dfbc5c451b4b32e5990aba3734714
+    rom
+      name:   mds-eb4-3e.1a
+      offset: 0x6000
+      size:   8192
+      crc:    e2902b4e
+      sha1:   f559517c735847e2ad622418b8fa525d9c9adac3
+  gfx1
+    rom
+      name:   mds-eb4-3e.2b
+      offset: 0x0
+      size:   8192
+      crc:    80be1f50
+      sha1:   d8544b9a0a9d8719ab601fa9c68c4305385b14c7
+    rom
+      name:   mds-eb4-3e.2a
+      offset: 0x2000
+      size:   8192
+      crc:    001e8e0b
+      sha1:   c4c2a11ade7788bac9dd61ea8de319c4111d2592
+  ppu1-palette
+    rom
+      name:   rp2c04-0003.pal
+      offset: 0x0
+      size:   192
+      crc:    fd6c578b
+      sha1:   653182ce0cbaff66a8fc5788e32cc088b6735f2e
+game
+  name:    excitebkj
+  title:   Vs. Excitebike (set EB4-4 A)
+  board:   nintendo/vs
+  type:    game
+  parent:  excitebk
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Bonus Bike
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 100k and Every 50k
+      value: 0x0
+    option
+      name: Every 100k
+      value: 0x10
+    option
+      name: 100k Only
+      value: 0x8
+    option
+      name: None
+      value: 0x18
+  dip
+    name: 1st Half Qualifying Time
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x20
+  dip
+    name: 2nd Half Qualifying Time
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x40
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-eb4-4 a.6d
+      offset: 0x0
+      size:   8192
+      crc:    6aa87037
+      sha1:   f3313700955498800a3d59c523ba2a4e0cf443bc
+    rom
+      name:   mds-eb4-4 a.6c
+      offset: 0x2000
+      size:   8192
+      crc:    bdb317db
+      sha1:   a8b3e8deb1e625d764aaffe86a513bc7ede51a46
+    rom
+      name:   mds-eb4-4 a.6b
+      offset: 0x4000
+      size:   8192
+      crc:    d1afe2dd
+      sha1:   ef0f44d98464b7dab7c51be4379242f7a4e4fcdd
+    rom
+      name:   mds-eb4-4 a.6a
+      offset: 0x6000
+      size:   8192
+      crc:    46711d0e
+      sha1:   6ce2f395b3f407671a87c6e1133ab63a637022f2
+  gfx1
+    rom
+      name:   mds-eb4-4 a.8b
+      offset: 0x0
+      size:   8192
+      crc:    62a76c52
+      sha1:   7ebd0dac976abe8636f4f75a3b2a473d7a54934d
+    rom
+      name:   mds-eb4-4 a.8a
+      offset: 0x2000
+      size:   8192
+      crc:    a9b49a05
+      sha1:   c14706e6a5524f81e79c101e32deef9f3d60de3f
+  ppu1-palette
+    rom
+      name:   rp2c04-0004.pal
+      offset: 0x0
+      size:   192
+      crc:    0c2e8e4d
+      sha1:   0f9090225eb1f08ae5072d40af3e95547cbce05f
+game
+  name:    excitebko
+  title:   Vs. Excitebike (set EB4-3 ?)
+  board:   nintendo/vs
+  type:    game
+  parent:  excitebk
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Bonus Bike
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 100k and Every 50k
+      value: 0x0
+    option
+      name: Every 100k
+      value: 0x10
+    option
+      name: 100k Only
+      value: 0x8
+    option
+      name: None
+      value: 0x18
+  dip
+    name: 1st Half Qualifying Time
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x20
+  dip
+    name: 2nd Half Qualifying Time
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x40
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-eb4-3.1d
+      offset: 0x0
+      size:   8192
+      crc:    7e54df1d
+      sha1:   38d878041976386e8608c73133040b18d0e4b9cd
+    rom
+      name:   mds-eb4-3.1c
+      offset: 0x2000
+      size:   8192
+      crc:    89baae91
+      sha1:   6aebf13c415e3246edf7daa847533b7e3ae0425f
+    rom
+      name:   mds-eb4-3.1b
+      offset: 0x4000
+      size:   8192
+      crc:    4c0c2098
+      sha1:   078f24ce02f5fb91d7ed7fa59aec8efbec38aed1
+    rom
+      name:   mds-eb4-3.1a
+      offset: 0x6000
+      size:   8192
+      crc:    b9ab7110
+      sha1:   89e3bd5f42b5b5e869ee46afe4f25a1a17d3814d
+  gfx1
+    rom
+      name:   mds-eb4-3.2b
+      offset: 0x0
+      size:   8192
+      crc:    80be1f50
+      sha1:   d8544b9a0a9d8719ab601fa9c68c4305385b14c7
+    rom
+      name:   mds-eb4-3.2a
+      offset: 0x2000
+      size:   8192
+      crc:    a9b49a05
+      sha1:   c14706e6a5524f81e79c101e32deef9f3d60de3f
+  ppu1-palette
+    rom
+      name:   rp2c04-0003.pal
+      offset: 0x0
+      size:   192
+      crc:    fd6c578b
+      sha1:   653182ce0cbaff66a8fc5788e32cc088b6735f2e
+game
+  name:    goonies
+  title:   Vs. The Goonies (set E)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: vrc1
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x3
+    option
+      name: 4 Coins/1 Credit
+      value: 0x5
+    option
+      name: 3 Coins/1 Credit
+      value: 0x1
+    option
+      name: 2 Coins/1 Credit
+      value: 0x6
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: 4
+      value: 0x0
+    option
+      name: 3
+      value: 0x8
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0x30
+    default: 0x0
+    option
+      name: 40000
+      value: 0x0
+    option
+      name: 50000
+      value: 0x20
+    option
+      name: 60000
+      value: 0x10
+    option
+      name: 70000
+      value: 0x30
+  dip
+    name: Timer
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Slow
+      value: 0x0
+    option
+      name: Fast
+      value: 0x40
+  dip
+    name: Demo Sounds
+    port: DSW0
+    mask: 0x80
+    default: 0x80
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-gn prg e.u7
+      offset: 0x0
+      size:   65536
+      crc:    1e438d52
+      sha1:   ac187904c125e56a71acff979e53f3398a05c075
+  gfx1
+    rom
+      name:   mds-gn chr e.u4
+      offset: 0x0
+      size:   65536
+      crc:    4c4b61b0
+      sha1:   7221c2499531e591a5a99e2cb339ae3a76b662c2
+  ppu1-palette
+    rom
+      name:   rp2c04-0003.pal
+      offset: 0x0
+      size:   192
+      crc:    fd6c578b
+      sha1:   653182ce0cbaff66a8fc5788e32cc088b6735f2e
+game
+  name:    hogalley
+  title:   Vs. Hogan's Alley (set HA4-1 E-1)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: zapper
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x3
+    option
+      name: 4 Coins/1 Credit
+      value: 0x5
+    option
+      name: 3 Coins/1 Credit
+      value: 0x1
+    option
+      name: 2 Coins/1 Credit
+      value: 0x6
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x18
+    default: 0x10
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x8
+    option
+      name: Medium
+      value: 0x10
+    option
+      name: Hard
+      value: 0x18
+  dip
+    name: Misses per game
+    port: DSW0
+    mask: 0x20
+    default: 0x20
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 5
+      value: 0x20
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0xc0
+    default: 0x0
+    option
+      name: 30000
+      value: 0x0
+    option
+      name: 50000
+      value: 0x40
+    option
+      name: 80000
+      value: 0x80
+    option
+      name: 100000
+      value: 0xc0
+  prg
+    rom
+      name:   mds-ha4-1 e-1.1d or 6d
+      offset: 0x0
+      size:   8192
+      crc:    2089e166
+      sha1:   7db09b5b6bcd87589bed89a5fc1a4b772155a0f3
+    rom
+      name:   mds-ha4-1 e-1.1c or 6c
+      offset: 0x2000
+      size:   8192
+      crc:    a85934ae
+      sha1:   f26af4f60a4072c45e900dff7f74d9907bc2e1e0
+    rom
+      name:   mds-ha4-1 e-1.1b or 6b
+      offset: 0x4000
+      size:   8192
+      crc:    718e25b3
+      sha1:   2710827931d3cd55984c3107c3b8e0f691965eaa
+    rom
+      name:   mds-ha4-1 e-1.1a or 6a
+      offset: 0x6000
+      size:   8192
+      crc:    f9526852
+      sha1:   244c6a12801d4aa774a416f7c3dd8465d01dbca2
+  gfx1
+    rom
+      name:   mds-ha4-1 e-1.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    fc5a91ad
+      sha1:   7ce6c64d81a9626d0b34bdc0a2a28fee457ebcb1
+    rom
+      name:   mds-ha4-1 e-1.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    78c842b6
+      sha1:   39f2a7fc1f1cbe2378a369e45b5cbb05057db3f0
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    hogalleyi
+  title:   Vs. Hogan's Alley (Italian bootleg)
+  board:   nintendo/vs
+  type:    game
+  parent:  hogalley
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mds-ha4_1d_or_6d.6d
+      offset: 0x0
+      size:   8192
+      crc:    1d45a0cb
+      sha1:   48174df14fb70613ac74dabd6cb9b9161bbbc29c
+    rom
+      name:   mds-ha4_1c_or_6c.6c
+      offset: 0x2000
+      size:   8192
+      crc:    e25d106c
+      sha1:   f147a0e4ce25a4b6bd867c2438f4d0692d00b74b
+    rom
+      name:   mds-ha4_1b_or_6b.6b
+      offset: 0x4000
+      size:   8192
+      crc:    8788c2c5
+      sha1:   7dc04b90c674736a04272b99173c598135e70b5c
+    rom
+      name:   mds-ha4_1a_or_6a.6a
+      offset: 0x6000
+      size:   8192
+      crc:    cebe3d7b
+      sha1:   1f122353388bfc1ad29274dbd690a21575f4b5f1
+  gfx1
+    rom
+      name:   mds-ha4_2b_or_8b
+      offset: 0x0
+      size:   8192
+      crc:    fc5a91ad
+      sha1:   7ce6c64d81a9626d0b34bdc0a2a28fee457ebcb1
+    rom
+      name:   mds-ha4_2a_or_8a
+      offset: 0x2000
+      size:   8192
+      crc:    78c842b6
+      sha1:   39f2a7fc1f1cbe2378a369e45b5cbb05057db3f0
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    iceclimb
+  title:   Vs. Ice Climber (set IC4-4 B-1)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: ice-climber
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 4
+      value: 0x10
+    option
+      name: 5
+      value: 0x8
+    option
+      name: 7
+      value: 0x18
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x20
+  dip
+    name: Time before bear appears
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Long
+      value: 0x0
+    option
+      name: Short
+      value: 0x40
+  dip
+    name: Unused
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-ic4-4 b.6d
+      offset: 0x0
+      size:   8192
+      crc:    0ea5f9cb
+      sha1:   3ba6228ac8011371fc36ce9dde4fc158a81a99a2
+    rom
+      name:   mds-ic4-4 b.6c
+      offset: 0x2000
+      size:   8192
+      crc:    51fe438e
+      sha1:   f40812d4275dabaac6f9539e1300c08d07992654
+    rom
+      name:   mds-ic4-4 b-1.6b
+      offset: 0x4000
+      size:   8192
+      crc:    a8afdc62
+      sha1:   f798da6c107926790026d4a4d384961dbff2380e
+    rom
+      name:   mds-ic4-4 b.6a
+      offset: 0x6000
+      size:   8192
+      crc:    96505d4d
+      sha1:   0fb913853decebec1d5d15ee5adc8027cd66f016
+  gfx1
+    rom
+      name:   mds-ic4-4 b.8b
+      offset: 0x0
+      size:   8192
+      crc:    331460b4
+      sha1:   4cf94d711cdb5715d14f1ab3cadec245e0adfb1e
+    rom
+      name:   mds-ic4-4 b.8a
+      offset: 0x2000
+      size:   8192
+      crc:    4ec44fb3
+      sha1:   676e0ab574dec08df562c6f278e8a9cc7c8afa41
+  ppu1-palette
+    rom
+      name:   rp2c04-0004.pal
+      offset: 0x0
+      size:   192
+      crc:    0c2e8e4d
+      sha1:   0f9090225eb1f08ae5072d40af3e95547cbce05f
+game
+  name:    iceclimba
+  title:   Vs. Ice Climber (set IC4-4 ?)
+  board:   nintendo/vs
+  type:    game
+  parent:  iceclimb
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 4
+      value: 0x10
+    option
+      name: 5
+      value: 0x8
+    option
+      name: 7
+      value: 0x18
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x20
+  dip
+    name: Time before bear appears
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Long
+      value: 0x0
+    option
+      name: Short
+      value: 0x40
+  dip
+    name: Unused
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-ic4-4.1d
+      offset: 0x0
+      size:   8192
+      crc:    65e21765
+      sha1:   900f1efe5e8005ee8cdccbf5039914dfe466aa3d
+    rom
+      name:   mds-ic4-4.1c
+      offset: 0x2000
+      size:   8192
+      crc:    a7909c51
+      sha1:   04708a9e429cbddab6988ff7b3ec5aa0109f6228
+    rom
+      name:   mds-ic4-4.1b
+      offset: 0x4000
+      size:   8192
+      crc:    7fb3cc21
+      sha1:   bed673211f2251d4112ea41c4a1f917fee32d93c
+    rom
+      name:   mds-ic4-4.1a
+      offset: 0x6000
+      size:   8192
+      crc:    bf196bf7
+      sha1:   7d7b34894caab41ac51ca9c89d09e72053798784
+  gfx1
+    rom
+      name:   mds-ic4-4 b.8b
+      offset: 0x0
+      size:   8192
+      crc:    331460b4
+      sha1:   4cf94d711cdb5715d14f1ab3cadec245e0adfb1e
+    rom
+      name:   mds-ic4-4 b.8a
+      offset: 0x2000
+      size:   8192
+      crc:    4ec44fb3
+      sha1:   676e0ab574dec08df562c6f278e8a9cc7c8afa41
+  ppu1-palette
+    rom
+      name:   rp2c04-0004.pal
+      offset: 0x0
+      size:   192
+      crc:    0c2e8e4d
+      sha1:   0f9090225eb1f08ae5072d40af3e95547cbce05f
+game
+  name:    iceclmrd
+  title:   Vs. Ice Climber Dual (set IC4-4 A-1)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mds-ic4-4 a.1d
+      offset: 0x0
+      size:   8192
+      crc:    94e3197d
+      sha1:   414156809a3fe2c072d8947a91708f3ed40008b2
+    rom
+      name:   mds-ic4-4 a.1c
+      offset: 0x2000
+      size:   8192
+      crc:    b253011e
+      sha1:   abc2c84e342d1f8e8d0dbb580370733ef4b38413
+    rom
+      name:   mds-ic4-4 a-1.1b
+      offset: 0x4000
+      size:   8192
+      crc:    f3795874
+      sha1:   f22f786960a27ab886a7fad7e312bdf28ffa5362
+    rom
+      name:   mds-ic4-4 a.1a
+      offset: 0x6000
+      size:   8192
+      crc:    094c246c
+      sha1:   82aba548706041c2de0cda02d21409fe8a09338c
+  gfx1
+    rom
+      name:   mds-ic4-4 a.2b
+      offset: 0x0
+      size:   8192
+      crc:    331460b4
+      sha1:   4cf94d711cdb5715d14f1ab3cadec245e0adfb1e
+    rom
+      name:   mds-ic4-4 a.2a
+      offset: 0x2000
+      size:   8192
+      crc:    4ec44fb3
+      sha1:   676e0ab574dec08df562c6f278e8a9cc7c8afa41
+  sub
+    rom
+      name:   mds-ic4-4 a.6d
+      offset: 0x8000
+      size:   8192
+      crc:    94e3197d
+      sha1:   414156809a3fe2c072d8947a91708f3ed40008b2
+    rom
+      name:   mds-ic4-4 a.6c
+      offset: 0xa000
+      size:   8192
+      crc:    b253011e
+      sha1:   abc2c84e342d1f8e8d0dbb580370733ef4b38413
+    rom
+      name:   mds-ic4-4 a.6b
+      offset: 0xc000
+      size:   8192
+      crc:    2ee9c1f9
+      sha1:   71619cff6d41cf5a8f74a689e30c2a24020f7d06
+    rom
+      name:   mds-ic4-4 a.6a
+      offset: 0xe000
+      size:   8192
+      crc:    094c246c
+      sha1:   82aba548706041c2de0cda02d21409fe8a09338c
+  gfx2
+    rom
+      name:   mds-ic4-4 a.8b
+      offset: 0x0
+      size:   8192
+      crc:    331460b4
+      sha1:   4cf94d711cdb5715d14f1ab3cadec245e0adfb1e
+    rom
+      name:   mds-ic4-4 a.8a
+      offset: 0x2000
+      size:   8192
+      crc:    4ec44fb3
+      sha1:   676e0ab574dec08df562c6f278e8a9cc7c8afa41
+  ppu1-palette
+    rom
+      name:   rp2c04-0004.pal
+      offset: 0x0
+      size:   192
+      crc:    0c2e8e4d
+      sha1:   0f9090225eb1f08ae5072d40af3e95547cbce05f
+game
+  name:    jajamaru
+  title:   Vs. Ninja Jajamaru Kun (Japan)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c05_01
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 4
+      value: 0x10
+    option
+      name: 5
+      value: 0x8
+    option
+      name: 6
+      value: 0x18
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x20
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x40
+  dip
+    name: Demo Sounds
+    port: DSW0
+    mask: 0x80
+    default: 0x80
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   10.bin
+      offset: 0x0
+      size:   8192
+      crc:    16af1704
+      sha1:   ebcf9ad06e302c51ee4432631a6b0fb85a9630ed
+    rom
+      name:   9.bin
+      offset: 0x2000
+      size:   8192
+      crc:    db7d1814
+      sha1:   6a0c9cf97006a8a41dc2f025a5f8acbb798dec60
+    rom
+      name:   8.bin
+      offset: 0x4000
+      size:   8192
+      crc:    ce263271
+      sha1:   1e5e2a9e0dcebeccd7df59491ca0bc5ac4d0d42b
+    rom
+      name:   7.bin
+      offset: 0x6000
+      size:   8192
+      crc:    a406d0e4
+      sha1:   1f67b58bacb145a3ff8b8380b44cd60251051c71
+  gfx1
+    rom
+      name:   12.bin
+      offset: 0x0
+      size:   8192
+      crc:    c91d536a
+      sha1:   8cb4b0819652df484553b9dd1f82391d51c90fcc
+    rom
+      name:   11.bin
+      offset: 0x2000
+      size:   8192
+      crc:    f0034c04
+      sha1:   402dcf6ad443baeee3038ecab12db008a1ad2787
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    ladygolf
+  title:   Vs. Stroke & Match Golf (Ladies Version, set LG4 ?)
+  board:   nintendo/vs
+  type:    game
+  parent:  smgolf
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x1
+    option
+      name: 4 Coins/1 Credit
+      value: 0x7
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x5
+    option
+      name: 1 Coin/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x4
+    option
+      name: Free Play
+      value: 0x0
+  dip
+    name: Hole Size
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Large
+      value: 0x0
+    option
+      name: Small
+      value: 0x8
+  dip
+    name: Points per Stroke
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Easier
+      value: 0x0
+    option
+      name: Harder
+      value: 0x10
+  dip
+    name: Starting Points
+    port: DSW0
+    mask: 0x60
+    default: 0x20
+    option
+      name: 10
+      value: 0x0
+    option
+      name: 13
+      value: 0x40
+    option
+      name: 16
+      value: 0x20
+    option
+      name: 20
+      value: 0x60
+  dip
+    name: Difficulty Vs. Computer
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x80
+  prg
+    rom
+      name:   lg-1d
+      offset: 0x0
+      size:   8192
+      crc:    8b2ab436
+      sha1:   145a75f30f1fab5b1babf01ada9ed23f59c2c18d
+    rom
+      name:   lg-1c
+      offset: 0x2000
+      size:   8192
+      crc:    bda6b432
+      sha1:   c8322f07df0adbd70cb49f2284b046478a3a57c1
+    rom
+      name:   lg-1b
+      offset: 0x4000
+      size:   8192
+      crc:    dcdd8220
+      sha1:   563028f8db9ad221d8ac8f8096b4587b822eedb7
+    rom
+      name:   lg-1a
+      offset: 0x6000
+      size:   8192
+      crc:    26a3cb3b
+      sha1:   00131637eb76154c4f04eb54707e0e7b453d4580
+  gfx1
+    rom
+      name:   mds-lg4 e.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    95618947
+      sha1:   e8f09bffa3fa1a1cac8fa25df9fba962951c1fb3
+    rom
+      name:   mds-lg4 e.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    d07407b1
+      sha1:   b998b46fe83e76fac3d7b71495d1da8580a731f9
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c
+game
+  name:    ladygolfe
+  title:   Vs. Stroke & Match Golf (Ladies Version, set LG4 E)
+  board:   nintendo/vs
+  type:    game
+  parent:  smgolf
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x1
+    option
+      name: 4 Coins/1 Credit
+      value: 0x7
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x5
+    option
+      name: 1 Coin/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x4
+    option
+      name: Free Play
+      value: 0x0
+  dip
+    name: Hole Size
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Large
+      value: 0x0
+    option
+      name: Small
+      value: 0x8
+  dip
+    name: Points per Stroke
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Easier
+      value: 0x0
+    option
+      name: Harder
+      value: 0x10
+  dip
+    name: Starting Points
+    port: DSW0
+    mask: 0x60
+    default: 0x20
+    option
+      name: 10
+      value: 0x0
+    option
+      name: 13
+      value: 0x40
+    option
+      name: 16
+      value: 0x20
+    option
+      name: 20
+      value: 0x60
+  dip
+    name: Difficulty Vs. Computer
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x80
+  prg
+    rom
+      name:   mds-lg4 e.1d or 6d
+      offset: 0x0
+      size:   8192
+      crc:    408ea247
+      sha1:   48cbcf9b87e522b20599bcf2b61df81bfd55db7b
+    rom
+      name:   mds-lg4 e.1c or 6c
+      offset: 0x2000
+      size:   8192
+      crc:    75214cf3
+      sha1:   8024a2a89573700250c1c12ab8f59f4848f87f78
+    rom
+      name:   mds-lg4 e.1b or 6b
+      offset: 0x4000
+      size:   8192
+      crc:    67f40126
+      sha1:   891c2bc2b6e1ee1d58baea22714133cae6e38b8d
+    rom
+      name:   mds-lg4 e.1a or 6a
+      offset: 0x6000
+      size:   8192
+      crc:    44393845
+      sha1:   5c36dcb115d4233a1e03faa28e95d2662953ca91
+  gfx1
+    rom
+      name:   mds-lg4 e.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    95618947
+      sha1:   e8f09bffa3fa1a1cac8fa25df9fba962951c1fb3
+    rom
+      name:   mds-lg4 e.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    d07407b1
+      sha1:   b998b46fe83e76fac3d7b71495d1da8580a731f9
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c
+game
+  name:    nvs_machrider
+  title:   Vs. Mach Rider (Endurance Course Version)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Time
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 280 (Easy)
+      value: 0x0
+    option
+      name: 250
+      value: 0x10
+    option
+      name: 220
+      value: 0x8
+    option
+      name: 200 (Hard)
+      value: 0x18
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x20
+  dip
+    name: Enemies
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: More
+      value: 0x40
+    option
+      name: Less
+      value: 0x0
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mr-1d
+      offset: 0x0
+      size:   8192
+      crc:    379c44b9
+      sha1:   7b148ba7f7eea64509733f94b4eaafe5bfcf3527
+    rom
+      name:   mr-1c
+      offset: 0x2000
+      size:   8192
+      crc:    cb864802
+      sha1:   65f06a8eaca3347432f3f2f673a24692415d869f
+    rom
+      name:   mr-1b
+      offset: 0x4000
+      size:   8192
+      crc:    5547261f
+      sha1:   aedb7ab1ef0cd32f325ec9fc948ca1e21a78aa7a
+    rom
+      name:   mr-1a
+      offset: 0x6000
+      size:   8192
+      crc:    e3e3900d
+      sha1:   c66807ca372d2e5ac11030fdf3d30e30617d4e72
+  gfx1
+    rom
+      name:   mr-2b
+      offset: 0x0
+      size:   8192
+      crc:    33a2b41a
+      sha1:   671f37bce742e63250296e62c143f8a82f860b04
+    rom
+      name:   mr-2a
+      offset: 0x2000
+      size:   8192
+      crc:    685899d8
+      sha1:   02b6a9bc21367c481d0091fa8a8f2d1b841244bf
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c
+game
+  name:    nvs_machridera
+  title:   Vs. Mach Rider (Fighting Course Version, set MR4-1 A)
+  board:   nintendo/vs
+  type:    game
+  parent:  nvs_machrider
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Max Lives After Level 1
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 3
+      value: 0x18
+    option
+      name: 4
+      value: 0x0
+    option
+      name: 5
+      value: 0x10
+    option
+      name: 6
+      value: 0x8
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x20
+  dip
+    name: Enemies
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: More
+      value: 0x40
+    option
+      name: Less
+      value: 0x0
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-mr4-1 a.1d or 6d
+      offset: 0x0
+      size:   8192
+      crc:    ab7e0594
+      sha1:   fc5982a93791608a20e5ec9e3a4b71d702bda354
+    rom
+      name:   mds-mr4-1 a.1c or 6c
+      offset: 0x2000
+      size:   8192
+      crc:    d4a341c3
+      sha1:   c799e40d0ebd1447032d8767fb2caeee6b33f31a
+    rom
+      name:   mds-mr4-1 a.1b or 6b
+      offset: 0x4000
+      size:   8192
+      crc:    cbdcfece
+      sha1:   91f3a0e1e91bdbb61721e9777009299f7e8efa96
+    rom
+      name:   mds-mr4-1 a.1a or 6a
+      offset: 0x6000
+      size:   8192
+      crc:    e5b1e350
+      sha1:   ab30f84597cbf470a02a2d083587cdc589a29a3c
+  gfx1
+    rom
+      name:   mds-mr4-1 a.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    59867e36
+      sha1:   2b5546aa9f140277d611d6d5516b1343e5e672a0
+    rom
+      name:   mds-mr4-1 a.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    ccfedc5a
+      sha1:   3d6321681fbe256d7c71037205d45d22fc264569
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    nvs_mightybj
+  title:   Vs. Mighty Bomb Jack (Japan)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c05_02
+    mapper: standard
+    protection: normal
+    input: swapped
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x7
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 2
+      value: 0x10
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 4
+      value: 0x8
+    option
+      name: 5
+      value: 0x18
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x20
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x40
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   1d.bin
+      offset: 0x0
+      size:   8192
+      crc:    55dc8d77
+      sha1:   eafb8636d994a10caee9eb0ba544260281706058
+    rom
+      name:   1c.bin
+      offset: 0x2000
+      size:   8192
+      crc:    151a6d15
+      sha1:   2652aef97aae122711ef471d9dc1d42f6393b91f
+    rom
+      name:   1b.bin
+      offset: 0x4000
+      size:   8192
+      crc:    9f9944bc
+      sha1:   58b1aca3e0cd32769978c704177d6ddeb70ac95a
+    rom
+      name:   1a.bin
+      offset: 0x6000
+      size:   8192
+      crc:    76f49b65
+      sha1:   c50fd29ea91bba3d59e943496d0941fe0e4efcb2
+  gfx1
+    rom
+      name:   2b.bin
+      offset: 0x0
+      size:   8192
+      crc:    5425a4d0
+      sha1:   09eb9d93b680c9eefde5ee6e16cf81de931cccb9
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    nvs_platoon
+  title:   Vs. Platoon
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: sunsoft-3
+    protection: normal
+    input: standard
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x1
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x1
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x2
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x2
+  dip
+    name: Demo Sounds
+    port: DSW0
+    mask: 0x4
+    default: 0x0
+    option
+      name: Off
+      value: 0x4
+    option
+      name: On
+      value: 0x0
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x8
+    option
+      name: Medium
+      value: 0x10
+    option
+      name: Hard
+      value: 0x18
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0xe0
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0xc0
+    option
+      name: 4 Coins/1 Credit
+      value: 0xa0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x80
+    option
+      name: 2 Coins/1 Credit
+      value: 0x60
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x20
+    option
+      name: 1 Coin/3 Credits
+      value: 0x40
+    option
+      name: Free Play
+      value: 0xe0
+  prg
+    rom
+      name:   prgver0.ic4
+      offset: 0x0
+      size:   131072
+      crc:    e2c0a2be
+      sha1:   1f8e33d6da8402be6a376668a424bfde38471021
+  gfx1
+    rom
+      name:   chrver0.ic6
+      offset: 0x0
+      size:   131072
+      crc:    689df57d
+      sha1:   854aaa9feb16e3f239fba6069fbf65e69858fe73
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    rbibb
+  title:   Vs. Atari R.B.I. Baseball (set 1)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: namco-108
+    protection: rbi-baseball
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x3
+    default: 0x0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x2
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x1
+  dip
+    name: 1p/inn, 2p/inn, Time/Min
+    port: DSW0
+    mask: 0xc
+    default: 0xc
+    option
+      name: 2, 1, 3
+      value: 0x4
+    option
+      name: 2, 2, 4
+      value: 0xc
+    option
+      name: 3, 2, 6
+      value: 0x0
+    option
+      name: 4, 3, 7
+      value: 0x8
+  dip
+    name: Demo Sounds
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Off
+      value: 0x10
+    option
+      name: On
+      value: 0x0
+  dip
+    name: PPU Type
+    port: DSW0
+    mask: 0xe0
+    default: 0x0
+    option
+      name: RP2C04-0001
+      value: 0x0
+    option
+      name: RP2C03
+      value: 0x20
+    option
+      name: RP2C04-0002
+      value: 0x40
+    option
+      name: RP2C04-0003
+      value: 0x80
+    option
+      name: RP2C04-0004
+      value: 0xc0
+  prg
+    rom
+      name:   rbi-prg
+      offset: 0x0
+      size:   65536
+      crc:    135adf7c
+      sha1:   e090b0aec98463c565e300a910561499d8bd9676
+  gfx1
+    rom
+      name:   rbi-cha
+      offset: 0x0
+      size:   32768
+      crc:    a3c14889
+      sha1:   ef00f4fbf21cf34e946957b9b6825b8e2cb16536
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    rbibba
+  title:   Vs. Atari R.B.I. Baseball (set 2)
+  board:   nintendo/vs
+  type:    game
+  parent:  rbibb
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: namco-108
+    protection: rbi-baseball
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x3
+    default: 0x0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x2
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x1
+  dip
+    name: 1p/inn, 2p/inn, Time/Min
+    port: DSW0
+    mask: 0xc
+    default: 0xc
+    option
+      name: 2, 1, 3
+      value: 0x4
+    option
+      name: 2, 2, 4
+      value: 0xc
+    option
+      name: 3, 2, 6
+      value: 0x0
+    option
+      name: 4, 3, 7
+      value: 0x8
+  dip
+    name: Demo Sounds
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Off
+      value: 0x10
+    option
+      name: On
+      value: 0x0
+  dip
+    name: PPU Type
+    port: DSW0
+    mask: 0xe0
+    default: 0x0
+    option
+      name: RP2C04-0001
+      value: 0x0
+    option
+      name: RP2C03
+      value: 0x20
+    option
+      name: RP2C04-0002
+      value: 0x40
+    option
+      name: RP2C04-0003
+      value: 0x80
+    option
+      name: RP2C04-0004
+      value: 0xc0
+  prg
+    rom
+      name:   rbi-prga
+      offset: 0x0
+      size:   65536
+      crc:    a5939d0d
+      sha1:   476ac2a3974b69082bb8eebdfc0d15befaa2e165
+  gfx1
+    rom
+      name:   rbi-cha
+      offset: 0x0
+      size:   32768
+      crc:    a3c14889
+      sha1:   ef00f4fbf21cf34e946957b9b6825b8e2cb16536
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    skatekds
+  title:   Vs. Skate Kids. (Graphic hack of Super Mario Bros.)
+  board:   nintendo/vs
+  type:    game
+  parent:  suprmrio
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: swapped
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x2
+    option
+      name: 2 Coins/1 Credit
+      value: 0x4
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x1
+    option
+      name: 1 Coin/4 Credits
+      value: 0x5
+    option
+      name: 1 Coin/5 Credits
+      value: 0x3
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: 2
+      value: 0x8
+    option
+      name: 3
+      value: 0x0
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0x30
+    default: 0x10
+    option
+      name: 100 Coins
+      value: 0x0
+    option
+      name: 150 Coins
+      value: 0x20
+    option
+      name: 200 Coins
+      value: 0x10
+    option
+      name: 250 Coins
+      value: 0x30
+  dip
+    name: Timer
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Slow
+      value: 0x0
+    option
+      name: Fast
+      value: 0x40
+  dip
+    name: Continue Lives
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: 3
+      value: 0x80
+    option
+      name: 4
+      value: 0x0
+  prg
+    rom
+      name:   mds-sm4-4__1dor6d_e.1d or 6d
+      offset: 0x0
+      size:   8192
+      crc:    be4d5436
+      sha1:   08162a7c987f1939d09bebdb676f596c86abf465
+    rom
+      name:   mds-sm4-4__1cor6c_e.1c or 6c
+      offset: 0x2000
+      size:   8192
+      crc:    5e3fb550
+      sha1:   de4494e4dd52f7f7b04cf1d9019fd89fb90eaca9
+    rom
+      name:   mds-sm4-4__1bor6b_e.1b or 6b
+      offset: 0x4000
+      size:   8192
+      crc:    b1b87893
+      sha1:   8563ceaca664cf4495ef1020c07179ca7e4af9f3
+    rom
+      name:   mds-sm4-4__1aor6a_e.1a or 6a
+      offset: 0x6000
+      size:   8192
+      crc:    1abf053c
+      sha1:   f17db88ce0c9bf1ed88dc16b9650f11d10835cec
+  gfx1
+    rom
+      name:   __skatekds,.2b
+      offset: 0x0
+      size:   8192
+      crc:    f3980303
+      sha1:   b9a25c906d1861c89e2e40e878a34d318daf6619
+    rom
+      name:   __skatekds,.2a
+      offset: 0x2000
+      size:   8192
+      crc:    7a0ab7eb
+      sha1:   b6c32791481fafddc8504adb4eaed30a2fb3a03e
+  ppu1-palette
+    rom
+      name:   rp2c04-0004.pal
+      offset: 0x0
+      size:   192
+      crc:    0c2e8e4d
+      sha1:   0f9090225eb1f08ae5072d40af3e95547cbce05f
+game
+  name:    smgolf
+  title:   Vs. Stroke & Match Golf (Men Version, set GF4-2 F)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x1
+    option
+      name: 4 Coins/1 Credit
+      value: 0x7
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x5
+    option
+      name: 1 Coin/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x4
+    option
+      name: Free Play
+      value: 0x0
+  dip
+    name: Hole Size
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Large
+      value: 0x0
+    option
+      name: Small
+      value: 0x8
+  dip
+    name: Points per Stroke
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Easier
+      value: 0x0
+    option
+      name: Harder
+      value: 0x10
+  dip
+    name: Starting Points
+    port: DSW0
+    mask: 0x60
+    default: 0x20
+    option
+      name: 10
+      value: 0x0
+    option
+      name: 13
+      value: 0x40
+    option
+      name: 16
+      value: 0x20
+    option
+      name: 20
+      value: 0x60
+  dip
+    name: Difficulty Vs. Computer
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x80
+  prg
+    rom
+      name:   mds-gf4-2 f.1d or 6d
+      offset: 0x0
+      size:   8192
+      crc:    4a723087
+      sha1:   87dc063d295f55871598a1e1eb4e62ce298b2f0c
+    rom
+      name:   mds-gf4-2 f.1c or 6c
+      offset: 0x2000
+      size:   8192
+      crc:    2debda63
+      sha1:   33b42eb5641ec947b2f2dcbc632ee6c81fa2ffe3
+    rom
+      name:   mds-gf4-2 f.1b or 6b
+      offset: 0x4000
+      size:   8192
+      crc:    6783652f
+      sha1:   7165ee59d3787cb56eed4791351da07f4bcc68ed
+    rom
+      name:   mds-gf4-2 f.1a or 6a
+      offset: 0x6000
+      size:   8192
+      crc:    bfc17263
+      sha1:   9e3b46fe08be893935138247ed3168d19d55312e
+  gfx1
+    rom
+      name:   mds-gf4-2 f.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    2782a3e5
+      sha1:   4e57aab58fb250da951a9aecd21d6aa79e697bcb
+    rom
+      name:   mds-gf4-2 f.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    6e93fdef
+      sha1:   44f46421adabbc40135c681592cb5226b7c9012a
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c
+game
+  name:    smgolfb
+  title:   Vs. Stroke & Match Golf (Men Version, set GF4-2 ?)
+  board:   nintendo/vs
+  type:    game
+  parent:  smgolf
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x1
+    option
+      name: 4 Coins/1 Credit
+      value: 0x7
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x5
+    option
+      name: 1 Coin/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x4
+    option
+      name: Free Play
+      value: 0x0
+  dip
+    name: Hole Size
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Large
+      value: 0x0
+    option
+      name: Small
+      value: 0x8
+  dip
+    name: Points per Stroke
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Easier
+      value: 0x0
+    option
+      name: Harder
+      value: 0x10
+  dip
+    name: Starting Points
+    port: DSW0
+    mask: 0x60
+    default: 0x20
+    option
+      name: 10
+      value: 0x0
+    option
+      name: 13
+      value: 0x40
+    option
+      name: 16
+      value: 0x20
+    option
+      name: 20
+      value: 0x60
+  dip
+    name: Difficulty Vs. Computer
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x80
+  prg
+    rom
+      name:   mds-gf4-2.1d
+      offset: 0x0
+      size:   8192
+      crc:    a3e286d3
+      sha1:   ee7539a46e0e062ffd63d84e8b83de29b860a501
+    rom
+      name:   mds-gf4-2.1c
+      offset: 0x2000
+      size:   8192
+      crc:    e477e48b
+      sha1:   2ebcc548ac8defc521860d2d2f585be0eee6620e
+    rom
+      name:   mds-gf4-2.1b
+      offset: 0x4000
+      size:   8192
+      crc:    7d80b511
+      sha1:   52aa7e798ff8d933b023bcade81a39f7e27d02c5
+    rom
+      name:   mds-gf4-2.1a
+      offset: 0x6000
+      size:   8192
+      crc:    7b767da6
+      sha1:   0f0f3a24b844265c304b10016f33e91b323a9a98
+  gfx1
+    rom
+      name:   mds-gf4-2 f.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    2782a3e5
+      sha1:   4e57aab58fb250da951a9aecd21d6aa79e697bcb
+    rom
+      name:   mds-gf4-2 f.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    6e93fdef
+      sha1:   44f46421adabbc40135c681592cb5226b7c9012a
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c
+game
+  name:    smgolfj
+  title:   Vs. Stroke & Match Golf (Men Version) (Japan, set GF3 B)
+  board:   nintendo/vs
+  type:    game
+  parent:  smgolf
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x1
+    option
+      name: 4 Coins/1 Credit
+      value: 0x7
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x5
+    option
+      name: 1 Coin/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x4
+    option
+      name: Free Play
+      value: 0x0
+  dip
+    name: Hole Size
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Large
+      value: 0x0
+    option
+      name: Small
+      value: 0x8
+  dip
+    name: Points per Stroke
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Easier
+      value: 0x0
+    option
+      name: Harder
+      value: 0x10
+  dip
+    name: Starting Points
+    port: DSW0
+    mask: 0x60
+    default: 0x20
+    option
+      name: 300
+      value: 0x0
+    option
+      name: 400
+      value: 0x40
+    option
+      name: 500
+      value: 0x20
+    option
+      name: 600
+      value: 0x60
+  dip
+    name: Difficulty Vs. Computer
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x80
+  prg
+    rom
+      name:   mds-gf3 b.6d
+      offset: 0x0
+      size:   8192
+      crc:    8ce375b6
+      sha1:   f787f5ebe584cc95428b63660cd41e2b3df6ddf2
+    rom
+      name:   mds-gf3 b.6c
+      offset: 0x2000
+      size:   8192
+      crc:    50a938d3
+      sha1:   5f5c5e50024fe113240f1b0b3b6d38cbf9130133
+    rom
+      name:   mds-gf3 b.6b
+      offset: 0x4000
+      size:   8192
+      crc:    7dc39f1f
+      sha1:   12ff2f0ec7418754f9b6e600746e15f345e3ddaa
+    rom
+      name:   mds-gf3 b.6a
+      offset: 0x6000
+      size:   8192
+      crc:    9b8a2106
+      sha1:   008ab9098f9ce564bcb4beb17285c2bc18b529ff
+  gfx1
+    rom
+      name:   mds-gf3 b.8b
+      offset: 0x0
+      size:   8192
+      crc:    7ef68029
+      sha1:   a639e463fd0abfb1bff0dd17aa0c9f70a72ee139
+    rom
+      name:   mds-gf3 b.8a
+      offset: 0x2000
+      size:   8192
+      crc:    f2285878
+      sha1:   e0d34161a1879975f51c12222cf366228170b0e3
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    starlstr
+  title:   Vs. Star Luster
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x3
+    default: 0x0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x2
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x4
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x4
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x8
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x10
+  dip
+    name: PPU Type
+    port: DSW0
+    mask: 0xe0
+    default: 0x0
+    option
+      name: RP2C03
+      value: 0x0
+    option
+      name: RP2C04-0001
+      value: 0x20
+    option
+      name: RP2C04-0002
+      value: 0x60
+    option
+      name: RP2C04-0003
+      value: 0xa0
+    option
+      name: RP2C04-0004
+      value: 0xe0
+  prg
+    rom
+      name:   sl_04.1d
+      offset: 0x0
+      size:   8192
+      crc:    4fd5b385
+      sha1:   a4cfdb9d74538a162825d9fbbed67e2a645bcc2c
+    rom
+      name:   sl_03.1c
+      offset: 0x2000
+      size:   8192
+      crc:    f26cd7ca
+      sha1:   f6fd5a6028b111a8fca68684bad651a92e0fd7be
+    rom
+      name:   sl_02.1b
+      offset: 0x4000
+      size:   8192
+      crc:    9308f34e
+      sha1:   4438d13dad793bbc158a5d163ccd4ae26f914fb5
+    rom
+      name:   sl_01.1a
+      offset: 0x6000
+      size:   8192
+      crc:    d87296e4
+      sha1:   a1220313f4c6ee1ee0beee9792f2e9038eaa4cb3
+  gfx1
+    rom
+      name:   sl_06.2b
+      offset: 0x0
+      size:   8192
+      crc:    25f0e027
+      sha1:   4fcbe4bb959689948cb8f505d5c495dabb893f7b
+    rom
+      name:   sl_05.2a
+      offset: 0x2000
+      size:   8192
+      crc:    2bbb45fd
+      sha1:   53c3588bd25baa6b8ff41f4755db9e0e806c9719
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    suprmrio
+  title:   Vs. Super Mario Bros. (set SM4-4 E)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: swapped
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x2
+    option
+      name: 2 Coins/1 Credit
+      value: 0x4
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x1
+    option
+      name: 1 Coin/4 Credits
+      value: 0x5
+    option
+      name: 1 Coin/5 Credits
+      value: 0x3
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: 2
+      value: 0x8
+    option
+      name: 3
+      value: 0x0
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0x30
+    default: 0x10
+    option
+      name: 100 Coins
+      value: 0x0
+    option
+      name: 150 Coins
+      value: 0x20
+    option
+      name: 200 Coins
+      value: 0x10
+    option
+      name: 250 Coins
+      value: 0x30
+  dip
+    name: Timer
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Slow
+      value: 0x0
+    option
+      name: Fast
+      value: 0x40
+  dip
+    name: Continue Lives
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: 3
+      value: 0x80
+    option
+      name: 4
+      value: 0x0
+  prg
+    rom
+      name:   mds-sm4-4__1dor6d_e.1d or 6d
+      offset: 0x0
+      size:   8192
+      crc:    be4d5436
+      sha1:   08162a7c987f1939d09bebdb676f596c86abf465
+    rom
+      name:   mds-sm4-4__1cor6c_e.1c or 6c
+      offset: 0x2000
+      size:   8192
+      crc:    5e3fb550
+      sha1:   de4494e4dd52f7f7b04cf1d9019fd89fb90eaca9
+    rom
+      name:   mds-sm4-4__1bor6b_e.1b or 6b
+      offset: 0x4000
+      size:   8192
+      crc:    b1b87893
+      sha1:   8563ceaca664cf4495ef1020c07179ca7e4af9f3
+    rom
+      name:   mds-sm4-4__1aor6a_e.1a or 6a
+      offset: 0x6000
+      size:   8192
+      crc:    1abf053c
+      sha1:   f17db88ce0c9bf1ed88dc16b9650f11d10835cec
+  gfx1
+    rom
+      name:   mds-sm4-4__2bor8b_e.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    42418d40
+      sha1:   22ab61589742cfa4cc6856f7205d7b4b8310bc4d
+    rom
+      name:   mds-sm4-4__2aor8a_e.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    15506b86
+      sha1:   69ecf7a3cc8bf719c1581ec7c0d68798817d416f
+  ppu1-palette
+    rom
+      name:   rp2c04-0004.pal
+      offset: 0x0
+      size:   192
+      crc:    0c2e8e4d
+      sha1:   0f9090225eb1f08ae5072d40af3e95547cbce05f
+game
+  name:    suprmrioa
+  title:   Vs. Super Mario Bros. (set ?, harder)
+  board:   nintendo/vs
+  type:    game
+  parent:  suprmrio
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: swapped
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x2
+    option
+      name: 2 Coins/1 Credit
+      value: 0x4
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x1
+    option
+      name: 1 Coin/4 Credits
+      value: 0x5
+    option
+      name: 1 Coin/5 Credits
+      value: 0x3
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: 2
+      value: 0x8
+    option
+      name: 3
+      value: 0x0
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0x30
+    default: 0x10
+    option
+      name: 100 Coins
+      value: 0x0
+    option
+      name: 150 Coins
+      value: 0x20
+    option
+      name: 200 Coins
+      value: 0x10
+    option
+      name: 250 Coins
+      value: 0x30
+  dip
+    name: Timer
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Slow
+      value: 0x0
+    option
+      name: Fast
+      value: 0x40
+  dip
+    name: Continue Lives
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: 3
+      value: 0x80
+    option
+      name: 4
+      value: 0x0
+  prg
+    rom
+      name:   mds-sm4-4__1dor6d_e.1d or 6d
+      offset: 0x0
+      size:   8192
+      crc:    be4d5436
+      sha1:   08162a7c987f1939d09bebdb676f596c86abf465
+    rom
+      name:   __suprmrioa,.1c or 6c
+      offset: 0x2000
+      size:   8192
+      crc:    0011fc5a
+      sha1:   5c2c49938a12affc03e64e5bdab307998be20020
+    rom
+      name:   mds-sm4-4__1bor6b_e.1b or 6b
+      offset: 0x4000
+      size:   8192
+      crc:    b1b87893
+      sha1:   8563ceaca664cf4495ef1020c07179ca7e4af9f3
+    rom
+      name:   mds-sm4-4__1aor6a_e.1a or 6a
+      offset: 0x6000
+      size:   8192
+      crc:    1abf053c
+      sha1:   f17db88ce0c9bf1ed88dc16b9650f11d10835cec
+  gfx1
+    rom
+      name:   mds-sm4-4__2bor8b_e.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    42418d40
+      sha1:   22ab61589742cfa4cc6856f7205d7b4b8310bc4d
+    rom
+      name:   mds-sm4-4__2aor8a_e.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    15506b86
+      sha1:   69ecf7a3cc8bf719c1581ec7c0d68798817d416f
+  ppu1-palette
+    rom
+      name:   rp2c04-0004.pal
+      offset: 0x0
+      size:   192
+      crc:    0c2e8e4d
+      sha1:   0f9090225eb1f08ae5072d40af3e95547cbce05f
+game
+  name:    suprmriobl
+  title:   Vs. Super Mario Bros. (bootleg with Z80, set 1)
+  board:   nintendo/vs
+  type:    game
+  parent:  suprmrio
+  hardware
+    topology: unsupported
+    reason: bootleg-z80
+  maincpu
+    rom
+      name:   4.bin
+      offset: 0x8000
+      size:   32768
+      crc:    6f857416
+      sha1:   05e2df8ac01a03bf09b73e34c30aaf5bf4715809
+  sub
+    rom
+      name:   1.bin
+      offset: 0x0
+      size:   8192
+      crc:    9e3557f2
+      sha1:   11a0de2c0154f7ac120d9774cb5d1051e0156822
+  unk
+    rom
+      name:   3.bin
+      offset: 0x0
+      size:   32768
+      crc:    67a467f9
+      sha1:   61cd1db7cd52faa31153b89f6b98c9b78bf4ca4f
+  gfx1
+    rom
+      name:   2.bin
+      offset: 0x0
+      size:   8192
+      crc:    42418d40
+      sha1:   22ab61589742cfa4cc6856f7205d7b4b8310bc4d
+    rom
+      name:   5.bin
+      offset: 0x2000
+      size:   8192
+      crc:    15506b86
+      sha1:   69ecf7a3cc8bf719c1581ec7c0d68798817d416f
+  ppu1-palette
+    rom
+      name:   prom6301.1
+      offset: 0x0
+      size:   256
+      crc:    a31dc330
+      sha1:   b652003f7e252bac3bdb19412839c2f03af7f8b8
+    rom
+      name:   prom6301.2
+      offset: 0x0
+      size:   256
+      crc:    019c6141
+      sha1:   fdeda4dea6506807a3324fa941f0684208aa3b4b
+  pals
+    rom
+      name:   pal16l8.1
+      offset: 0x0
+      size:   260
+      crc:    bd76fb53
+      sha1:   2d0634e8edb3289a103719466465e9777606086e
+    rom
+      name:   pal16r6a.2
+      offset: 0x0
+      size:   260
+      status: nodump
+    rom
+      name:   pal16r8.3
+      offset: 0x0
+      size:   260
+      crc:    bd76fb53
+      sha1:   2d0634e8edb3289a103719466465e9777606086e
+    rom
+      name:   pal16l8.4
+      offset: 0x0
+      size:   260
+      crc:    6f6de82d
+      sha1:   3d59b222d25457b2f89b559409721db37d6a81d8
+    rom
+      name:   pal16r6.5
+      offset: 0x0
+      size:   260
+      crc:    ceff7c7c
+      sha1:   52fd344c591478469369cd0862d1facfe23e12fb
+    rom
+      name:   pal16r8.6
+      offset: 0x0
+      size:   260
+      crc:    bd76fb53
+      sha1:   2d0634e8edb3289a103719466465e9777606086e
+    rom
+      name:   pal16r8a.7
+      offset: 0x0
+      size:   260
+      crc:    bd76fb53
+      sha1:   2d0634e8edb3289a103719466465e9777606086e
+  epld
+    rom
+      name:   ep1200.bin
+      offset: 0x0
+      size:   256
+      status: nodump
+game
+  name:    suprmriobl2
+  title:   Vs. Super Mario Bros. (bootleg with Z80, set 2)
+  board:   nintendo/vs
+  type:    game
+  parent:  suprmrio
+  hardware
+    topology: unsupported
+    reason: bootleg-z80
+  maincpu
+    rom
+      name:   4-27256.bin
+      offset: 0x8000
+      size:   32768
+      crc:    663b1753
+      sha1:   b0d2057c4545f2d6534cafb16086826c8ba49f5a
+  sub
+    rom
+      name:   1-2764.bin
+      offset: 0x0
+      size:   8192
+      crc:    95856e07
+      sha1:   c681cfdb656e687bc59080df56c9c38e13be4bb8
+  unk
+    rom
+      name:   3-27256.bin
+      offset: 0x0
+      size:   32768
+      crc:    67a467f9
+      sha1:   61cd1db7cd52faa31153b89f6b98c9b78bf4ca4f
+  gfx1
+    rom
+      name:   2-2764.bin
+      offset: 0x0
+      size:   8192
+      crc:    42418d40
+      sha1:   22ab61589742cfa4cc6856f7205d7b4b8310bc4d
+    rom
+      name:   5-2764.bin
+      offset: 0x2000
+      size:   8192
+      crc:    15506b86
+      sha1:   69ecf7a3cc8bf719c1581ec7c0d68798817d416f
+  ppu1-palette
+    rom
+      name:   prom6301.1
+      offset: 0x0
+      size:   256
+      crc:    a31dc330
+      sha1:   b652003f7e252bac3bdb19412839c2f03af7f8b8
+      status: baddump
+    rom
+      name:   prom6301.2
+      offset: 0x0
+      size:   256
+      crc:    019c6141
+      sha1:   fdeda4dea6506807a3324fa941f0684208aa3b4b
+      status: baddump
+  pals
+    rom
+      name:   pal16l8.1
+      offset: 0x0
+      size:   260
+      crc:    bd76fb53
+      sha1:   2d0634e8edb3289a103719466465e9777606086e
+      status: baddump
+    rom
+      name:   pal16r6a.2
+      offset: 0x0
+      size:   260
+      status: nodump
+    rom
+      name:   pal16r8.3
+      offset: 0x0
+      size:   260
+      crc:    bd76fb53
+      sha1:   2d0634e8edb3289a103719466465e9777606086e
+      status: baddump
+    rom
+      name:   pal16l8.4
+      offset: 0x0
+      size:   260
+      crc:    6f6de82d
+      sha1:   3d59b222d25457b2f89b559409721db37d6a81d8
+      status: baddump
+    rom
+      name:   pal16r6.5
+      offset: 0x0
+      size:   260
+      crc:    ceff7c7c
+      sha1:   52fd344c591478469369cd0862d1facfe23e12fb
+      status: baddump
+    rom
+      name:   pal16r8.6
+      offset: 0x0
+      size:   260
+      crc:    bd76fb53
+      sha1:   2d0634e8edb3289a103719466465e9777606086e
+      status: baddump
+    rom
+      name:   pal16r8a.7
+      offset: 0x0
+      size:   260
+      crc:    bd76fb53
+      sha1:   2d0634e8edb3289a103719466465e9777606086e
+      status: baddump
+  epld
+    rom
+      name:   ep1200.bin
+      offset: 0x0
+      size:   256
+      status: nodump
+game
+  name:    supxevs
+  title:   Vs. Super Xevious
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: namco-108
+    protection: super-xevious
+    input: standard
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0x1
+    default: 0x0
+    option
+      name: 50k, 150k, every 150k
+      value: 0x0
+    option
+      name: 70k, 200k, every 200k
+      value: 0x1
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x2
+    default: 0x0
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 5
+      value: 0x2
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x4
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x4
+  dip
+    name: Hidden Password Screen
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Yes
+      value: 0x0
+    option
+      name: No
+      value: 0x8
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x30
+    default: 0x0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x30
+    option
+      name: 2 Coins/1 Credit
+      value: 0x20
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x10
+  dip
+    name: PPU Type
+    port: DSW0
+    mask: 0xc0
+    default: 0x0
+    option
+      name: RP2C04-0001
+      value: 0x0
+    option
+      name: RP2C04-0002
+      value: 0x40
+    option
+      name: RP2C04-0003
+      value: 0x80
+    option
+      name: RP2C04-0004
+      value: 0xc0
+  prg
+    rom
+      name:   prg2
+      offset: 0x0
+      size:   65536
+      crc:    645669f0
+      sha1:   3b18c0bb33dd5a95f52a2de7b9a5730990517ad9
+    rom
+      name:   prg1
+      offset: 0x10000
+      size:   65536
+      crc:    ff762ceb
+      sha1:   04ca386ef4ad79f99d1efdc0a4d908ef0e523d75
+  gfx1
+    rom
+      name:   cha
+      offset: 0x0
+      size:   32768
+      crc:    e27c7434
+      sha1:   a033bbaf0c28504ed2a641dea28f016a88ef03ac
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    tkoboxng
+  title:   Vs. T.K.O. Boxing
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: namco-108
+    protection: tko-boxing
+    input: swapped
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x3
+    default: 0x0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x2
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x1
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0xc
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x4
+    option
+      name: Hard
+      value: 0x8
+    option
+      name: Very Hard
+      value: 0xc
+  dip
+    name: Unused
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x10
+  dip
+    name: PPU Type
+    port: DSW0
+    mask: 0xe0
+    default: 0x0
+    option
+      name: RP2C04-0003
+      value: 0x0
+    option
+      name: RP2C03
+      value: 0xe0
+  prg
+    rom
+      name:   tkoprg.bin
+      offset: 0x0
+      size:   65536
+      crc:    eb2dba63
+      sha1:   257c9f3565ff1d136094e99636ca57e300352b7e
+  gfx1
+    rom
+      name:   tkochr.bin
+      offset: 0x0
+      size:   65536
+      crc:    21275ba5
+      sha1:   160131586aeeca848deabff258a2ce5f62b17c5f
+  ppu1-palette
+    rom
+      name:   rp2c04-0003.pal
+      offset: 0x0
+      size:   192
+      crc:    fd6c578b
+      sha1:   653182ce0cbaff66a8fc5788e32cc088b6735f2e
+game
+  name:    topgun
+  title:   Vs. Top Gun
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c05_04
+    mapper: unrom
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x3
+    option
+      name: 4 Coins/1 Credit
+      value: 0x5
+    option
+      name: 3 Coins/1 Credit
+      value: 0x1
+    option
+      name: 2 Coins/1 Credit
+      value: 0x6
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives per Coin
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: 3 - 12 Max
+      value: 0x0
+    option
+      name: 2 - 9 Max
+      value: 0x8
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0x30
+    default: 0x0
+    option
+      name: 30k and Every 50k
+      value: 0x0
+    option
+      name: 50k and Every 100k
+      value: 0x20
+    option
+      name: 100k and Every 150k
+      value: 0x10
+    option
+      name: 200k and Every 200k
+      value: 0x30
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x40
+  dip
+    name: Demo Sounds
+    port: DSW0
+    mask: 0x80
+    default: 0x80
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   rc-003.u7
+      offset: 0x0
+      size:   131072
+      crc:    8c0c2df5
+      sha1:   d9b1b87204e025a637821a0168475e1209ce0c8a
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    vsbball
+  title:   Vs. Baseball (US, set BA E-1)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mds-ba__1d_e-1.1d
+      offset: 0x0
+      size:   8192
+      crc:    7ec792bc
+      sha1:   92d1f8809db89a8d99f7ea1d2ba3f9be69195866
+    rom
+      name:   mds-ba__1c_e-1.1c
+      offset: 0x2000
+      size:   8192
+      crc:    b631f8aa
+      sha1:   0ee8a8def9512552037fdac1a14a3ea9393bb943
+    rom
+      name:   mds-ba__1b_e-1.1b
+      offset: 0x4000
+      size:   8192
+      crc:    c856b45a
+      sha1:   7f15613120d72859ea1ed647c9eee3074f63f0b9
+    rom
+      name:   mds-ba__1a_e-1.1a
+      offset: 0x6000
+      size:   8192
+      crc:    06b74c18
+      sha1:   9a61161b4856b88e40eee6edb39e0a608748cf0b
+  gfx1
+    rom
+      name:   mds-ba__2b_e.2b
+      offset: 0x0
+      size:   8192
+      crc:    3ff8bec3
+      sha1:   28c1bf89ed1046243ca8cf122cefa0752c242577
+    rom
+      name:   mds-ba__2a_e.2a
+      offset: 0x2000
+      size:   8192
+      crc:    13b20cfd
+      sha1:   cb333cbea09557a9d2bdc351fabc61fc7760c35d
+  sub
+    rom
+      name:   mds-ba__6d_e-1.6d
+      offset: 0x8000
+      size:   8192
+      crc:    0cc5225f
+      sha1:   a8eb3153ce3f1282901c305177347112df0fb3b2
+    rom
+      name:   mds-ba__6c_e-1.6c
+      offset: 0xa000
+      size:   8192
+      crc:    9856ac60
+      sha1:   f033171c3dea6af63f1f328fee74e695c67adc92
+    rom
+      name:   mds-ba__6b_e-1.6b
+      offset: 0xc000
+      size:   8192
+      crc:    d1312e63
+      sha1:   0fc46a4ef0fb8a304320f8b3cac3edd1cd9ed286
+    rom
+      name:   mds-ba__6a_e-1.6a
+      offset: 0xe000
+      size:   8192
+      crc:    28199b4d
+      sha1:   e63d69662d3b70b883028d3103c8f65de8f5edda
+  gfx2
+    rom
+      name:   mds-ba__8b_e.8b
+      offset: 0x0
+      size:   8192
+      crc:    3ff8bec3
+      sha1:   28c1bf89ed1046243ca8cf122cefa0752c242577
+    rom
+      name:   mds-ba__8a_e.8a
+      offset: 0x2000
+      size:   8192
+      crc:    13b20cfd
+      sha1:   cb333cbea09557a9d2bdc351fabc61fc7760c35d
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    vsbballj
+  title:   Vs. Baseball (Japan, set BA A-3)
+  board:   nintendo/vs
+  type:    game
+  parent:  vsbball
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mds-ba a-3.1d
+      offset: 0x0
+      size:   8192
+      crc:    e234d609
+      sha1:   a148d6b57fbc9d5f91737fa30c2df2c2b66df404
+    rom
+      name:   mds-ba a-3.1c
+      offset: 0x2000
+      size:   8192
+      crc:    ca1a9591
+      sha1:   3544f244c59d3dab40c2745e84775b7c1defaf54
+    rom
+      name:   mds-ba a-3.1b
+      offset: 0x4000
+      size:   8192
+      crc:    50e1f6cf
+      sha1:   8eb4ccb4817295084280ffd1ee5261eee02485c5
+    rom
+      name:   mds-ba a-3.1a
+      offset: 0x6000
+      size:   8192
+      crc:    f796df5b
+      sha1:   7e7e1c69b27f2fe41c509107abbe802877e3a92e
+  gfx1
+    rom
+      name:   mds-ba a.2b
+      offset: 0x0
+      size:   8192
+      crc:    919147d0
+      sha1:   9fccdfccc2a3ec634e350880ded7053f36c377bc
+    rom
+      name:   mds-ba a.2a
+      offset: 0x2000
+      size:   8192
+      crc:    3f7edb00
+      sha1:   f59d24f15bdb8903187eabc1578dcb60443614ed
+  sub
+    rom
+      name:   mds-ba a-3.6d
+      offset: 0x8000
+      size:   8192
+      crc:    6eb9e36e
+      sha1:   3877dee54a1a11417296150f7e7a1ae2c2847484
+    rom
+      name:   mds-ba a-3.6c
+      offset: 0xa000
+      size:   8192
+      crc:    dca4dc75
+      sha1:   231819edb58caf96b4f5c56a44163fbb666dc67d
+    rom
+      name:   mds-ba a-3.6b
+      offset: 0xc000
+      size:   8192
+      crc:    46cf6f84
+      sha1:   125af20e1e9066e4b92174ba0a7f59271ef57557
+    rom
+      name:   mds-ba a-3.6a
+      offset: 0xe000
+      size:   8192
+      crc:    4cbc2cac
+      sha1:   90bed7694836075738d99aa8fe672dbffa7bbd6d
+  gfx2
+    rom
+      name:   mds-ba a.8b
+      offset: 0x0
+      size:   8192
+      crc:    919147d0
+      sha1:   9fccdfccc2a3ec634e350880ded7053f36c377bc
+    rom
+      name:   mds-ba a.8a
+      offset: 0x2000
+      size:   8192
+      crc:    3f7edb00
+      sha1:   f59d24f15bdb8903187eabc1578dcb60443614ed
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    vsbballja
+  title:   Vs. Baseball (Japan, set BA A-2)
+  board:   nintendo/vs
+  type:    game
+  parent:  vsbball
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mds-ba a-2.1d
+      offset: 0x0
+      size:   8192
+      crc:    f3820b70
+      sha1:   c50d0c2e34f646dd186ee0f2774e94add733f21d
+    rom
+      name:   mds-ba a-2.1c
+      offset: 0x2000
+      size:   8192
+      crc:    39fbbf28
+      sha1:   9941defda548f2c51cf62f0ad62a041ee9a69c37
+    rom
+      name:   mds-ba a-2.1b
+      offset: 0x4000
+      size:   8192
+      crc:    b1377b12
+      sha1:   9afca83f343b768de8ac51c5967f8825de9d7883
+    rom
+      name:   mds-ba a-2.1a
+      offset: 0x6000
+      size:   8192
+      crc:    08fab347
+      sha1:   b6ecd1464c47afac922355b8d5e961892e58a0ed
+  gfx1
+    rom
+      name:   mds-ba a.2b
+      offset: 0x0
+      size:   8192
+      crc:    919147d0
+      sha1:   9fccdfccc2a3ec634e350880ded7053f36c377bc
+    rom
+      name:   mds-ba a.2a
+      offset: 0x2000
+      size:   8192
+      crc:    3f7edb00
+      sha1:   f59d24f15bdb8903187eabc1578dcb60443614ed
+  sub
+    rom
+      name:   mds-ba a-2.6d
+      offset: 0x8000
+      size:   8192
+      crc:    c69561b0
+      sha1:   4234d88ffa957e7f70ef9da8c61db4e251c3bc66
+    rom
+      name:   mds-ba a-2.6c
+      offset: 0xa000
+      size:   8192
+      crc:    17d1ca39
+      sha1:   2fa61a2c39495b72a22f001a72e4526e86d9544e
+    rom
+      name:   mds-ba a-2.6b
+      offset: 0xc000
+      size:   8192
+      crc:    37481900
+      sha1:   dbab48d6c95e365ee4ab6ca4c61224b2c813e538
+    rom
+      name:   mds-ba a-2.6a
+      offset: 0xe000
+      size:   8192
+      crc:    a44ffc4b
+      sha1:   ec65c3b52659dacfd2b7afe1e744e7bbd61fd6e1
+  gfx2
+    rom
+      name:   mds-ba a.8b
+      offset: 0x0
+      size:   8192
+      crc:    919147d0
+      sha1:   9fccdfccc2a3ec634e350880ded7053f36c377bc
+    rom
+      name:   mds-ba a.8a
+      offset: 0x2000
+      size:   8192
+      crc:    3f7edb00
+      sha1:   f59d24f15bdb8903187eabc1578dcb60443614ed
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    vsbballjb
+  title:   Vs. Baseball (Japan, set BA A-1)
+  board:   nintendo/vs
+  type:    game
+  parent:  vsbball
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mds-ba a-1.1d
+      offset: 0x0
+      size:   8192
+      crc:    6dbc129b
+      sha1:   3e786632563364bf7ae13c7d25c522999f237009
+    rom
+      name:   mds-ba a-1.1c
+      offset: 0x2000
+      size:   8192
+      crc:    2a684b3a
+      sha1:   316aa1051a5ff33e5a2369f9e984b34f637595ff
+    rom
+      name:   mds-ba a-1.1b
+      offset: 0x4000
+      size:   8192
+      crc:    7ca0f715
+      sha1:   cf87e530c15c142efa48d6462870bbdf44002f45
+    rom
+      name:   mds-ba a-1.1a
+      offset: 0x6000
+      size:   8192
+      crc:    926bb4fc
+      sha1:   b9b8611b90d73f39f65166010058e03d0aad5bb0
+  gfx1
+    rom
+      name:   mds-ba a.2b
+      offset: 0x0
+      size:   8192
+      crc:    919147d0
+      sha1:   9fccdfccc2a3ec634e350880ded7053f36c377bc
+    rom
+      name:   mds-ba a.2a
+      offset: 0x2000
+      size:   8192
+      crc:    3f7edb00
+      sha1:   f59d24f15bdb8903187eabc1578dcb60443614ed
+  sub
+    rom
+      name:   mds-ba a-1.6d
+      offset: 0x8000
+      size:   8192
+      crc:    d534dca4
+      sha1:   6d454a2b5944f98c95d3a1bdeee8e8e52524cb21
+    rom
+      name:   mds-ba a-1.6c
+      offset: 0xa000
+      size:   8192
+      crc:    73904bbc
+      sha1:   d32a0f659d628b98a0b06f846842432f83e79a07
+    rom
+      name:   mds-ba a-1.6b
+      offset: 0xc000
+      size:   8192
+      crc:    7c130724
+      sha1:   99134180e158eaa4b260d1dacf9aa56a6d48ad73
+    rom
+      name:   mds-ba a-1.6a
+      offset: 0xe000
+      size:   8192
+      crc:    d938080e
+      sha1:   35e00bd76364ec88fb3bb8908bc9171df9cd26de
+  gfx2
+    rom
+      name:   mds-ba a.8b
+      offset: 0x0
+      size:   8192
+      crc:    919147d0
+      sha1:   9fccdfccc2a3ec634e350880ded7053f36c377bc
+    rom
+      name:   mds-ba a.8a
+      offset: 0x2000
+      size:   8192
+      crc:    3f7edb00
+      sha1:   f59d24f15bdb8903187eabc1578dcb60443614ed
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    vsfdf
+  title:   Vs. Freedom Force
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: namco-108
+    protection: normal
+    input: zapper
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x3
+    option
+      name: 4 Coins/1 Credit
+      value: 0x5
+    option
+      name: 3 Coins/1 Credit
+      value: 0x1
+    option
+      name: 2 Coins/1 Credit
+      value: 0x6
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Health Awarded At
+    port: DSW0
+    mask: 0x18
+    default: 0x10
+    option
+      name: 20k/60k
+      value: 0x0
+    option
+      name: 20k/60k/Every 60k
+      value: 0x8
+    option
+      name: 10k/50k
+      value: 0x10
+    option
+      name: 10k/50k/Every 50k
+      value: 0x18
+  dip
+    name: Difficulty (Damage)
+    port: DSW0
+    mask: 0x60
+    default: 0x0
+    option
+      name: Easy
+      value: 0x40
+    option
+      name: Normal
+      value: 0x0
+    option
+      name: Hard
+      value: 0x20
+    option
+      name: Hardest
+      value: 0x60
+  dip
+    name: Difficulty (Enemy)
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Normal
+      value: 0x0
+    option
+      name: Hard
+      value: 0x80
+  prg
+    rom
+      name:   prg2
+      offset: 0x0
+      size:   65536
+      crc:    3bce8f0f
+      sha1:   5a9b91bae4b28c1df54fb290efdec4805f4f217e
+    rom
+      name:   prg1
+      offset: 0x10000
+      size:   65536
+      crc:    c74499ce
+      sha1:   14f50d4d11c363e761a6472a6e57a5e5a6dab9ce
+  gfx1
+    rom
+      name:   cha2.1
+      offset: 0x0
+      size:   65536
+      crc:    a2f88df0
+      sha1:   10ef432d3132b01a1fcb38d8f521edd2a029ac5e
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    vsgradus
+  title:   Vs. Gradius (US, set GR E)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: vrc1
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x3
+    option
+      name: 4 Coins/1 Credit
+      value: 0x5
+    option
+      name: 3 Coins/1 Credit
+      value: 0x1
+    option
+      name: 2 Coins/1 Credit
+      value: 0x6
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: 3
+      value: 0x8
+    option
+      name: 4
+      value: 0x0
+  dip
+    name: Bonus
+    port: DSW0
+    mask: 0x30
+    default: 0x0
+    option
+      name: 100k
+      value: 0x0
+    option
+      name: 200k
+      value: 0x20
+    option
+      name: 300k
+      value: 0x10
+    option
+      name: 400k
+      value: 0x30
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Hard
+      value: 0x40
+  dip
+    name: Demo Sounds
+    port: DSW0
+    mask: 0x80
+    default: 0x80
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-gr__prg_e.u7
+      offset: 0x0
+      size:   65536
+      crc:    d99a2087
+      sha1:   b26efe78798453a903921723f3c9ac69f579b7d2
+  gfx1
+    rom
+      name:   mds-gr__chr_e.u4
+      offset: 0x0
+      size:   65536
+      crc:    23cf2fc3
+      sha1:   0a3f48aec529b92abc261952e632af7ff766b1ef
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    vsgshoe
+  title:   Vs. Gumshoe (set GM5)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c05_03
+    mapper: standard
+    protection: normal
+    input: zapper
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x3
+    option
+      name: 4 Coins/1 Credit
+      value: 0x5
+    option
+      name: 3 Coins/1 Credit
+      value: 0x1
+    option
+      name: 2 Coins/1 Credit
+      value: 0x6
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x8
+    option
+      name: Hard
+      value: 0x10
+    option
+      name: Hardest
+      value: 0x18
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x20
+    default: 0x0
+    option
+      name: 3
+      value: 0x20
+    option
+      name: 5
+      value: 0x0
+  dip
+    name: Bullets per Balloon
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 2
+      value: 0x40
+  dip
+    name: Bonus Man Awarded
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: At 50000
+      value: 0x0
+    option
+      name: None
+      value: 0x80
+  prg
+    rom
+      name:   mds-gm5.1d
+      offset: 0x0
+      size:   16384
+      crc:    063b342f
+      sha1:   66f69de27db5b08969f9250d0a6760e7311bd9bf
+    rom
+      name:   mds-gm5.1c
+      offset: 0x4000
+      size:   8192
+      crc:    e1b7915e
+      sha1:   ed0fdf74b05a3ccd1645c4f580436fd439f81dea
+    rom
+      name:   mds-gm5.1b
+      offset: 0x6000
+      size:   8192
+      crc:    5b73aa3c
+      sha1:   4069a6139091fbff48758953bd894808a8356d46
+    rom
+      name:   mds-gm5.1a
+      offset: 0x8000
+      size:   8192
+      crc:    70e606bc
+      sha1:   8207ded20cb9109d605ce73deb722de3514ed9bf
+  gfx1
+    rom
+      name:   mds-gm5.2b
+      offset: 0x0
+      size:   8192
+      crc:    192c3360
+      sha1:   5ddbe007d8bc693a0b7c92f33e6ed6b27dc1c08e
+    rom
+      name:   mds-gm5.2a
+      offset: 0x2000
+      size:   8192
+      crc:    823dd178
+      sha1:   77578a48ded0c244d1ae30aafaa9259b7dd0dfc4
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    vsmahjng
+  title:   Vs. Mahjong (Japan)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mj.1c
+      offset: 0x2000
+      size:   8192
+      crc:    ec77671f
+      sha1:   3716a4d5ab1efee0416dd7f6466d29379dc6f296
+    rom
+      name:   mj.1b
+      offset: 0x4000
+      size:   8192
+      crc:    ac53398b
+      sha1:   2582c73efec233a389900949d6af7c4c9a9e7148
+    rom
+      name:   mj.1a
+      offset: 0x6000
+      size:   8192
+      crc:    62f0df8e
+      sha1:   5628397c5d9acf470cc0cbffdba20e9e4cc8ea91
+  gfx1
+    rom
+      name:   mj.2b
+      offset: 0x0
+      size:   8192
+      crc:    9dae3502
+      sha1:   b7ffbc17af35eeac1b06c651f6c25f71827e9c3b
+  sub
+    rom
+      name:   mj.6c
+      offset: 0xa000
+      size:   8192
+      crc:    3cee11e9
+      sha1:   03ae904a98a12b5571374417069e50f8bc824c24
+    rom
+      name:   mj.6b
+      offset: 0xc000
+      size:   8192
+      crc:    e8341f7b
+      sha1:   cf3c43e4f87dbcd4ae9a74f2808282883c8ba38a
+    rom
+      name:   mj.6a
+      offset: 0xe000
+      size:   8192
+      crc:    0ee69f25
+      sha1:   078e8f51887be58336ff23f90bacfa90c1730f36
+  gfx2
+    rom
+      name:   mj.8b
+      offset: 0x0
+      size:   8192
+      crc:    9dae3502
+      sha1:   b7ffbc17af35eeac1b06c651f6c25f71827e9c3b
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    vspinbal
+  title:   Vs. Pinball (US, set PN4 E-1)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x1
+    option
+      name: 4 Coins/1 Credit
+      value: 0x7
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x5
+    option
+      name: 1 Coin/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x4
+    option
+      name: Free Play
+      value: 0x0
+  dip
+    name: Side Drain Walls
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: High
+      value: 0x0
+    option
+      name: Low
+      value: 0x8
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: 50000
+      value: 0x0
+    option
+      name: 70000
+      value: 0x10
+  dip
+    name: Balls
+    port: DSW0
+    mask: 0x60
+    default: 0x0
+    option
+      name: 2
+      value: 0x60
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 4
+      value: 0x40
+    option
+      name: 5
+      value: 0x20
+  dip
+    name: Ball speed
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Slow
+      value: 0x0
+    option
+      name: Fast
+      value: 0x80
+  prg
+    rom
+      name:   mds-pn4_1__6d_e.6d
+      offset: 0x0
+      size:   8192
+      crc:    69fc575e
+      sha1:   d5165959c3569f5ebccd03d2cad4714f9240cc4c
+    rom
+      name:   mds-pn4_1__6c_e.6c
+      offset: 0x2000
+      size:   8192
+      crc:    fa9472d2
+      sha1:   d20ffb156bea1f474ad7d9776e217cb05048f00f
+    rom
+      name:   mds-pn4_1__6b_e.6b
+      offset: 0x4000
+      size:   8192
+      crc:    f57d89c5
+      sha1:   03f3a27d806c61fef13b0d8b2d8b9a15ee968e80
+    rom
+      name:   mds-pn4_1__6a_e.6a
+      offset: 0x6000
+      size:   8192
+      crc:    640c4741
+      sha1:   930bed577bfc75b03d064dc0ef523c45186fc3c4
+  gfx1
+    rom
+      name:   mds-pn4_1__8b_e.8b
+      offset: 0x0
+      size:   8192
+      crc:    8822ee9e
+      sha1:   950113952e6d356e45e03479ba5dd5a8cb131609
+    rom
+      name:   mds-pn4_1__8a_e.8a
+      offset: 0x2000
+      size:   8192
+      crc:    cbe98a28
+      sha1:   c00c5f15a33611bfe3ad420b93b1cc2cae011c3e
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    vspinbalj
+  title:   Vs. Pinball (Japan, set PN3 B)
+  board:   nintendo/vs
+  type:    game
+  parent:  vspinbal
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: swap-ab
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x1
+    option
+      name: 4 Coins/1 Credit
+      value: 0x7
+    option
+      name: 3 Coins/1 Credit
+      value: 0x3
+    option
+      name: 2 Coins/1 Credit
+      value: 0x5
+    option
+      name: 1 Coin/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/2 Credits
+      value: 0x6
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x4
+    option
+      name: Free Play
+      value: 0x0
+  dip
+    name: Side Drain Walls
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: High
+      value: 0x0
+    option
+      name: Low
+      value: 0x8
+  dip
+    name: Bonus Life
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: 50000
+      value: 0x0
+    option
+      name: 70000
+      value: 0x10
+  dip
+    name: Balls
+    port: DSW0
+    mask: 0x60
+    default: 0x0
+    option
+      name: 2
+      value: 0x60
+    option
+      name: 3
+      value: 0x0
+    option
+      name: 4
+      value: 0x40
+    option
+      name: 5
+      value: 0x20
+  dip
+    name: Ball speed
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Slow
+      value: 0x0
+    option
+      name: Fast
+      value: 0x80
+  prg
+    rom
+      name:   mds-pn3 b.6d
+      offset: 0x0
+      size:   8192
+      crc:    fd50c42e
+      sha1:   4a3ea9e85b60caf8b6975fd2798bc59e86ec257f
+    rom
+      name:   mds-pn3 b.6c
+      offset: 0x2000
+      size:   8192
+      crc:    59beb9e5
+      sha1:   682b31dfbdf1ee44fd5d5d63169ab35409e93546
+    rom
+      name:   mds-pn3 b.6b
+      offset: 0x4000
+      size:   8192
+      crc:    ce7f47ce
+      sha1:   c548c1b94d3807b4968629c7fdce8aae3a61e6e0
+    rom
+      name:   mds-pn3 b.6a
+      offset: 0x6000
+      size:   8192
+      crc:    5685e2ee
+      sha1:   a38fbf25c93dfc73658d3837b2b6397736e8d2f2
+  gfx1
+    rom
+      name:   mds-pn3 b.8b
+      offset: 0x0
+      size:   8192
+      crc:    1e3fec3e
+      sha1:   aef18cee358af202ec48c1c36986e42e134466b1
+    rom
+      name:   mds-pn3 b.8a
+      offset: 0x2000
+      size:   8192
+      crc:    6f963a65
+      sha1:   af69564b51aa42ef0815c952e0d0d0d928651685
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    vsskykid
+  title:   Vs. Super SkyKid
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: namco-108
+    protection: normal
+    input: standard
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x3
+    default: 0x1
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x1
+    option
+      name: Medium
+      value: 0x2
+    option
+      name: Hard
+      value: 0x3
+  dip
+    name: Lives
+    port: DSW0
+    mask: 0x4
+    default: 0x4
+    option
+      name: 2
+      value: 0x0
+    option
+      name: 3
+      value: 0x4
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 3 Coins/1 Credit
+      value: 0x18
+    option
+      name: 2 Coins/1 Credit
+      value: 0x10
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x8
+  dip
+    name: PPU Type
+    port: DSW0
+    mask: 0xe0
+    default: 0x0
+    option
+      name: RP2C04-0001
+      value: 0x0
+    option
+      name: RP2C03
+      value: 0x20
+    option
+      name: RP2C04-0002
+      value: 0x40
+    option
+      name: RP2C04-0003
+      value: 0x80
+    option
+      name: RP2C04-0004
+      value: 0xc0
+  prg
+    rom
+      name:   sk-prg1
+      offset: 0x0
+      size:   32768
+      crc:    cf36261e
+      sha1:   e4a3d2a223f066c231631d92504f08e60b303dfd
+  gfx1
+    rom
+      name:   sk-cha
+      offset: 0x0
+      size:   32768
+      crc:    9bd44dad
+      sha1:   bf33d175b6ab991d63a0acaf83ba22d5b7ab11b9
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    vsslalom
+  title:   Vs. Slalom
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 5 Coins/1 Credit
+      value: 0x3
+    option
+      name: 4 Coins/1 Credit
+      value: 0x5
+    option
+      name: 3 Coins/1 Credit
+      value: 0x1
+    option
+      name: 2 Coins/1 Credit
+      value: 0x6
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Freestyle Points
+    port: DSW0
+    mask: 0x8
+    default: 0x0
+    option
+      name: Left / Right
+      value: 0x0
+    option
+      name: Hold Time
+      value: 0x8
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x30
+    default: 0x10
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x10
+    option
+      name: Medium
+      value: 0x20
+    option
+      name: Hard
+      value: 0x30
+  dip
+    name: Allow Continue
+    port: DSW0
+    mask: 0x40
+    default: 0x0
+    option
+      name: No
+      value: 0x40
+    option
+      name: Yes
+      value: 0x0
+  dip
+    name: Inverted input
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-sl4.1d
+      offset: 0x0
+      size:   8192
+      crc:    6240a07d
+      sha1:   c9a3743a1caaa417c3828365a4c7a75272c20146
+    rom
+      name:   mds-sl4.1c
+      offset: 0x2000
+      size:   8192
+      crc:    27c355e4
+      sha1:   ba55258396a17858e136fe45332f6cc13a46b072
+    rom
+      name:   mds-sl4.1b
+      offset: 0x4000
+      size:   8192
+      crc:    d4825fbf
+      sha1:   5e7fcfa1999c52f94be28c693acffc6e5d434674
+    rom
+      name:   mds-sl4.1a
+      offset: 0x6000
+      size:   8192
+      crc:    82333f80
+      sha1:   fa85f8a481f3847b33fd9df005df4fde59080bce
+  gfx1
+    rom
+      name:   mds-sl4.2a
+      offset: 0x0
+      size:   8192
+      crc:    977bb126
+      sha1:   9b12cd37246237c24a8077c6184a2f71d342ac47
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c
+game
+  name:    vssoccer
+  title:   Vs. Soccer (set SC4-2 A)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Points Timer
+    port: DSW0
+    mask: 0x18
+    default: 0x0
+    option
+      name: 1000 Pts
+      value: 0x0
+    option
+      name: 1500 Pts
+      value: 0x10
+    option
+      name: 2000 Pts
+      value: 0x8
+    option
+      name: 600 Pts
+      value: 0x18
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x60
+    default: 0x40
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x40
+    option
+      name: Medium
+      value: 0x20
+    option
+      name: Hard
+      value: 0x60
+  dip
+    name: Unused
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-sc4-2 a.1d or 6d
+      offset: 0x0
+      size:   8192
+      crc:    722fc5bc
+      sha1:   1ac06ade7412c476b834190034d94420863fe301
+    rom
+      name:   mds-sc4-2 a.1c or 6c
+      offset: 0x2000
+      size:   8192
+      crc:    6407cb08
+      sha1:   95e79633dfa4468e2a2af6d0a2cf5a23e4f23eb1
+    rom
+      name:   mds-sc4-2 a.1b or 6b
+      offset: 0x4000
+      size:   8192
+      crc:    d156b824
+      sha1:   2b7916805a0f09c10a334ba3c13481ce1da82be1
+    rom
+      name:   mds-sc4-2 a.1a or 6a
+      offset: 0x6000
+      size:   8192
+      crc:    2d75ca32
+      sha1:   9509bd984ca1ca6fce83874a6e13e75cdf91726b
+  gfx1
+    rom
+      name:   mds-sc4-2 a.2b or 8b
+      offset: 0x0
+      size:   8192
+      crc:    307b19ab
+      sha1:   b35ef4c2cf071db77cec1b4529b43a20cfcce172
+    rom
+      name:   mds-sc4-2 a.2a or 8a
+      offset: 0x2000
+      size:   8192
+      crc:    7263613a
+      sha1:   aa5673b57833d1f32c2cb0230a809397ec6103b4
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c
+game
+  name:    vssoccera
+  title:   Vs. Soccer (set SC4-3 ?)
+  board:   nintendo/vs
+  type:    game
+  parent:  vssoccer
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Coinage
+    port: DSW0
+    mask: 0x7
+    default: 0x0
+    option
+      name: 4 Coins/1 Credit
+      value: 0x3
+    option
+      name: 3 Coins/1 Credit
+      value: 0x5
+    option
+      name: 2 Coins/1 Credit
+      value: 0x1
+    option
+      name: 1 Coin/1 Credit
+      value: 0x0
+    option
+      name: 1 Coin/2 Credits
+      value: 0x4
+    option
+      name: 1 Coin/3 Credits
+      value: 0x2
+    option
+      name: 1 Coin/4 Credits
+      value: 0x6
+    option
+      name: Free Play
+      value: 0x7
+  dip
+    name: Points Timer
+    port: DSW0
+    mask: 0x18
+    default: 0x18
+    option
+      name: 600 Pts
+      value: 0x0
+    option
+      name: 800 Pts
+      value: 0x10
+    option
+      name: 1000 Pts
+      value: 0x8
+    option
+      name: 1200 Pts
+      value: 0x18
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0x60
+    default: 0x40
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x40
+    option
+      name: Medium
+      value: 0x20
+    option
+      name: Hard
+      value: 0x60
+  dip
+    name: Unused
+    port: DSW0
+    mask: 0x80
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x80
+  prg
+    rom
+      name:   mds-sc4-3.1d
+      offset: 0x0
+      size:   8192
+      crc:    0ac52145
+      sha1:   148d9850cd80fb64e28f478891c16dac71e67e96
+    rom
+      name:   mds-sc4-3.1c
+      offset: 0x2000
+      size:   8192
+      crc:    f132e794
+      sha1:   f289f5acec7e2a62fc569a401e7ab5200df302f5
+    rom
+      name:   mds-sc4-3.1b
+      offset: 0x4000
+      size:   8192
+      crc:    26bb7325
+      sha1:   80e97a36c364a07cf9862202454651fb2872cd51
+    rom
+      name:   mds-sc4-3.1a
+      offset: 0x6000
+      size:   8192
+      crc:    e731635a
+      sha1:   8089bc49a0115225d26c4cbaaf08431376eafa59
+  gfx1
+    rom
+      name:   mds-sc4-3.2b
+      offset: 0x0
+      size:   8192
+      crc:    307b19ab
+      sha1:   b35ef4c2cf071db77cec1b4529b43a20cfcce172
+    rom
+      name:   mds-sc4-3.2a
+      offset: 0x2000
+      size:   8192
+      crc:    7263613a
+      sha1:   aa5673b57833d1f32c2cb0230a809397ec6103b4
+  ppu1-palette
+    rom
+      name:   rp2c04-0003.pal
+      offset: 0x0
+      size:   192
+      crc:    fd6c578b
+      sha1:   653182ce0cbaff66a8fc5788e32cc088b6735f2e
+game
+  name:    vstennis
+  title:   Vs. Tennis (Japan/USA, set TE A-3)
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mds-te a-3.1d
+      offset: 0x0
+      size:   8192
+      crc:    8d88fbe5
+      sha1:   1aa172d02d0d47325edf2f5ea4fc3c1c52f1efbe
+    rom
+      name:   mds-te a-2.1c
+      offset: 0x2000
+      size:   8192
+      crc:    5f00c129
+      sha1:   e9954ebedc037be0a177286bbfc2ecdaa9223d85
+    rom
+      name:   mds-te a-2.1b
+      offset: 0x4000
+      size:   8192
+      crc:    4b57910c
+      sha1:   1baeb31e0e9085ac6a9406a1802dfa47952d833e
+    rom
+      name:   mds-te a-2.1a
+      offset: 0x6000
+      size:   8192
+      crc:    41097060
+      sha1:   aec457f7780dcd693dd93076cc185d5db38d5b93
+  gfx1
+    rom
+      name:   mds-te a.2b
+      offset: 0x0
+      size:   8192
+      crc:    9de19c9c
+      sha1:   1cb65e423a6c2d2a56c67ad08ecf7e746551c322
+    rom
+      name:   mds-te a.2a
+      offset: 0x2000
+      size:   8192
+      crc:    67a5800e
+      sha1:   7bad1b486d9dac962fa8c87984038be4ac6b699b
+  sub
+    rom
+      name:   mds-te a-3.6d
+      offset: 0x8000
+      size:   8192
+      crc:    b18fd769
+      sha1:   152413e065d1f5af0a70f9272a908dfbd162fe65
+    rom
+      name:   mds-te a-2.6c
+      offset: 0xa000
+      size:   8192
+      crc:    315d8178
+      sha1:   2165c8a42004fb5b1e6b8904a59159cd4157538e
+    rom
+      name:   mds-te a-2.6b
+      offset: 0xc000
+      size:   8192
+      crc:    18114f8d
+      sha1:   351894e0cc791028a43da0ec27d78d669cdeea27
+    rom
+      name:   mds-te a-2.6a
+      offset: 0xe000
+      size:   8192
+      crc:    50a2de11
+      sha1:   3e22e50c9ae2521dc7f4416ac834cdbd3988369e
+  gfx2
+    rom
+      name:   mds-te a.8b
+      offset: 0x0
+      size:   8192
+      crc:    c81e9260
+      sha1:   6d4809a05364cc05485ee1add833428529af2be6
+    rom
+      name:   mds-te a.8a
+      offset: 0x2000
+      size:   8192
+      crc:    d91eb295
+      sha1:   6b69bcef5421a6bcde89a2d1f514853f9f7992c3
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    vstennisa
+  title:   Vs. Tennis (Japan/USA, set 2)
+  board:   nintendo/vs
+  type:    game
+  parent:  vstennis
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   mds-te.1d
+      offset: 0x0
+      size:   8192
+      crc:    f4e9fca0
+      sha1:   05b91f578bc0a118ab75ce487b14adcd1fb6e714
+    rom
+      name:   mds-te.1c
+      offset: 0x2000
+      size:   8192
+      crc:    7e52df58
+      sha1:   a5ddebfa1f7f1a2b6b46d4b4a7f2c36477158e7e
+    rom
+      name:   mds-te.1b
+      offset: 0x4000
+      size:   8192
+      crc:    1a0d809a
+      sha1:   44ce2f9250940bf5f754918b4a2ae63f76181eff
+    rom
+      name:   mds-te.1a
+      offset: 0x6000
+      size:   8192
+      crc:    8483a612
+      sha1:   c854f72d86fe4e99c4c6426cfc5ea6f2997bfc8c
+  gfx1
+    rom
+      name:   mds-te a.2b
+      offset: 0x0
+      size:   8192
+      crc:    9de19c9c
+      sha1:   1cb65e423a6c2d2a56c67ad08ecf7e746551c322
+    rom
+      name:   mds-te a.2a
+      offset: 0x2000
+      size:   8192
+      crc:    67a5800e
+      sha1:   7bad1b486d9dac962fa8c87984038be4ac6b699b
+  sub
+    rom
+      name:   mds-te.6d
+      offset: 0x8000
+      size:   8192
+      crc:    3131b1bf
+      sha1:   ed26df260df3a295b5c9747530428efec29676c0
+    rom
+      name:   mds-te.6c
+      offset: 0xa000
+      size:   8192
+      crc:    27195d13
+      sha1:   a1d6960a194cb048c5c26f9378b49da7d6e7d1af
+    rom
+      name:   mds-te.6b
+      offset: 0xc000
+      size:   8192
+      crc:    4b4e26ca
+      sha1:   68821357f473a0e1c575b547cc8c67be965fe73a
+    rom
+      name:   mds-te.6a
+      offset: 0xe000
+      size:   8192
+      crc:    b6bfee07
+      sha1:   658458931efbb260faec3a11ee530326c56e63a9
+  gfx2
+    rom
+      name:   mds-te a.8b
+      offset: 0x0
+      size:   8192
+      crc:    c81e9260
+      sha1:   6d4809a05364cc05485ee1add833428529af2be6
+    rom
+      name:   mds-te a.8a
+      offset: 0x2000
+      size:   8192
+      crc:    d91eb295
+      sha1:   6b69bcef5421a6bcde89a2d1f514853f9f7992c3
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    vstennisb
+  title:   Vs. Tennis (Japan/USA, set 3)
+  board:   nintendo/vs
+  type:    game
+  parent:  vstennis
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   1d
+      offset: 0x0
+      size:   8192
+      crc:    34ba9922
+      sha1:   709d3034d98eaf519ab1a824483bf14470291dab
+    rom
+      name:   1c
+      offset: 0x2000
+      size:   8192
+      crc:    d4874908
+      sha1:   53c00468f87185dcc37f5f3874b395f639e7d34f
+    rom
+      name:   1b
+      offset: 0x4000
+      size:   8192
+      crc:    eee3fc51
+      sha1:   02e22506106026c84150e3d937d08d4bd2edefdd
+    rom
+      name:   1a
+      offset: 0x6000
+      size:   8192
+      crc:    83cc5e96
+      sha1:   edd5b7d466d2f7d5714c376cb781382d4e6c6fcc
+  gfx1
+    rom
+      name:   2b
+      offset: 0x0
+      size:   8192
+      crc:    9de19c9c
+      sha1:   1cb65e423a6c2d2a56c67ad08ecf7e746551c322
+    rom
+      name:   2a
+      offset: 0x2000
+      size:   8192
+      crc:    67a5800e
+      sha1:   7bad1b486d9dac962fa8c87984038be4ac6b699b
+  sub
+    rom
+      name:   6d
+      offset: 0x8000
+      size:   8192
+      crc:    5da8a6a0
+      sha1:   a153a5bfb9e64978eb33d7ed4f4cf96d9bc7ee4a
+      status: baddump
+    rom
+      name:   6c
+      offset: 0xa000
+      size:   8192
+      crc:    154af5fe
+      sha1:   2459a31a3cd427609c427ade093b12abc3df2d78
+      status: baddump
+    rom
+      name:   6b
+      offset: 0xc000
+      size:   8192
+      crc:    0da89d4e
+      sha1:   f183729477b410e04ad5ccf8b7212f45bc0e466b
+      status: baddump
+    rom
+      name:   6a
+      offset: 0xe000
+      size:   8192
+      crc:    a5bc72be
+      sha1:   8046c2b7679d7a4bc9bd5a178404053113d3527e
+      status: baddump
+  gfx2
+    rom
+      name:   8b
+      offset: 0x0
+      size:   8192
+      crc:    c81e9260
+      sha1:   6d4809a05364cc05485ee1add833428529af2be6
+    rom
+      name:   8a
+      offset: 0x2000
+      size:   8192
+      crc:    d91eb295
+      sha1:   6b69bcef5421a6bcde89a2d1f514853f9f7992c3
+  ppu1-palette
+    rom
+      name:   rp2c0x.pal
+      offset: 0x0
+      size:   192
+      crc:    48de65dc
+      sha1:   d10acafc8da9ff479c270ec01180cca61efe62f5
+game
+  name:    vstetris
+  title:   Vs. Tetris
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unisystem
+    ppu: ppu2c04
+    mapper: standard
+    protection: normal
+    input: standard
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x1
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x1
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x2
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x2
+  dip
+    name: Difficulty
+    port: DSW0
+    mask: 0xc
+    default: 0x4
+    option
+      name: Easy
+      value: 0x0
+    option
+      name: Normal
+      value: 0x4
+    option
+      name: Medium
+      value: 0x8
+    option
+      name: Hard
+      value: 0xc
+  dip
+    name: Unknown
+    port: DSW0
+    mask: 0x10
+    default: 0x0
+    option
+      name: Off
+      value: 0x0
+    option
+      name: On
+      value: 0x10
+  dip
+    name: PPU Type
+    port: DSW0
+    mask: 0xe0
+    default: 0x0
+    option
+      name: RP2C04-0001
+      value: 0x0
+    option
+      name: RP2C03
+      value: 0x20
+    option
+      name: RP2C04-0002
+      value: 0x40
+    option
+      name: RP2C04-0003
+      value: 0x80
+    option
+      name: RP2C04-0004
+      value: 0xc0
+  prg
+    rom
+      name:   a000.6c
+      offset: 0x2000
+      size:   8192
+      crc:    92a1cf10
+      sha1:   463f62aec3f26d70b35e804398a38baf8f41a5e3
+    rom
+      name:   c000.6b
+      offset: 0x4000
+      size:   8192
+      crc:    9e9cda9d
+      sha1:   27d91b957ff0b3abd5567341574318548470fb3c
+    rom
+      name:   e000.6a
+      offset: 0x6000
+      size:   8192
+      crc:    bfeaf6c1
+      sha1:   2f2150138c023cb7962f3e04d34bd01be9fa2e24
+  gfx1
+    rom
+      name:   char.8b
+      offset: 0x0
+      size:   8192
+      crc:    51e8d403
+      sha1:   ed734994d164c4b59794249a13bce333896b3ee5
+  ppu1-palette
+    rom
+      name:   rp2c04-0001.pal
+      offset: 0x0
+      size:   192
+      crc:    a6293faa
+      sha1:   190a410a3d818e124b2b9d2ef9fb3da003bb5d4c
+game
+  name:    wrecking
+  title:   Vs. Wrecking Crew
+  board:   nintendo/vs
+  type:    game
+  hardware
+    topology: unsupported
+    reason: dualsystem
+  prg
+    rom
+      name:   wr.1d
+      offset: 0x0
+      size:   8192
+      crc:    8897e1b9
+      sha1:   7d33f6ee78d8663d62e6e05e231fd3d19ad09baa
+    rom
+      name:   wr.1c
+      offset: 0x2000
+      size:   8192
+      crc:    d4dc5ebb
+      sha1:   bce9b2ebabe7b882f1bc71e2dd50906365521d78
+    rom
+      name:   wr.1b
+      offset: 0x4000
+      size:   8192
+      crc:    8ee4a454
+      sha1:   58e970780a2ef5d44950dba6b44e501d320c9588
+    rom
+      name:   wr.1a
+      offset: 0x6000
+      size:   8192
+      crc:    63d6490a
+      sha1:   40f573713b7729bc26f41978583defca47f75033
+  gfx1
+    rom
+      name:   wr.2b
+      offset: 0x0
+      size:   8192
+      crc:    455d77ac
+      sha1:   fa09d0be51cc780f6c16cd314facc84043e1e69b
+    rom
+      name:   wr.2a
+      offset: 0x2000
+      size:   8192
+      crc:    653350d8
+      sha1:   d9aa699394654deaf50fadd8a652f08a340377eb
+  sub
+    rom
+      name:   wr.6d
+      offset: 0x8000
+      size:   8192
+      crc:    90e49ce7
+      sha1:   dca3004305979dc09500fae4667084363fac761f
+    rom
+      name:   wr.6c
+      offset: 0xa000
+      size:   8192
+      crc:    a12ae745
+      sha1:   15deabebc4ef59f08aa8ead3f576ed5cbde4c62e
+    rom
+      name:   wr.6b
+      offset: 0xc000
+      size:   8192
+      crc:    03947ca9
+      sha1:   02f0404d2351d2475240818b6b103a6e01691daf
+    rom
+      name:   wr.6a
+      offset: 0xe000
+      size:   8192
+      crc:    2c0a13ac
+      sha1:   47e6a50c210508fab51062eb5c8a3e1129c18125
+  gfx2
+    rom
+      name:   wr.8b
+      offset: 0x0
+      size:   8192
+      crc:    455d77ac
+      sha1:   fa09d0be51cc780f6c16cd314facc84043e1e69b
+    rom
+      name:   wr.8a
+      offset: 0x2000
+      size:   8192
+      crc:    653350d8
+      sha1:   d9aa699394654deaf50fadd8a652f08a340377eb
+  ppu1-palette
+    rom
+      name:   rp2c04-0002.pal
+      offset: 0x0
+      size:   192
+      crc:    fd19ae5e
+      sha1:   8ed14347c5a0b1a8a4d6365d6727e0951a00131c

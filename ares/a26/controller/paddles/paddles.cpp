@@ -1,0 +1,28 @@
+Paddles::Paddles(Node::Port parent, bool axes) {
+  node = parent->append<Node::Peripheral>("Paddles");
+
+  if(axes) {
+    axis[0] = node->append<Node::Input::Axis>("Paddle 1");
+    axis[1] = node->append<Node::Input::Axis>("Paddle 2");
+  }
+  fire[0] = node->append<Node::Input::Button>("Paddle 1 Fire");
+  fire[1] = node->append<Node::Input::Button>("Paddle 2 Fire");
+}
+
+auto Paddles::read() -> n8 {
+  platform->input(fire[0]);
+  platform->input(fire[1]);
+
+  n8 data = 0xff;
+  data.bit(3) = !fire[0]->value();
+  data.bit(2) = !fire[1]->value();
+  return data;
+}
+
+auto Paddles::readAnalog(n1 index) -> AnalogConnection {
+  if(!axis[index]) return AnalogConnection::disconnected();
+  platform->input(axis[index]);
+  auto value = std::clamp<s64>(axis[index]->value(), -32768, 32767);
+  auto resistance = (u64)(32767 - value) * MaximumResistance / 65535;
+  return AnalogConnection::vcc(resistance);
+}

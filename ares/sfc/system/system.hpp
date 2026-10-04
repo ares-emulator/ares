@@ -1,6 +1,7 @@
 struct System {
   Node::System node;
   VFS::Pak pak;
+  bool deterministicEntropy = false;
 
   struct Controls {
     Node::Object node;

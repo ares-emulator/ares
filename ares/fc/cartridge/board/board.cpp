@@ -7,6 +7,7 @@ namespace Board {
 #include "bandai-fcg.cpp"
 #include "bandai-karaoke.cpp"
 #include "bandai-lz93d50.cpp"
+#include "bandai-datach.cpp"
 #include "bandai-oeka.cpp"
 #include "camerica-bf909x.cpp"
 #include "colordreams-74x377.cpp"
@@ -57,6 +58,8 @@ namespace Board {
 #include "taito-x1-017.cpp"
 #include "tengen-80003x.cpp"
 #include "unrom-512.cpp"
+#include "vs/board.cpp"
+#include "vs-unisystem.cpp"
 
 #include "unl-bmc.cpp"
 #include "unl-jy.cpp"
@@ -74,6 +77,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = BandaiFCG::create(board);
   if(!p) p = BandaiKaraoke::create(board);
   if(!p) p = BandaiLZ93D50::create(board);
+  if(!p) p = BandaiDatach::create(board);
   if(!p) p = BandaiOeka::create(board);
   if(!p) p = Camerica_BF909x::create(board);
   if(!p) p = ColorDreams_74x377::create(board);
@@ -131,6 +135,8 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = SachenSA0037::create(board);
   if(!p) p = Sc127::create(board);
   if(!p) p = TXC::create(board);
+
+  if(!p) p = VsUniSystem::create(board);
 
   if(!p) p = new Interface;
   return p;

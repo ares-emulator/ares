@@ -7,7 +7,20 @@ auto DD::RTC::load() -> void {
   //byte 0 to 7 = raw rtc time (last updated, only 6 bytes are used)
   n64 check = 0;
   for(auto n : range(8)) check.byte(n) = ram.read<Byte>(n);
-  if(!~check) return;  //new save file
+  //byte 8 to 15 = timestamp of when the last save was made
+  n64 timestamp = 0;
+  for(auto n : range(8)) timestamp.byte(n) = ram.read<Byte>(8 + n);
+  if(!~check || !~timestamp) {  //new save file
+    time_t t = time(0);
+    struct tm tmm = *localtime(&t);
+    ram.write<Byte>(0, BCD::encode(tmm.tm_year % 100));
+    ram.write<Byte>(1, BCD::encode(tmm.tm_mon + 1));
+    ram.write<Byte>(2, BCD::encode(tmm.tm_mday));
+    ram.write<Byte>(3, BCD::encode(tmm.tm_hour));
+    ram.write<Byte>(4, BCD::encode(tmm.tm_min));
+    ram.write<Byte>(5, BCD::encode(tmm.tm_sec));
+    return;
+  }
 
   //check for invalid time info, if invalid, set time info to something invalid and ignore the rest
   if (!valid()) {
@@ -15,14 +28,13 @@ auto DD::RTC::load() -> void {
     return;
   }
 
-  //byte 8 to 15 = timestamp of when the last save was made
-  n64 timestamp = 0;
-  for(auto n : range(8)) timestamp.byte(n) = ram.read<Byte>(8 + n);
-  if(!~timestamp) return;  //new save file
-
   //update based on the amount of time that has passed since the last save
-  timestamp = time(0) - timestamp;
-  while(timestamp--) tickSecond();
+  time_t now = time(0);
+  time_t saved = (time_t)timestamp;
+  if(now > saved) {
+    timestamp = now - saved;
+    while(timestamp--) tickSecond();
+  }
 }
 
 auto DD::RTC::reset() -> void {

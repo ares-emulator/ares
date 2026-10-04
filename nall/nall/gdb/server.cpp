@@ -34,6 +34,7 @@ namespace nall::GDB {
 
   auto Server::reportSignal(Signal sig, u64 originPC) -> bool {
     if(!hasActiveClient || !handshakeDone)return true; // no client -> no error
+    if(passSignals[static_cast<u8>(sig)])return true; // QPassSignals: deliver without stopping or reporting
     if(forceHalt)return false; // Signals can only happen while the game is running, ignore others
 
     pcOverride = originPC;
@@ -54,7 +55,7 @@ namespace nall::GDB {
 
   auto Server::reportMemRead(u64 address, u32 size) -> void {
     if(watchpointRead.empty())return;
-    
+
     if(hooks.normalizeAddress) {
       address = hooks.normalizeAddress(address);
     }
@@ -218,7 +219,7 @@ namespace nall::GDB {
 
       case 'p': // read specific register (e.g.: "p15")
         if(hooks.regRead) {
-          u32 regIdx = cmdName.slice(1).integer();
+          u32 regIdx = cmdName.slice(1).hex();
           return hooks.regRead(regIdx);
         } else {
           return "00000000";
@@ -229,7 +230,7 @@ namespace nall::GDB {
         if(hooks.regWrite) {
           auto sepIdxMaybe = cmdName.find("=");
           u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
-          
+
           u32 regIdx = static_cast<u32>(cmdName.slice(1, sepIdx-1).hex());
           u64 regValue = cmdName.slice(sepIdx+1).hex();
 
@@ -241,8 +242,9 @@ namespace nall::GDB {
         // This tells the client what we can and can't do
         if(cmdName == "qSupported"){ return {
           "PacketSize=", hex(MAX_PACKET_SIZE),
-          ";fork-events-;swbreak+;hwbreak-", 
+          ";fork-events-;swbreak+;hwbreak-",
           ";vContSupported-", // prevent vCont commands (reduces potential GDB variations: some prefer using it, others don't)
+          ";QPassSignals+", // let the client ask us to swallow chosen signals
           NON_STOP_MODE ? ";QNonStop+" : "",
           "QStartNoAckMode+",
           hooks.targetXML ? ";xmlRegisters+;qXfer:features:read+" : "" // (see: https://marc.info/?l=gdb&m=149901965961257&w=2)
@@ -260,7 +262,7 @@ namespace nall::GDB {
         if(cmdName == "qTsP")return "";
 
         // extended target features (gdb extension), most return XML data
-        if(cmdName == "qXfer" && cmdParts.size() > 4) 
+        if(cmdName == "qXfer" && cmdParts.size() > 4)
         {
           if(cmdParts[1] == "features" && cmdParts[2] == "read") {
             // informs the client about arch/registers (https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format)
@@ -279,6 +281,16 @@ namespace nall::GDB {
         break;
 
       case 'Q':
+        if(cmdName == "QPassSignals") { // e.g. "QPassSignals:0b;0e" (hex signal numbers); empty list = clear
+          passSignals.fill(false);
+          if(cmdParts.size() > 1) {
+            for(auto sig : nall::split(cmdParts[1], ";")) {
+              if(sig.size()) passSignals[sig.hex() & 0xFF] = true;
+            }
+          }
+          return "OK";
+        }
+
         if(cmdName == "QNonStop") { // 0=stop, 1=non-stop-mode (this allows for async GDB-communication)
           if(cmdParts.size() <= 1)return "E00";
           nonStopMode = cmdParts[1] == "1";
@@ -305,7 +317,7 @@ namespace nall::GDB {
 
       case 's': {
         if(cmdName.size() > 1) {
-          u64 address = cmdName.slice(1).integer();
+          u64 address = cmdName.slice(1).hex();
           printf("stepping at address unsupported, ignore (%016" PRIX64 ")\n", address);
         }
 
@@ -361,21 +373,21 @@ namespace nall::GDB {
         switch(cmdName(1)) {
           case '0': // (hardware/software breakpoints are the same for us)
           case '1': addOrRemoveEntry(breakpoints, address, isInsert); break;
-          
+
           case '2':
             wp.type = WatchpointType::WRITE;
-            addOrRemoveEntry(watchpointWrite, wp, isInsert); 
+            addOrRemoveEntry(watchpointWrite, wp, isInsert);
             break;
 
-          case '3': 
+          case '3':
             wp.type = WatchpointType::READ;
-            addOrRemoveEntry(watchpointRead, wp, isInsert); 
+            addOrRemoveEntry(watchpointRead, wp, isInsert);
             break;
 
           case '4':
             wp.type = WatchpointType::ACCESS;
-            addOrRemoveEntry(watchpointRead,  wp, isInsert); 
-            addOrRemoveEntry(watchpointWrite, wp, isInsert); 
+            addOrRemoveEntry(watchpointRead,  wp, isInsert);
+            addOrRemoveEntry(watchpointWrite, wp, isInsert);
             break;
           default: return "E00";
         }
@@ -397,9 +409,9 @@ namespace nall::GDB {
       cmdBuffer.reserve(text.size());
     }
 
-    for(char c : text) 
+    for(char c : text)
     {
-      switch(c) 
+      switch(c)
       {
         case '$':
           insideCommand = true;
@@ -434,7 +446,7 @@ namespace nall::GDB {
             cmdBuffer.append(c);
           }
       }
-    }  
+    }
   }
 
   auto Server::updateLoop() -> void {
@@ -468,11 +480,11 @@ namespace nall::GDB {
         if(wasHalted && !isHalted())return;
 
         if(messageCount > 0 && maxLoopResets > 0) {
-          i = loopCount; // reset loop here to keep a fast chain of messages going (reduces latency)
+          i = 0; // reset loop here to keep a fast chain of messages going (reduces latency)
           --maxLoopResets;
         }
       }
-      
+
       if(wasHalted)usleep(1);
     }
   }
@@ -551,6 +563,8 @@ namespace nall::GDB {
 
     watchpointWrite.clear();
     watchpointWrite.reserve(DEF_BREAKPOINT_SIZE);
+
+    passSignals.fill(false);
 
     pcOverride.reset();
     insideCommand = false;

@@ -7,6 +7,7 @@ struct ControllerPort {
   auto unload() -> void;
   auto allocate(string name) -> Node::Peripheral;
 
+  auto frame() -> void { if(device) device->frame(); }
   auto data() -> n3 { if(device) return device->data(); return 0b000; }
   auto latch(n1 data) -> void { if(device) return device->latch(data); }
 
