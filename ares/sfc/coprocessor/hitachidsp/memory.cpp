@@ -200,7 +200,11 @@ auto HitachiDSP::writeIO(n24 address, n8 data) -> void {
 
   case 0x7f48:
     io.cache.page = data.bit(0);
-    if(io.halt) io.cache.enable = 1;
+    if(io.halt) {
+      r.pb = io.cache.pb;
+      io.cache.preload = 1;
+      io.cache.enable = 1;
+    }
     return;
 
   case 0x7f49: io.cache.base.byte(0) = data; return;

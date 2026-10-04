@@ -20,7 +20,7 @@ auto HG51B::halt() -> void {
 auto HG51B::wait(n24 address) -> u32 {
   if(isROM(address)) return 1 + io.wait.rom;
   if(isRAM(address)) return 1 + io.wait.ram;
-  return 1;
+  return 0;
 }
 
 auto HG51B::main() -> void {
@@ -73,20 +73,24 @@ auto HG51B::suspend() -> void {
 auto HG51B::cache() -> bool {
   n24 address = io.cache.base + r.pb * 512;
 
-  //try to use the current page ...
-  if(io.cache.address[io.cache.page] == address) return io.cache.enable = 0, true;
-  //if it's not valid, try to use the other page ...
-  io.cache.page ^= 1;
-  if(io.cache.address[io.cache.page] == address) return io.cache.enable = 0, true;
-  //if it's not valid, try to load into the other page ...
-  if(io.cache.lock[io.cache.page]) io.cache.page ^= 1;
-  //if it's locked, try to load into the first page ...
-  if(io.cache.lock[io.cache.page]) return io.cache.enable = 0, false;
+  if(io.cache.preload == 0) {
+    //try to use the current page ...
+    if(io.cache.address[io.cache.page] == address) return io.cache.enable = 0, true;
+    //if it's not valid, try to use the other page ...
+    io.cache.page ^= 1;
+    if(io.cache.address[io.cache.page] == address) return io.cache.enable = 0, true;
+    //if it's not valid, try to load into the other page ...
+    if(io.cache.lock[io.cache.page]) io.cache.page ^= 1;
+    //if it's locked, try to load into the first page ...
+    if(io.cache.lock[io.cache.page]) return io.cache.enable = 0, false;
+  }
+  io.cache.preload = 0;
 
   io.cache.address[io.cache.page] = address;
   for(u32 offset : range(256)) {
     step(wait(address));
     programRAM[io.cache.page][offset].byte(0) = read(address++);
+    step(wait(address));
     programRAM[io.cache.page][offset].byte(1) = read(address++);
   }
   return io.cache.enable = 0, true;
