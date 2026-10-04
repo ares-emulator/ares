@@ -24,7 +24,7 @@ auto MemoryEditor::construct() -> void {
 
   refreshButton.setText("Refresh").onActivate([&] {
     Program::Guard guard;
-    memoryEditor.update();
+    refresh();
   });
 }
 
@@ -46,6 +46,23 @@ auto MemoryEditor::unload() -> void {
 }
 
 auto MemoryEditor::refresh() -> void {
+  if(auto item = memoryList.selected()) {
+    if(auto memory = item.attribute<ares::Node::Debugger::Memory>("node")) {
+      auto size = memory->size();
+      if(previousData.size() != size) {
+        //first refresh after selecting this memory node: seed the baseline, nothing to highlight yet
+        previousData.resize(size);
+        changedData.assign(size, false);
+        for(u32 address : range(size)) previousData[address] = memory->read(address);
+      } else {
+        for(u32 address : range(size)) {
+          u8 data = memory->read(address);
+          changedData[address] = data != previousData[address];
+          previousData[address] = data;
+        }
+      }
+    }
+  }
   memoryEditor.update();
 }
 
@@ -64,11 +81,19 @@ auto MemoryEditor::eventChange() -> void {
         Program::Guard guard;
         return memory->write(address, data);
       });
+      memoryEditor.onHighlight([this](u32 address) -> bool {
+        return address < changedData.size() && changedData[address];
+      });
+      previousData.clear();
+      changedData.clear();
     }
   } else {
     memoryEditor.setLength(0);
     memoryEditor.onRead();
     memoryEditor.onWrite();
+    memoryEditor.onHighlight();
+    previousData.clear();
+    changedData.clear();
   }
   memoryEditor.setAddress(0);
   if(visible()) memoryEditor.update();

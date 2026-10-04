@@ -18,6 +18,11 @@ auto mHexEdit::columns() const -> u32 {
   return state.columns;
 }
 
+auto mHexEdit::doHighlight(u32 offset) const -> bool {
+  if(state.onHighlight) return state.onHighlight(offset);
+  return false;
+}
+
 auto mHexEdit::doRead(u32 offset) const -> u8 {
   if(state.onRead) return state.onRead(offset);
   return 0x00;
@@ -33,6 +38,11 @@ auto mHexEdit::foregroundColor() const -> Color {
 
 auto mHexEdit::length() const -> u32 {
   return state.length;
+}
+
+auto mHexEdit::onHighlight(const std::function<bool (u32)>& callback) -> type& {
+  state.onHighlight = callback;
+  return *this;
 }
 
 auto mHexEdit::onRead(const std::function<u8 (u32)>& callback) -> type& {

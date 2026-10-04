@@ -11,6 +11,15 @@ struct System {
   u16 oscPort = 9000;
   nall::OSC::Socket oscSocket;
 
+  struct OscMapping {
+    string oscAddress;
+    u32 memoryAddress = 0;
+    bool isFloat = false;
+    u32 size = 4;      //1, 2, 4, or 8 bytes
+    bool isSigned = true; //ignored when isFloat
+  };
+  std::vector<OscMapping> oscMappings;
+
   enum class Model : u32 { Nintendo64, Aleck64 };
   enum class Region : u32 { NTSC, PAL };
 
@@ -29,6 +38,8 @@ struct System {
   auto save() -> void;
   auto power(bool reset) -> void;
   auto updateOsc() -> void;
+  auto loadOscConfig(const string& json) -> void;
+  auto sendOscFrame() -> void;
 
   //serialization.cpp
   auto serialize(bool synchronize = true) -> serializer;

@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include <nall/gdb/server.hpp>
+#include <nall/string/markup/json.hpp>
 
 namespace ares::Nintendo64 {
 
@@ -38,6 +39,7 @@ auto option(string name, string value) -> bool {
   if(name == "OSC Enabled") { system.oscEnabled = value.boolean(); system.updateOsc(); }
   if(name == "OSC Host") { system.oscHost = value; system.updateOsc(); }
   if(name == "OSC Port") { system.oscPort = value.natural(); system.updateOsc(); }
+  if(name == "OSC Config") system.loadOscConfig(value);
   if(name == "Recompiler") {
     if constexpr(Accuracy::CPU::Recompiler) {
       cpu.recompiler.enabled = value.boolean();
@@ -72,6 +74,74 @@ Queue queue;
 auto System::updateOsc() -> void {
   oscSocket.close();
   if(oscEnabled) oscSocket.open(oscHost, oscPort);
+}
+
+//parses a JSON array of {address, memoryAddress, type, size, signed} mappings.
+//memoryAddress accepts either a standard KSEG0/KSEG1 virtual address (e.g. "0x800E9F88",
+//as seen in decomps/RAM maps/cheat databases) or a raw RDRAM offset; the segment bits are
+//masked off below, matching the same convention used by the GDB debug hooks.
+auto System::loadOscConfig(const string& json) -> void {
+  oscMappings.clear();
+  if(!json) return;
+
+  auto document = nall::JSON::unserialize(json);
+  for(auto entry : document) {
+    OscMapping mapping;
+    mapping.oscAddress = entry["address"].text();
+    mapping.memoryAddress = entry["memoryAddress"].text().natural() & 0x1fff'ffff;
+    mapping.isFloat = entry["type"].text() == "float";
+    mapping.size = entry["size"].natural(4);
+    mapping.isSigned = entry["signed"].boolean(true);
+
+    if(!mapping.oscAddress) continue;
+    if(mapping.size != 1 && mapping.size != 2 && mapping.size != 4 && mapping.size != 8) continue;
+    oscMappings.push_back(mapping);
+  }
+}
+
+auto System::sendOscFrame() -> void {
+  if(!oscEnabled) return;
+  oscSocket.send("/ares/alive");
+
+  for(auto& mapping : oscMappings) {
+    if(mapping.isFloat) {
+      if(mapping.size == 4) {
+        u32 bits = (u32)rdram.ram.read<Word>(mapping.memoryAddress, RBusDevice::ARES_DEBUGGER);
+        f32 value;
+        memory::copy(&value, &bits, 4);
+        oscSocket.sendFloat32(mapping.oscAddress, value);
+      } else if(mapping.size == 8) {
+        u64 bits = rdram.ram.read<Dual>(mapping.memoryAddress, RBusDevice::ARES_DEBUGGER);
+        f64 value;
+        memory::copy(&value, &bits, 8);
+        oscSocket.sendFloat64(mapping.oscAddress, value);
+      }
+      continue;
+    }
+
+    switch(mapping.size) {
+    case 1: {
+      u8 raw = (u8)rdram.ram.read<Byte>(mapping.memoryAddress, RBusDevice::ARES_DEBUGGER);
+      oscSocket.sendInt32(mapping.oscAddress, mapping.isSigned ? (s32)(s8)raw : (s32)raw);
+      break;
+    }
+    case 2: {
+      u16 raw = (u16)rdram.ram.read<Half>(mapping.memoryAddress, RBusDevice::ARES_DEBUGGER);
+      oscSocket.sendInt32(mapping.oscAddress, mapping.isSigned ? (s32)(s16)raw : (s32)raw);
+      break;
+    }
+    case 4: {
+      u32 raw = (u32)rdram.ram.read<Word>(mapping.memoryAddress, RBusDevice::ARES_DEBUGGER);
+      oscSocket.sendInt32(mapping.oscAddress, (s32)raw);
+      break;
+    }
+    case 8: {
+      u64 raw = rdram.ram.read<Dual>(mapping.memoryAddress, RBusDevice::ARES_DEBUGGER);
+      oscSocket.sendInt64(mapping.oscAddress, (s64)raw);
+      break;
+    }
+    }
+  }
 }
 
 auto System::game() -> string {

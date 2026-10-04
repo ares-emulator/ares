@@ -1,7 +1,8 @@
 #if defined(Hiro_HexEdit)
 
-@interface CocoaHexEdit : NSScrollView <NSTableViewDataSource>  {
-  // Not an NSTableViewDelegate because the table is cell-based, not view-based
+@interface CocoaHexEdit : NSScrollView <NSTableViewDataSource, NSTableViewDelegate>  {
+  // Only used as an NSTableViewDelegate for the cell-based willDisplayCell: callback
+  // (to highlight changed bytes); the table remains cell-based, not view-based.
 @public
   hiro::mHexEdit* hexEdit; // this will be the data source for tableView.
   NSTableView* tableView;

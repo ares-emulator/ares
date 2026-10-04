@@ -388,10 +388,12 @@ struct HexEdit : sHexEdit {
   auto address() const { return self().address(); }
   auto backgroundColor() const { return self().backgroundColor(); }
   auto columns() const { return self().columns(); }
+  auto doHighlight(u32 offset) const { return self().doHighlight(offset); }
   auto doRead(u32 offset) const { return self().doRead(offset); }
   auto doWrite(u32 offset, u8 data) const { return self().doWrite(offset, data); }
   auto foregroundColor() const { return self().foregroundColor(); }
   auto length() const { return self().length(); }
+  auto onHighlight(const std::function<bool (u32)>& callback = {}) { return self().onHighlight(callback), *this; }
   auto onRead(const std::function<u8 (u32)>& callback = {}) { return self().onRead(callback), *this; }
   auto onWrite(const std::function<void (u32, u8)>& callback = {}) { return self().onWrite(callback), *this; }
   auto rows() const { return self().rows(); }

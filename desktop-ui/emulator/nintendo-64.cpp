@@ -6,10 +6,12 @@ struct Nintendo64 : Emulator {
   auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
+  auto reloadOscConfig() -> void;
 
   std::shared_ptr<mia::Pak> disk;
   u32 regionID = 0;
   sTimer diskInsertTimer;
+  string oscConfigLocation;
 };
 
 Nintendo64::Nintendo64() {
@@ -123,6 +125,10 @@ auto Nintendo64::load() -> LoadResult {
 
   if(!ares::Nintendo64::load(root, {"[Nintendo] ", name, " (", region, ")"})) return otherError;
 
+  //root must be assigned before calling locate(), which reads root->name()
+  oscConfigLocation = Emulator::locate(game->location, ".osc.json");
+  reloadOscConfig();
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
@@ -189,7 +195,28 @@ auto Nintendo64::load() -> LoadResult {
   return successful;
 }
 
+auto Nintendo64::reloadOscConfig() -> void {
+  string location = oscConfigLocation;
+  if(!file::exists(location)) {
+    //fall back to any *.osc.json file next to the ROM, in case it wasn't named to match the ROM exactly
+    auto directory = Location::path(game->location);
+    auto matches = nall::directory::files(directory, "*.osc.json");
+    if(!matches.empty()) location = {directory, matches.front()};
+  }
+
+  string oscConfig;
+  if(location && file::exists(location)) oscConfig = string::read(location);
+  ares::Nintendo64::option("OSC Config", oscConfig);
+}
+
 auto Nintendo64::load(Menu menu) -> void {
+  MenuItem reloadOscConfigItem{&menu};
+  reloadOscConfigItem.setIcon(Icon::Action::Refresh);
+  reloadOscConfigItem.setText("Reload OSC Config").onActivate([&] {
+    Program::Guard guard;
+    reloadOscConfig();
+  });
+
   if(disk) {
     MenuItem changeDisk{&menu};
     changeDisk.setIcon(Icon::Device::Optical);

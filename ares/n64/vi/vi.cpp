@@ -94,7 +94,7 @@ auto VI::main() -> void {
         #endif
         refreshed = true;
         screen->frame();
-        if(system.oscEnabled) system.oscSocket.send("/ares/alive");
+        system.sendOscFrame();
       }
 
       if(io.halfLinesPerField.bit(0)) { // progressive

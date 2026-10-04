@@ -1,11 +1,11 @@
 #pragma once
 
 // Minimal sender for OSC (Open Sound Control) messages over UDP.
-// Only sending bare/argument-less messages is supported for now;
-// there is no need to receive or parse OSC, or send typed arguments, yet.
+// Only sending is supported; there is no need to receive or parse OSC.
 
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>
+#include <cstring>
 #include <vector>
 
 #if defined(PLATFORM_WINDOWS)
@@ -30,10 +30,17 @@ struct Socket {
   //sends an OSC message with no arguments (e.g. "/ares/alive")
   auto send(const string& address) -> bool;
 
+  //sends an OSC message with a single numeric argument
+  auto sendInt32(const string& address, s32 value) -> bool;
+  auto sendInt64(const string& address, s64 value) -> bool;
+  auto sendFloat32(const string& address, f32 value) -> bool;
+  auto sendFloat64(const string& address, f64 value) -> bool;
+
   ~Socket() { close(); }
 
 private:
   auto appendPaddedString(std::vector<u8>& buffer, const string& value) -> void;
+  auto sendRaw(const string& address, const char* typeTag, const u8* data, u32 size) -> bool;
 
   s32 fd = -1;
 };
@@ -92,15 +99,48 @@ inline auto Socket::close() -> void {
   fd = -1;
 }
 
-inline auto Socket::send(const string& address) -> bool {
+inline auto Socket::sendRaw(const string& address, const char* typeTag, const u8* data, u32 size) -> bool {
   if(fd < 0) return false;
 
   std::vector<u8> packet;
   appendPaddedString(packet, address);
-  appendPaddedString(packet, ","); //empty argument list
+  appendPaddedString(packet, {",", typeTag});
+  packet.insert(packet.end(), data, data + size);
 
   auto result = ::send(fd, (const char*)packet.data(), (int)packet.size(), 0);
   return result == (decltype(result))packet.size();
+}
+
+inline auto Socket::send(const string& address) -> bool {
+  return sendRaw(address, "", nullptr, 0);
+}
+
+inline auto Socket::sendInt32(const string& address, s32 value) -> bool {
+  u32 bits = (u32)value;
+  u8 data[4] = {u8(bits >> 24), u8(bits >> 16), u8(bits >> 8), u8(bits >> 0)};
+  return sendRaw(address, "i", data, 4);
+}
+
+inline auto Socket::sendInt64(const string& address, s64 value) -> bool {
+  u64 bits = (u64)value;
+  u8 data[8];
+  for(u32 n = 0; n < 8; n++) data[n] = u8(bits >> (56 - n * 8));
+  return sendRaw(address, "h", data, 8);
+}
+
+inline auto Socket::sendFloat32(const string& address, f32 value) -> bool {
+  u32 bits;
+  memcpy(&bits, &value, 4);
+  u8 data[4] = {u8(bits >> 24), u8(bits >> 16), u8(bits >> 8), u8(bits >> 0)};
+  return sendRaw(address, "f", data, 4);
+}
+
+inline auto Socket::sendFloat64(const string& address, f64 value) -> bool {
+  u64 bits;
+  memcpy(&bits, &value, 8);
+  u8 data[8];
+  for(u32 n = 0; n < 8; n++) data[n] = u8(bits >> (56 - n * 8));
+  return sendRaw(address, "d", data, 8);
 }
 
 }

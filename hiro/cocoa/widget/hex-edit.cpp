@@ -7,6 +7,7 @@
     hexEdit = &hexEditReference;
     if (tableView = [[NSTableView alloc] initWithFrame:[self bounds]]) {
       [tableView setDataSource:self];
+      [tableView setDelegate:self];
       // [tableView setHeaderView:nil];
       [tableView setUsesAlternatingRowBackgroundColors:true];
       [tableView setGridStyleMask:(NSTableViewDashedHorizontalGridLineMask | NSTableViewSolidVerticalGridLineMask)];
@@ -108,6 +109,22 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
     }
   }
   [senderTableView reloadData];
+}
+
+-(void) tableView:(NSTableView *) senderTableView
+   willDisplayCell:(id) cell
+    forTableColumn:(NSTableColumn *) tableColumn
+               row:(NSInteger) row {
+  if (![[tableColumn identifier] isEqualToString:@"Address"] && ![[tableColumn identifier] isEqualToString:@"Char"]) {
+    u32 address = row * hexEdit->columns() + [tableColumn.identifier integerValue];
+    bool highlighted = address < hexEdit->length() && hexEdit->doHighlight(address);
+
+    NSTextFieldCell* textCell = (NSTextFieldCell*)cell;
+    [textCell setDrawsBackground:highlighted];
+    if (highlighted) {
+      [textCell setBackgroundColor:[NSColor colorWithCalibratedRed:1.0 green:0.85 blue:0.2 alpha:0.65]];
+    }
+  }
 }
 
 @end

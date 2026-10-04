@@ -66,6 +66,9 @@ struct MemoryEditor : VerticalLayout {
     Widget spacer{&controlLayout, Size{~0, 0}};
     CheckLabel liveOption{&controlLayout, Size{0, 0}, 2};
     Button refreshButton{&controlLayout, Size{80, 0}};
+
+  std::vector<u8> previousData;
+  std::vector<bool> changedData;
 };
 
 struct GraphicsViewer : VerticalLayout {
