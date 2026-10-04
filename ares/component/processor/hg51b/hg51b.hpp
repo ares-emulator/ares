@@ -156,6 +156,7 @@ protected:
     struct Cache {
       n1  enable;
       n1  page;
+      n1  preload;
       n1  lock[2];
       n24 address[2];  //cache address is in bytes; so 24-bit
       n24 base;        //base address is also in bytes
