@@ -163,7 +163,10 @@ auto Nintendo64::load() -> LoadResult {
 
   auto controllers = 4;
   //Jeopardy! does not accept any input if > 3 controllers are plugged in at boot.
-  if(game->pak->attribute("id") == "NJOE") controllers = min(controllers, 3);
+  if(game->pak->attribute("id") == "NJOE") {
+    controllers = min(controllers, 3);
+    peripheralConfigurationBlacklist.push_back("Controller Port 4");
+  }
 
   for(auto id : range(controllers)) {
     if(auto port = root->find<ares::Node::Port>({"Controller Port ", 1 + id})) {
