@@ -1,5 +1,10 @@
 struct MegaCD : CompactDisc {
   auto name() -> string override { return "Mega CD"; }
+  auto extensions() -> std::vector<string> override {
+    auto formats = CompactDisc::extensions();
+    formats.push_back("zip");
+    return formats;
+  }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
@@ -38,7 +43,12 @@ auto MegaCD::save(string location) -> bool {
 auto MegaCD::analyze(string location) -> string {
   std::vector<u8> sector;
 
-  sector = readDataSector(location, 0);
+  if(location.iendsWith(".zip")) {
+    Decode::DiscArchive source;
+    if(source.open(location)) sector = source.readDataSector(0);
+  } else {
+    sector = readDataSector(location, 0);
+  }
 
   if(sector.empty() || memory::compare(sector.data(), "SEGA", 4))
     return CompactDisc::manifestAudio(location);
