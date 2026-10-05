@@ -110,12 +110,12 @@ auto MegaDrive::load() -> LoadResult {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    port->allocate("Control Pad");
+    port->allocate("Fighting Pad");
     port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
-    port->allocate("Control Pad");
+    port->allocate("Fighting Pad");
     port->connect();
   }
 
