@@ -3,6 +3,7 @@ struct MegaCD : CompactDisc {
   auto extensions() -> std::vector<string> override {
     auto formats = CompactDisc::extensions();
     formats.push_back("zip");
+    formats.push_back("7z");
     return formats;
   }
   auto load(string location) -> LoadResult override;
@@ -43,7 +44,7 @@ auto MegaCD::save(string location) -> bool {
 auto MegaCD::analyze(string location) -> string {
   std::vector<u8> sector;
 
-  if(location.iendsWith(".zip")) {
+  if(location.iendsWith(".zip") || location.iendsWith(".7z")) {
     Decode::DiscArchive source;
     if(source.open(location)) sector = source.readDataSector(0);
   } else {

@@ -2,6 +2,7 @@
 
 #include <nall/decode/archive.hpp>
 #include <nall/decode/cue.hpp>
+#include <nall/decode/sevenzip-archive.hpp>
 #include <nall/decode/zip-archive.hpp>
 #include <memory>
 #include <span>
@@ -10,14 +11,15 @@
 namespace nall::Decode {
 
 // Resolves an optical-disc descriptor stored inside an archive container.
-// Initially ZIP is the only backend; additional archive formats plug into the
-// same factory without changing CUE parsing, MIA, or vfs::cdrom.
+// Container parsing stays behind Archive so CUE parsing, MIA, and vfs::cdrom
+// share one descriptor/member-resolution path for ZIP and 7z.
 struct DiscArchive {
   auto open(const string& filename) -> bool {
     close();
     location = filename;
 
     if(filename.iendsWith(".zip")) archive = std::make_unique<ZIPArchive>();
+    else if(filename.iendsWith(".7z")) archive = std::make_unique<SevenZipArchive>();
     else return false;
 
     if(!archive->open(filename)) {

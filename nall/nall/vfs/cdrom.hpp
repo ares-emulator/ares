@@ -41,7 +41,7 @@ struct cdrom : file {
 #if defined(ARES_ENABLE_CHD)
     if(location.iendsWith(".chd") && instance->loadChd(location)) return instance;
 #endif
-    if(location.iendsWith(".zip")) {
+    if(location.iendsWith(".zip") || location.iendsWith(".7z")) {
       Decode::DiscArchive source;
       if(source.open(location)) {
         auto descriptor = source.descriptor;

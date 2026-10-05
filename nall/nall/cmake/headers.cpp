@@ -68,6 +68,7 @@
 #include <nall/decode/archive.hpp>
 #include <nall/decode/zip.hpp>
 #include <nall/decode/zip-archive.hpp>
+#include <nall/decode/sevenzip-archive.hpp>
 #include <nall/decode/disc-archive.hpp>
 #include <nall/encode/base.hpp>
 #include <nall/encode/base64.hpp>
