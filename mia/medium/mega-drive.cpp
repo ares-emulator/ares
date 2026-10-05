@@ -53,6 +53,7 @@ auto MegaDrive::load(string location) -> LoadResult {
 
   pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",    document["game/title"].string());
+  pak->setAttribute("serial",   document["game/serial"].string());
   pak->setAttribute("region",   document["game/region"].string());
   pak->setAttribute("board",    document["game/board"].string());
   pak->setAttribute("bootable", true);
