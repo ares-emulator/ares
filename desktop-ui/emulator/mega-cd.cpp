@@ -1,6 +1,7 @@
 struct MegaCD : Emulator {
   MegaCD();
   auto load() -> LoadResult override;
+  auto sixButtonIncompatible() const -> bool;
   auto load(Menu) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
@@ -60,6 +61,15 @@ MegaCD::MegaCD() {
   }
 }
 
+auto MegaCD::sixButtonIncompatible() const -> bool {
+  if(!game || !game->pak) return false;
+
+  // Product code documented at:
+  // https://segaretro.org/Six_Button_Control_Pad_(Mega_Drive)
+  // The Terminator (USA, Europe) is incompatible with the six-button protocol.
+  return game->pak->attribute("serial").beginsWith("GM T-70015-");
+}
+
 auto MegaCD::load() -> LoadResult {
   game = mia::Medium::create("Mega CD");
   string location = Emulator::load(game, configuration.game);
@@ -109,6 +119,20 @@ auto MegaCD::load() -> LoadResult {
     } else {
       port->allocate("Control Pad");
       port->connect();
+    }
+  }
+
+  // Keep both ports in three-button mode for games that mis-handle the
+  // six-button protocol, even if the normal default changes to Fighting Pad.
+  if(sixButtonIncompatible()) {
+    for(auto portName : {"Controller Port 1", "Controller Port 2"}) {
+      if(auto port = root->find<ares::Node::Port>(portName)) {
+        auto supported = port->supported();
+        std::erase(supported, string{"Fighting Pad"});
+        port->setSupported(supported);
+        port->allocate("Control Pad");
+        port->connect();
+      }
     }
   }
 
