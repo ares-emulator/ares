@@ -20,6 +20,52 @@ auto Emulator::enumeratePorts(string name) -> std::vector<InputPort>& {
   return ports;
 }
 
+auto Emulator::configuredPeripheral(const string& portName) -> string* {
+  if(configuration.peripherals.size() < ports.size()) configuration.peripherals.resize(ports.size());
+  for(auto index : range(ports.size())) {
+    if(ports[index].name == portName) return &configuration.peripherals[index];
+  }
+  return nullptr;
+}
+
+auto Emulator::setPeripheralConfiguration(const string& portName, const string& peripheral) -> bool {
+  if(auto configured = configuredPeripheral(portName)) {
+    *configured = peripheral;
+    return true;
+  }
+  return false;
+}
+
+auto Emulator::applyPeripheralConfiguration() -> void {
+  if(configuration.peripherals.size() < ports.size()) configuration.peripherals.resize(ports.size());
+
+  for(auto index : range(ports.size())) {
+    auto& peripheral = configuration.peripherals[index];
+    if(!peripheral) continue;
+
+    auto& portName = ports[index].name;
+    if(std::ranges::find(peripheralConfigurationBlacklist, portName) != peripheralConfigurationBlacklist.end()) continue;
+
+    auto port = root->find<ares::Node::Port>(portName);
+    if(!port) continue;
+
+    if(peripheral == "Nothing") {
+      port->disconnect();
+      continue;
+    }
+
+    auto supported = port->supported();
+    if(std::ranges::find(supported, peripheral) == supported.end()) continue;
+
+    if(auto connected = port->connected()) {
+      if(connected->name() == peripheral) continue;
+    }
+
+    port->disconnect();
+    if(port->allocate(peripheral)) port->connect();
+  }
+}
+
 auto Emulator::location() -> string {
   return {Path::userData(), "ares/Saves/", name, "/"};
 }
@@ -135,7 +181,8 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
 auto Emulator::load(const string& location) -> bool {
   Program::Guard guard;
   if(inode::exists(location)) locationQueue.push_back(location);
-  
+
+  peripheralConfigurationBlacklist.clear();
   LoadResult result = load();
   handleLoadResult(result);
   if(result != successful) {
@@ -146,6 +193,7 @@ auto Emulator::load(const string& location) -> bool {
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
   setColorBleed(settings.video.colorBleed);
+  applyPeripheralConfiguration();
 
   latch = {};
   root->power();

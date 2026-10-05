@@ -12,6 +12,9 @@ struct Emulator {
 
   //emulator.cpp
   static auto enumeratePorts(string name) -> std::vector<InputPort>&;
+  auto configuredPeripheral(const string& portName) -> string*;
+  auto setPeripheralConfiguration(const string& portName, const string& peripheral) -> bool;
+  auto applyPeripheralConfiguration() -> void;
   auto location() -> string;
   auto locate(const string& location, const string& suffix, const string& path = "", maybe<string> system = {}) -> string;
   auto region() -> string;
@@ -60,10 +63,12 @@ struct Emulator {
   std::vector<InputPort> ports;
   std::vector<string> inputBlacklist;
   std::vector<string> portBlacklist;
+  std::vector<string> peripheralConfigurationBlacklist;
 
   struct Configuration {
     bool visible = true;  //whether or not to show this emulator in the load menu
     string game;          //the most recently used folder for games for each emulator core
+    std::vector<string> peripherals;  //persisted peripheral selection for each input port
   } configuration;
 
   struct Latch {

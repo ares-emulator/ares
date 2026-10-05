@@ -100,6 +100,7 @@ auto MegaCD32X::load() -> LoadResult {
       // CORPSE KILLER 32X (E) -- GM T-16201F-50
       // Gamepad in controller port 2 breaks input polling, so leave it disconnected.
       // No supported lightgun devices are currently emulated (Sega Menacer, ALG GameGun).
+      peripheralConfigurationBlacklist.push_back("Controller Port 2");
     } else {
       port->allocate("Fighting Pad");
       port->connect();

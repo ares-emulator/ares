@@ -230,6 +230,16 @@ auto Settings::process(bool load) -> void {
     bind(boolean, name, emulator->configuration.visible);
     name = {base, "/Path"};
     bind(string,  name, emulator->configuration.game);
+
+    emulator->configuration.peripherals.resize(emulator->ports.size());
+    for(auto index : range(emulator->ports.size())) {
+      string portName = string{emulator->ports[index].name}
+        .replace(" ", "").replace("[", "").replace("]", "").replace("(", "").replace(")", "")
+        .replace("*", "Star").replace("#", "Pound").replace("/", "");
+      name = {base, "/", portName};
+      bind(string, name, emulator->configuration.peripherals[index]);
+    }
+
     for(auto& firmware : emulator->firmware) {
       string name = {base, "/Firmware/", firmware.type, ".", firmware.region};
       name.replace(" ", "-");

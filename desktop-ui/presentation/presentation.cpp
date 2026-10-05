@@ -928,6 +928,7 @@ auto Presentation::refreshSystemMenu() -> void {
         Program::Guard guard;
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
         port->disconnect();
+        if(emulator->setPeripheralConfiguration(port->name(), "Nothing")) settings.save();
         refreshSystemMenu();
       });
       peripheralGroup.append(peripheralItem);
@@ -945,6 +946,7 @@ auto Presentation::refreshSystemMenu() -> void {
         port->disconnect();
         port->allocate(peripheralItem.text());
         port->connect();
+        if(emulator->setPeripheralConfiguration(port->name(), peripheralItem.text())) settings.save();
         refreshSystemMenu();
       });
       peripheralGroup.append(peripheralItem);
