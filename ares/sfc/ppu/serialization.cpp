@@ -247,6 +247,10 @@ auto PPU::Window::serialize(serializer& s) -> void {
   s(output.below.colorEnable);
 
   s(x);
+  s(oneActive);
+  s(oneStopped);
+  s(twoActive);
+  s(twoStopped);
 }
 
 auto PPU::DAC::serialize(serializer& s) -> void {
