@@ -8,19 +8,13 @@ struct MegaCD : CompactDisc {
   }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(string location, string* error = nullptr) -> string;
+  auto analyze(string location, string* error = nullptr, vfs::cdrom* mountedDisc = nullptr) -> string;
 };
 
 auto MegaCD::load(string location) -> LoadResult {
   if(!inode::exists(location)) return romNotFound;
 
   this->location = location;
-  string analysisError;
-  this->manifest = analyze(location, &analysisError);
-  if(analysisError) return {invalidROM, analysisError};
-  auto document = BML::unserialize(manifest);
-  if(!document) return couldNotParseManifest;
-
   std::shared_ptr<vfs::cdrom> archiveDisc;
   if(file::exists(location) && (location.iendsWith(".zip") || location.iendsWith(".7z"))) {
     string discError;
@@ -30,6 +24,12 @@ auto MegaCD::load(string location) -> LoadResult {
       return {invalidROM, discError};
     }
   }
+
+  string analysisError;
+  this->manifest = analyze(location, &analysisError, archiveDisc.get());
+  if(analysisError) return {invalidROM, analysisError};
+  auto document = BML::unserialize(manifest);
+  if(!document) return couldNotParseManifest;
 
   pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",  document["game/title"].string());
@@ -53,11 +53,23 @@ auto MegaCD::save(string location) -> bool {
   return true;
 }
 
-auto MegaCD::analyze(string location, string* error) -> string {
+auto MegaCD::analyze(string location, string* error, vfs::cdrom* mountedDisc) -> string {
   if(error) *error = {};
   std::vector<u8> sector;
 
-  if(location.iendsWith(".zip") || location.iendsWith(".7z")) {
+  if(mountedDisc) {
+    auto offset = 2448ull * (CD::LeadInSectors + (u64)CD::LBAtoABA(0)) + 16;
+    if(offset > mountedDisc->size() || mountedDisc->size() - offset < 2048) {
+      if(error) *error = "The mounted archived Sega CD data track is too short.";
+      return {};
+    }
+    auto previousOffset = mountedDisc->offset();
+    vfs::file& disc = *mountedDisc;
+    disc.seek(offset);
+    sector.resize(2048);
+    disc.read(sector);
+    disc.seek(previousOffset);
+  } else if(location.iendsWith(".zip") || location.iendsWith(".7z")) {
     Decode::DiscArchive source;
     if(!source.open(location)) {
       if(error) *error = source.error();
