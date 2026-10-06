@@ -4,26 +4,19 @@
 #include <nall/string.hpp>
 #include <vector>
 #include <span>
+#include <nall/decode/archive.hpp>
 #include <nall/decode/inflate.hpp>
 
 namespace nall::Decode {
 
-struct ZIP {
-  struct File {
-    string name;
-    const u8* data;
-    u64 size;
-    u64 csize;
-    u32 cmode;  //0 = uncompressed, 8 = deflate
-    u32 crc32;
-    time_t timestamp;
-  };
+struct ZIP : Archive {
+  using File = Archive::File;
 
-  ~ZIP() {
+  ~ZIP() override {
     close();
   }
 
-  auto findFile(const string& filename) const -> const maybe<File> {
+  auto findFile(const string& filename) const -> const maybe<File> override {
     for (const auto& currentFile : file) {
       if (currentFile.name.iequals(filename)) {
         return currentFile;
@@ -32,7 +25,11 @@ struct ZIP {
     return nothing;
   }
 
-  auto open(const string& filename) -> bool {
+  auto files() const -> std::vector<File> override {
+    return file;
+  }
+
+  auto open(const string& filename) -> bool override {
     close();
     if(fm.open(filename, file::mode::read) == false) return false;
     if(open(fm.data(), fm.size()) == false) {
@@ -175,7 +172,7 @@ struct ZIP {
     return true;
   }
 
-  auto extract(const File& file) const -> std::vector<u8> {
+  auto extract(const File& file) const -> std::vector<u8> override {
     std::vector<u8> buffer;
 
     if(file.cmode == 0) {
@@ -193,18 +190,18 @@ struct ZIP {
     return buffer;
   }
 
-  auto isDataUncompressed(const File& file) const {
+  auto isDataUncompressed(const File& file) const -> bool override {
     return (file.cmode == 0);
   }
 
-  auto dataViewIfUncompressed(const File& file) const -> std::span<const u8> {
+  auto dataViewIfUncompressed(const File& file) const -> std::span<const u8> override {
     if(file.cmode == 0) {
       return std::span<const u8>(file.data, file.size);
     }
     return std::span<const u8>();
   }
 
-  auto close() -> void {
+  auto close() -> void override {
     if(fm) fm.close();
   }
 

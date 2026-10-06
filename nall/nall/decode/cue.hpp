@@ -3,8 +3,8 @@
 #include <nall/file.hpp>
 #include <nall/maybe.hpp>
 #include <nall/string.hpp>
+#include <nall/decode/archive.hpp>
 #include <nall/decode/wav.hpp>
-#include <nall/decode/zip.hpp>
 #include <vector>
 
 namespace nall::Decode {
@@ -31,7 +31,7 @@ struct CUE {
 
   struct File {
     auto sectorCount() const -> u32;
-    auto scan(const string& pathname, const string& archiveFolder, const Decode::ZIP* archive) -> bool;
+    auto scan(const string& pathname, const string& archiveFolder, const Decode::Archive* archive) -> bool;
 
     string name;
     string archiveFolder;
@@ -39,7 +39,7 @@ struct CUE {
     std::vector<Track> tracks;
   };
 
-  auto load(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool;
+  auto load(const string& location, const Decode::Archive* archive, const Decode::Archive::File* compressedFile) -> bool;
   auto sectorCount() const -> u32;
 
   std::vector<File> files;
@@ -51,7 +51,7 @@ private:
   auto toLBA(const string& msf) -> u32;
 };
 
-inline auto CUE::load(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
+inline auto CUE::load(const string& location, const Decode::Archive* archive, const Decode::Archive::File* compressedFile) -> bool {
   std::vector<string> lines;
   string archiveFolder;
   if (compressedFile != nullptr) {
@@ -195,16 +195,16 @@ inline auto CUE::sectorCount() const -> u32 {
   return count;
 }
 
-inline auto CUE::File::scan(const string& pathname, const string& archiveFolderPath, const Decode::ZIP* archive) -> bool {
+inline auto CUE::File::scan(const string& pathname, const string& archiveFolderPath, const Decode::Archive* archive) -> bool {
   string location = {Location::path(pathname), name};
 
-  maybe<ZIP::File> zipFileEntry;
+  maybe<Archive::File> archiveFileEntry;
   if(archive != nullptr) {
     string archiveFilePath = archiveFolderPath;
     archiveFilePath.append(name);
-    zipFileEntry = archive->findFile(archiveFilePath);
+    archiveFileEntry = archive->findFile(archiveFilePath);
     archiveFolder = archiveFolderPath;
-    if(!zipFileEntry) return false;
+    if(!archiveFileEntry) return false;
   } else {
     if(!file::exists(location)) return false;
   }
@@ -212,9 +212,9 @@ inline auto CUE::File::scan(const string& pathname, const string& archiveFolderP
   u64 size = 0;
 
   if(type == "binary") {
-    size = zipFileEntry ? zipFileEntry->size : file::size(location);
+    size = archiveFileEntry ? archiveFileEntry->size : file::size(location);
   } else if(type == "wave") {
-    //##TODO## Do we bother to support wav files in our zip bundles?
+    //##TODO## Do we bother to support wav files in our archive bundles?
     Decode::WAV wav;
     if(!wav.open(location)) return false;
     if(wav.channels != 2) return false;
