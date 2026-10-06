@@ -5,6 +5,7 @@
 #include <nall/string.hpp>
 #include <nall/decode/archive.hpp>
 #include <nall/decode/wav.hpp>
+#include <limits>
 #include <vector>
 
 namespace nall::Decode {
@@ -40,6 +41,7 @@ struct CUE {
   };
 
   auto load(const string& location, const Decode::Archive* archive, const Decode::Archive::File* compressedFile) -> bool;
+  auto error() const -> string { return errorMessage; }
   auto sectorCount() const -> u32;
 
   std::vector<File> files;
@@ -48,18 +50,23 @@ private:
   auto loadFile(std::vector<string>& lines, u32& offset) -> File;
   auto loadTrack(std::vector<string>& lines, u32& offset) -> Track;
   auto loadIndex(std::vector<string>& lines, u32& offset) -> Index;
-  auto toLBA(const string& msf) -> u32;
+  auto toLBA(const string& msf) -> s32;
+  string errorMessage;
 };
 
 inline auto CUE::load(const string& location, const Decode::Archive* archive, const Decode::Archive::File* compressedFile) -> bool {
+  files.clear();
+  errorMessage = {};
   std::vector<string> lines;
   string archiveFolder;
   if (compressedFile != nullptr) {
-    auto fileNameSeparatorPos = compressedFile->name.findPrevious(compressedFile->name.size()-1, "/");
-    if (fileNameSeparatorPos.data() != nullptr) {
-      archiveFolder = compressedFile->name.slice(0, fileNameSeparatorPos.get() + 1);
-    }
+    archiveFolder = Location::path(compressedFile->name);
     auto rawDataBuffer = archive->extract(*compressedFile);
+    if(rawDataBuffer.size() != compressedFile->size) {
+      errorMessage = archive->error();
+      if(!errorMessage) errorMessage = {"Failed to read archived CUE: ", compressedFile->name};
+      return false;
+    }
     // Currently (2025-08-14) there is no way to construct a nall::string from a fixed-length buffer using
     // nall::string_view, as the variadic constructor overrides "string_view(const char* data, u32 size)",
     // meaning we can't create a string_view from a fixed-length input. We use a std::span here as a
@@ -88,12 +95,27 @@ inline auto CUE::load(const string& location, const Decode::Archive* archive, co
     offset++;
   }
 
-  if(files.empty()) return false;
-  if(files.front().tracks.empty()) return false;
-  if(files.front().tracks.front().indices.empty()) return false;
+  if(files.empty()) { errorMessage = "The CUE contains no usable FILE entries."; return false; }
+  for(auto& file : files) {
+    if(file.tracks.empty()) { errorMessage = "The CUE contains a FILE with no usable tracks."; return false; }
+    for(auto& track : file.tracks) {
+      if(!track.sectorSize()) { errorMessage = {"Unsupported CUE track type: ", track.type}; return false; }
+      bool hasIndex = false;
+      for(auto& index : track.indices) if(index.lba >= 0) hasIndex = true;
+      if(!hasIndex) { errorMessage = "The CUE contains a track with no valid INDEX time."; return false; }
+    }
+  }
 
   for(auto& file : files) {
-    if(!file.scan(Location::path(location), archiveFolder, archive)) return false;
+    if(archive && !Archive::resolveMemberName(archiveFolder, file.name)) {
+      errorMessage = {"Unsafe CUE member reference: ", file.name};
+      return false;
+    }
+    if(!file.scan(Location::path(location), archiveFolder, archive)) {
+      if(archive) errorMessage = archive->error();
+      if(!errorMessage) errorMessage = {"CUE member is missing or unsupported: ", file.name};
+      return false;
+    }
   }
 
   return true;
@@ -151,7 +173,7 @@ inline auto CUE::loadTrack(std::vector<string>& lines, u32& offset) -> Track {
     }
     if(lines[offset].ibeginsWith("POSTGAP ")) {
       track.postgap = toLBA(lines[offset++].itrimLeft("POSTGAP ", 1L));
-      Index index; index.number = track.indices.back().number + 1; index.lba = -1;
+      Index index; index.number = track.indices.empty() ? 0 : track.indices.back().number + 1; index.lba = -1;
       track.indices.push_back(index); // placeholder
       continue;
     }
@@ -181,12 +203,15 @@ inline auto CUE::loadIndex(std::vector<string>& lines, u32& offset) -> Index {
   return index;
 }
 
-inline auto CUE::toLBA(const string& msf) -> u32 {
+inline auto CUE::toLBA(const string& msf) -> s32 {
   auto parts = nall::split(msf, ":");
-  u32 m = parts.size() > 0 ? parts[0].natural() : 0;
-  u32 s = parts.size() > 1 ? parts[1].natural() : 0;
-  u32 f = parts.size() > 2 ? parts[2].natural() : 0;
-  return m * 60 * 75 + s * 75 + f;
+  if(parts.size() != 3) return -1;
+  u64 m = parts[0].natural();
+  u64 s = parts[1].natural();
+  u64 f = parts[2].natural();
+  if(s >= 60 || f >= 75) return -1;
+  if(m > ((u64)std::numeric_limits<s32>::max() - s * 75 - f) / (60 * 75)) return -1;
+  return (s32)(m * 60 * 75 + s * 75 + f);
 }
 
 inline auto CUE::sectorCount() const -> u32 {
@@ -200,11 +225,12 @@ inline auto CUE::File::scan(const string& pathname, const string& archiveFolderP
 
   maybe<Archive::File> archiveFileEntry;
   if(archive != nullptr) {
-    string archiveFilePath = archiveFolderPath;
-    archiveFilePath.append(name);
-    archiveFileEntry = archive->findFile(archiveFilePath);
-    archiveFolder = archiveFolderPath;
+    auto archiveFilePath = Archive::resolveMemberName(archiveFolderPath, name);
+    if(!archiveFilePath) return false;
+    archiveFileEntry = archive->findFile(*archiveFilePath);
     if(!archiveFileEntry) return false;
+    name = Location::file(*archiveFilePath);
+    archiveFolder = Location::path(*archiveFilePath);
   } else {
     if(!file::exists(location)) return false;
   }

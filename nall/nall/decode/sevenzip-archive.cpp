@@ -1,3 +1,4 @@
+#include <nall/nall.hpp>
 #include <nall/decode/sevenzip-archive.hpp>
 #include <nall/file-buffer.hpp>
 
@@ -17,6 +18,22 @@ namespace {
 
 constexpr size_t SevenZipInputBufferSize = 1u << 18;
 constexpr size_t SevenZipMaximumNameLength = 1u << 20;
+constexpr u64 SevenZipMaximumArchiveSize = 2ull << 30;
+constexpr u64 SevenZipMaximumDecodedBlockSize = 1ull << 30;
+constexpr u64 SevenZipMaximumExpandedSize = 2ull << 30;
+constexpr UInt32 SevenZipMaximumFileCount = 10000;
+
+static auto sevenZipError(SRes result, const string& context) -> string {
+  if(result == SZ_ERROR_UNSUPPORTED)
+    return {context, ": encrypted/password-protected archives and unsupported compression methods are not supported."};
+  if(result == SZ_ERROR_CRC || result == SZ_ERROR_DATA || result == SZ_ERROR_ARCHIVE || result == SZ_ERROR_INPUT_EOF || result == SZ_ERROR_NO_ARCHIVE)
+    return {context, ": the SevenZip archive is corrupt or truncated."};
+  if(result == SZ_ERROR_MEM)
+    return {context, ": the SevenZip archive exceeds the decoder memory limit."};
+  if(result == SZ_ERROR_READ)
+    return {context, ": the SevenZip archive could not be read."};
+  return {context, ": SevenZip decoder error ", result, "."};
+}
 
 static auto appendUtf8(std::vector<u8>& output, u32 codepoint) -> void {
   if(codepoint <= 0x7f) {
@@ -95,14 +112,11 @@ struct SevenZipArchive::Impl {
         return SZ_ERROR_READ;
       }
 
-      auto fileSize = self->file.size();
-      auto fileOffset = self->file.offset();
-      if(fileOffset > fileSize) {
+      if(self->file.offset() > self->file.size()) {
         *size = 0;
         return SZ_ERROR_READ;
       }
-
-      auto remaining = fileSize - fileOffset;
+      auto remaining = self->file.size() - self->file.offset();
       auto length = (size_t)std::min<u64>(remaining, *size);
       if(length) self->file.read(std::span<u8>((u8*)data, length));
       *size = length;
@@ -113,31 +127,20 @@ struct SevenZipArchive::Impl {
       auto self = from(stream);
       if(!self->file) return SZ_ERROR_READ;
 
-      auto fileSize = self->file.size();
-      if(fileSize > (u64)std::numeric_limits<Int64>::max()) return SZ_ERROR_FAIL;
+      if(origin != SZ_SEEK_SET && origin != SZ_SEEK_CUR && origin != SZ_SEEK_END) return SZ_ERROR_PARAM;
+      if(self->file.size() > (u64)std::numeric_limits<s64>::max()) return SZ_ERROR_UNSUPPORTED;
 
-      u64 base = 0;
-      if(origin == SZ_SEEK_SET) base = 0;
-      else if(origin == SZ_SEEK_CUR) base = self->file.offset();
-      else if(origin == SZ_SEEK_END) base = fileSize;
-      else return SZ_ERROR_FAIL;
-      if(base > fileSize) return SZ_ERROR_FAIL;
+      s64 base = 0;
+      if(origin == SZ_SEEK_CUR) base = (s64)self->file.offset();
+      if(origin == SZ_SEEK_END) base = (s64)self->file.size();
 
-      u64 target = 0;
-      if(*position >= 0) {
-        auto delta = (u64)*position;
-        if(delta > fileSize - base) return SZ_ERROR_FAIL;
-        target = base + delta;
-      } else {
-        // Convert the negative displacement to its magnitude without negating
-        // INT64_MIN, which would itself overflow a signed integer.
-        auto delta = (u64)(-(*position + 1)) + 1;
-        if(delta > base) return SZ_ERROR_FAIL;
-        target = base - delta;
-      }
+      if(*position > 0 && base > std::numeric_limits<s64>::max() - *position) return SZ_ERROR_FAIL;
+      if(*position < 0 && base < std::numeric_limits<s64>::min() - *position) return SZ_ERROR_FAIL;
+      auto target = base + *position;
+      if(target < 0 || (u64)target > self->file.size()) return SZ_ERROR_FAIL;
 
       self->file.seek(target);
-      *position = (Int64)target;
+      *position = target;
       return SZ_OK;
     }
 
@@ -163,6 +166,11 @@ struct SevenZipArchive::Impl {
   mutable UInt32 blockIndex = 0xffffffff;
   mutable Byte* block = nullptr;
   mutable size_t blockSize = 0;
+  mutable UInt32 viewFileIndex = 0xffffffff;
+  mutable size_t viewOffset = 0;
+  mutable size_t viewSize = 0;
+  mutable std::mutex decoderMutex;
+  mutable string errorMessage;
 };
 
 SevenZipArchive::SevenZipArchive() : impl(std::make_unique<Impl>()) {
@@ -174,14 +182,20 @@ SevenZipArchive::~SevenZipArchive() {
 
 auto SevenZipArchive::open(const string& filename) -> bool {
   close();
-  if(!impl->input.open(filename)) return false;
+  impl->errorMessage = {};
+  auto fail = [&](const string& message) -> bool {
+    close();
+    impl->errorMessage = message;
+    return false;
+  };
+
+  if(!impl->input.open(filename)) return fail("The SevenZip archive could not be opened.");
+  if(impl->input.file.size() > SevenZipMaximumArchiveSize)
+    return fail("The SevenZip archive exceeds the 2 GiB compressed-size safety limit.");
 
   LookToRead2_CreateVTable(&impl->look, False);
   impl->look.buf = (Byte*)ISzAlloc_Alloc(&impl->allocator, SevenZipInputBufferSize);
-  if(!impl->look.buf) {
-    close();
-    return false;
-  }
+  if(!impl->look.buf) return fail("The SevenZip decoder could not allocate its input buffer.");
   impl->look.bufSize = SevenZipInputBufferSize;
   impl->look.realStream = &impl->input.vt;
   LookToRead2_INIT(&impl->look)
@@ -197,34 +211,46 @@ auto SevenZipArchive::open(const string& filename) -> bool {
     &impl->allocator,
     &impl->temporaryAllocator
   );
-  if(result != SZ_OK) {
-    close();
-    return false;
+  if(result != SZ_OK) return fail(sevenZipError(result, "Unable to read the SevenZip directory"));
+
+  if(impl->database.NumFiles > SevenZipMaximumFileCount)
+    return fail("The SevenZip archive contains more than 10000 members.");
+
+  for(UInt32 folder = 0; folder < impl->database.db.NumFolders; folder++) {
+    auto unpackSize = SzAr_GetFolderUnpackSize(&impl->database.db, folder);
+    if(unpackSize > SevenZipMaximumDecodedBlockSize || unpackSize > std::numeric_limits<size_t>::max())
+      return fail("A SevenZip solid block exceeds the 1 GiB decoded-size safety limit.");
   }
 
   impl->entries.reserve(impl->database.NumFiles);
+  u64 expandedSize = 0;
   for(UInt32 index = 0; index < impl->database.NumFiles; index++) {
     if(SzArEx_IsDir(&impl->database, index)) continue;
 
     auto nameLength = SzArEx_GetFileNameUtf16(&impl->database, index, nullptr);
-    if(!nameLength || nameLength > SevenZipMaximumNameLength) {
-      close();
-      return false;
-    }
+    if(!nameLength || nameLength > SevenZipMaximumNameLength)
+      return fail("A SevenZip member name is empty or exceeds the 1 MiB safety limit.");
 
     std::vector<UInt16> name(nameLength);
-    if(SzArEx_GetFileNameUtf16(&impl->database, index, name.data()) != nameLength) {
-      close();
-      return false;
-    }
+    if(SzArEx_GetFileNameUtf16(&impl->database, index, name.data()) != nameLength)
+      return fail("A SevenZip member name could not be decoded.");
 
     Impl::Entry entry;
     entry.index = index;
-    entry.file.name = utf16ToUtf8(name.data(), name.size());
+    auto decodedName = utf16ToUtf8(name.data(), name.size());
+    auto normalizedName = Archive::normalizeMemberName(decodedName);
+    if(!normalizedName) return fail({"Unsafe SevenZip member name: ", decodedName});
+    entry.file.name = *normalizedName;
     entry.file.size = SzArEx_GetFileSize(&impl->database, index);
-    if(!entry.file.name) {
-      close();
-      return false;
+    if(entry.file.size > SevenZipMaximumDecodedBlockSize)
+      return fail({"SevenZip member exceeds the 1 GiB decoded-size safety limit: ", entry.file.name});
+    if(expandedSize > SevenZipMaximumExpandedSize - entry.file.size)
+      return fail("The SevenZip archive exceeds the 2 GiB total expanded-size safety limit.");
+    expandedSize += entry.file.size;
+
+    for(auto& existing : impl->entries) {
+      if(existing.file.name == entry.file.name)
+        return fail({"Duplicate normalized SevenZip member name: ", entry.file.name});
     }
     impl->entries.push_back(std::move(entry));
   }
@@ -235,12 +261,33 @@ auto SevenZipArchive::open(const string& filename) -> bool {
 auto SevenZipArchive::findFile(const string& filename) const -> const maybe<File> {
   if(!impl) return nothing;
 
-  for(auto& entry : impl->entries) {
-    if(entry.file.name == filename) return entry.file;
+  auto normalized = Archive::normalizeMemberName(filename);
+  if(!normalized) {
+    impl->errorMessage = {"Unsafe archive member reference: ", filename};
+    return nothing;
   }
+
   for(auto& entry : impl->entries) {
-    if(entry.file.name.iequals(filename)) return entry.file;
+    if(entry.file.name == *normalized) {
+      impl->errorMessage = {};
+      return entry.file;
+    }
   }
+
+  const Impl::Entry* match = nullptr;
+  for(auto& entry : impl->entries) {
+    if(!entry.file.name.iequals(*normalized)) continue;
+    if(match) {
+      impl->errorMessage = {"Ambiguous case-insensitive archive member reference: ", *normalized};
+      return nothing;
+    }
+    match = &entry;
+  }
+  if(match) {
+    impl->errorMessage = {};
+    return match->file;
+  }
+  impl->errorMessage = {"Archive member not found: ", *normalized};
   return nothing;
 }
 
@@ -254,7 +301,15 @@ auto SevenZipArchive::files() const -> std::vector<File> {
 }
 
 auto SevenZipArchive::extract(const File& file) const -> std::vector<u8> {
+  auto view = decodedView(file);
+  std::vector<u8> output(view.size());
+  if(!view.empty()) memory::copy(output.data(), output.size(), view.data(), view.size());
+  return output;
+}
+
+auto SevenZipArchive::decodedView(const File& file) const -> std::span<const u8> {
   if(!impl || !impl->databaseInitialized) return {};
+  std::lock_guard<std::mutex> lock(impl->decoderMutex);
 
   const Impl::Entry* selected = nullptr;
   for(auto& entry : impl->entries) {
@@ -264,15 +319,32 @@ auto SevenZipArchive::extract(const File& file) const -> std::vector<u8> {
     }
   }
   if(!selected) {
+    const Impl::Entry* match = nullptr;
     for(auto& entry : impl->entries) {
-      if(entry.file.name.iequals(file.name)) {
-        selected = &entry;
-        break;
+      if(!entry.file.name.iequals(file.name)) continue;
+      if(match) {
+        impl->errorMessage = {"Ambiguous case-insensitive archive member reference: ", file.name};
+        return {};
       }
+      match = &entry;
     }
+    selected = match;
   }
-  if(!selected) return {};
-  if(selected->file.size > std::numeric_limits<size_t>::max()) return {};
+  if(!selected) {
+    impl->errorMessage = {"Archive member not found: ", file.name};
+    return {};
+  }
+  if(selected->file.size > std::numeric_limits<size_t>::max()) {
+    impl->errorMessage = {"SevenZip member is too large for this platform: ", selected->file.name};
+    return {};
+  }
+
+  if(impl->viewFileIndex == selected->index) {
+    if(impl->viewOffset <= impl->blockSize && impl->viewSize <= impl->blockSize - impl->viewOffset)
+      return {impl->block + impl->viewOffset, impl->viewSize};
+    impl->errorMessage = {"Invalid cached SevenZip member bounds: ", selected->file.name};
+    return {};
+  }
 
   size_t offset = 0;
   size_t extractedSize = 0;
@@ -288,23 +360,39 @@ auto SevenZipArchive::extract(const File& file) const -> std::vector<u8> {
     &impl->allocator,
     &impl->temporaryAllocator
   );
-  if(result != SZ_OK) return {};
-  if(offset > impl->blockSize || extractedSize > impl->blockSize - offset) return {};
-  if(extractedSize != selected->file.size) return {};
+  if(result != SZ_OK) {
+    impl->errorMessage = sevenZipError(result, {"Unable to decompress SevenZip member ", selected->file.name});
+    return {};
+  }
+  if(offset > impl->blockSize || extractedSize > impl->blockSize - offset) {
+    impl->errorMessage = {"Invalid decoded bounds for SevenZip member: ", selected->file.name};
+    return {};
+  }
+  if(extractedSize != selected->file.size) {
+    impl->errorMessage = {"Decoded size mismatch for SevenZip member: ", selected->file.name};
+    return {};
+  }
 
-  std::vector<u8> output(extractedSize);
-  if(extractedSize) memory::copy(output.data(), output.size(), impl->block + offset, extractedSize);
-  return output;
+  impl->viewFileIndex = selected->index;
+  impl->viewOffset = offset;
+  impl->viewSize = extractedSize;
+  impl->errorMessage = {};
+  return {impl->block + offset, extractedSize};
 }
 
-auto SevenZipArchive::isDataUncompressed(const File&) const -> bool {
-  // A 7z member can share a decoded solid block with other members, so expose
-  // all members through extract() even when the coder itself is Copy.
-  return false;
+auto SevenZipArchive::isDataUncompressed(const File& file) const -> bool {
+  // Decode into the SDK's bounded solid-block cache and let sequential disc
+  // consumers read that view directly, avoiding a second full-member copy.
+  return file.size == 0 || !decodedView(file).empty();
 }
 
-auto SevenZipArchive::dataViewIfUncompressed(const File&) const -> std::span<const u8> {
-  return {};
+auto SevenZipArchive::dataViewIfUncompressed(const File& file) const -> std::span<const u8> {
+  return decodedView(file);
+}
+
+auto SevenZipArchive::error() const -> string {
+  if(!impl) return "SevenZip archive is not initialized.";
+  return impl->errorMessage;
 }
 
 auto SevenZipArchive::close() -> void {
@@ -316,6 +404,9 @@ auto SevenZipArchive::close() -> void {
   }
   impl->blockIndex = 0xffffffff;
   impl->blockSize = 0;
+  impl->viewFileIndex = 0xffffffff;
+  impl->viewOffset = 0;
+  impl->viewSize = 0;
 
   if(impl->databaseInitialized) {
     SzArEx_Free(&impl->database, &impl->allocator);

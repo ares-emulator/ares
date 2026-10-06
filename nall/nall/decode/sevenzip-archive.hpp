@@ -21,9 +21,12 @@ struct SevenZipArchive : Archive {
   auto extract(const File& file) const -> std::vector<u8> override;
   auto isDataUncompressed(const File& file) const -> bool override;
   auto dataViewIfUncompressed(const File& file) const -> std::span<const u8> override;
+  auto error() const -> string override;
   auto close() -> void override;
 
 private:
+  auto decodedView(const File& file) const -> std::span<const u8>;
+
   struct Impl;
   std::unique_ptr<Impl> impl;
 };

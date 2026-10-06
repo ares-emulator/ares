@@ -8,16 +8,28 @@ struct MegaCD : CompactDisc {
   }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(string location) -> string;
+  auto analyze(string location, string* error = nullptr) -> string;
 };
 
 auto MegaCD::load(string location) -> LoadResult {
   if(!inode::exists(location)) return romNotFound;
 
   this->location = location;
-  this->manifest = analyze(location);
+  string analysisError;
+  this->manifest = analyze(location, &analysisError);
+  if(analysisError) return {invalidROM, analysisError};
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
+
+  std::shared_ptr<vfs::cdrom> archiveDisc;
+  if(file::exists(location) && (location.iendsWith(".zip") || location.iendsWith(".7z"))) {
+    string discError;
+    archiveDisc = vfs::cdrom::open(location, &discError);
+    if(!archiveDisc) {
+      if(!discError) discError = "The archived Sega CD disc could not be mounted.";
+      return {invalidROM, discError};
+    }
+  }
 
   pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",  document["game/title"].string());
@@ -29,7 +41,7 @@ auto MegaCD::load(string location) -> LoadResult {
     pak->append("cd.rom", vfs::disk::open({location, "cd.rom"}, vfs::read));
   }
   if(file::exists(location)) {
-    pak->append("cd.rom", vfs::cdrom::open(location));
+    pak->append("cd.rom", archiveDisc ? archiveDisc : vfs::cdrom::open(location));
   }
 
   return successful;
@@ -41,18 +53,34 @@ auto MegaCD::save(string location) -> bool {
   return true;
 }
 
-auto MegaCD::analyze(string location) -> string {
+auto MegaCD::analyze(string location, string* error) -> string {
+  if(error) *error = {};
   std::vector<u8> sector;
 
   if(location.iendsWith(".zip") || location.iendsWith(".7z")) {
     Decode::DiscArchive source;
-    if(source.open(location)) sector = source.readDataSector(0);
+    if(!source.open(location)) {
+      if(error) *error = source.error();
+      return {};
+    }
+    sector = source.readDataSector(0);
+    if(sector.empty()) {
+      if(error) *error = source.error();
+      return {};
+    }
   } else {
     sector = readDataSector(location, 0);
   }
 
-  if(sector.empty() || memory::compare(sector.data(), "SEGA", 4))
+  if(sector.empty())
     return CompactDisc::manifestAudio(location);
+  if(memory::compare(sector.data(), "SEGA", 4)) {
+    if(location.iendsWith(".zip") || location.iendsWith(".7z")) {
+      if(error) *error = "The selected archive does not contain a recognizable Sega CD data track.";
+      return {};
+    }
+    return CompactDisc::manifestAudio(location);
+  }
 
   std::vector<string> regions;
   if(!memory::compare(sector.data()+4, "DISCSYSTEM  ", 12)

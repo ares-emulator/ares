@@ -17,11 +17,33 @@ struct ZIP : Archive {
   }
 
   auto findFile(const string& filename) const -> const maybe<File> override {
-    for (const auto& currentFile : file) {
-      if (currentFile.name.iequals(filename)) {
+    auto normalized = normalizeMemberName(filename);
+    if(!normalized) {
+      errorMessage = {"Unsafe archive member reference: ", filename};
+      return nothing;
+    }
+
+    for(auto& currentFile : file) {
+      if(currentFile.name == *normalized) {
+        errorMessage = {};
         return currentFile;
       }
     }
+
+    const File* match = nullptr;
+    for(auto& currentFile : file) {
+      if(!currentFile.name.iequals(*normalized)) continue;
+      if(match) {
+        errorMessage = {"Ambiguous case-insensitive archive member reference: ", *normalized};
+        return nothing;
+      }
+      match = &currentFile;
+    }
+    if(match) {
+      errorMessage = {};
+      return *match;
+    }
+    errorMessage = {"Archive member not found: ", *normalized};
     return nothing;
   }
 
@@ -31,9 +53,14 @@ struct ZIP : Archive {
 
   auto open(const string& filename) -> bool override {
     close();
-    if(fm.open(filename, file::mode::read) == false) return false;
+    errorMessage = {};
+    if(fm.open(filename, file::mode::read) == false) {
+      errorMessage = "The ZIP archive could not be opened.";
+      return false;
+    }
     if(open(fm.data(), fm.size()) == false) {
       fm.close();
+      if(!errorMessage) errorMessage = "The ZIP archive is corrupt or unsupported.";
       return false;
     }
     return true;
@@ -120,6 +147,19 @@ struct ZIP : Archive {
       file.name = filename;
       delete[] filename;
 
+      auto normalizedName = normalizeMemberName(file.name);
+      if(!normalizedName) {
+        errorMessage = {"Unsafe ZIP member name: ", file.name};
+        return false;
+      }
+      file.name = *normalizedName;
+      for(auto& existing : this->file) {
+        if(existing.name == file.name) {
+          errorMessage = {"Duplicate normalized ZIP member name: ", file.name};
+          return false;
+        }
+      }
+
       u64 offset = read(directory + 42, 4);
       if (isZip64 && (offset == 0xFFFFFFFF)) {
         needsZip64ExtraFieldRecord = true;
@@ -172,43 +212,53 @@ struct ZIP : Archive {
     return true;
   }
 
-  auto extract(const File& file) const -> std::vector<u8> override {
+  auto extract(const File& requested) const -> std::vector<u8> override {
+    auto found = findFile(requested.name);
+    if(!found) return {};
+    auto file = *found;
     std::vector<u8> buffer;
 
     if(file.cmode == 0) {
       buffer.resize(file.size);
       memcpy(buffer.data(), file.data, file.size);
-    }
-
-    if(file.cmode == 8) {
+    } else if(file.cmode == 8) {
       buffer.resize(file.size);
-      if(inflate(buffer.data(), buffer.size(), file.data, file.csize) == false) {
-        buffer.clear();
-      }
+      if(inflate(buffer.data(), buffer.size(), file.data, file.csize) == false) buffer.clear();
     }
 
+    if(buffer.size() != file.size) {
+      errorMessage = {"Failed to decompress ZIP member: ", file.name};
+      return {};
+    }
+    errorMessage = {};
     return buffer;
   }
 
-  auto isDataUncompressed(const File& file) const -> bool override {
-    return (file.cmode == 0);
+  auto isDataUncompressed(const File& requested) const -> bool override {
+    auto found = findFile(requested.name);
+    return found && found->cmode == 0;
   }
 
-  auto dataViewIfUncompressed(const File& file) const -> std::span<const u8> override {
-    if(file.cmode == 0) {
-      return std::span<const u8>(file.data, file.size);
-    }
-    return std::span<const u8>();
+  auto dataViewIfUncompressed(const File& requested) const -> std::span<const u8> override {
+    auto found = findFile(requested.name);
+    if(!found || found->cmode != 0) return {};
+    return std::span<const u8>(found->data, found->size);
+  }
+
+  auto error() const -> string override {
+    return errorMessage;
   }
 
   auto close() -> void override {
     if(fm) fm.close();
+    file.clear();
   }
 
 protected:
   file_map fm;
   const u8* filedata;
   u64 filesize;
+  mutable string errorMessage;
 
   auto read(const u8* data, u32 size) -> u64 {
     u64 result = 0, shift = 0;
