@@ -91,6 +91,7 @@ auto construct() -> void {
   media.push_back("BS Memory");
   media.push_back("ColecoVision");
   media.push_back("MyVision");
+  media.push_back("Gamate");
   media.push_back("Famicom");
   media.push_back("Famicom Disk System");
   media.push_back("Game Boy");
