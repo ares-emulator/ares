@@ -314,17 +314,19 @@ auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> std::vecto
 #endif
 
 auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> std::vector<u8> {
-  std::unique_ptr<Decode::ZIP> archive = std::make_unique<Decode::ZIP>();
-  if (!archive->open(mmiPath)) return {};
+  std::unique_ptr<Decode::Archive> archive = std::make_unique<Decode::ZIPArchive>();
+  if(!archive->open(mmiPath)) return {};
+  auto cueEntry = archive->findFile(cuePath);
+  if(!cueEntry) return {};
   Decode::CUE cuesheet;
-  if(!cuesheet.load(mmiPath, archive.get(), &archive->findFile(cuePath).get())) return {};
+  if(!cuesheet.load(mmiPath, archive.get(), &cueEntry.get())) return {};
 
   for(auto& file : cuesheet.files) {
     u64 offset = 0;
     if(file.type == "binary") {
-      auto filePathInArchive = file.archiveFolder;
-      filePathInArchive.append(file.name);
-      auto fileEntry = archive->findFile(filePathInArchive);
+      auto filePathInArchive = Decode::Archive::resolveMemberName(file.archiveFolder, file.name);
+      if(!filePathInArchive) continue;
+      auto fileEntry = archive->findFile(*filePathInArchive);
       if(!fileEntry) continue;
       std::span<const u8> rawDataView;
       std::vector<u8> rawDataBuffer;
@@ -343,7 +345,9 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
           if(track.type == "mode1/2352") sectorSize = 2352;
           if(track.type == "mode2/2352") sectorSize = 2352;
           if(sectorSize && index.number == 1) {
-            size_t readPos = offset + (sectorSize * sectorID) + (sectorSize == 2352 ? 16 : 0);
+            if(sectorID > (std::numeric_limits<u64>::max() - offset) / sectorSize) return {};
+            u64 readPos = offset + (u64)sectorSize * sectorID + (sectorSize == 2352 ? 16 : 0);
+            if(readPos > rawDataView.size() || rawDataView.size() - readPos < 2048) return {};
             std::vector<u8> sector;
             sector.resize(2048);
             memcpy(sector.data(), rawDataView.data() + readPos, sector.size());

@@ -4,6 +4,34 @@ target_include_directories(sljit PUBLIC ../thirdparty)
 target_compile_definitions(sljit PUBLIC SLJIT_HAVE_CONFIG_PRE=1 SLJIT_HAVE_CONFIG_POST=1)
 target_compile_options(sljit PRIVATE $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-conditional-uninitialized>)
 
+# Minimal read-only 7z decoder from the official 7-Zip/LZMA SDK 26.02.
+# This source set mirrors C/Util/7z/makefile.gcc, excluding the CLI frontend.
+add_library(
+  sevenzip-sdk
+  STATIC
+  lzma-sdk-26.02/C/7zAlloc.c
+  lzma-sdk-26.02/C/7zArcIn.c
+  lzma-sdk-26.02/C/7zBuf.c
+  lzma-sdk-26.02/C/7zBuf2.c
+  lzma-sdk-26.02/C/7zCrc.c
+  lzma-sdk-26.02/C/7zCrcOpt.c
+  lzma-sdk-26.02/C/7zDec.c
+  lzma-sdk-26.02/C/7zStream.c
+  lzma-sdk-26.02/C/Bcj2.c
+  lzma-sdk-26.02/C/Bra.c
+  lzma-sdk-26.02/C/Bra86.c
+  lzma-sdk-26.02/C/BraIA64.c
+  lzma-sdk-26.02/C/CpuArch.c
+  lzma-sdk-26.02/C/Delta.c
+  lzma-sdk-26.02/C/Lzma2Dec.c
+  lzma-sdk-26.02/C/LzmaDec.c
+  lzma-sdk-26.02/C/Ppmd7.c
+  lzma-sdk-26.02/C/Ppmd7Dec.c
+)
+target_compile_definitions(sevenzip-sdk PRIVATE Z7_EXTRACT_ONLY Z7_PPMD_SUPPORT)
+target_include_directories(sevenzip-sdk PUBLIC lzma-sdk-26.02/C)
+set_target_properties(sevenzip-sdk PROPERTIES POSITION_INDEPENDENT_CODE ON FOLDER thirdparty PREFIX "")
+
 option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
 
 if(ARES_ENABLE_CHD)

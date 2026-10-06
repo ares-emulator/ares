@@ -1,4 +1,4 @@
-add_library(nall OBJECT main.cpp nall.cpp sljitAllocator.cpp)
+add_library(nall OBJECT main.cpp nall.cpp sljitAllocator.cpp decode/sevenzip-archive.cpp)
 add_library(ares::nall ALIAS nall)
 
 add_library(nall-headers INTERFACE)
@@ -21,7 +21,7 @@ include(cmake/sources.cmake)
 find_package(Threads REQUIRED)
 target_link_libraries(nall PRIVATE Threads::Threads)
 
-target_link_libraries(nall PUBLIC sljit)
+target_link_libraries(nall PUBLIC sljit sevenzip-sdk)
 if(ARES_ENABLE_CHD)
   target_link_libraries(nall PUBLIC chdr-static)
 endif()
@@ -59,7 +59,7 @@ endif()
 get_target_property(nall_SOURCES nall SOURCES)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${nall_SOURCES})
 set_source_files_properties(${nall_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
-set_source_files_properties(nall nall.cpp main.cpp sljitAllocator.cpp PROPERTIES HEADER_FILE_ONLY FALSE)
+set_source_files_properties(nall nall.cpp main.cpp sljitAllocator.cpp decode/sevenzip-archive.cpp PROPERTIES HEADER_FILE_ONLY FALSE)
 
 if(ARES_TREAT_NALL_AS_SYSTEM)
   target_include_directories(nall-headers SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")
