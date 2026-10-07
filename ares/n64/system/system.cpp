@@ -31,6 +31,11 @@ auto option(string name, string value) -> bool {
   if(name == "Supersampling") vulkan.supersampleScanout = value.boolean();
   if(name == "Disable Video Interface Processing") vulkan.disableVideoInterfaceProcessing = value.boolean();
   if(name == "Weave Deinterlacing") vulkan.weaveDeinterlacing = value.boolean();
+  if (name == "Enable Overscan Crop") vulkan.enableOverscanCrop = value.boolean();
+  if (name == "Overscan Crop Top") vulkan.overscanCropTop = value.natural();
+  if (name == "Overscan Crop Bottom") vulkan.overscanCropBottom = value.natural();
+  if (name == "Overscan Crop Left") vulkan.overscanCropLeft = value.natural();
+  if (name == "Overscan Crop Right") vulkan.overscanCropRight = value.natural();
   if(vulkan.internalUpscale == 1) vulkan.supersampleScanout = false;
   vulkan.outputUpscale = vulkan.supersampleScanout ? 1 : vulkan.internalUpscale;
   #endif
