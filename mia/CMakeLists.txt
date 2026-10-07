@@ -24,6 +24,7 @@ target_sources(
     medium/game-boy-advance.cpp
     medium/game-boy-color.cpp
     medium/game-boy.cpp
+    medium/mega-duck.cpp
     medium/game-gear.cpp
     medium/mame.cpp
     medium/master-system.cpp
@@ -88,6 +89,7 @@ target_sources(
     system/game-boy-advance.cpp
     system/game-boy-color.cpp
     system/game-boy.cpp
+    system/mega-duck.cpp
     system/game-gear.cpp
     system/master-system.cpp
     system/mega-32x.cpp
