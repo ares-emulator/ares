@@ -50,6 +50,20 @@ auto CoreSettings::construct() -> void {
     nintendo64ControllerPakBankLabel.setText("Controller Pak Size:");
     nintendo64ControllerPakBankHint.setText("Sets the size of a newly created Controller Pak's available memory").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  u32 overclockTenths = max(3u, min(40u, (u32)(settings.nintendo64.overclock * 10.0 + 0.5)));
+  settings.nintendo64.overclock = overclockTenths / 10.0;
+  nintendo64OverclockLabel.setText("Clock Multiplier:");
+  nintendo64OverclockSlider.setLength(38).setPosition(overclockTenths - 3).onChange([&] {
+    u32 tenths = nintendo64OverclockSlider.position() + 3;
+    settings.nintendo64.overclock = tenths / 10.0;
+    nintendo64OverclockValue.setText({tenths / 10, ".", tenths % 10, "x"});
+    if(emulator && (emulator->name == "Nintendo 64" || emulator->name == "Nintendo 64DD")) {
+      emulator->configure();
+    }
+  }).doChange();
+  nintendo64OverclockLayout.setAlignment(0.5).setPadding(12_sx, 0);
+    nintendo64OverclockHint.setText("Runs the CPU, RSP, and RDP at the selected clock multiplier").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
     renderQualityLayout.setPadding(12_sx, 0);
 
   disableVideoInterfaceProcessingOption.setText("Disable Video Interface Processing").setChecked(settings.nintendo64.disableVideoInterfaceProcessing).onToggle([&] {
