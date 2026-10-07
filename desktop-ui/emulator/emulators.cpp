@@ -27,6 +27,13 @@ namespace ares::Atari5200 {
   #include "myvision.cpp"
 #endif
 
+#ifdef CORE_KROKHA
+  namespace ares::Krokha {
+    auto load(Node::System& node, string name) -> bool;
+  }
+  #include "krokha.cpp"
+#endif
+
 #ifdef CORE_FC
   namespace ares::Famicom {
     auto load(Node::System& node, string name) -> bool;
@@ -192,6 +199,10 @@ auto Emulator::construct() -> void {
 
   #ifdef CORE_MYVISION
   emulators.push_back(std::make_shared<MyVision>());
+  #endif
+
+  #ifdef CORE_KROKHA
+  emulators.push_back(std::make_shared<Krokha>());
   #endif
 
   #ifdef CORE_MSX

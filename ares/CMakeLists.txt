@@ -243,6 +243,13 @@ else()
   disable_core("My Vision")
 endif()
 
+if(krokha IN_LIST ARES_CORES)
+  enable_core("Krokha")
+  add_subdirectory(krokha)
+else()
+  disable_core("Krokha")
+endif()
+
 if(gb IN_LIST ARES_CORES)
   enable_core("Game Boy / Game Boy Color")
   add_subdirectory(gb)
