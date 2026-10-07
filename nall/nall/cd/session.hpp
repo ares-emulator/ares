@@ -152,6 +152,7 @@ struct Session {
   Index leadOut;      //aa
   u8 firstTrack = 0xff;
   u8 lastTrack  = 0xff;
+  u8 format = 0x00;  //TOC A0 PSEC: audio/Mode1 = 00, CD-I = 10, CD-XA = 20
 
   auto inLeadIn(s32 lba) const -> bool {
     return leadIn && lba >= leadIn.lba && lba <= leadIn.end;
@@ -229,7 +230,7 @@ struct Session {
         q[5] = BCD::encode(msf.frame);
         q[6] = 0x00;
         q[7] = BCD::encode(firstTrack);
-        q[8] = 0x00;
+        q[8] = format;
         q[9] = 0x00;
         auto crc16 = CRC16({q.data(), 10});
         q[10] = crc16 >> 8;
@@ -430,6 +431,7 @@ struct Session {
 
       if(point == 0xa0) {  //first track
         firstTrack = BCD::decode(q[7]);
+        format = q[8];
       }
 
       if(point == 0xa1) {  //last track

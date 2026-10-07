@@ -1,3 +1,79 @@
+auto CPU::statusRegisterSCC() const -> u32 {
+  n32 data = 0;
+  data.bit( 0)    = scc.status.frame[0].interruptEnable;
+  data.bit( 1)    = scc.status.frame[0].userMode;
+  data.bit( 2)    = scc.status.frame[1].interruptEnable;
+  data.bit( 3)    = scc.status.frame[1].userMode;
+  data.bit( 4)    = scc.status.frame[2].interruptEnable;
+  data.bit( 5)    = scc.status.frame[2].userMode;
+  data.bit( 8,15) = scc.status.interruptMask;
+  data.bit(16)    = scc.status.cache.isolate;
+  data.bit(17)    = scc.status.cache.swap;
+  data.bit(18)    = scc.status.cache.parityZero;
+  data.bit(19)    = scc.status.cache.loadWasData;
+  data.bit(20)    = scc.status.cache.parityError;
+  data.bit(21)    = scc.status.tlbShutdown;
+  data.bit(22)    = scc.status.vectorLocation;
+  data.bit(25)    = scc.status.reverseEndian;
+  data.bit(28)    = scc.status.enable.coprocessor0;
+  data.bit(29)    = scc.status.enable.coprocessor1;
+  data.bit(30)    = scc.status.enable.coprocessor2;
+  data.bit(31)    = scc.status.enable.coprocessor3;
+  return data;
+}
+
+auto CPU::setStatusRegisterSCC(u32 value) -> void {
+  n32 data = value;
+  scc.status.frame[0].interruptEnable = data.bit( 0);
+  scc.status.frame[0].userMode        = data.bit( 1);
+  scc.status.frame[1].interruptEnable = data.bit( 2);
+  scc.status.frame[1].userMode        = data.bit( 3);
+  scc.status.frame[2].interruptEnable = data.bit( 4);
+  scc.status.frame[2].userMode        = data.bit( 5);
+  scc.status.interruptMask            = data.bit( 8,15);
+  scc.status.cache.isolate            = data.bit(16);
+  scc.status.cache.swap               = data.bit(17);
+  scc.status.cache.parityZero         = data.bit(18);
+  scc.status.cache.loadWasData        = data.bit(19);
+  scc.status.cache.parityError        = data.bit(20);
+//scc.status.tlbShutdown              = data.bit(21);  //read-only
+  scc.status.vectorLocation           = data.bit(22);
+  scc.status.reverseEndian            = data.bit(25);
+  scc.status.enable.coprocessor0      = data.bit(28);
+  scc.status.enable.coprocessor1      = data.bit(29);
+  scc.status.enable.coprocessor2      = data.bit(30);
+  scc.status.enable.coprocessor3      = data.bit(31);
+}
+
+auto CPU::effectiveStatusRegisterSCC() const -> u32 {
+  if(execution.status.managed) return execution.status.visible;
+  return statusRegisterSCC();
+}
+
+auto CPU::statusInterruptEnable() const -> bool {
+  return effectiveStatusRegisterSCC() & 1;
+}
+
+auto CPU::statusUserMode() const -> bool {
+  return effectiveStatusRegisterSCC() >> 1 & 1;
+}
+
+auto CPU::statusCacheIsolated() const -> bool {
+  return effectiveStatusRegisterSCC() >> 16 & 1;
+}
+
+auto CPU::statusVectorLocation() const -> bool {
+  return effectiveStatusRegisterSCC() >> 22 & 1;
+}
+
+auto CPU::statusInterruptMask() const -> u8 {
+  return effectiveStatusRegisterSCC() >> 8;
+}
+
+auto CPU::statusCoprocessorEnabled(u32 coprocessor) const -> bool {
+  return effectiveStatusRegisterSCC() >> (28 + coprocessor) & 1;
+}
+
 auto CPU::getControlRegisterSCC(u8 index) -> u32 {
   n32 data = 0;
 
@@ -50,25 +126,7 @@ auto CPU::getControlRegisterSCC(u8 index) -> u32 {
     break;
 
   case 12:  //Status
-    data.bit( 0)    = scc.status.frame[0].interruptEnable;
-    data.bit( 1)    = scc.status.frame[0].userMode;
-    data.bit( 2)    = scc.status.frame[1].interruptEnable;
-    data.bit( 3)    = scc.status.frame[1].userMode;
-    data.bit( 4)    = scc.status.frame[2].interruptEnable;
-    data.bit( 5)    = scc.status.frame[2].userMode;
-    data.bit( 8,15) = scc.status.interruptMask;
-    data.bit(16)    = scc.status.cache.isolate;
-    data.bit(17)    = scc.status.cache.swap;
-    data.bit(18)    = scc.status.cache.parityZero;
-    data.bit(19)    = scc.status.cache.loadWasData;
-    data.bit(20)    = scc.status.cache.parityError;
-    data.bit(21)    = scc.status.tlbShutdown;
-    data.bit(22)    = scc.status.vectorLocation;
-    data.bit(25)    = scc.status.reverseEndian;
-    data.bit(28)    = scc.status.enable.coprocessor0;
-    data.bit(29)    = scc.status.enable.coprocessor1;
-    data.bit(30)    = scc.status.enable.coprocessor2;
-    data.bit(31)    = scc.status.enable.coprocessor3;
+    data = statusRegisterSCC();
     break;
 
   case 13:  //Cause
@@ -145,35 +203,15 @@ auto CPU::setControlRegisterSCC(u8 index, u32 value) -> void {
     break;
 
   case 12: {//Status
-    bool interruptsWerePending = exception.interruptsPending();
-    scc.status.frame[0].interruptEnable = data.bit( 0);
-    scc.status.frame[0].userMode        = data.bit( 1);
-    scc.status.frame[1].interruptEnable = data.bit( 2);
-    scc.status.frame[1].userMode        = data.bit( 3);
-    scc.status.frame[2].interruptEnable = data.bit( 4);
-    scc.status.frame[2].userMode        = data.bit( 5);
-    scc.status.interruptMask            = data.bit( 8,15);
-    scc.status.cache.isolate            = data.bit(16);
-    scc.status.cache.swap               = data.bit(17);
-    scc.status.cache.parityZero         = data.bit(18);
-    scc.status.cache.loadWasData        = data.bit(19);
-    scc.status.cache.parityError        = data.bit(20);
-  //scc.status.tlbShutdown              = data.bit(21);  //read-only
-    scc.status.vectorLocation           = data.bit(22);
-    scc.status.reverseEndian            = data.bit(25);
-    scc.status.enable.coprocessor0      = data.bit(28);
-    scc.status.enable.coprocessor1      = data.bit(29);
-    scc.status.enable.coprocessor2      = data.bit(30);
-    scc.status.enable.coprocessor3      = data.bit(31);
-    if(!interruptsWerePending && exception.interruptsPending()) delay.interrupt = 2;
+    u32 previous = effectiveStatusRegisterSCC();
+    setStatusRegisterSCC(data);
+    scheduleStatusVisibility(previous, statusRegisterSCC(), execution.retiredInstructions + 3);
     break;
   }
 
   case 13: {//Cause
-    bool interruptsWerePending = exception.interruptsPending();
     scc.cause.interruptPending.bit(0) = data.bit(8);
     scc.cause.interruptPending.bit(1) = data.bit(9);
-    if(!interruptsWerePending && exception.interruptsPending()) delay.interrupt = 1;
     break;
   }
 
@@ -187,19 +225,4 @@ auto CPU::setControlRegisterSCC(u8 index, u32 value) -> void {
     break;
 
   }
-}
-
-auto CPU::MFC0(u32& rt, u8 rd) -> void {
-  if(&rt == &ipu.r[0]) return exception.reservedInstruction();
-  load(rt, getControlRegisterSCC(rd));
-}
-
-auto CPU::MTC0(cu32& rt, u8 rd) -> void {
-  setControlRegisterSCC(rd, rt);
-}
-
-auto CPU::RFE() -> void {
-  scc.status.frame[0] = scc.status.frame[1];
-  scc.status.frame[1] = scc.status.frame[2];
-//scc.status.frame[2] remains unchanged
 }

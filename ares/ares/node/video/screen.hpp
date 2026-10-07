@@ -62,6 +62,7 @@ struct Screen : Video {
 
   auto colors(u32 colors, std::function<n64 (n32)> color) -> void;
   auto frame() -> void;
+  auto synchronize() -> void;
   auto refresh() -> void;
   auto lookupPalette(u32 index) -> u32;
   auto overrideLineDraw(u32 y, const u32* source) -> void;

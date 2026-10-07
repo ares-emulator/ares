@@ -1,315 +1,299 @@
 //read code from the bus
 inline auto CPU::fetch(u32 address) -> u32 {
-  switch(address >> 29) {
-  //cached
-  case 0:  //$00000000-$1fffffff  KUSEG
-  case 4: {//$80000000-$9fffffff  KSEG0
-    return icache.fetch(address);
+  if(unlikely(statusUserMode() && (address & 0x8000'0000))) {
+    return exception.address<Read>(address), 0;
   }
 
-  //uncached
-  case 5: {//$a0000000-$bfffffff  KSEG1
-    if(likely(address <= 0xa07f'ffff)) {
-      step(bus.calcAccessTime<false, false>(address, Word));
-      auto data = ram.read<Word>(address);
-      return data;
+  switch(address >> 29) {
+  case 0:  //KUSEG cached
+  case 4:  //KSEG0 cached
+    return icache.fetch(address);
+
+  case 5: {  //KSEG1 uncached
+    u32 physical = address & 0x1fff'ffff;
+    auto access = memory.decodeRAM(physical);
+    if(access.type != MemoryControl::RAMAccess::NotRAM) {
+      if(access.type == MemoryControl::RAMAccess::Mapped) {
+        waitWriteBuffer(access.offset, 15);
+        stepBus(bus.calcAccessTime<false, false>(physical, Word));
+        return ram.read<Word>(access.offset);
+      }
+      if(access.type == MemoryControl::RAMAccess::HighZ) return step(1), 0;
+      if constexpr(Accuracy::CPU::BusErrors) exception.busInstruction();
+      return 0;
     }
-    if(likely(address >= 0xbfc0'0000)) {
-      step(bus.calcAccessTime<false, false>(address, Word));
-      auto data = bios.read<Word>(address);
-      return data;
+    if(physical >= 0x1fc0'0000) {
+      if(&bus.mmio(physical) == &unmapped) {
+        if constexpr(Accuracy::CPU::BusErrors) exception.busInstruction();
+        return 0;
+      }
+      stepBus(bus.calcAccessTime<false, false>(physical, Word));
+      return bios.read<Word>(physical);
     }
-    if(likely(address >= 0xbf00'0000)) {
-      //the CPU cannot execute out of the scratchpad or (most) MMIO register areas
+    if(physical >= 0x1f00'0000) {
       debug(unhandled, "CPU::fetch");
       return 0;
     }
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busInstruction();
-    }
-    return 0;  //nop
+    if constexpr(Accuracy::CPU::BusErrors) exception.busInstruction();
+    return 0;
   }
 
-  //unmapped
-  case 1:  //$20000000-$3fffffff  KUSEG
-  case 2:  //$40000000-$5fffffff  KUSEG
-  case 3:  //$60000000-$7fffffff  KUSEG
-  case 6:  //$c0000000-$dfffffff  KSEG2
-  case 7: {//$e0000000-$ffffffff  KSEG2
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busInstruction();
-    }
-    return 0;  //nop
-  }
-
+  case 1:
+  case 2:
+  case 3:
+  case 6:
+  case 7:
+    if constexpr(Accuracy::CPU::BusErrors) exception.busInstruction();
+    return 0;
   }
   unreachable;
 }
 
 //peek at the next instruction, does not consume cycles
 inline auto CPU::peek(u32 address) -> u32 {
-  address &= 0x1fff'ffff;
-
-  if(likely(address <= 0x007f'ffff)) {
-    return ram.read<Word>(address);
-  }
-
-  if(likely(address >= 0x1fc0'0000)) {
-    return bios.read<Word>(address);
-  }
-
+  u32 physical = address & 0x1fff'ffff;
+  auto access = memory.decodeRAM(physical);
+  if(access.type == MemoryControl::RAMAccess::Mapped) return ram.read<Word>(access.offset);
+  if(access.type == MemoryControl::RAMAccess::HighZ) return 0;
+  if(physical >= 0x1fc0'0000) return bios.read<Word>(physical);
   debug(unimplemented, "CPU::peek ", hex(address));
   return 0;
 }
 
-//read data from the bus
+template<u32 Size>
+inline auto CPU::readRAM(u32 address) -> u32 {
+  u32 physical = address & 0x1fff'ffff;
+  auto access = memory.decodeRAM(physical);
+  if(access.type == MemoryControl::RAMAccess::Mapped) {
+    u8 byteEnable = writeBufferByteEnable(access.offset, Size);
+    waitWriteBuffer(access.offset, byteEnable);
+    stepBus(bus.calcAccessTime<false, false>(physical, Size), Bus::CPUAccess, true);
+    return ram.read<Size>(access.offset);
+  }
+  if(access.type == MemoryControl::RAMAccess::HighZ) return step(1), 0;
+  if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+  return 0;
+}
+
+template<u32 Size>
+inline auto CPU::writeRAM(u32 address, u32 data) -> void {
+  u32 physical = address & 0x1fff'ffff;
+  auto access = memory.decodeRAM(physical);
+  if(access.type == MemoryControl::RAMAccess::Mapped) {
+    return enqueueWriteBuffer(physical, access.offset, data, writeBufferByteEnable(access.offset, Size));
+  }
+  if(access.type == MemoryControl::RAMAccess::HighZ) return step(1);
+  if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+}
+
 template<u32 Size>
 inline auto CPU::read(u32 address) -> u32 {
   if constexpr(Accuracy::CPU::Breakpoints) {
-    if(breakpoint.testData<Read, Size>(address)) return 0;  //nop
+    if(testDataBreakpoint<Read, Size>(address)) return 0;
   }
-
   if constexpr(Accuracy::CPU::AddressErrors) {
-    if constexpr(Size == Half) {
-      if(unlikely(address & 1)) return exception.address<Read>(address), 0;  //nop
-    }
-    if constexpr(Size == Word) {
-      if(unlikely(address & 3)) return exception.address<Read>(address), 0;  //nop
-    }
+    if constexpr(Size == Half) if(unlikely(address & 1)) return exception.address<Read>(address), 0;
+    if constexpr(Size == Word) if(unlikely(address & 3)) return exception.address<Read>(address), 0;
   }
-
-  if(unlikely(address >= 0xfffe'0000)) {
-    return memory.read<Size>(address);
+  if(unlikely(statusUserMode() && (address & 0x8000'0000))) {
+    return exception.address<Read>(address), 0;
   }
+  if(unlikely(address >= 0xfffe'0000)) return memory.read<Size>(address);
 
   switch(address >> 29) {
-  //cached
-  case 0: {//KUSEG
-    if(unlikely(scc.status.cache.isolate)) {
-      if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
-        return icache.read(address);
+  case 0:
+  case 4: {  //KUSEG/KSEG0 cached
+    u32 physical = address & 0x1fff'ffff;
+    if(unlikely(statusCacheIsolated())) {
+      u32 word = 0;
+      if(memory.cache.codeEnable) {
+        word = memory.cache.tagTest ? icache.readTag(physical) : icache.read(physical);
+      } else if(memory.cache.scratchpadEnable) {
+        return scratchpad.read<Size>(physical);
+      } else {
+        return 0;
       }
-      if(memory.cache.tagTest == 0 && memory.cache.scratchpadEnable == 1) {
-        return scratchpad.read<Size>(address);
+      if constexpr(Size == Byte) return word >> (physical & 3) * 8 & 0xff;
+      if constexpr(Size == Half) return word >> (physical & 2) * 8 & 0xffff;
+      return word;
+    }
+
+    auto ramAccess = memory.decodeRAM(physical);
+    if(ramAccess.type != MemoryControl::RAMAccess::NotRAM) {
+      if(!memory.cache.scratchpadEnable && memory.cache.dataEnable
+      && ramAccess.type == MemoryControl::RAMAccess::Mapped) {
+        waitWriteBuffer(ramAccess.offset, 15);
+        stepBus(bus.calcAccessTime<false, false>(physical, Word), Bus::CPUAccess, true);
+        u32 word = ram.read<Word>(ramAccess.offset & ~3);
+        scratchpad.write<Word>(physical & 0x3fc, word);
+        if constexpr(Size == Byte) return word >> (physical & 3) * 8 & 0xff;
+        if constexpr(Size == Half) return word >> (physical & 2) * 8 & 0xffff;
+        return word;
       }
-      return 0;  //nop
+      return readRAM<Size>(physical);
     }
-    if(likely(address <= 0x007f'ffff)) {
-      step(bus.calcAccessTime<false, false>(address, Size));
-      auto data = ram.read<Size>(address);
-      return data;
-    }
-    if(likely(address >= 0x1fc0'0000)) {
-      auto data = memory.read<Size>(address);
-      return data;
-    }
-    if(likely(address >= 0x1f00'0000)) {
-      step(bus.calcAccessTime<false, false>(address, Size));
-      address &= 0x1fff'ffff;
-      auto& memory = bus.mmio(address);
-      auto data = memory.read<Size>(address);
-      return data;
-    }
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busData();
-    }
-    return 0;  //nop
-  }
 
-  //cached
-  case 4: {//KSEG0
-    if(unlikely(scc.status.cache.isolate)) {
-      if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
-        return icache.read(address);
+    if(physical >= 0x1fc0'0000) {
+      if(&bus.mmio(physical) == &unmapped) {
+        if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+        return 0;
       }
-      if(memory.cache.tagTest == 0 && memory.cache.scratchpadEnable == 1) {
-        return scratchpad.read<Size>(address);
+      stepBus(bus.calcAccessTime<false, false>(physical, Size));
+      return bios.read<Size>(physical);
+    }
+    if(physical >= 0x1f00'0000) {
+      if((physical & 0xffff'fc00) == 0x1f80'0000
+      && !memory.cache.scratchpadEnable && memory.cache.dataEnable) {
+        enterBusWait(MemoryFrontend::BusWaitDCacheScratchpad);
+        return 0;
       }
-      return 0;  //nop
+      if((physical & 0xffff'fc00) == 0x1f80'0000) {
+        step(1);
+        return scratchpad.read<Size>(physical);
+      }
+      auto& target = bus.mmio(physical);
+      if(&target == &unmapped) {
+        if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+        return 0;
+      }
+      stepBus(bus.calcAccessTime<false, false>(physical, Size));
+      return target.read<Size>(physical);
     }
-    if(likely(address <= 0x807f'ffff)) {
-      step(bus.calcAccessTime<false, false>(address, Size));
-      auto data = ram.read<Size>(address);
-      return data;
-    }
-    if(likely(address >= 0x9fc0'0000)) {
-      auto data = memory.read<Size>(address);
-      return data;
-    }
-    if(likely(address >= 0x9f00'0000)) {
-      step(bus.calcAccessTime<false, false>(address, Size));
-      address &= 0x1fff'ffff;
-      auto& memory = bus.mmio(address);
-      auto data = memory.read<Size>(address);
-      return data;
-    }
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busData();
-    }
-    return 0;  //nop
+    if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+    return 0;
   }
 
-  //uncached
-  case 5: {//KSEG1
-    if(likely(address <= 0xa07f'ffff)) {
-      step(bus.calcAccessTime<false, false>(address, Size));
-      auto data = ram.read<Size>(address);
-      return data;
+  case 5: {  //KSEG1 uncached
+    u32 physical = address & 0x1fff'ffff;
+    if(memory.decodeRAM(physical).type != MemoryControl::RAMAccess::NotRAM) return readRAM<Size>(physical);
+    if(physical >= 0x1fc0'0000) {
+      if(&bus.mmio(physical) == &unmapped) {
+        if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+        return 0;
+      }
+      stepBus(bus.calcAccessTime<false, false>(physical, Size));
+      return bios.read<Size>(physical);
     }
-    if(likely(address >= 0xbfc0'0000)) {
-      step(bus.calcAccessTime<false, false>(address, Size));
-      auto data = bios.read<Size>(address);
-      return data;
+    if(physical >= 0x1f00'0000) {
+      if((physical & 0xffff'fc00) == 0x1f80'0000) {
+        step(1);
+        return scratchpad.read<Size>(physical);
+      }
+      auto& target = bus.mmio(physical);
+      if(&target == &unmapped) {
+        if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+        return 0;
+      }
+      stepBus(bus.calcAccessTime<false, false>(physical, Size));
+      return target.read<Size>(physical);
     }
-    if(likely(address >= 0xbf00'0000)) {
-      step(bus.calcAccessTime<false, false>(address, Size));
-      address &= 0x1fff'ffff;
-      auto& memory = bus.mmio(address);
-      auto data = memory.read<Size>(address);
-      return data;
-    }
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busData();
-    }
-    return 0;  //nop
+    if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+    return 0;
   }
 
-  //unmapped
-  case 1:  //KUSEG
-  case 2:  //KUSEG
-  case 3:  //KUSEG
-  case 6:  //KSEG2
-  case 7: {//KSEG2
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busData();
-    }
-    return 0;  //nop
+  case 1:
+  case 2:
+  case 3:
+  case 6:
+  case 7:
+    if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+    return 0;
   }
-
-  }
-
   unreachable;
 }
 
-//write data to the bus
 template<u32 Size>
 inline auto CPU::write(u32 address, u32 data) -> void {
-  //NOTE: CPU has a write fifo that prevents stalls until full
-  //for now we disable write cycle timing to simulate an infinite write fifo
-  //once we implement the real thing; then we can uncomment the step() calls
   if constexpr(Accuracy::CPU::Breakpoints) {
-    if(breakpoint.testData<Write, Size>(address)) return;
+    if(testDataBreakpoint<Write, Size>(address)) return;
   }
-
   if constexpr(Accuracy::CPU::AddressErrors) {
-    if constexpr(Size == Half) {
-      if(unlikely(address & 1)) return exception.address<Write>(address);
-    }
-    if constexpr(Size == Word) {
-      if(unlikely(address & 3)) return exception.address<Write>(address);
-    }
+    if constexpr(Size == Half) if(unlikely(address & 1)) return exception.address<Write>(address);
+    if constexpr(Size == Word) if(unlikely(address & 3)) return exception.address<Write>(address);
   }
-
-  if(unlikely(address >= 0xfffe'0000)) {
-    return memory.write<Size>(address, data);
+  if(unlikely(statusUserMode() && (address & 0x8000'0000))) {
+    return exception.address<Write>(address);
   }
+  if(unlikely(address >= 0xfffe'0000)) return memory.write<Size>(address, data);
 
   switch(address >> 29) {
-  //cached
-  case 0: {//KUSEG
-    if(unlikely(scc.status.cache.isolate)) {
-      if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
-        return icache.invalidate(address);
+  case 0:
+  case 4: {  //KUSEG/KSEG0 cached
+    u32 physical = address & 0x1fff'ffff;
+    if(unlikely(statusCacheIsolated())) {
+      if(memory.cache.codeEnable) {
+        if(memory.cache.tagTest) return icache.writeTag(physical, data);
+        u32 shifted = data << (physical & 3) * 8;
+        return icache.write(physical, shifted, writeBufferByteEnable(physical, Size));
       }
-      if(memory.cache.tagTest == 0 && memory.cache.scratchpadEnable == 1) {
-        return scratchpad.write<Size>(address, data);
-      }
+      if(memory.cache.scratchpadEnable) return scratchpad.write<Size>(physical, data);
       return;
     }
-    if(likely(address <= 0x007f'ffff)) {
-      step(bus.calcAccessTime<true, false>(address, Size));
-      return ram.write<Size>(address, data);
-    }
-    if(likely(address >= 0x1fc0'0000)) {
-      step(bus.calcAccessTime<true, false>(address, Size));
-      return bios.write<Size>(address, data);
-    }
-    if(likely(address >= 0x1f00'0000)) {
-      step(bus.calcAccessTime<true, false>(address, Size));
-      address &= 0x1fff'ffff;
-      auto& memory = bus.mmio(address);
-      return memory.write<Size>(address, data);
-    }
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busData();
-    }
-    return;
-  }
 
-  //cached
-  case 4: {//KSEG0
-    if(unlikely(scc.status.cache.isolate)) {
-      if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
-        return icache.invalidate(address);
+    if(memory.decodeRAM(physical).type != MemoryControl::RAMAccess::NotRAM) return writeRAM<Size>(physical, data);
+    if(physical >= 0x1fc0'0000) {
+      if(&bus.mmio(physical) == &unmapped) {
+        if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+        return;
       }
-      if(memory.cache.tagTest == 0 && memory.cache.scratchpadEnable == 1) {
-        return scratchpad.write<Size>(address, data);
+      stepBus(bus.calcAccessTime<true, false>(physical, Size));
+      return bios.write<Size>(physical, data);
+    }
+    if(physical >= 0x1f00'0000) {
+      if((physical & 0xffff'fc00) == 0x1f80'0000
+      && !memory.cache.scratchpadEnable && memory.cache.dataEnable) {
+        return enterBusWait(MemoryFrontend::BusWaitDCacheScratchpad);
       }
-      return;
+      if((physical & 0xffff'fc00) == 0x1f80'0000) {
+        step(1);
+        return scratchpad.write<Size>(physical, data);
+      }
+      auto& target = bus.mmio(physical);
+      if(&target == &unmapped) {
+        if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+        return;
+      }
+      stepBus(bus.calcAccessTime<true, false>(physical, Size));
+      return target.write<Size>(physical, data);
     }
-    if(likely(address <= 0x807f'ffff)) {
-      step(bus.calcAccessTime<true, false>(address, Size));
-      return ram.write<Size>(address, data);
-    }
-    if(likely(address >= 0x9fc0'0000)) {
-      step(bus.calcAccessTime<true, false>(address, Size));
-      return bios.write<Size>(address, data);
-    }
-    if(likely(address >= 0x9f00'0000)) {
-      step(bus.calcAccessTime<true, false>(address, Size));
-      address &= 0x1fff'ffff;
-      auto& memory = bus.mmio(address);
-      return memory.write<Size>(address, data);
-    }
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busData();
-    }
+    if constexpr(Accuracy::CPU::BusErrors) exception.busData();
     return;
   }
 
-  //uncached
-  case 5: {//KSEG1
-    if(likely(address <= 0xa07f'ffff)) {
-      step(bus.calcAccessTime<true, false>(address, Size));
-      return ram.write<Size>(address, data);
+  case 5: {  //KSEG1 uncached
+    u32 physical = address & 0x1fff'ffff;
+    if(memory.decodeRAM(physical).type != MemoryControl::RAMAccess::NotRAM) return writeRAM<Size>(physical, data);
+    if(physical >= 0x1fc0'0000) {
+      if(&bus.mmio(physical) == &unmapped) {
+        if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+        return;
+      }
+      stepBus(bus.calcAccessTime<true, false>(physical, Size));
+      return bios.write<Size>(physical, data);
     }
-    if(likely(address >= 0xbfc0'0000)) {
-      step(bus.calcAccessTime<true, false>(address, Size));
-      return bios.write<Size>(address, data);
+    if(physical >= 0x1f00'0000) {
+      if((physical & 0xffff'fc00) == 0x1f80'0000) {
+        step(1);
+        return scratchpad.write<Size>(physical, data);
+      }
+      auto& target = bus.mmio(physical);
+      if(&target == &unmapped) {
+        if constexpr(Accuracy::CPU::BusErrors) exception.busData();
+        return;
+      }
+      stepBus(bus.calcAccessTime<true, false>(physical, Size));
+      return target.write<Size>(physical, data);
     }
-    if(likely(address >= 0xbf00'0000)) {
-      step(bus.calcAccessTime<true, false>(address, Size));
-      address &= 0x1fff'ffff;
-      auto& memory = bus.mmio(address);
-      return memory.write<Size>(address, data);
-    }
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busData();
-    }
+    if constexpr(Accuracy::CPU::BusErrors) exception.busData();
     return;
   }
 
-  //unmapped
-  case 1:  //KUSEG
-  case 2:  //KUSEG
-  case 3:  //KUSEG
-  case 6:  //KSEG2
-  case 7: {//KSEG2
-    if constexpr(Accuracy::CPU::BusErrors) {
-      exception.busData();
-    }
+  case 1:
+  case 2:
+  case 3:
+  case 6:
+  case 7:
+    if constexpr(Accuracy::CPU::BusErrors) exception.busData();
     return;
-  }
-
   }
 }

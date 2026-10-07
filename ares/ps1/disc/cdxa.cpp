@@ -1,3 +1,5 @@
+#include "xa-resampler.hpp"
+
 auto Disc::CDXA::load(Node::Object parent) -> void {
 //stream = parent->append<Node::Audio::Stream>("CD-XA");
 //stream->setChannels(2);
@@ -11,81 +13,111 @@ auto Disc::CDXA::unload(Node::Object parent) -> void {
 }
 
 auto Disc::CDXA::clockSector() -> void {
-  n8 subMode     = drive->sector.data[18];
-  n1 endOfRecord = subMode.bit(0);
-  n1 video       = subMode.bit(1);
-  n1 audio       = subMode.bit(2);
-  n1 data        = subMode.bit(3);
-  n1 trigger     = subMode.bit(4);
-  n1 form2       = subMode.bit(5);
-  n1 realTime    = subMode.bit(6);
-  n1 endOfFile   = subMode.bit(7);
+  u8 file = drive->sector.data[16];
+  u8 channel = drive->sector.data[17];
+  if(drive->mode.xaFilter && (file != filter.file || channel != filter.channel)) return;
+  if(!current.selected) {
+    // R2 reference compatibility: ignore unselected channel255 unless explicitly requested.
+    if(channel == 255 && (!drive->mode.xaFilter || filter.channel != 255)) return;
+    current = {file, channel, true};
+  } else if(file != current.file || channel != current.channel) {
+    return;
+  }
+  if(drive->sector.data[18] & 0x80) current = {};
 
-  n8  codingInfo    = drive->sector.data[19];
-  n1  stereo        = codingInfo.bit(0);
-  n1  halfSampleRate= codingInfo.bit(2);
-  n32 bitsPerSample = codingInfo.bit(4) ? 8 : 4;
-  n1  emphasis      = codingInfo.bit(6);
-
-  if(stereo == 0 && bitsPerSample == 4) decodeADPCM<0, 0>(halfSampleRate);
-  if(stereo == 0 && bitsPerSample == 8) decodeADPCM<0, 1>(halfSampleRate);
-  if(stereo == 1 && bitsPerSample == 4) decodeADPCM<1, 0>(halfSampleRate);
-  if(stereo == 1 && bitsPerSample == 8) decodeADPCM<1, 1>(halfSampleRate);
-
-  monaural = !stereo;
+  // R2 reference low watermark is ten stereo frames. Drop before altering decoder/interpolation history.
+  if(self.audio.frames.size() > 10) return;
+  s16 decoded[4032];
+  auto count = decodeSector(decoded);
+  if(self.audio.mute || self.audio.muteADPCM) return;  // Decode history advances; reference interpolation pauses.
+  bool stereo = drive->sector.data[19] & 1;
+  bool halfRate = drive->sector.data[19] & 4;
+  resample(decoded, stereo ? count / 2 : count, stereo, halfRate);
 }
 
-auto Disc::CDXA::clockSample() -> void {
-  s16 left  = 0;
-  s16 right = 0;
+auto Disc::CDXA::decodeSector(s16* output) -> u32 {
+  bool stereo = drive->sector.data[19] & 1;
+  bool bits8 = drive->sector.data[19] & 0x10;
+  if(!stereo && !bits8) decodeADPCM<false, false>(output);
+  if(!stereo &&  bits8) decodeADPCM<false, true >(output);
+  if( stereo && !bits8) decodeADPCM<true,  false>(output);
+  if( stereo &&  bits8) decodeADPCM<true,  true >(output);
+  return 18 * 28 * (bits8 ? 4 : 8);
+}
 
-  if(monaural) {
-    left = right = samples.read(0);
-  } else {
-    left  = samples.read(0);
-    right = samples.read(0);
+auto Disc::CDXA::pushFrame(s16 left, s16 right) -> void {
+  self.audio.pushFrame(left, right, true);
+}
+
+auto Disc::CDXA::resample(const s16* input, u32 frames, bool stereo, bool halfRate) -> void {
+  u32 position = resamplePosition;
+  u32 phase = resampleStep;
+  auto interpolate = [&](u32 channel, u32 table) -> s16 {
+    s32 sum = 0;
+    if(halfRate) {
+      // Reference18.9kHz weights; absolute coefficient sum <=56030 keeps this accumulator in32 bits.
+      for(u32 tap : range(25)) {
+        sum += s32(resampleRing[channel][(position + 32 - 25 + tap) & 31]) * XAInterpolation::half[table][tap];
+      }
+      sum >>= 15;
+    } else {
+      for(u32 tap : range(29)) {
+        sum += s32(resampleRing[channel][(position + 32 - tap) & 31]) * XAInterpolation::normal[table][tap] >> 15;
+      }
+    }
+    return sclamp<16>(sum);
+  };
+  auto emit = [&](u32 table) {
+    s16 left = interpolate(0, table);
+    pushFrame(left, stereo ? interpolate(1, table) : left);
+  };
+
+  u32 consumed = 0;
+  while(consumed < frames) {
+    if(!halfRate || phase >= 7) {
+      if(halfRate) {
+        phase -= 7;
+        position = (position + 1) & 31;
+      }
+      resampleRing[0][position] = *input++;
+      if(stereo) resampleRing[1][position] = *input++;
+      consumed++;
+      if(!halfRate) {
+        position = (position + 1) & 31;
+        if(--phase) continue;
+        phase = 6;
+      }
+    }
+    if(halfRate) {
+      emit(phase);
+      phase += 3;
+    } else {
+      for(u32 table : range(7)) emit(table);
+    }
   }
-
-  if(self.audio.mute || self.audio.muteADPCM) {
-    sample.left  = 0;
-    sample.right = 0;
-  } else {
-    //each channel is saturated; but the combination of each channel is not and may overflow
-    sample.left  = sclamp<16>(left * self.audio.volume[0] >> 7) + sclamp<16>(right * self.audio.volume[2] >> 7);
-    sample.right = sclamp<16>(left * self.audio.volume[1] >> 7) + sclamp<16>(right * self.audio.volume[3] >> 7);
-  }
-
-//stream->sample(sample.left / 32768.0, sample.right / 32768.0);
+  resamplePosition = position;
+  resampleStep = phase;
 }
 
 template<bool isStereo, bool is8bit>
-auto Disc::CDXA::decodeADPCM(n1 halfSampleRate) -> void {
-  const u32 Blocks = 18;
-  const u32 BlockSize = 128;
-  const u32 WordsPerBlock = 28;
-  const u32 SamplesPerBlock = WordsPerBlock * (is8bit ? 4 : 8);
-
-  s16 output[SamplesPerBlock];
-  for(u32 block : range(Blocks)) {
-    decodeBlock<isStereo, is8bit>(output, 24 + block * BlockSize);
-    for(auto sample : output) {
-      if(!samples.full()) samples.write(sample);
-      if(halfSampleRate && !samples.full()) samples.write(sample);
-    }
+auto Disc::CDXA::decodeADPCM(s16* output) -> void {
+  constexpr u32 SamplesPerBlock = 28 * (is8bit ? 4 : 8);
+  for(u32 block : range(18)) {
+    decodeBlock<isStereo, is8bit>(output + block * SamplesPerBlock, 24 + block * 128);
   }
 }
 
 template<bool isStereo, bool is8bit>
 auto Disc::CDXA::decodeBlock(s16* output, u16 address) -> void {
-  static constexpr s32 filterPositive[] = {0, 60, 115, 98};
-  static constexpr s32 filterNegative[] = {0, 0, -52, -55};
+  static constexpr s32 filterPositive[16] = {0, 60, 115, 98};
+  static constexpr s32 filterNegative[16] = {0, 0, -52, -55};
   static constexpr u32 Blocks = is8bit ? 4 : 8;
   static constexpr u32 WordsPerBlock = 28;
 
   for(u32 block : range(Blocks)) {
     u8  header   = drive->sector.data[address + 4 + block];
     u8  shift    = (header & 0x0f) > 12 ? 9 : (header & 0x0f);
-    u8  filter   = (header & 0x30) >> 4;
+    u8  filter   = header >> 4;
     s32 positive = filterPositive[filter];
     s32 negative = filterNegative[filter];
     u16 index    = isStereo ? (block >> 1) * (WordsPerBlock << 1) + (block & 1) : block * WordsPerBlock;
@@ -98,14 +130,16 @@ auto Disc::CDXA::decodeBlock(s16* output, u16 address) -> void {
       data |= drive->sector.data[address + 16 + word * 4 + 3] << 24;
 
       u32 nibble = is8bit ? (data >> block * 8 & 0xff) : (data >> block * 4 & 0x0f);
-      s16 sample = s16(nibble << 12) >> shift;
+      s16 sample = s16(nibble << (is8bit ? 8 : 12)) >> shift;
 
       s32* previous = isStereo ? &previousSamples[(block & 1) * 2] : &previousSamples[0];
-      s32 interpolated = s32(sample) + ((previous[0] * positive) + (previous[1] * negative) + 32) / 64;
+      // Reference rounds each signed predictor product down and saturates decoder history.
+      s32 predicted = (previous[0] * positive >> 6) + (previous[1] * negative >> 6);
+      s32 interpolated = sclamp<16>(s32(sample) + predicted);
       previous[1] = previous[0];
       previous[0] = interpolated;
 
-      output[index] = sclamp<16>(interpolated);
+      output[index] = interpolated;
       index += isStereo ? 2 : 1;
     }
   }

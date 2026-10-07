@@ -31,11 +31,10 @@ auto PlayStation::load(string location) -> LoadResult {
     pak->append("cd.rom", vfs::disk::open({location, "cd.rom"}, vfs::read));
   }
   if(file::exists(location)) {
-    if(location.iendsWith(".cue")) {
-      pak->append("cd.rom", vfs::cdrom::open(location));
-    }
-    if(location.iendsWith(".chd")) {
-      pak->append("cd.rom", vfs::cdrom::open(location));
+    if(location.iendsWith(".cue") || location.iendsWith(".chd")) {
+      auto image = vfs::cdrom::openWithSubQ(location);
+      if(!image) return {invalidROM, "Could not load the disc image or its supplementary subchannel data."};
+      pak->append("cd.rom", image);
     }
     if(location.iendsWith(".exe") || location.iendsWith(".ps-exe")) {
       pak->append("program.exe", vfs::disk::open(location, vfs::read));

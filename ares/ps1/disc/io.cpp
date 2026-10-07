@@ -1,14 +1,28 @@
 auto Disc::canReadDMA() -> bool {
-  return io.sectorBufferReadRequest && !fifo.data.empty();
+  return io.sectorBufferReadRequest;
 }
 
 auto Disc::readDMA() -> u32 {
   u32 data = 0;
-  data |= fifo.data.read(0) <<  0;
-  data |= fifo.data.read(0) <<  8;
-  data |= fifo.data.read(0) << 16;
-  data |= fifo.data.read(0) << 24;
+  data |= u32(readData()) <<  0;
+  data |= u32(readData()) <<  8;
+  data |= u32(readData()) << 16;
+  data |= u32(readData()) << 24;
   return data;
+}
+
+auto Disc::readData() -> u8 {
+  if(!io.sectorBufferReadRequest) return fifo.data.exhausted ? fifo.data.padding : 0;
+  auto value = fifo.data.read();
+  if(fifo.data.empty()) {
+    io.sectorBufferReadRequest = 0;
+    if(fifo.sectorPending && fifo.deferred.type == ResponseType::None) {
+      fifo.deferred.type = ResponseType::Ready;
+      fifo.deferred.data.write(status());
+      scheduleAsyncResponse(5000);
+    }
+  }
+  return value;
 }
 
 auto Disc::readByte(u32 address) -> u32 {
@@ -17,53 +31,34 @@ auto Disc::readByte(u32 address) -> u32 {
   if(address == 0x1f80'1800) {
     data.bit(0) = io.index.bit(0);
     data.bit(1) = io.index.bit(1);
-    data.bit(2) = 0;  //XA-ADPCM FIFO (0 = empty)
+    data.bit(2) = 0;  // ADPBUSY unsupported: reference fallback, not the actual XA decoder/queue state.
     data.bit(3) = fifo.parameter.empty();  //1 when empty
     data.bit(4) = !fifo.parameter.full();  //0 when full
     data.bit(5) = !fifo.response.empty();  //0 when empty
-    data.bit(6) = io.sectorBufferReadRequest && !fifo.data.empty();      //0 when empty
-    data.bit(7) = command.transfer.started; //command/parameter busy (0 = ready)
+    data.bit(6) = io.sectorBufferReadRequest;
+    data.bit(7) = command.first.pending;  //the second response does not assert command BUSY
     return data;
   }
 
   //response FIFO
   if(address == 0x1f80'1801 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
-    return data = fifo.response.read(data);
+    if(!fifo.response.empty()) fifo.response.read();
+    return fifo.responseLatch[fifo.responsePosition++];
   }
 
   //data FIFO
   if(address == 0x1f80'1802 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
-    return data = fifo.data.read(data);
+    return readData();
   }
 
   //interrupt enable
   if(address == 0x1f80'1803 && (io.index == 0 || io.index == 2)) {
-    data.bit(0) = irq.ready.enable;
-    data.bit(1) = irq.complete.enable;
-    data.bit(2) = irq.acknowledge.enable;
-    data.bit(3) = irq.end.enable;
-    data.bit(4) = irq.error.enable;
-    data.bit(5) = 1;
-    data.bit(6) = 1;
-    data.bit(7) = 1;
-    return data;
+    return 0xe0 | irq.mask;
   }
 
   //interrupt flag
   if(address == 0x1f80'1803 && (io.index == 1 || io.index == 3)) {
-    n3 flags = 0;
-    if(irq.error.flag      ) flags = 5;
-    if(irq.end.flag        ) flags = 4;
-    if(irq.acknowledge.flag) flags = 3;
-    if(irq.complete.flag   ) flags = 2;
-    if(irq.ready.flag      ) flags = 1;
-    data.bit(0,2) = flags;
-    data.bit(3) = irq.end.flag;
-    data.bit(4) = irq.error.flag;
-    data.bit(5) = 1;
-    data.bit(6) = 1;
-    data.bit(7) = 1;
-    return data;
+    return 0xe0 | irq.flag;
   }
 
   debug(unhandled, "Disc::readByte(", hex(address, 8L), ") -> ", hex(data, 2L));
@@ -71,15 +66,15 @@ auto Disc::readByte(u32 address) -> u32 {
 }
 
 auto Disc::readHalf(u32 address) -> u32 {
-  debug(unverified, "Disc::readHalf(", hex(address, 8L), ")");
-  n16    data = readByte(address & ~1 | 0) <<  0;
-  return data | readByte(address & ~1 | 1) <<  8;
+  u32 data = 0;
+  for(u32 byte : range(2)) data |= readByte(address + (memory.cdrom.autoIncrement ? byte : 0)) << (byte * 8);
+  return data;
 }
 
 auto Disc::readWord(u32 address) -> u32 {
-  debug(unverified, "Disc::readWord(", hex(address, 8L), ")");
-  n32    data = readHalf(address & ~3 | 0) <<  0;
-  return data | readHalf(address & ~3 | 2) << 16;
+  u32 data = 0;
+  for(u32 byte : range(4)) data |= readByte(address + (memory.cdrom.autoIncrement ? byte : 0)) << (byte * 8);
+  return data;
 }
 
 auto Disc::writeByte(u32 address, u32 value) -> void {
@@ -92,13 +87,7 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //command register
   if(address == 0x1f80'1801 && io.index == 0) {
-    if(!command.transfer.started) {
-      command.transfer.started = 1;
-      command.transfer.counter = 40'000;
-    }
-
-    command.transfer.command = data;
-    ssr.error = 0;
+    beginCommand(data);
     return;
   }
 
@@ -122,22 +111,14 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //parameter FIFO
   if(address == 0x1f80'1802 && io.index == 0) {
-    if(!fifo.parameter.full()) {
-      fifo.parameter.write(data);
-      return;
-    }
-
-    debug(unusual, "Disc::writeByte(): parameter FIFO full, data lost");
+    if(fifo.parameter.full()) fifo.parameter.read();  //reference overflow policy: retain the newest 16 bytes
+    fifo.parameter.write(data);
     return;
   }
 
   //interrupt enable
   if(address == 0x1f80'1802 && io.index == 1) {
-    irq.ready.enable       = data.bit(0);
-    irq.complete.enable    = data.bit(1);
-    irq.acknowledge.enable = data.bit(2);
-    irq.end.enable         = data.bit(3);
-    irq.error.enable       = data.bit(4);
+    irq.mask = data.bit(0,4);
     irq.poll();
     return;
   }
@@ -156,26 +137,32 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //request register
   if(address == 0x1f80'1803 && io.index == 0) {
+    bool wasReading = io.sectorBufferReadRequest;
+    // SMEN/BFWR are retained but sound-map upload/playback is unsupported, as in the reference.
     io.soundMapEnable = data.bit(5);
     io.sectorBufferWriteRequest = data.bit(6);
     io.sectorBufferReadRequest = data.bit(7);
+    if(io.sectorBufferReadRequest && !wasReading && !fifo.hostLoaded) {
+      fifo.data = fifo.sectors[fifo.sectorRead];
+      fifo.hostLoaded = true;
+    }
+    if(!io.sectorBufferReadRequest && !fifo.data.empty()) fifo.data.position = 0;
     return;
   }
 
   //interrupt flag
   if(address == 0x1f80'1803 && io.index == 1) {
-    if(data.bit(0,2) == 7) {
-           if(irq.ready.flag      ) irq.ready.flag       = 0;
-      else if(irq.complete.flag   ) irq.complete.flag    = 0;
-      else if(irq.acknowledge.flag) irq.acknowledge.flag = 0;
-      else if(irq.end.flag        ) irq.end.flag         = 0;
-      else if(irq.error.flag      ) irq.error.flag       = 0;
+    // SMADPCLR/CHPRST (bits5/7) remain unsupported reference no-ops; bit6 still clears parameters.
+    auto previous = irq.flag;
+    irq.flag &= ~data.bit(0,4);
+    if(previous && !irq.flag) irq.acknowledgeAge = 0;
+    if(previous && !irq.flag && fifo.deferred.scheduled && fifo.deferred.counter <= 0) {
+      fifo.deferred.counter = 500;
     }
-    if(data.bit(3)) irq.end.flag   = 0;
-    if(data.bit(4)) irq.error.flag = 0;
     if(data.bit(6)) fifo.parameter.flush();
     irq.poll();
-    flushDeferredResponse();
+    scheduleAsyncResponse();
+    updateCommandEvent();
     return;
   }
 
@@ -202,13 +189,9 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 }
 
 auto Disc::writeHalf(u32 address, u32 data) -> void {
-  debug(unverified, "Disc::writeHalf(", hex(address, 8L), ")");
-  writeByte(address & ~1 | 0, data >>  0);
-  writeByte(address & ~1 | 1, data >>  8);
+  for(u32 byte : range(2)) writeByte(address + (memory.cdrom.autoIncrement ? byte : 0), data >> (byte * 8));
 }
 
 auto Disc::writeWord(u32 address, u32 data) -> void {
-  debug(unverified, "Disc::writeWord(", hex(address, 8L), ")");
-  writeHalf(address & ~3 | 0, data >>  0);
-  writeHalf(address & ~3 | 2, data >> 16);
+  for(u32 byte : range(4)) writeByte(address + (memory.cdrom.autoIncrement ? byte : 0), data >> (byte * 8));
 }

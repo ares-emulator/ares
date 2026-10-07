@@ -15,7 +15,6 @@ auto Interrupt::unload() -> void {
 }
 
 auto Interrupt::poll() -> void {
-  bool interruptsWerePending = cpu.exception.interruptsPending();
   bool line = 0;
   line |= vblank.poll();
   line |= gpu.poll();
@@ -29,7 +28,6 @@ auto Interrupt::poll() -> void {
   line |= spu.poll();
   line |= pio.poll();
   cpu.scc.cause.interruptPending.bit(2) = line;
-  if(!interruptsWerePending && cpu.exception.interruptsPending()) cpu.delay.interrupt = 2;
 }
 
 auto Interrupt::level(u32 source) -> bool {

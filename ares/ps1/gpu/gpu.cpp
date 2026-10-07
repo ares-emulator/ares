@@ -13,6 +13,7 @@ GPU gpu;
 GPU::Color GPU::Color::table[65536];
 #include "io.cpp"
 #include "gp0.cpp"
+#include "command.cpp"
 #include "gp1.cpp"
 #include "renderer.cpp"
 #include "blitter.cpp"
@@ -62,33 +63,38 @@ auto GPU::unload() -> void {
 
 auto GPU::main() -> void {
   io.hcounter = 0;
-
-  step(hblankStart());
-  io.hcounter += hblankStart();
+  // Latch this scanline's split; GP1 writes during synchronization apply next line.
+  u32 blankStart = hblankStart(), total = htotal();
+  step(blankStart);
+  io.hcounter = blankStart;
   timer.hsync(1);
   Thread::synchronize();
-
-  step(htotal() - hblankStart());
-  io.hcounter = htotal();
+  step(total - blankStart);
   timer.hsync(0);
   io.hcounter = 0;
+  if(advanceScanline()) blitter.queue();
+}
 
-  if(++io.vcounter == vtotal()) {
-    io.vcounter = 0;
-    io.field = !io.field;
-    frame();
+auto GPU::advanceScanline() -> bool {
+  bool wrapped = advanceVerticalCounter();
+  bool blank = vblank();
+  if(blank != io.inVblank) {
+    timer.vsync(blank);
+    interrupt.drive(Interrupt::Vblank, blank);
+    if(blank) io.activeField = interlace() ? !io.field : 0;
+    io.inVblank = blank;
   }
+  // Invalid or full-frame ranges must not prevent the frontend from returning.
+  if(vstart() >= vend() || vend() >= vtotal()) return wrapped;
+  return io.vcounter == vend();
+}
 
-  if(io.vcounter == vstart()) {
-    timer.vsync(0);
-    interrupt.lower(Interrupt::Vblank);
-  }
-
-  if(io.vcounter == vend()) {
-    timer.vsync(1);
-    interrupt.raise(Interrupt::Vblank);
-    blitter.queue();
-  }
+auto GPU::advanceVerticalCounter() -> bool {
+  if(++io.vcounter < vtotal()) return false;
+  io.vcounter = 0;
+  io.field = io.interlace ? !io.field : 0;
+  frame();
+  return true;
 }
 
 auto GPU::frame() -> void {
@@ -107,22 +113,30 @@ auto GPU::frame() -> void {
 }
 
 auto GPU::step(u32 clocks) -> void {
-  if(timer.timers[0].clock == 1) {
-    u32 div = dotclockDivider();
-    if(div == 0) div = 1;
-    io.dotcounter += clocks;
-    u32 dots = io.dotcounter / div;
-    io.dotcounter -= dots * div;
-    if(dots) timer.timers[0].step(dots);
-  }
+  //CPU polling can submit work while this coroutine is ahead. Bound even
+  //idle spans so a small command cannot inherit a scanline-long busy delay.
+  //This is a scheduling quantum, not a measured hardware command latency.
+  while(clocks) {
+    u32 elapsed = std::min(clocks, 32u);
+    if(timer.timers[0].clock == 1) {
+      u32 div = dotclockDivider();
+      if(div == 0) div = 1;
+      io.dotcounter += elapsed;
+      u32 dots = io.dotcounter / div;
+      io.dotcounter -= dots * div;
+      if(dots) timer.timers[0].step(dots);
+    }
 
-  Thread::step(clocks);
-  io.pcounter -= clocks;
-  if(io.pcounter < 0) io.pcounter = 0;
-  Thread::synchronize();
+    Thread::step(elapsed);
+    advanceCommands(elapsed);
+    Thread::synchronize();
+    clocks -= elapsed;
+  }
 }
 
 auto GPU::power(bool reset) -> void {
+  screen->synchronize();
+  renderer.kill();
   Thread::create(system.gpuFrequency(), std::bind_front(&GPU::main, this));
   screen->power();
   refreshed = false;
@@ -137,6 +151,7 @@ auto GPU::power(bool reset) -> void {
   display.previous.width = 0;
   display.previous.height = 0;
   io = {};
+  input = {};
   queue.gp0 = {};
   queue.gp1 = {};
 
