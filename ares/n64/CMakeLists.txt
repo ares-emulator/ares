@@ -9,6 +9,7 @@ ares_add_sources(
     memory/memory.cpp
     system/system.cpp
     cartridge/cartridge.cpp
+    sc64/sc64.cpp
     cic/cic.cpp
     controller/controller.cpp
     dd/dd.cpp
@@ -92,6 +93,13 @@ ares_add_sources(
     cartridge/serialization.cpp
     cartridge/slot.cpp
     cartridge/slot.hpp
+)
+
+ares_add_sources(
+  CORE #
+    n64
+  INCLUDED #
+    sc64/sc64.hpp
 )
 
 ares_add_sources(
