@@ -86,6 +86,7 @@ ares_add_sources(
     cartridge/board/mbc7.cpp
     cartridge/board/mmm01.cpp
     cartridge/board/none.cpp
+    cartridge/board/pocketvoice.cpp
     cartridge/board/tama.cpp
 )
 
