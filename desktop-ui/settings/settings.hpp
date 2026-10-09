@@ -12,6 +12,7 @@ struct Settings : Markup::Node {
   auto process(bool load) -> void;
 
   string filePath;
+  std::vector<string> comments;
 
   struct Video {
     string driver;
@@ -460,8 +461,19 @@ struct DeveloperSettings : VerticalLayout {
 struct ImportExportSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
+  auto refreshProfiles() -> void;
+  auto activateProfile() -> void;
+  auto rebuildSettingsPanels() -> void;
   auto setVisible(bool visible = true) -> ImportExportSettings&;
 
+  Label profileManagerLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout profileFolderLayout{this, Size{~0, 0}};
+    LineEdit profileFolderPath{&profileFolderLayout, Size{~0, 0}};
+    Button profileFolderButton{&profileFolderLayout, Size{90, 0}};
+  HorizontalLayout profileSelectionLayout{this, Size{~0, 0}};
+    ComboButton profileList{&profileSelectionLayout, Size{~0, 0}};
+    Button activateProfileButton{&profileSelectionLayout, Size{110, 0}};
+    Button refreshProfilesButton{&profileSelectionLayout, Size{80, 0}};
   Label settingsFileLabel{this, Size{~0, 0}, 5};
   TextEdit settingsView{this, Size{~0, ~0}};
   HorizontalLayout controlsLayout{this, Size{~0, 0}};
@@ -471,6 +483,8 @@ struct ImportExportSettings : VerticalLayout {
     Button exportButton{&controlsLayout, Size{80, 0}};
   
   bool imported = false;
+  string profileDirectory;
+  std::vector<string> profilePaths;
 };
 
 struct HomePanel : VerticalLayout {

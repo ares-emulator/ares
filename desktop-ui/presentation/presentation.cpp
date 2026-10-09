@@ -347,8 +347,10 @@ Presentation::Presentation() {
       Program::Guard guard;
       if(program.stateSave(1 + slot)) {
         undoSaveStateMenu.setEnabled(true);
+        refreshStateMenus();
       }
     });
+    saveStateItems.push_back(item);
   }
   loadStateMenu.setText("Load State").setIcon(Icon::Media::Rewind);
   for(u32 slot : range(9)) {
@@ -359,12 +361,14 @@ Presentation::Presentation() {
         undoLoadStateMenu.setEnabled(true);
       }
     });
+    loadStateItems.push_back(item);
   }
   undoSaveStateMenu.setText("Undo Last Save State").setIcon(Icon::Edit::Undo).setEnabled(false);
   undoSaveStateMenu.onActivate([&] {
     Program::Guard guard;
     program.undoStateSave();
     undoSaveStateMenu.setEnabled(false);
+    refreshStateMenus();
   });
   undoLoadStateMenu.setText("Undo Last Load State").setIcon(Icon::Edit::Undo).setEnabled(false);
   undoLoadStateMenu.onActivate([&] {
@@ -853,10 +857,31 @@ auto Presentation::loadEmulator() -> void {
 
     toolsMenu.setVisible(true);
     pauseEmulation.setChecked(false);
+    refreshStateMenus();
   }
 
   setFocused();
   viewport.setFocused();
+}
+
+auto Presentation::refreshStateMenus() -> void {
+  for(u32 slot : range(9)) {
+    string label{"Slot ", 1 + slot};
+    bool available = false;
+
+    if(emulator && emulator->game) {
+      auto location = emulator->locate(emulator->game->location, {".bs", 1 + slot}, settings.paths.saves);
+      if(file::exists(location)) {
+        available = true;
+        label.append(" — ", chrono::local::datetime(file::timestamp(location, file::time::modify)));
+      } else {
+        label.append(" — Empty");
+      }
+    }
+
+    if(slot < saveStateItems.size()) saveStateItems[slot].setText(label);
+    if(slot < loadStateItems.size()) loadStateItems[slot].setText(label).setEnabled(available);
+  }
 }
 
 auto Presentation::refreshSystemMenu() -> void {
@@ -998,6 +1023,7 @@ auto Presentation::unloadEmulator(bool reloading) -> void {
   systemMenu.reset();
 
   toolsMenu.setVisible(false);
+  refreshStateMenus();
 }
 
 auto Presentation::showIcon(bool visible) -> void {

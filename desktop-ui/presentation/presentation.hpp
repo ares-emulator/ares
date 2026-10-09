@@ -8,6 +8,7 @@ struct Presentation : Window {
   auto loadEmulators() -> void;
   auto loadEmulator() -> void;
   auto unloadEmulator(bool reloading = false) -> void;
+  auto refreshStateMenus() -> void;
   auto showIcon(bool visible) -> void;
   auto loadShaders() -> void;
   auto refreshSystemMenu() -> void;
@@ -66,7 +67,9 @@ struct Presentation : Window {
       MenuItem importExportAction{&settingsMenu};
     Menu toolsMenu{&menuBar};
       Menu saveStateMenu{&toolsMenu};
+        std::vector<MenuItem> saveStateItems;
       Menu loadStateMenu{&toolsMenu};
+        std::vector<MenuItem> loadStateItems;
       MenuItem undoSaveStateMenu{&toolsMenu};
       MenuItem undoLoadStateMenu{&toolsMenu};
       MenuItem captureScreenshot{&toolsMenu};

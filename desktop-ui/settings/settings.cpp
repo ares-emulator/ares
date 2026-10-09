@@ -29,14 +29,24 @@ CoreSettings& coreSettings = settingsWindow.coreSettings;
 ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
 auto Settings::load() -> void {
-  Markup::Node::operator=(BML::unserialize(string::read(filePath), " "));
+  auto source = string::read(filePath).replace("\r", "");
+  comments.clear();
+  for(auto& line : nall::split(source, "\n")) {
+    auto comment = string{line}.strip();
+    if(comment.beginsWith("//")) comments.push_back(comment);
+  }
+  Markup::Node::operator=(BML::unserialize(source, " "));
   process(true);
   save();
 }
 
 auto Settings::save() -> void {
   process(false);
-  file::write(filePath, BML::serialize(*this, " "));
+  string output;
+  for(auto& comment : comments) output.append(comment, "\n");
+  if(comments.size()) output.append("\n");
+  output.append(BML::serialize(*this, " "));
+  file::write(filePath, output);
 }
 
 auto Settings::process(bool load) -> void {
