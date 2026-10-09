@@ -6,6 +6,7 @@ RDP rdp;
 #include "render.cpp"
 #include "io.cpp"
 #include "debugger.cpp"
+#include "capture.cpp"
 #include "serialization.cpp"
 
 auto RDP::load(Node::Object parent) -> void {
@@ -61,6 +62,7 @@ auto RDP::power(bool reset) -> void {
   io.bist = {};
   io.test = {};
   if(!reset) mapIdentityWarned = 0;
+  debugger.resetCapture();
 }
 
 }

@@ -36,6 +36,7 @@ namespace ares::Core {
     struct Debugger;
     struct Memory;
     struct Graphics;
+    struct GraphicsFrame;
     struct Properties;
     namespace Tracer {
       struct Tracer;
@@ -83,6 +84,7 @@ namespace ares::Node {
     using Debugger       = std::shared_ptr<Core::Debugger::Debugger>;
     using Memory         = std::shared_ptr<Core::Debugger::Memory>;
     using Graphics       = std::shared_ptr<Core::Debugger::Graphics>;
+    using GraphicsFrame  = std::shared_ptr<Core::Debugger::GraphicsFrame>;
     using Properties     = std::shared_ptr<Core::Debugger::Properties>;
     namespace Tracer {
       using Tracer       = std::shared_ptr<Core::Debugger::Tracer::Tracer>;
@@ -137,6 +139,7 @@ namespace ares::Core {
     #include <ares/node/debugger/debugger.hpp>
     #include <ares/node/debugger/memory.hpp>
     #include <ares/node/debugger/graphics.hpp>
+    #include <ares/node/debugger/graphics-frame.hpp>
     #include <ares/node/debugger/properties.hpp>
     namespace Tracer {
       #include <ares/node/debugger/tracer/tracer.hpp>
