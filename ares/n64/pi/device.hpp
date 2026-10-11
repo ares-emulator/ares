@@ -8,6 +8,20 @@ struct PIDeviceTiming {
         && pulseWidth      >= other.pulseWidth
         && releaseDuration >= other.releaseDuration;
   }
+
+  //Each PI bus cycle is one RCP clock (~16ns @ 62.5MHz).
+  //The PI latches the address on /ALE_L, waits (LAT+1) cycles, then holds /RD (or /WR)
+  //low for (PWD+1) cycles and samples the data bus on its rising edge.
+
+  //time the device has from the address being latched until the first word is sampled
+  auto accessCycles() const -> u32 {
+    return (latency + 1) + (pulseWidth + 1);
+  }
+
+  //time the device has to drive the bus while /RD is asserted
+  auto pulseCycles() const -> u32 {
+    return pulseWidth + 1;
+  }
 };
 
 struct PIDevice {

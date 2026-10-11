@@ -7,9 +7,36 @@ struct Cartridge {
   struct RomDevice : PIDeviceMemory {
     Cartridge& self;
     RomDevice(Cartridge& self) : self(self) {}
-    auto piAddress(u32 address, PIDeviceTiming timing) -> bool override {
+
+    //The mask ROMs used in cartridges cannot keep up with arbitrarily fast PI bus timings.
+    //Period 16-bit mask ROMs (eg Macronix MX23C/MX23L) specify an address access time (tAA)
+    //of ~100ns and an output enable time (tOE) of ~50ns. If the PI samples the bus before
+    //the ROM has had time to drive it, real hardware reads back garbage (open bus), and
+    //the ROM must not answer. Reference points, in (LAT, PWD) form:
+    //  retail cartridges (header 80 37 12 40):   (0x40, 0x12) => 1040ns + 304ns
+    //  64DD IPL ROM (header 80 27 07 40):        (0x40, 0x07) => 1040ns + 128ns
+    //  flashcarts (libcart: EverDrive, 64drive): (0x04, 0x0c) => 80ns + 208ns
+    //  MGC 2011 Demo (Retroactive) emulator test: (0x02, 0x02) => 48ns + 48ns
+    //The last one deliberately reads the ROM header with timings no cartridge can satisfy
+    //and refuses to run ("FAIL.") if the correct data comes back, as it only can on an
+    //emulator that ignores the timing registers.
+    static constexpr u32 minAccessCycles = 7;  //(LAT+1)+(PWD+1) >= 112ns  (tAA ~ 100ns)
+    static constexpr u32 minPulseCycles  = 4;  //(PWD+1)         >=  64ns  (tOE ~  50ns)
+
+    auto piTimingSatisfied(const PIDeviceTiming& timing) const -> bool {
       if(!timing.fasterThan(min)) return false;
+      if(timing.accessCycles() < minAccessCycles) return false;
+      if(timing.pulseCycles()  < minPulseCycles ) return false;
+      return true;
+    }
+
+    auto piAddress(u32 address, PIDeviceTiming timing) -> bool override {
       if(address < 0x1000'0000 || address >= 0x1000'0000 + self.rom.size) return false;
+      if(!piTimingSatisfied(timing)) {
+        debug(unusual, "[Cartridge::RomDevice::piAddress] PI timings too fast for mask ROM (LAT=",
+          hex(timing.latency, 2L), " PWD=", hex(timing.pulseWidth, 2L), "); reading open bus");
+        return false;
+      }
       piView = {self.rom.data, self.rom.size};
       piViewOffset = address - 0x1000'0000;
       piViewWritable = false;
