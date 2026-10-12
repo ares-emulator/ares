@@ -25,6 +25,7 @@ namespace ruby {
 #include "emulator/emulator.hpp"
 #include "game-browser/game-browser.hpp"
 #include "program/program.hpp"
+#include "program/nci.hpp"
 #include "presentation/presentation.hpp"
 #include "settings/settings.hpp"
 #include "tools/tools.hpp"

@@ -84,6 +84,12 @@ struct Program : ares::Platform {
   bool requestScreenshot = false;
   bool keyboardCaptured = false;
   atomic<bool> pendingKioskExit = false;
+  atomic<bool> requestFullscreenToggle = false;
+  atomic<bool> requestQuit = false;
+  atomic<bool> requestUnload = false;
+  atomic<bool> requestLoad = false;
+  string requestLoadPath;
+  string requestLoadSystem;
 
   struct State {
     u32 slot = 1;
