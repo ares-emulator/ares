@@ -37,6 +37,7 @@ struct Arguments {
   auto take(string_view name) -> bool;
   auto take(string_view name, bool& argument) -> bool;
   auto take(string_view name, string& argument) -> bool;
+  auto takeOptional(string_view name, string& argument) -> bool;
 
   auto begin() { return arguments.begin(); }
   auto end() { return arguments.end(); }
@@ -166,6 +167,21 @@ inline auto Arguments::take(string_view name, string& argument) -> bool {
       arguments.erase(arguments.begin() + index);
       argument = arguments[index];
       arguments.erase(arguments.begin() + index);
+      return true;
+    }
+  }
+  return false;
+}
+
+inline auto Arguments::takeOptional(string_view name, string& argument) -> bool {
+  for(u32 index : range(arguments.size())) {
+    if(arguments[index].match(name)) {
+      arguments.erase(arguments.begin() + index);
+      argument = {};
+      if(arguments.size() > index && !arguments[index].beginsWith("--")) {
+        argument = arguments[index];
+        arguments.erase(arguments.begin() + index);
+      }
       return true;
     }
   }
