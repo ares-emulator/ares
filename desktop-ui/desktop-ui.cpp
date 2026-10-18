@@ -199,13 +199,16 @@ auto nall::main(Arguments arguments) -> void {
     return string{text}.replace(" ", "").replace("(", "").replace(")", "").replace("/", "").replace("\\", "");
   };
 
-  std::vector<string> portSettings;
+  //Route CLI port settings through the controller choices persisted by the GUI.
+  std::map<string, string> portSettings;
   std::vector<string> peripheralSettings;
   for(auto& emulator : emulators) {
     string core = settingKey(emulator->name);
     for(auto& port : emulator->ports) {
-      if(port.devices.size() <= 1) continue;
-      portSettings.push_back({"Ports/", core, "/", settingKey(port.name)});
+      string persistedPort = string{port.name}
+        .replace(" ", "").replace("[", "").replace("]", "").replace("(", "").replace(")", "")
+        .replace("*", "Star").replace("#", "Pound").replace("/", "");
+      portSettings[{"Ports/", core, "/", settingKey(port.name)}] = {core, "/", persistedPort};
     }
 
     if(core == "Nintendo64" || core == "Nintendo64DD") {
@@ -217,10 +220,8 @@ auto nall::main(Arguments arguments) -> void {
     }
   }
 
-  //for settings that don't persist in settings.bml because they are dynamically generated
-  //based on the loaded core
+  //Nintendo 64 Pak settings are generated from the loaded core.
   auto isDynamicSetting = [&](const string& path) -> bool {
-    if(std::ranges::find(portSettings, path) != portSettings.end()) return true;
     if(std::ranges::find(peripheralSettings, path) != peripheralSettings.end()) return true;
     return false;
   };
@@ -242,7 +243,6 @@ auto nall::main(Arguments arguments) -> void {
       }
     };
     dump(settings, {});
-    for(auto& path : portSettings) dumpableSettings.push_back(path);
     for(auto& path : peripheralSettings) dumpableSettings.push_back(path);
     return dumpableSettings;
   };
@@ -253,7 +253,8 @@ auto nall::main(Arguments arguments) -> void {
       auto kv = nall::split(settingValue, "=", 1L);
       if(kv.size() == 2) {
         auto path = kv[0];
-        auto node = settings[kv[0]];
+        if(auto port = portSettings.find(path); port != portSettings.end()) path = port->second;
+        auto node = settings[path];
         if(node) {
           bool found = false;
           for(auto& override : cliSettingOverrides) {
@@ -266,8 +267,8 @@ auto nall::main(Arguments arguments) -> void {
             cliSettingOverrides.push_back({path, node.value(), kv[1]});
           }
           node.setValue(kv[1]);
-        } else if(isDynamicSetting(kv[0])) {
-          settings(kv[0]).setValue(kv[1]);
+        } else if(isDynamicSetting(path)) {
+          settings(path).setValue(kv[1]);
         } else {
           print("Invalid setting: ", settingValue, "\n");
           return;
@@ -360,11 +361,9 @@ auto nall::main(Arguments arguments) -> void {
     appendChoice("Video/Monitor", "Primary");
     if(settings.video.monitor && settings.video.monitor != "Primary") appendChoice("Video/Monitor", settings.video.monitor);
     appendChoices("Video/Format", ruby::video.hasFormats());
-    appendChoices("Audio/Driver", ruby::audio.hasDrivers());
     appendChoices("Audio/Device", ruby::audio.hasDevices());
     for(auto frequency : ruby::audio.hasFrequencies()) appendChoice("Audio/Frequency", frequency);
     for(auto latency : ruby::audio.hasLatencies()) appendChoice("Audio/Latency", latency);
-    appendChoices("Input/Driver", ruby::input.hasDrivers());
     appendChoices("Input/Defocus", {"Pause", "Block", "Allow"});
     appendChoices("Video/Quality", {"SD", "HD", "UHD"});
     appendChoices("Video/Output", {"Scale", "Integer", "Stretch"});
@@ -387,9 +386,14 @@ auto nall::main(Arguments arguments) -> void {
     for(auto& emulator : emulators) {
       string core = settingKey(emulator->name);
       for(auto& port : emulator->ports) {
-        if(port.devices.size() <= 1) continue;
-        string path = {"Ports/", core, "/", settingKey(port.name)};
-        for(auto& device : port.devices) appendChoice(path, device.name);
+        auto alias = string{"Ports/", core, "/", settingKey(port.name)};
+        auto path = portSettings.at(alias);
+        appendChoice(path, "Nothing");
+        for(auto& device : port.devices) {
+          if(std::ranges::find(emulator->inputBlacklist, device.name) == emulator->inputBlacklist.end()) {
+            appendChoice(path, device.name);
+          }
+        }
       }
 
       if(core == "Nintendo64" || core == "Nintendo64DD") {

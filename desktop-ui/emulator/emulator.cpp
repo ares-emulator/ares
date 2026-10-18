@@ -59,6 +59,8 @@ auto Emulator::applyPeripheralConfiguration() -> void {
       continue;
     }
 
+    if(std::ranges::find(inputBlacklist, peripheral) != inputBlacklist.end()) continue;
+
     auto supported = port->supported();
     if(std::ranges::find(supported, peripheral) == supported.end()) continue;
 
@@ -194,14 +196,13 @@ auto Emulator::load(const string& location) -> bool {
     return false;
   }
 
-  applyPortSettings();
-
   setBoolean("Color Emulation", settings.video.colorEmulation);
   setBoolean("Deep Black Boost", settings.superFamicom.deepBlackBoost);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
   setColorBleed(settings.video.colorBleed);
   applyPeripheralConfiguration();
+  applyPortSettings();
 
   latch = {};
   root->power();
@@ -223,27 +224,6 @@ auto Emulator::applyPortSettings() -> void {
     }
     return {};
   };
-
-  for(auto port : ares::Node::enumerate<ares::Node::Port>(root)) {
-    if(!port->hotSwappable()) continue;
-    if(port->type() != "Controller" && port->type() != "Expansion") continue;
-
-    auto portKey = settingKey(port->name());
-    auto path = string{"Ports/", core, "/", portKey};
-
-    string device;
-    if(auto node = settings[path]) device = string{node.string()}.strip();
-    if(!device) continue;
-
-    auto supportedDevices = port->supported();
-    device = resolveSupported(supportedDevices, device);
-    bool supported = !!device;
-    bool blacklisted = std::ranges::find(inputBlacklist, device) != inputBlacklist.end();
-    if(!supported || blacklisted) continue;
-
-    port->disconnect();
-    if(port->allocate(device)) port->connect();
-  }
 
   // apply Nintendo 64 controller pak/peripheral settings
   if(core == "Nintendo64" || core == "Nintendo64DD") {
