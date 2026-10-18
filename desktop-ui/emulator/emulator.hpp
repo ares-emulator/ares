@@ -59,7 +59,6 @@ struct Emulator {
   std::vector<Firmware> firmware;
   std::shared_ptr<mia::Pak> system;
   std::shared_ptr<mia::Pak> game;
-  std::shared_ptr<mia::Pak> gamepad;
   std::shared_ptr<mia::Pak> gb;
   std::vector<InputPort> ports;
   std::vector<string> inputBlacklist;

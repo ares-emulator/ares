@@ -1,3 +1,5 @@
+#include <array>
+
 struct Nintendo64 : Emulator {
   Nintendo64();
   auto load() -> LoadResult override;
@@ -6,8 +8,14 @@ struct Nintendo64 : Emulator {
   auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
+  auto createControllerPak(ares::Node::Object port) -> void;
+  auto saveControllerPaks() -> void;
+  auto controllerPakIndex(string portName) -> s32;
+  auto controllerPakExtension(u32 index) -> string;
 
   std::shared_ptr<mia::Pak> disk;
+  //The core requests a Pak for each Gamepad node, so keep one save per controller port.
+  std::array<std::shared_ptr<mia::Pak>, 4> controllerPaks{};
   u32 regionID = 0;
   sTimer diskInsertTimer;
 };
@@ -81,6 +89,39 @@ Nintendo64::Nintendo64() {
     port.append(device); }
   
     ports.push_back(port);
+  }
+}
+
+auto Nintendo64::controllerPakIndex(string portName) -> s32 {
+  for(u32 index : range(controllerPaks.size())) {
+    if(ports[index].name == portName) return index;
+  }
+  return -1;
+}
+
+auto Nintendo64::controllerPakExtension(u32 index) -> string {
+  return index == 0 ? ".pak" : string{".", index + 1, ".pak"};
+}
+
+auto Nintendo64::createControllerPak(ares::Node::Object port) -> void {
+  if(!port || !game) return;
+  auto index = controllerPakIndex(port->name());
+  if(index < 0) return;
+
+  auto& controllerPak = controllerPaks[index];
+  if(controllerPak) controllerPak->save("save.pak", controllerPakExtension(index), game->location);
+  controllerPak = mia::Pak::create("Nintendo 64");
+  //Allocate enough space for existing multi-bank Paks; the core adjusts the size on connect.
+  controllerPak->pak->append("save.pak", 1984_KiB);
+  controllerPak->load("save.pak", controllerPakExtension(index), game->location);
+}
+
+auto Nintendo64::saveControllerPaks() -> void {
+  if(!game) return;
+  for(u32 index : range(controllerPaks.size())) {
+    if(auto& controllerPak = controllerPaks[index]) {
+      controllerPak->save("save.pak", controllerPakExtension(index), game->location);
+    }
   }
 }
 
@@ -196,11 +237,7 @@ auto Nintendo64::load() -> LoadResult {
 
         if(!transferPakConnected) {
           if(game->pak->attribute({"port", id+1, "/cpak"}).boolean()) {
-            gamepad = mia::Pak::create("Nintendo 64");
-
-            //create maximum sized controller pak, file is resized later
-            gamepad->pak->append("save.pak", 1984_KiB);
-            gamepad->load("save.pak", ".pak", game->location);
+            createControllerPak(ares::Node::parent(peripheral));
             port->allocate("Controller Pak");
             port->connect();
           } else if(game->pak->attribute({"port", id+1, "/rpak"}).boolean()) {
@@ -258,8 +295,6 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
     pak = pakPort->connected();
   }
 
-  const string portNum = port->name()[port->name().length() - 1];
-
   if(portMenu.actionCount() > 0) portMenu.append(MenuSeparator());
   Menu pakMenu{&portMenu};
   pakMenu.setText("Pak");
@@ -295,7 +330,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
   cpak.setAttribute<ares::Node::Port>("port", port);
   cpak.setText("Controller Pak");
   if(pak && pak->name() == "Controller Pak") cpak.setChecked();
-  cpak.onActivate([=] {
+  cpak.onActivate([=, this] {
     Program::Guard guard;
     auto port = cpak.attribute<ares::Node::Port>("port");
     const string portName = port->name();
@@ -303,11 +338,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
       if(auto peripheral = port->connected()) {
         if(auto pakPort = peripheral->find<ares::Node::Port>("Pak")) {
           pakPort->disconnect();
-          emulator->gamepad = mia::Pak::create("Nintendo 64");
-          emulator->gamepad->pak->append("save.pak", 32_KiB);
-          string pakExt = ".pak";
-          if(portNum != "1") { pakExt = string(".", portNum, ".pak");}
-          emulator->gamepad->load("save.pak", pakExt, emulator->game->location);
+          createControllerPak(port);
           pakPort->allocate("Controller Pak");
           pakPort->connect();
         }
@@ -417,7 +448,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
 auto Nintendo64::unload() -> void {
   Emulator::unload();
 
-  gamepad.reset();
+  controllerPaks = {};
   disk.reset();
   gb.reset();
 
@@ -429,7 +460,7 @@ auto Nintendo64::save() -> bool {
   system->save(system->location);
   game->save(game->location);
   if(disk) disk->save(disk->location);
-  if(gamepad) gamepad->save("save.pak", ".pak", game->location);
+  saveControllerPaks();
   if(gb) gb->save(gb->location);
   return true;
 }
@@ -440,6 +471,11 @@ auto Nintendo64::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory>
   if(node->name() == "Nintendo 64DD Disk" && disk) return disk->pak;
   if(node->name() == "Game Boy Cartridge") return gb->pak;
   if(node->name() == "Game Boy Color Cartridge") return gb->pak;
-  if(node->name() == "Gamepad") return gamepad->pak;
+  if(node->name() == "Gamepad") {
+    if(auto port = ares::Node::parent(node)) {
+      auto index = controllerPakIndex(port->name());
+      if(index >= 0 && controllerPaks[index]) return controllerPaks[index]->pak;
+    }
+  }
   return {};
 }

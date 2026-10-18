@@ -252,22 +252,10 @@ auto Emulator::applyPortSettings() -> void {
       peripheral = resolveSupported(supportedPeripherals, peripheral);
       if(!peripheral) continue;
 
-      if(peripheral == "Controller Pak") {
-        if(auto n64 = dynamic_cast<Nintendo64*>(this)) {
-          n64->gamepad = mia::Pak::create("Nintendo 64");
-          n64->gamepad->pak->append("save.pak", 32_KiB);
-
-          string pakExt = ".pak";
-          auto portName = string{port->name()};
-          if(portName.size()) {
-            string portNum = portName[portName.size() - 1];
-            if(portNum != "1") pakExt = string{".", portNum, ".pak"};
-          }
-          if(n64->game) n64->gamepad->load("save.pak", pakExt, n64->game->location);
-        }
-      }
-
       pakPort->disconnect();
+      if(peripheral == "Controller Pak") {
+        if(auto n64 = dynamic_cast<Nintendo64*>(this)) n64->createControllerPak(port);
+      }
       if(pakPort->allocate(peripheral)) pakPort->connect();
     }
   }

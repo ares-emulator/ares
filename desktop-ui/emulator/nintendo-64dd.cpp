@@ -108,18 +108,6 @@ auto Nintendo64DD::load() -> LoadResult {
       port->connect();
       bool transferPakConnected = false;
       if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-        if(id == 0 && game->pak->attribute("cpak").boolean()) {
-          gamepad = mia::Pak::create("Nintendo 64");
-
-          //create maximum sized controller pak, file is resized later
-          gamepad->pak->append("save.pak", 1984_KiB);
-          gamepad->load("save.pak", ".pak", game->location);
-          port->allocate("Controller Pak");
-          port->connect();
-        } else if(game->pak->attribute("rpak").boolean()) {
-          port->allocate("Rumble Pak");
-          port->connect();
-        }
         if(id == 0 && game->pak->attribute("tpak").boolean()) {
           #if defined(CORE_GB)
           auto transferPak = port->allocate("Transfer Pak");
@@ -142,9 +130,7 @@ auto Nintendo64DD::load() -> LoadResult {
 
         if(!transferPakConnected) {
           if(id == 0 && game->pak->attribute("cpak").boolean()) {
-            gamepad = mia::Pak::create("Nintendo 64");
-            gamepad->pak->append("save.pak", 32_KiB);
-            gamepad->load("save.pak", ".pak", game->location);
+            createControllerPak(ares::Node::parent(peripheral));
             port->allocate("Controller Pak");
             port->connect();
           } else if(game->pak->attribute("rpak").boolean()) {
@@ -186,9 +172,8 @@ auto Nintendo64DD::load(Menu menu) -> void {
 }
 
 auto Nintendo64DD::unload() -> void {
-  gamepad.reset();
-
   Emulator::unload();
+  controllerPaks = {};
   diskInsertTimer.reset();
 }
 
@@ -196,13 +181,18 @@ auto Nintendo64DD::save() -> bool {
   root->save();
   system->save(system->location);
   game->save(game->location);
-  if(gamepad) gamepad->save("save.pak", ".pak", game->location);
+  saveControllerPaks();
   return true;
 }
 
 auto Nintendo64DD::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Nintendo 64") return system->pak;
   if(node->name() == "Nintendo 64DD Disk") return game->pak;
-  if(node->name() == "Gamepad") return gamepad->pak;
+  if(node->name() == "Gamepad") {
+    if(auto port = ares::Node::parent(node)) {
+      auto index = controllerPakIndex(port->name());
+      if(index >= 0 && controllerPaks[index]) return controllerPaks[index]->pak;
+    }
+  }
   return {};
 }
