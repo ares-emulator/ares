@@ -83,6 +83,7 @@ struct Program : ares::Platform {
   bool requestFrameAdvance = false;
   bool requestScreenshot = false;
   bool keyboardCaptured = false;
+  bool externalInput = false;  // an external frontend supplies virtual HID devices
   atomic<bool> pendingKioskExit = false;
 
   struct State {

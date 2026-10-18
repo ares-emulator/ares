@@ -1,0 +1,16 @@
+{
+  "name": "ares-electron-spike",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native ares to Electron canvas feasibility spike",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test protocol.test.cjs",
+    "fixture": "node fixture.cjs artifacts/spike.gb",
+    "smoke": "node smoke.cjs"
+  },
+  "devDependencies": {
+    "electron": "44.9.0"
+  }
+}

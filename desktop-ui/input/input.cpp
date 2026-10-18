@@ -619,6 +619,7 @@ auto InputManager::bind() -> void {
 }
 
 auto InputManager::acquired() -> bool {
+  if(program.externalInput) return true;
   return ruby::input.acquired();
 }
 

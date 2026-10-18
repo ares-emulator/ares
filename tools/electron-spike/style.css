@@ -1,0 +1,14 @@
+:root { color-scheme: dark; --bg:#10141b; --panel:#1a212b; --text:#e7edf4; --muted:#99a9b9; --accent:#85dfbb; --line:#303d4d; }
+body[data-theme=paper] { color-scheme:light; --bg:#f4f0e8; --panel:#fffdf7; --text:#272d35; --muted:#65717e; --accent:#267254; --line:#d7d1c6; }
+body[data-theme=green] { --bg:#07130c; --panel:#102217; --text:#c0efca; --muted:#81af8d; --accent:#91efaa; --line:#2b4a33; }
+* { box-sizing:border-box; }
+body { margin:0; padding:25px; height:100vh; display:flex; flex-direction:column; gap:18px; background:var(--bg); color:var(--text); font:14px system-ui,sans-serif; }
+header { display:flex; align-items:center; justify-content:space-between; } small { color:var(--accent); letter-spacing:3px; font-size:10px; } h1 { font-size:27px; margin:6px 0 0; font-weight:550; } #badge { color:var(--muted); font:12px monospace; }
+nav { display:flex; gap:8px; flex-wrap:wrap; } button,select { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:9px 12px; font:inherit; } button { cursor:pointer; } button:hover { border-color:var(--accent); } #open { color:var(--accent); }
+main { display:flex; flex:1; min-height:0; gap:18px; } body.panel-left main { flex-direction:row-reverse; }
+#viewport { background:#050709; flex:1; min-width:0; min-height:0; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid var(--line); border-radius:10px; }
+canvas { display:block; outline:none; } canvas:focus-visible { outline:2px solid var(--accent); }
+aside { width:260px; min-width:210px; max-width:45vw; overflow:auto; resize:horizontal; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px; }
+h2 { font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:0 0 16px; } h2:not(:first-child) { margin-top:24px; } label { display:block; margin:12px 0; } select { display:block; width:100%; margin-top:7px; } input { accent-color:var(--accent); } p { font-size:12px; line-height:1.7; color:var(--muted); } pre { font-size:11px; line-height:1.8; white-space:pre-wrap; } footer { color:var(--muted); font:11px monospace; min-height:14px; }
+
+nav select { width:220px; margin:0; } footer { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
