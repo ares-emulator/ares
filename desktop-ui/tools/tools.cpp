@@ -64,6 +64,10 @@ ToolsWindow::ToolsWindow() {
 }
 
 auto ToolsWindow::show(const string& panel) -> void {
+  if(retroAchievements.hardcore() && (panel == "Cheats" || panel == "Memory" || panel == "Tracer" || panel == "Graphics")) {
+    program.showMessage("[RA] Disable Hardcore to use this tool");
+    return;
+  }
   for(auto& item : panelList.items()) {
     if(item.text() == panel) {
       item.setSelected();
@@ -89,6 +93,11 @@ auto ToolsWindow::eventChange() -> void {
 
   bool found = false;
   if(auto item = panelList.selected()) {
+    if(retroAchievements.hardcore() && (item.text() == "Cheats" || item.text() == "Memory" || item.text() == "Tracer" || item.text() == "Graphics")) {
+      program.showMessage("[RA] Disable Hardcore to use this tool");
+      setVisible(false);
+      return;
+    }
     if(item.text() == "Manifest"  ) found = true, manifestViewer.setVisible();
     if(item.text() == "Cheats"    ) found = true, cheatEditor.setVisible();
     if(item.text() == "Memory"    ) found = true, memoryEditor.setVisible();

@@ -33,6 +33,10 @@ auto OptionSettings::construct() -> void {
   commonSettingsLabel.setText("Emulator Options").setFont(Font().setBold());
 
   runAhead.setText("Run-Ahead").setEnabled(co_serializable()).setChecked(settings.general.runAhead && co_serializable()).onToggle([&] {
+    if(retroAchievements.hardcore() && runAhead.checked()) {
+      runAhead.setChecked(false);
+      return program.showMessage("[RA] Run-ahead is disabled in Hardcore mode");
+    }
     settings.general.runAhead = runAhead.checked() && co_serializable();
     program.runAheadUpdate();
   });
@@ -54,6 +58,10 @@ auto OptionSettings::construct() -> void {
 
   rewindSettingsLabel.setText("Rewind Settings").setFont(Font().setBold());
   rewind.setText("Enable Rewind").setChecked(settings.general.rewind).onToggle([&] {
+    if(retroAchievements.hardcore() && rewind.checked()) {
+      rewind.setChecked(false);
+      return program.showMessage("[RA] Rewind is disabled in Hardcore mode");
+    }
     settings.general.rewind = rewind.checked();
     rewindFrequencyOption.setEnabled(settings.general.rewind);
     rewindLengthOption.setEnabled(settings.general.rewind);

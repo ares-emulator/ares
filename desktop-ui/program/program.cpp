@@ -100,8 +100,12 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
 
     nall::GDB::server.updateLoop();
 
+    if(retroAchievements.hardcore() && program.requestFrameAdvance) {
+      program.requestFrameAdvance = false;
+      continue;
+    }
     program.requestFrameAdvance = false;
-    if(!runAhead || fastForwarding || rewinding) {
+    if(!runAhead || fastForwarding || rewinding || retroAchievements.hardcore()) {
       emulator->root->run();
     } else {
       ares::setRunAhead(true);

@@ -391,6 +391,7 @@ Presentation::Presentation() {
   });
   frameAdvance.setText("Frame Advance").setIcon(Icon::Media::Play).onActivate([&] {
     Program::Guard guard;
+    if(retroAchievements.hardcore()) return program.showMessage("[RA] Frame advance is disabled in Hardcore mode");
     if (!program.paused) program.pause(true);
     program.requestFrameAdvance = true;
   });
@@ -982,6 +983,7 @@ auto Presentation::refreshSystemMenu() -> void {
   reset.setText("Reset").setIcon(Icon::Action::Refresh).onActivate([&] {
     Program::Guard guard;
     emulator->root->power(true);
+    retroAchievements.reset();
     program.showMessage("System reset");
   });
   systemMenu.append(MenuSeparator());

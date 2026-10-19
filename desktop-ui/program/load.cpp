@@ -88,6 +88,13 @@ auto Program::load(string location) -> bool {
   }
   location = emulator->game->location;
 
+  if(retroAchievements.hardcore()) {
+    nall::GDB::server.close();
+    settings.developer.debugServerEnabled = false;
+    developerSettings.enabled.setChecked(false);
+    if(toolsWindowConstructed) toolsWindow.setVisible(false);
+  }
+
   //this is a safeguard warning in case the user loads their games from a read-only location:
   string savesPath = settings.paths.saves;
   if(!savesPath) savesPath = Location::path(location);
@@ -121,11 +128,11 @@ auto Program::load(string location) -> bool {
     tapeViewer.reload();
   }
   state = {};  //reset hotkey state slot to 1
-  if(settings.boot.debugger) {
+  if(settings.boot.debugger && !retroAchievements.hardcore()) {
     pause(true);
     if(toolsWindowConstructed) toolsWindow.show("Tracer");
     presentation.setFocused();
-  } else if (settings.boot.awaitGDBClient) {
+  } else if (settings.boot.awaitGDBClient && !retroAchievements.hardcore()) {
     pause(true);
   } else {
     pause(false);
@@ -133,7 +140,7 @@ auto Program::load(string location) -> bool {
 
   showMessage({"Loaded ", Location::prefix(location)});
 
-  if(settings.developer.debugServerEnabled) {
+  if(settings.developer.debugServerEnabled && !retroAchievements.hardcore()) {
     nall::GDB::server.open(settings.developer.debugServerPort, settings.developer.debugServerUseIPv4);
     nall::GDB::server.onClientConnectCallback = []() {
       if (settings.boot.awaitGDBClient)

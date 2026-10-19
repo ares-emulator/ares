@@ -13,8 +13,21 @@ auto ImportExportSettings::construct() -> void {
     dialog.setAlignment(settingsWindow);
     if(auto location = program.openFile(dialog)) {
       string currentSavePath = settings.filePath;
+#if defined(ARES_ENABLE_RCHEEVOS)
+      bool previousRaEnabled = settings.retroAchievements.enabled;
+      bool previousHardcore = settings.retroAchievements.hardcore;
+#endif
       settings.filePath = location;
       settings.load();
+#if defined(ARES_ENABLE_RCHEEVOS)
+      bool importedRaEnabled = settings.retroAchievements.enabled;
+      bool importedHardcore = settings.retroAchievements.hardcore;
+      settings.retroAchievements.enabled = previousRaEnabled;
+      settings.retroAchievements.hardcore = previousHardcore;
+      if(!importedHardcore) retroAchievements.enableHardcore(false);
+      retroAchievements.setEnabled(importedRaEnabled);
+      if(importedHardcore) retroAchievements.enableHardcore(true);
+#endif
       if(!imported) settings.filePath = currentSavePath;
       videoSettings.construct();
       audioSettings.construct();
@@ -26,6 +39,7 @@ auto ImportExportSettings::construct() -> void {
       pathSettings.construct();
       coreSettings.construct();
       developerSettings.construct();
+      retroAchievementsSettings.construct();
       importExportSettings.construct();
     }
   });

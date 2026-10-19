@@ -49,6 +49,7 @@ auto Program::event(ares::Event event) -> void {
 }
 
 auto Program::log(ares::Node::Debugger::Tracer::Tracer node, string_view message) -> void {
+  if(retroAchievements.hardcore()) return;
   string channel = string{node->component(), " ", node->name()};
 
   string modifiedMessage;
@@ -248,5 +249,6 @@ auto Program::input(ares::Node::Input::Input node) -> void {
 }
 
 auto Program::cheat(u32 address) -> maybe<u32> {
+  if(retroAchievements.hardcore()) return nothing;
   return cheatEditor.find(address);
 }

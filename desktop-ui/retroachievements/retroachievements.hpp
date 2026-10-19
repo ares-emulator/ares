@@ -36,6 +36,12 @@ struct RetroAchievements {
   auto gameLoaded() -> void;
   auto gameUnloaded() -> void;
   auto gameHash() const -> string;
+  auto hardcore() const -> bool;
+  auto supportsGame() const -> bool;
+  auto enableHardcore(bool enabled) -> bool;
+  auto setEnabled(bool enabled) -> void;
+  auto reset() -> void;
+  auto resetGame() -> void;
 
 private:
   auto ensureClient() -> bool;

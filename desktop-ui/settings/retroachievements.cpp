@@ -7,10 +7,25 @@ auto RetroAchievementsSettings::construct() -> void {
 #if defined(ARES_ENABLE_RCHEEVOS)
   enabled.setText("Enable RetroAchievements").setChecked(settings.retroAchievements.enabled).onToggle([&] {
     Program::Guard guard;
-    settings.retroAchievements.enabled = enabled.checked();
-    settings.save();
-    if(settings.retroAchievements.enabled) retroAchievements.initialize();
-    program.showMessage(settings.retroAchievements.enabled ? "[RA] Enabled" : "[RA] Disabled");
+    retroAchievements.setEnabled(enabled.checked());
+    refresh();
+  });
+
+  hardcore.setText("Enable Hardcore mode").setChecked(settings.retroAchievements.hardcore).onToggle([&] {
+    Program::Guard guard;
+    bool requested = hardcore.checked();
+    if(requested && retroAchievements.supportsGame()) {
+      auto response = MessageDialog()
+        .setTitle(ares::Name)
+        .setText("Enabling Hardcore will reset the current game. Save state loading, rewind, frame advance, cheats, and debugging will be disabled. Continue?")
+        .setAlignment(settingsWindow)
+        .question();
+      if(response != "Yes") {
+        hardcore.setChecked(false);
+        return;
+      }
+    }
+    if(!retroAchievements.enableHardcore(requested)) hardcore.setChecked(false);
     refresh();
   });
 
@@ -56,6 +71,7 @@ auto RetroAchievementsSettings::construct() -> void {
   refresh();
 #else
   enabled.setText("Enable RetroAchievements").setEnabled(false);
+  hardcore.setText("Enable Hardcore mode").setChecked(false).setEnabled(false);
   usernameLabel.setText("Username:");
   usernameValue.setText(settings.retroAchievements.username).setEnabled(false);
   passwordLabel.setText("Password:");
@@ -86,6 +102,7 @@ auto RetroAchievementsSettings::refresh() -> void {
   auto loggedIn = enabledSetting && retroAchievements.hasUser() && settings.retroAchievements.username && settings.retroAchievements.token;
 
   enabled.setChecked(settings.retroAchievements.enabled).setEnabled(true);
+  hardcore.setChecked(settings.retroAchievements.hardcore).setEnabled(enabledSetting);
   usernameLayout.setVisible(enabledSetting && !loggedIn);
   passwordLayout.setVisible(enabledSetting && !loggedIn);
   actionLayout.setVisible(enabledSetting && !loggedIn);

@@ -110,6 +110,9 @@ auto clientEvent(const rc_client_event_t* event, rc_client_t*) -> void {
       program.showMessage({"[RA] Server error: ", event->server_error->error_message});
     }
     break;
+  case RC_CLIENT_EVENT_RESET:
+    retroAchievements.resetGame();
+    break;
   default:
     break;
   }
@@ -442,7 +445,7 @@ auto RetroAchievements::ensureClient() -> bool {
   rc_client_set_userdata(_client, this);
   rc_client_set_event_handler(_client, clientEvent);
   rc_client_set_allow_background_memory_reads(_client, 0);
-  rc_client_set_hardcore_enabled(_client, 0);
+  rc_client_set_hardcore_enabled(_client, settings.retroAchievements.hardcore ? 1 : 0);
   return true;
 #else
   return false;
@@ -471,6 +474,7 @@ auto RetroAchievements::loadGame() -> void {
   if(!_authenticated) return;
   if(!emulator) return;
   if(!ensureClient()) return;
+  rc_client_set_hardcore_enabled(_client, hardcore() ? 1 : 0);
 
   auto* adapter = RA::Platform::selectAdapter(*emulator);
   if(!adapter) return;
@@ -562,6 +566,7 @@ auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLog
     settings.retroAchievements.username = result.username;
     settings.retroAchievements.token = result.token;
     settings.save();
+    if(hardcore()) resetGame();
     syncClientLogin();
   }
   retroAchievementsSettings.statusLabel.setText(result.message);
@@ -693,7 +698,7 @@ auto RetroAchievements::handleClientGameLoadResult(int result, const char* error
   program.showMessage({
     "[RA] Game loaded: ", title,
     " (", counts.unlocked, "/", counts.total,
-    " achievements, ", subsetCount, " sets)"
+    " achievements, ", subsetCount, " sets, ", hardcore() ? "Hardcore" : "Casual", ")"
   });
 #else
   (void)result;
@@ -731,7 +736,12 @@ auto RetroAchievements::gameLoaded() -> void {
   if(!emulator) return;
   if(!settings.retroAchievements.enabled) return;
   unloadClientGame();
-
+  if(settings.retroAchievements.hardcore && emulator->game && emulator->game->pak && emulator->game->pak->attribute("label") == "Game Genie") {
+    program.showMessage("[RA] Game Genie requires Casual mode");
+  }
+  if(RA::Platform::selectAdapter(*emulator)) {
+    program.showMessage(hardcore() ? "[RA] Hardcore mode" : "[RA] Casual mode");
+  }
   auto hash = generateHash(*emulator);
   if(!hash) {
     if(RA::Platform::selectAdapter(*emulator)) {
@@ -755,6 +765,94 @@ auto RetroAchievements::gameUnloaded() -> void {
 auto RetroAchievements::gameHash() const -> string {
   Program::Guard guard;
   return _gameHash;
+}
+
+auto RetroAchievements::hardcore() const -> bool {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  return settings.retroAchievements.enabled && settings.retroAchievements.hardcore &&
+    supportsGame() &&
+    !(emulator->game && emulator->game->pak && emulator->game->pak->attribute("label") == "Game Genie");
+#else
+  return false;
+#endif
+}
+
+auto RetroAchievements::supportsGame() const -> bool {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  return emulator && RA::Platform::selectAdapter(*emulator);
+#else
+  return false;
+#endif
+}
+
+auto RetroAchievements::enableHardcore(bool enabled) -> bool {
+  Program::Guard guard;
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(enabled && supportsGame() && emulator->game && emulator->game->pak && emulator->game->pak->attribute("label") == "Game Genie") {
+    program.showMessage("[RA] Hardcore is unavailable with a Game Genie cartridge");
+    return false;
+  }
+  if(enabled == settings.retroAchievements.hardcore) return true;
+  settings.retroAchievements.hardcore = enabled;
+  bool clientGameLoaded = _client && rc_client_is_game_loaded(_client);
+  if(_client) rc_client_set_hardcore_enabled(_client, hardcore() ? 1 : 0);
+  if(enabled) {
+    program.rewinding = false;
+    program.requestFrameAdvance = false;
+    program.rewindReset();
+    program.runAheadUpdate();
+    if(hardcore()) {
+      nall::GDB::server.close();
+      settings.developer.debugServerEnabled = false;
+      developerSettings.enabled.setChecked(false);
+      if(program.toolsWindowConstructed) toolsWindow.setVisible(false);
+      if(!clientGameLoaded) resetGame();
+    }
+  } else {
+    program.runAheadUpdate();
+  }
+  settings.save();
+  program.showMessage(enabled ? "[RA] Hardcore enabled" : "[RA] Hardcore disabled");
+  return true;
+#else
+  (void)enabled;
+  return false;
+#endif
+}
+
+auto RetroAchievements::setEnabled(bool enabled) -> void {
+  Program::Guard guard;
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(settings.retroAchievements.enabled == enabled) return;
+  settings.retroAchievements.enabled = enabled;
+  if(!enabled) {
+    unloadClientGame();
+  } else {
+    if(emulator) {
+      gameLoaded();
+      if(hardcore()) resetGame();
+    }
+    if(!_authenticated) initialize();
+  }
+  settings.save();
+  program.showMessage(enabled ? "[RA] Enabled" : "[RA] Disabled");
+#else
+  (void)enabled;
+#endif
+}
+
+auto RetroAchievements::reset() -> void {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(_client && _gameReady) rc_client_reset(_client);
+#endif
+}
+
+auto RetroAchievements::resetGame() -> void {
+  Program::Guard guard;
+  if(!emulator) return;
+  program.rewindReset();
+  emulator->root->power(true);
+  reset();
 }
 
 auto RetroAchievements::setUser(const RetroAchievementsLoginResult& result) -> void {
