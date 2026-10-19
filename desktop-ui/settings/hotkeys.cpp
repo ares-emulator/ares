@@ -233,7 +233,7 @@ auto HotkeySettings::refresh() -> void {
       auto cell = inputList.item(row).cell(1 + binding);
       auto assignment = mapping.assignments[binding];
       if(nall::split(assignment, "+").size() > 1) {
-        cell.setIcon(Icon::Device::Keyboard);
+        cell.setIcon(hotkeyAssignmentIcon(assignment));
         cell.setText(hotkeyAssignmentText(assignment));
       } else {
         cell.setIcon(mapping.bindings[binding].icon());
