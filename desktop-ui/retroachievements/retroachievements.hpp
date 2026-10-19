@@ -1,5 +1,6 @@
 struct RetroAchievementsLoginResult {
   bool success = false;
+  int errorCode = 0;
   string username;
   string token;
   string displayName;
@@ -67,6 +68,7 @@ private:
   u32 _scoreSoftcore = 0;
   bool _authenticated = false;
   bool _loginPending = false;
+  bool _startupTokenLoginPending = false;
   u64 _loginGeneration = 0;
   u64 _gameGeneration = 0;
 };

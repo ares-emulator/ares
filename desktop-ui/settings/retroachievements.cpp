@@ -94,7 +94,7 @@ auto RetroAchievementsSettings::construct() -> void {
 
 auto RetroAchievementsSettings::refresh() -> void {
 #if defined(ARES_ENABLE_RCHEEVOS)
-  if(!retroAchievements.loginPending() && (!settings.retroAchievements.enabled || !settings.retroAchievements.username || !settings.retroAchievements.token)) {
+  if(retroAchievements.hasUser() && !retroAchievements.loginPending() && (!settings.retroAchievements.enabled || !settings.retroAchievements.username || !settings.retroAchievements.token)) {
     retroAchievements.logout();
   }
 

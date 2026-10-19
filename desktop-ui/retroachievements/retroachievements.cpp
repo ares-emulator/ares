@@ -203,6 +203,7 @@ auto loginRequest(const string& username, const string& password, const string& 
     result.scoreSoftcore = loginResponse.score_softcore;
     result.message = loginMessage(result);
   } else {
+    result.errorCode = rc;
     result.message = loginResponse.response.error_message ? loginResponse.response.error_message : rc_error_str(rc);
   }
 
@@ -401,6 +402,118 @@ struct HttpWorker {
 
 HttpWorker httpWorker;
 
+struct StartupLoginDialog {
+  auto construct() -> void {
+    if(constructed) return;
+    layout.setPadding(10_sx, 10_sy).setSpacing(8_sy);
+    message.setText("Sign in to RetroAchievements to enable achievements for this session.")
+      .setForegroundColor(SystemColor::Sublabel);
+
+    usernameLayout.setAlignment(1).setSpacing(8_sx);
+    usernameLabel.setText("Username:");
+    usernameValue.onActivate([&] { passwordValue.setFocused(); });
+    passwordLayout.setAlignment(1).setSpacing(8_sx);
+    passwordLabel.setText("Password:");
+    passwordValue.setMasked(true).onActivate([&] { submit(); });
+
+    status.setForegroundColor(SystemColor::Sublabel).setVisible(false);
+    buttons.setAlignment(1).setSpacing(8_sx);
+    spacer.setCollapsible();
+    loginButton.setText("Login").onActivate([&] { submit(); });
+    cancelButton.setText("Cancel").onActivate([&] { close(true); });
+
+    window.onClose([&] { close(true); });
+    window.setDismissable();
+    window.setTitle("RetroAchievements Login");
+    constructed = true;
+  }
+
+  auto request(const string& text) -> void {
+    if(dismissed) return;
+    pending = true;
+    statusText = text;
+  }
+
+  auto close(bool userDismissed = false) -> void {
+    pending = false;
+    if(userDismissed) dismissed = true;
+    if(constructed && window.visible()) {
+      passwordValue.setText();
+      window.setVisible(false);
+    }
+  }
+
+  auto setPending(bool loginPending) -> void {
+    if(controlsPending == loginPending) return;
+    controlsPending = loginPending;
+    usernameValue.setEnabled(!loginPending);
+    passwordValue.setEnabled(!loginPending);
+    loginButton.setEnabled(!loginPending);
+    cancelButton.setEnabled(!loginPending);
+  }
+
+  auto setStatus(const string& text, bool error = false) -> void {
+    status.setText(text).setVisible((bool)text);
+    status.setForegroundColor(error ? Color{224, 92, 92} : SystemColor::Sublabel);
+  }
+
+  auto show() -> void {
+    construct();
+    pending = false;
+    usernameValue.setText(settings.retroAchievements.username);
+    passwordValue.setText();
+    setStatus(statusText);
+    setPending(false);
+    window.setSize({420_sx, layout.minimumSize().height()});
+    window.setAlignment(presentation);
+    window.setVisible();
+    if(usernameValue.text()) passwordValue.setFocused();
+    else usernameValue.setFocused();
+  }
+
+  auto submit() -> void {
+    auto username = usernameValue.text().strip();
+    auto password = passwordValue.text();
+    if(!username) return setStatus("Enter a username before logging in.", true);
+    if(!password) return setStatus("Enter a password to log in.", true);
+    if(!retroAchievements.login(username, password)) return setStatus("Could not start login.", true);
+    passwordValue.setText();
+    setStatus("Signing in...");
+    setPending(true);
+  }
+
+  auto pump() -> void {
+    if(program.kiosk || !settings.retroAchievements.enabled) {
+      close();
+      return;
+    }
+    if(pending && !dismissed && !retroAchievements.loginPending() && !retroAchievements.hasUser()) show();
+    if(constructed && window.visible()) setPending(retroAchievements.loginPending());
+  }
+
+  bool constructed = false;
+  bool pending = false;
+  bool dismissed = false;
+  bool controlsPending = false;
+  string statusText;
+  Window window;
+  VerticalLayout layout{&window};
+  Label message{&layout, Size{~0, 0}};
+  HorizontalLayout usernameLayout{&layout, Size{~0, 0}};
+  Label usernameLabel{&usernameLayout, Size{80_sx, 0}};
+  LineEdit usernameValue{&usernameLayout, Size{~0, 0}};
+  HorizontalLayout passwordLayout{&layout, Size{~0, 0}};
+  Label passwordLabel{&passwordLayout, Size{80_sx, 0}};
+  LineEdit passwordValue{&passwordLayout, Size{~0, 0}};
+  Label status{&layout, Size{~0, 0}};
+  HorizontalLayout buttons{&layout, Size{~0, 0}};
+  Canvas spacer{&buttons, Size{~0, 0}};
+  Button loginButton{&buttons, Size{80_sx, 0}};
+  Button cancelButton{&buttons, Size{80_sx, 0}};
+};
+
+StartupLoginDialog startupLoginDialog;
+
 auto clientServerCall(const rc_api_request_t* request, rc_client_server_callback_t callback, void* callbackData, rc_client_t*) -> void {
   if(!callback) return;
   if(!request || !request->url) {
@@ -513,14 +626,23 @@ auto RetroAchievements::initialize() -> void {
   Program::Guard guard;
 #if defined(ARES_ENABLE_RCHEEVOS)
   if(!settings.retroAchievements.enabled) return;
-  if(!settings.retroAchievements.username || !settings.retroAchievements.token) return;
-  if(!httpWorker.start()) return;
+  startupLoginDialog.dismissed = false;
+  if(!settings.retroAchievements.username || !settings.retroAchievements.token) {
+    if(program.kiosk) program.showMessage("[RA] Sign in through the main GUI to enable achievements");
+    else startupLoginDialog.request("RetroAchievements login required.");
+    return;
+  }
+  if(!httpWorker.start()) {
+    if(!program.kiosk) startupLoginDialog.request("RetroAchievements network initialization failed.");
+    return;
+  }
   HttpWorker::Task task;
   task.kind = HttpWorker::Task::Kind::Login;
   task.username = (const char*)settings.retroAchievements.username;
   task.token = (const char*)settings.retroAchievements.token;
   task.generation = ++_loginGeneration;
   _loginPending = true;
+  _startupTokenLoginPending = true;
   httpWorker.enqueue(std::move(task));
 #endif
 }
@@ -529,6 +651,7 @@ auto RetroAchievements::login(const string& username, const string& password) ->
   Program::Guard guard;
 #if defined(ARES_ENABLE_RCHEEVOS)
   if(!username || !password || !httpWorker.start()) return false;
+  _startupTokenLoginPending = false;
   HttpWorker::Task task;
   task.kind = HttpWorker::Task::Kind::Login;
   task.username = (const char*)username;
@@ -548,7 +671,9 @@ auto RetroAchievements::logout() -> void {
   Program::Guard guard;
   ++_loginGeneration;
   _loginPending = false;
+  _startupTokenLoginPending = false;
 #if defined(ARES_ENABLE_RCHEEVOS)
+  startupLoginDialog.close(true);
   unloadClientGame();
   if(_client) rc_client_logout(_client);
 #endif
@@ -556,8 +681,11 @@ auto RetroAchievements::logout() -> void {
 }
 
 auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLoginResult& result) -> void {
+#if defined(ARES_ENABLE_RCHEEVOS)
   Program::Guard guard;
   if(generation != _loginGeneration) return;
+  bool startupTokenLogin = _startupTokenLoginPending;
+  _startupTokenLoginPending = false;
   _loginPending = false;
   program.showMessage({"[RA] ", result.message});
   if(result.success) {
@@ -568,9 +696,26 @@ auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLog
     settings.save();
     if(hardcore()) resetGame();
     syncClientLogin();
+    startupLoginDialog.close();
+  } else if(startupTokenLogin) {
+    if(result.errorCode == RC_EXPIRED_TOKEN || result.errorCode == RC_INVALID_CREDENTIALS || result.errorCode == RC_LOGIN_REQUIRED) {
+      settings.retroAchievements.token = "";
+      settings.save();
+    }
+    if(program.kiosk) program.showMessage("[RA] Sign in through the main GUI to enable achievements");
+    else if(result.errorCode == RC_EXPIRED_TOKEN) startupLoginDialog.request("Saved RetroAchievements login expired. Please sign in again.");
+    else if(result.errorCode == RC_INVALID_CREDENTIALS) startupLoginDialog.request("Saved RetroAchievements login is invalid. Please sign in again.");
+    else startupLoginDialog.request({"Saved RetroAchievements login failed: ", result.message});
+  } else if(startupLoginDialog.constructed && startupLoginDialog.window.visible()) {
+    startupLoginDialog.setStatus(result.message, true);
+    startupLoginDialog.setPending(false);
   }
   retroAchievementsSettings.statusLabel.setText(result.message);
   retroAchievementsSettings.refresh();
+#else
+  (void)generation;
+  (void)result;
+#endif
 }
 
 auto RetroAchievements::pumpUi() -> void {
@@ -581,6 +726,7 @@ auto RetroAchievements::pumpUi() -> void {
   for(auto& response : httpWorker.takeAvatarResponses()) {
     retroAchievementsSettings.acceptAvatar(response.url, response.bytes);
   }
+  startupLoginDialog.pump();
 #endif
 }
 
@@ -826,6 +972,10 @@ auto RetroAchievements::setEnabled(bool enabled) -> void {
   if(settings.retroAchievements.enabled == enabled) return;
   settings.retroAchievements.enabled = enabled;
   if(!enabled) {
+    ++_loginGeneration;
+    _loginPending = false;
+    _startupTokenLoginPending = false;
+    startupLoginDialog.close(true);
     unloadClientGame();
   } else {
     if(emulator) {
