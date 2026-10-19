@@ -632,18 +632,27 @@ auto RetroAchievements::initialize() -> void {
     else startupLoginDialog.request("RetroAchievements login required.");
     return;
   }
-  if(!httpWorker.start()) {
+  if(!beginSavedTokenLogin(true)) {
     if(!program.kiosk) startupLoginDialog.request("RetroAchievements network initialization failed.");
-    return;
   }
+#endif
+}
+
+auto RetroAchievements::beginSavedTokenLogin(bool startup) -> bool {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(!settings.retroAchievements.username || !settings.retroAchievements.token || !httpWorker.start()) return false;
   HttpWorker::Task task;
   task.kind = HttpWorker::Task::Kind::Login;
   task.username = (const char*)settings.retroAchievements.username;
   task.token = (const char*)settings.retroAchievements.token;
   task.generation = ++_loginGeneration;
   _loginPending = true;
-  _startupTokenLoginPending = true;
+  _startupTokenLoginPending = startup;
   httpWorker.enqueue(std::move(task));
+  return true;
+#else
+  (void)startup;
+  return false;
 #endif
 }
 
@@ -698,10 +707,6 @@ auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLog
     syncClientLogin();
     startupLoginDialog.close();
   } else if(startupTokenLogin) {
-    if(result.errorCode == RC_EXPIRED_TOKEN || result.errorCode == RC_INVALID_CREDENTIALS || result.errorCode == RC_LOGIN_REQUIRED) {
-      settings.retroAchievements.token = "";
-      settings.save();
-    }
     if(program.kiosk) program.showMessage("[RA] Sign in through the main GUI to enable achievements");
     else if(result.errorCode == RC_EXPIRED_TOKEN) startupLoginDialog.request("Saved RetroAchievements login expired. Please sign in again.");
     else if(result.errorCode == RC_INVALID_CREDENTIALS) startupLoginDialog.request("Saved RetroAchievements login is invalid. Please sign in again.");
@@ -709,6 +714,10 @@ auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLog
   } else if(startupLoginDialog.constructed && startupLoginDialog.window.visible()) {
     startupLoginDialog.setStatus(result.message, true);
     startupLoginDialog.setPending(false);
+  }
+  if(!result.success && (result.errorCode == RC_EXPIRED_TOKEN || result.errorCode == RC_INVALID_CREDENTIALS || result.errorCode == RC_LOGIN_REQUIRED)) {
+    settings.retroAchievements.token = "";
+    settings.save();
   }
   retroAchievementsSettings.statusLabel.setText(result.message);
   retroAchievementsSettings.refresh();
@@ -982,7 +991,9 @@ auto RetroAchievements::setEnabled(bool enabled) -> void {
       gameLoaded();
       if(hardcore()) resetGame();
     }
-    if(!_authenticated) initialize();
+    if(!_authenticated && settings.retroAchievements.username && settings.retroAchievements.token) {
+      if(!beginSavedTokenLogin(false)) retroAchievementsSettings.statusLabel.setText("RetroAchievements network initialization failed");
+    }
   }
   settings.save();
   program.showMessage(enabled ? "[RA] Enabled" : "[RA] Disabled");

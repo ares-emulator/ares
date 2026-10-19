@@ -139,7 +139,8 @@ auto RetroAchievementsSettings::refresh() -> void {
     cachedAvatarImage = {};
     profileAvatar.setIcon();
   } else {
-    if(!statusLabel.text()) statusLabel.setText("Enter your RA password");
+    if(retroAchievements.loginPending()) statusLabel.setText("Signing in...");
+    else if(!statusLabel.text()) statusLabel.setText("Enter your RA password");
     passwordValue.setText();
     cachedAvatarUrl = {};
     cachedAvatarImage = {};

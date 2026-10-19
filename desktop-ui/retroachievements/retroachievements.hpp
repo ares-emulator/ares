@@ -46,6 +46,7 @@ struct RetroAchievements {
 
 private:
   auto ensureClient() -> bool;
+  auto beginSavedTokenLogin(bool startup) -> bool;
   auto syncClientLogin() -> void;
   auto loadGame() -> void;
   auto unloadClientGame() -> void;
