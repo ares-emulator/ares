@@ -6,6 +6,9 @@
 #if defined(CORE_GB)
 #include <gb/gb.hpp>
 #endif
+#if defined(CORE_GBA)
+#include <gba/gba.hpp>
+#endif
 
 namespace {
 
@@ -138,6 +141,88 @@ struct GameBoyAdapter final : Adapter {
 };
 #endif
 
+#if defined(CORE_GBA)
+struct GameBoyAdvanceAdapter final : Adapter {
+  struct Cache : NodeCache {
+    ares::Node::Debugger::Memory iwram;
+    ares::Node::Debugger::Memory ewram;
+    CompiledMap memoryMap;
+    ares::VFS::Pak savePak;
+    std::span<n8> save;
+  };
+
+  mutable Cache cache;
+
+  auto refreshMemoryMap(const Emulator& emu) const -> void {
+    bool changed = false;
+    if(!refreshMemoryNodeCache(cache, &emu.root, {
+      {"CPU IWRAM", &cache.iwram},
+      {"CPU EWRAM", &cache.ewram},
+    }, &changed)) return;
+    if(!changed && !cache.memoryMap.empty()) return;
+
+    cache.memoryMap = compileMemoryMap({
+      {0x000000, 0x007fff, ReadMode::Linear, 0x8000, &cache.iwram},
+      {0x008000, 0x047fff, ReadMode::Linear, 0x40000, &cache.ewram},
+    });
+  }
+
+  auto saveMemory(const Emulator& emu) const -> std::span<n8> {
+    if(!emu.game || !emu.game->pak) return {};
+    auto& cartridge = ares::GameBoyAdvance::cartridge;
+    if(cartridge.pak != emu.game->pak) return {};
+    if(cache.savePak != cartridge.pak) {
+      cache.savePak = cartridge.pak;
+      cache.save = {};
+      if(cartridge.pak->read("save.flash")) cache.save = {cartridge.flash.data, cartridge.flash.size};
+      else if(cartridge.pak->read("save.ram")) cache.save = {cartridge.sram.data, cartridge.sram.size};
+      else if(cartridge.pak->read("save.eeprom")) cache.save = {cartridge.eeprom.data, cartridge.eeprom.size};
+    }
+    return cache.save;
+  }
+
+  auto supports(const Emulator& emu) const -> bool override {
+    return supportsAnyName(emu, {"Game Boy Advance"});
+  }
+
+  auto consoleId(const Emulator&) const -> u32 override {
+    return RC_CONSOLE_GAMEBOY_ADVANCE;
+  }
+
+  auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool override {
+    out.clear();
+    return emu.game && appendPakFile(emu.game->pak, "program.rom", out);
+  }
+
+  auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 override {
+    if(!buffer || !size) return 0;
+    if(address >= 0x048000 && address <= 0x057fff) {
+      auto save = saveMemory(emu);
+      auto offset = address - 0x048000;
+      if(offset >= save.size()) return 0;
+      auto readable = min(size, min((u32)save.size() - offset, 0x058000 - address));
+      for(u32 index : range(readable)) buffer[index] = save[offset + index];
+      return readable;
+    }
+    refreshMemoryMap(emu);
+    return Adapter::readMemoryMap(cache.memoryMap, address, buffer, size);
+  }
+
+  auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
+    if(!buffer || !size) return 0;
+    if(address >= 0x048000 && address <= 0x057fff) {
+      auto save = saveMemory(emu);
+      auto offset = address - 0x048000;
+      if(offset >= save.size()) return 0;
+      auto writable = min(size, min((u32)save.size() - offset, 0x058000 - address));
+      for(u32 index : range(writable)) save[offset + index] = buffer[index];
+      return writable;
+    }
+    refreshMemoryMap(emu);
+    return Adapter::writeMemoryMap(cache.memoryMap, address, buffer, size);
+  }
+};
+#endif
 
 struct FamicomAdapter final : Adapter {
   struct Cache : NodeCache {
@@ -263,6 +348,10 @@ auto registerNintendoAdapters(std::vector<Adapter*>& list) -> void {
 #if defined(CORE_GB)
   static GameBoyAdapter gameBoy;
   list.push_back(&gameBoy);
+#endif
+#if defined(CORE_GBA)
+  static GameBoyAdvanceAdapter gameBoyAdvance;
+  list.push_back(&gameBoyAdvance);
 #endif
 #if defined(CORE_FC)
   static FamicomAdapter famicom;
