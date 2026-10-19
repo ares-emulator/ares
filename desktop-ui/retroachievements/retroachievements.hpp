@@ -127,6 +127,7 @@ struct RetroAchievements {
   auto enableEncore(bool enabled) -> void;
   auto setEnabled(bool enabled) -> void;
   auto encoreUnlock(u32 achievementId) const -> bool;
+  auto reportWarning(u32 achievementId, const char* title) -> void;
   auto reset() -> void;
   auto resetGame() -> void;
   auto developmentMenuSupported() const -> bool;
@@ -159,6 +160,7 @@ private:
   bool _encoreGameActive = false;
   bool _reloadEncoreGame = false;
   std::unordered_set<u32> _previousUnlocks;
+  std::unordered_set<u32> _reportedWarnings;
   string _username;
   string _token;
   string _displayName;

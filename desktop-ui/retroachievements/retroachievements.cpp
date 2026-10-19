@@ -72,9 +72,7 @@ auto achievementUnlocked(const rc_client_achievement_t* achievement) -> bool {
 }
 
 auto achievementIsWarning(const rc_client_achievement_t* achievement) -> bool {
-  if(!achievement) return false;
-  auto title = achievement->title ? string{achievement->title} : string{};
-  return achievement->id == 101000001 || (achievement->points == 0 && title.beginsWith("Warning:"));
+  return achievement && achievement->id >= 101000001;
 }
 
 auto visibleAchievementCounts(rc_client_t* client) -> AchievementCounts {
@@ -119,6 +117,10 @@ auto clientEvent(const rc_client_event_t* event, rc_client_t* client) -> void {
   if(!event) return;
   switch(event->type) {
   case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
+    if(achievementIsWarning(event->achievement)) {
+      retroAchievements.reportWarning(event->achievement->id, event->achievement->title);
+      break;
+    }
     if(event->achievement && event->achievement->title) {
       const char* label = "Achievement unlocked: ";
       if(retroAchievements.encoreUnlock(event->achievement->id)) label = "Encore achievement unlocked: ";
@@ -1115,7 +1117,7 @@ auto RetroAchievements::handleClientGameLoadResult(int result, const char* error
         auto& bucket = list->buckets[bucketIndex];
         for(u32 index : range(bucket.num_achievements)) {
           auto* achievement = bucket.achievements[index];
-          if(achievementUnlocked(achievement)) _previousUnlocks.insert(achievement->id);
+          if(!achievementIsWarning(achievement) && achievementUnlocked(achievement)) _previousUnlocks.insert(achievement->id);
         }
       }
       rc_client_destroy_achievement_list(list);
@@ -1248,6 +1250,11 @@ auto RetroAchievements::enableEncore(bool enabled) -> void {
 
 auto RetroAchievements::encoreUnlock(u32 achievementId) const -> bool {
   return _encoreGameActive && _previousUnlocks.contains(achievementId);
+}
+
+auto RetroAchievements::reportWarning(u32 achievementId, const char* title) -> void {
+  if(!_reportedWarnings.insert(achievementId).second) return;
+  program.showMessage({"[RA] ", title ? title : "Warning: Unknown Emulator"});
 }
 
 auto RetroAchievements::setEnabled(bool enabled) -> void {
