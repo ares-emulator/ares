@@ -27,7 +27,6 @@ struct FamicomAdapter final : Adapter {
   mutable Cache cache;
 
   auto ensureCpuRamMemory(const Emulator& emu) const -> bool {
-    if(cache.cpuRamMemory) return true;
     if(!refreshMemoryNodeCache(cache, &emu.root, {{"CPU RAM", &cache.cpuRamMemory}})) return false;
     return (bool)cache.cpuRamMemory;
   }
