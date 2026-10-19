@@ -1,6 +1,7 @@
 #include "../desktop-ui.hpp"
 
 #include "platform/adapter.hpp"
+#include "platform/hash_chd.hpp"
 #include "raintegration.hpp"
 #if defined(_WIN32)
 #define boolean RA_win_boolean
@@ -39,11 +40,21 @@ auto generateHash(const Emulator& emu) -> string {
   if(!adapter) return {};
 
   std::vector<u8> rom;
-  if(!adapter->romData(emu, rom) || rom.empty()) return {};
-
   char hash[33] = {};
-  if(!rc_hash_generate_from_buffer(hash, adapter->consoleId(emu), rom.data(), rom.size())) return {};
-  return hash;
+  if(adapter->romData(emu, rom) && !rom.empty()) {
+    if(rc_hash_generate_from_buffer(hash, adapter->consoleId(emu), rom.data(), rom.size())) return hash;
+    return {};
+  }
+
+  auto path = adapter->filePath(emu);
+  if(!path || !file::exists(path)) return {};
+
+  rc_hash_iterator_t iterator{};
+  rc_hash_initialize_iterator(&iterator, path, nullptr, 0);
+  RA::Platform::configureChdHashCallbacks(iterator.callbacks);
+  auto success = rc_hash_generate(hash, adapter->consoleId(emu), &iterator);
+  rc_hash_destroy_iterator(&iterator);
+  return success ? string{hash} : string{};
 }
 
 auto loginMessage(const RetroAchievementsLoginResult& result) -> string {
@@ -648,22 +659,12 @@ auto RetroAchievements::loadGame() -> void {
   auto* adapter = RA::Platform::selectAdapter(*emulator);
   if(!adapter) return;
   if(_integrationActive) RA::Integration::setConsoleId(_client, adapter->consoleId(*emulator));
-
-  _pendingRomData.clear();
-  if(!adapter->romData(*emulator, _pendingRomData) || _pendingRomData.empty()) {
-    program.showMessage("[RA] Could not read ROM data for game lookup");
-    return;
-  }
-
-  auto path = emulator->game ? emulator->game->location : string{};
+  if(!_gameHash) return;
   _encoreGameActive = settings.retroAchievements.encore;
   _gameLoadPending = true;
-  rc_client_begin_identify_and_load_game(
+  rc_client_begin_load_game(
     _client,
-    adapter->consoleId(*emulator),
-    path ? (const char*)path : nullptr,
-    _pendingRomData.data(),
-    _pendingRomData.size(),
+    _gameHash,
     clientLoadGameCallback,
     new ClientCallbackData{this, _gameGeneration}
   );
@@ -683,7 +684,6 @@ auto RetroAchievements::unloadClientGame() -> void {
   _reloadEncoreGame = false;
   _previousUnlocks.clear();
   if(_client) rc_client_unload_game(_client);
-  _pendingRomData.clear();
 }
 
 auto RetroAchievements::reloadEncoreGameIfNeeded() -> void {
@@ -1092,7 +1092,6 @@ auto RetroAchievements::handleClientLoginResult(int result, const char* errorMes
 
 auto RetroAchievements::handleClientGameLoadResult(int result, const char* errorMessage, u64 generation) -> void {
   if(generation != _gameGeneration) return;
-  _pendingRomData.clear();
   _gameLoadPending = false;
   _gameReady = result == RC_OK && _client && rc_client_is_game_loaded(_client);
 

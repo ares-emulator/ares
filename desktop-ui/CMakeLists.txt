@@ -73,6 +73,8 @@ if(ARES_ENABLE_RCHEEVOS)
       retroachievements/platform/adapter.cpp
       retroachievements/platform/adapters/nintendo.cpp
       retroachievements/platform/adapters/sega.cpp
+      retroachievements/platform/adapters/nec.cpp
+      retroachievements/platform/hash_chd.cpp
   )
   if(OS_WINDOWS)
     target_sources(desktop-ui PRIVATE retroachievements/raintegration.cpp)

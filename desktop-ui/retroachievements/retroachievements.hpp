@@ -153,7 +153,6 @@ private:
   rc_client_t* _client = nullptr;
   string _gameHash;
   string _gameLoadError;
-  std::vector<u8> _pendingRomData;
   bool _gameReady = false;
   bool _gameLoadPending = false;
   bool _gameUnrecognized = false;

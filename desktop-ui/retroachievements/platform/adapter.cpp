@@ -172,6 +172,7 @@ auto adapters() -> std::vector<Adapter*>& {
     // Registry entries are non-owning pointers to function-local static adapters.
     registerNintendoAdapters(out);
     registerSegaAdapters(out);
+    registerNecAdapters(out);
     return out;
   }();
   return list;

@@ -11,6 +11,7 @@ struct Adapter {
   virtual auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 = 0;
   virtual auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 = 0;
   virtual auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool = 0;
+  virtual auto filePath(const Emulator& emu) const -> string { return {}; }
 
 protected:
   struct MemoryNodeBinding {
@@ -72,6 +73,7 @@ protected:
 
 auto registerNintendoAdapters(std::vector<Adapter*>& list) -> void;
 auto registerSegaAdapters(std::vector<Adapter*>& list) -> void;
+auto registerNecAdapters(std::vector<Adapter*>& list) -> void;
 auto adapters() -> std::vector<Adapter*>&;
 auto selectAdapter(const Emulator& emu) -> Adapter*;
 
