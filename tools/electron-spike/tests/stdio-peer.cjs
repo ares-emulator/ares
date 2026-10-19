@@ -24,15 +24,15 @@ class StdioPeer {
     this.child.once('close', () => this.fail(new Error(`MCP closed: ${this.stderr}`)));
   }
   fail(error) { for (const p of this.pending.values()) { clearTimeout(p.timer); p.reject(error); } this.pending.clear(); }
-  request(method, params) {
+  request(method, params, timeoutMs = 8000) {
     const id = ++this.id;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`MCP timeout ${method}: ${this.stderr}`)); }, 8000);
+      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`MCP timeout ${method}: ${this.stderr}`)); }, timeoutMs);
       this.pending.set(id, { resolve, reject, timer }); this.child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n');
     });
   }
   async initialize() {
-    const response = await this.request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'ares-live-test', version: '1' } });
+    const response = await this.request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'ares-live-test', version: '1' } }, 30000);
     if (response.error) throw new Error(JSON.stringify(response.error));
     this.child.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n'); return response;
   }

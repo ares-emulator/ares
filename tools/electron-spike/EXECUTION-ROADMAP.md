@@ -1,6 +1,7 @@
 # Execution roadmap: how to tackle the implementation plans
 
-Status: tasks 1–3 implemented; milestone 1 integration gate passed on macOS arm64.
+Status: tasks 1–4 and the task 4.5 TypeScript/ESM detour implemented; milestone 1
+integration gate passed on macOS arm64.
 Runtime evidence and pending checks are recorded in
 [EXECUTION-LOG.md](EXECUTION-LOG.md). Remaining tasks are planned. Start here when
 choosing the next task.
@@ -115,6 +116,19 @@ and controlled execution without normal audio/focus/frame pacing interference.
 Done when: a bounded operation has one final result, competing owners get explicit
 busy results, cancellation/timeout are responsive, and ROM changes revoke stale
 work. Use a synthetic fixture to verify exact frames and partial-frame behavior.
+
+### Task 4.5 — TypeScript and ESM detour
+
+Requested after the task 4 backend checkpoint. Move Electron main, renderer,
+preload and the frame parser to strict TypeScript; compile application services,
+main and MCP to native ESM, and the renderer to browser ESM. Keep a single emitted
+CJS preload because the renderer sandbox is enabled. Add shared IPC/window/frame
+types, explicit relative import extensions, compiled-entry asset paths and matching
+packaging/test entry points. This detour reuses the task 4 native binary.
+
+Done when: clean TypeScript builds, real sandboxed Electron UI, real MCP stdio
+(including task 4 ownership/reload/cancel cases) and copied-package checks pass.
+Keep task 4’s outstanding integration failures visible until these gates pass.
 
 ### Task 5 — CPU debug engine and N64 memory semantics
 
@@ -263,6 +277,6 @@ Conversely, none of those deferrals removes an existing MCP tool from the parity
 target without an explicit scope decision. A clean host-library extraction can
 follow when concrete coupling impedes a task; it is not an initial rewrite mandate.
 
-The immediate next action is **task 4**. Milestone 1 evidence is recorded in the
-execution log. Tasks 1–3 now provide the first shared MCP-and-UI vertical slice;
-they are not three competing implementations of the same service.
+The immediate next action is **task 5**. Task 4 owns bounded native execution;
+task 4.5 supplies typed ESM application entry points and a sandbox-compatible
+preload. Runtime evidence and remaining manual checks are in the execution log.

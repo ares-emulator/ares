@@ -4,7 +4,7 @@ import { constants } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
-import { decodeReply, encodeRequest, ServiceError, type SessionClient, type SessionIdentity, type ServiceMethod, type ServiceParams, type ServiceResult, type SessionReply } from './contracts';
+import { decodeReply, encodeRequest, ServiceError, type SessionClient, type SessionIdentity, type ServiceMethod, type ServiceParams, type ServiceResult, type SessionReply } from './contracts.js';
 const MAX_LINE = 65536;
 const token = (v: unknown): v is string => typeof v === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(v);
 export interface ConnectionInfo { protocol: 1; instance: string; endpoint: string; token: string }

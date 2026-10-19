@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { FrameParser } = require('./protocol.cjs');
+const { FrameParser } = require('./dist/protocol.js');
 function packet(sequence) {
   const b = Buffer.alloc(72); b.write('AEF2'); b.writeUInt32LE(24, 4);
   b.writeUInt32LE(3, 8); b.writeUInt32LE(2, 12); b.writeUInt32LE(sequence, 16);

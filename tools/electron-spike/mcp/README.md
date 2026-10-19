@@ -1,10 +1,11 @@
-# MCP adapter (task 3)
+# MCP adapter (tasks 3–4.5)
 
-The Node stdio entry point is `dist/mcp/server.js`, compiled from `server.ts`.
+The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The only registered tools are `emu_status`, `pause`, `resume`,
-`memory_regions`, `read_memory` and `write_memory`. Diagnostics go to stderr;
+emulator. The eleven registered tools are `emu_status`, `pause`, `resume`,
+`memory_regions`, `read_memory`, `write_memory`, `run_frames`, `run_until_frame`,
+`step`, `operation_status` and `cancel_operation`. Diagnostics go to stderr;
 stdout carries MCP JSON-RPC only.
 
 ## Start and explicitly select an app
@@ -47,7 +48,7 @@ app's launcher for a self-contained distribution; it supplies its own runtime.
 
 ## Compatibility and current bounds
 
-The six tools retain the reference parameter names/types and defaults:
+The initial memory/session tools retain the reference parameter names/types and defaults:
 `verbose=false`, `keep_overrides=false`, and `read_memory.length=64`.
 `region` accepts an exact debugger name or an opaque ID returned by
 `memory_regions`; ambiguous names fail. Addresses accept unsigned integers or
@@ -58,11 +59,22 @@ session/epoch plus `region_id`. Region descriptors add IDs and access metadata.
 
 This is incremental compatibility, not full reference-result parity:
 
-- `emu_status` is generic system/paused/session/epoch/service-capability state;
-  VI coordinates, registers, executor, last stops and owned operations await
-  their native backends. `verbose=true` includes an explicit limits list. The
+- `emu_status` includes system/paused/session/epoch/service capabilities, native
+  VI coordinates, frame kind, boundary state, configured executor and active
+  operation ID. CPU registers, hit snapshots and input ownership remain pending. `verbose=true` includes an explicit limits list. The
   capabilities field describes native services; `tools/list` is the available
   MCP tool inventory, not the legacy telemetry inventory.
+- `run_frames(n, max_seconds=60)` and `run_until_frame(k, max_seconds=60)`
+  support N64 and the explicitly labelled synthetic fixture. `step()` is one VI
+  boundary. Relative runs cap at one million frames; deadlines are 0.001–600
+  seconds. Zero frames advances nothing; past absolute targets reject. These
+  calls poll internally while permitting concurrent status/cancel requests.
+  Requested register/capture options return `unavailable` until their backends land.
+- `operation_status(operation_id)` returns live progress or an immutable final
+  result (last 16 retained). `cancel_operation(operation_id=null)` cancels this
+  connection’s operation; UI pause can interrupt any owner. Recent handles keep
+  their original session/epoch. Disconnect finishes owned work; renderer reload
+  preserves it. Competing starts/resume/writes/cancellation return `busy`.
 - Transfers are limited to 1–1024 bytes per request. Oversized requests fail;
   the adapter does not silently truncate or split a mutation. `hex_bytes` must
   be even-length hex (outer whitespace accepted); its input string is bounded.
@@ -76,7 +88,7 @@ This is incremental compatibility, not full reference-result parity:
   register values or legacy telemetry-protocol compatibility are advertised.
 
 `parity-ledger.json` still tracks all 68 tools and the remaining differences.
-The other 62 tools are not registered. No tool was removed from the target.
+The other 57 tools are not registered. No tool was removed from the target.
 
 ## Bundled runtime and distribution
 

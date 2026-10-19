@@ -1,14 +1,28 @@
-'use strict';
-const $ = id => document.getElementById(id);
+import type { FramePacket, RendererStats } from './bridge.js';
+import type { SessionIdentity, SessionMethod, SessionReply } from './services/contracts.js';
+interface Elements {
+  screen: HTMLCanvasElement; theme: HTMLSelectElement; scale: HTMLSelectElement;
+  scanlines: HTMLInputElement; left: HTMLInputElement; system: HTMLSelectElement;
+  pause: HTMLButtonElement; reset: HTMLButtonElement; open: HTMLButtonElement;
+  settings: HTMLButtonElement; synthetic: HTMLButtonElement; hd: HTMLButtonElement; stress: HTMLButtonElement;
+  status: HTMLElement; controls: HTMLElement; viewport: HTMLElement; metrics: HTMLElement;
+}
+const $ = <K extends keyof Elements>(id: K): Elements[K] => {
+  const element = document.getElementById(id);
+  if (!element) throw new Error(`Missing UI element: ${id}`);
+  return element as Elements[K];
+};
 window.addEventListener('error', event => { $('status').textContent = event.message; });
-const canvas = $('screen'), gl = canvas.getContext('webgl2', { alpha: false, antialias: false, preserveDrawingBuffer: true });
-if (!gl) throw new Error('WebGL2 is unavailable');
-function shader(type, source) {
-  const s = gl.createShader(type); gl.shaderSource(s, source); gl.compileShader(s);
-  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+const canvas = $('screen'), context = canvas.getContext('webgl2', { alpha: false, antialias: false, preserveDrawingBuffer: true });
+if (!context) throw new Error('WebGL2 is unavailable');
+const gl = context;
+function shader(type: number, source: string) {
+  const s = gl.createShader(type); if (!s) throw new Error('Cannot create shader'); gl.shaderSource(s, source); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) || 'Shader compilation failed');
   return s;
 }
 const program = gl.createProgram();
+if (!program) throw new Error('Cannot create WebGL program');
 gl.attachShader(program, shader(gl.VERTEX_SHADER, `#version 300 es
 out vec2 uv;
 void main() {
@@ -25,7 +39,7 @@ void main() {
   color.rgb *= 1.0 - lines * 0.18 * step(0.5, fract(uv.y * rows));
 }`));
 gl.linkProgram(program);
-if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) || 'Program link failed');
 gl.useProgram(program);
 const texture = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, texture);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -34,16 +48,16 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 const lines = gl.getUniformLocation(program, 'lines'), rows = gl.getUniformLocation(program, 'rows');
 let system = 'Synthetic', aspect = 4 / 3;
-let width = 0, height = 0, pending, port, paused = false;
+let width = 0, height = 0, pending: FramePacket | null = null, port: MessagePort | undefined, paused = false;
 let frames = 0, skipped = 0, last = 0, firstNative = 0, lastNative = 0, firstSequence = 0;
-let bridge = [], upload = [], inputTimes = new Map(), inputAges = [], latestQueue = 0;
-let started = performance.now(), lastStats = started, latestReadback = null;
+let bridge: number[] = [], upload: number[] = [], inputTimes = new Map<number, number>(), inputAges: number[] = [], latestQueue = 0;
+let started = performance.now(), lastStats = started, latestReadback: number[] | null = null;
 let receivedFrames = 0, maxPending = 0;
-const settings = (() => { try { return JSON.parse(localStorage.getItem('ares-spike') || '{}'); } catch { return {}; } })();
-for (const name of ['theme', 'scale', 'scanlines', 'left']) {
+const settings: Record<string, string | boolean> = (() => { try { return JSON.parse(localStorage.getItem('ares-spike') || '{}'); } catch { return {}; } })();
+for (const name of ['theme', 'scale', 'scanlines', 'left'] as const) {
   const el = $(name);
-  if (settings[name] !== undefined) el.type === 'checkbox' ? el.checked = settings[name] : el.value = settings[name];
-  el.onchange = () => { settings[name] = el.type === 'checkbox' ? el.checked : el.value;
+  if (settings[name] !== undefined) el instanceof HTMLInputElement ? el.checked = Boolean(settings[name]) : el.value = String(settings[name]);
+  el.onchange = () => { settings[name] = el instanceof HTMLInputElement ? el.checked : el.value;
     localStorage.setItem('ares-spike', JSON.stringify(settings)); apply(); };
 }
 function apply() {
@@ -72,7 +86,7 @@ apply(); new ResizeObserver(resize).observe($('viewport'));
 window.addEventListener('message', event => {
   if (event.source !== window || event.data?.type !== 'ares-frames' || !event.ports[0]) return;
   port?.close(); port = event.ports[0];
-  port.onmessage = ({ data }) => {
+  port.onmessage = ({ data }: MessageEvent<import('./bridge.js').FrameMessage>) => {
     if (data.reset) {
       system = data.system;
       $('controls').textContent = system.startsWith('Nintendo 64')
@@ -89,18 +103,18 @@ window.addEventListener('message', event => {
   port.start();
 });
 // Bits represent ares's virtual pad, so existing per-system mappings remain authoritative.
-const keys = { ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3, KeyZ: 4, KeyX: 5,
+const keys: Record<string, number> = { ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3, KeyZ: 4, KeyX: 5,
   KeyC: 6, KeyV: 7, ShiftLeft: 8, ShiftRight: 8, Enter: 9, KeyQ: 10, KeyE: 11, Space: 13,
   Digit1: 16, Digit2: 17, Digit3: 18, Digit4: 19, Digit5: 20, Digit6: 21, Digit7: 22,
   Digit8: 23, Digit9: 24, Digit0: 25 };
-const pressed = new Set();
+const pressed = new Set<string>();
 let inputSeq = 0, lastMask = -1, lastAxes = '';
-function sendInput(mask, x = 0, y = 0, rx = 0, ry = 0) {
+function sendInput(mask: number, x = 0, y = 0, rx = 0, ry = 0) {
   const axes = `${x},${y},${rx},${ry}`;
   if (mask === lastMask && axes === lastAxes) return;
   lastMask = mask; lastAxes = axes; inputSeq++;
   if (frames > 60) inputTimes.set(inputSeq, performance.now());
-  if (inputTimes.size > 128) inputTimes.delete(inputTimes.keys().next().value);
+  if (inputTimes.size > 128) inputTimes.delete(inputTimes.keys().next().value!);
   window.ares.command({ type: 'input', sequence: inputSeq, mask, x, y, rx, ry });
 }
 function pollInput() {
@@ -118,27 +132,28 @@ function pollInput() {
     ry = (Number(pressed.has('KeyK')) - Number(pressed.has('KeyI'))) * 32767;
     const pad = [...navigator.getGamepads()].find(p => p?.mapping === 'standard');
     if (pad) {
-      const mapping = { 12: 0, 13: 1, 14: 2, 15: 3, 0: 4, 1: 5, 2: 6, 3: 7,
+      const mapping: Record<string, number> = { 12: 0, 13: 1, 14: 2, 15: 3, 0: 4, 1: 5, 2: 6, 3: 7,
         8: 8, 9: 9, 4: 10, 5: 11, 6: 12, 7: 13, 10: 14, 11: 15 };
-      for (const [button, bit] of Object.entries(mapping)) if (pad.buttons[button]?.pressed) mask |= 1 << bit;
-      const axis = i => Math.abs(pad.axes[i] || 0) > .12 ? Math.round(pad.axes[i] * 32767) : 0;
+      for (const [button, bit] of Object.entries(mapping)) if (pad.buttons[Number(button)]?.pressed) mask |= 1 << bit;
+      const axis = (i: number) => Math.abs(pad.axes[i] || 0) > .12 ? Math.round(pad.axes[i] * 32767) : 0;
       x = axis(0) || x; y = axis(1) || y; rx = axis(2) || rx; ry = axis(3) || ry;
     }
   }
   sendInput(mask, x, y, rx, ry);
 }
-function nativeKey(code) {
+function nativeKey(code: string) {
   if (/^Key[A-Z]$/.test(code)) return code.slice(3);
   if (/^Digit[0-9]$/.test(code)) return 'Num' + code.slice(5);
   if (/^Numpad[0-9]$/.test(code)) return 'Keypad' + code.slice(6);
-  return ({ ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right',
+  const names: Record<string, string> = { ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right',
     ShiftLeft: 'LeftShift', ShiftRight: 'RightShift', ControlLeft: 'LeftControl', ControlRight: 'RightControl',
     AltLeft: 'LeftAlt', AltRight: 'RightAlt', MetaLeft: 'LeftSuper', MetaRight: 'RightSuper',
     Backquote: 'Tilde', Minus: 'Dash', Equal: 'Equal', BracketLeft: 'LeftBracket', BracketRight: 'RightBracket',
     Backslash: 'Backslash', Semicolon: 'Semicolon', Quote: 'Apostrophe', Comma: 'Comma', Period: 'Period',
     Slash: 'Slash', NumpadEnter: 'Enter', NumpadAdd: 'Add', NumpadSubtract: 'Subtract',
     NumpadMultiply: 'Multiply', NumpadDivide: 'Divide', NumpadDecimal: 'Point',
-    PageUp: 'Pageup', PageDown: 'Pagedown' })[code] || code;
+    PageUp: 'Pageup', PageDown: 'Pagedown' };
+  return names[code] || code;
 }
 window.addEventListener('keydown', event => {
   if (document.activeElement !== canvas) return;
@@ -151,7 +166,7 @@ window.addEventListener('keyup', event => {
 });
 function releaseInput() { pressed.clear(); sendInput(0); window.ares.command({ type: 'clear' }); }
 window.addEventListener('blur', releaseInput); canvas.addEventListener('blur', releaseInput);
-function mouseInput(event) {
+function mouseInput(event: MouseEvent) {
   if (document.activeElement !== canvas) return;
   const rect = canvas.getBoundingClientRect();
   // DOM and HID use different middle/right button bit ordering.
@@ -167,9 +182,10 @@ $('open').onclick = () => window.ares.open({ system: $('system').value });
 $('settings').onclick = () => window.ares.settings();
 window.ares.systems().then(systems => {
   for (const name of systems) { const option = document.createElement('option'); option.value = option.textContent = name; $('system').append(option); }
-}).catch(error => { $('status').textContent = error.message; });
-let sessionIdentity;
-function acceptSessionState(reply) {
+}).catch(error => { $('status').textContent = error instanceof Error ? error.message : String(error); });
+let sessionIdentity: SessionIdentity | undefined;
+function acceptSessionState(reply: SessionReply) {
+  if (!reply.ok || !reply.result) return;
   const previous = sessionIdentity;
   sessionIdentity = { session: reply.session, epoch: reply.epoch };
   paused = reply.result.paused && reply.result.operation_id == null;
@@ -177,7 +193,7 @@ function acceptSessionState(reply) {
   if (previous && (previous.session !== reply.session || previous.epoch !== reply.epoch)) window.dispatchEvent(new Event('ares-session-reset'));
 }
 window.ares.onSessionState(acceptSessionState);
-async function sessionRequest(method) {
+async function sessionRequest(method: SessionMethod) {
   const reply = await window.ares.session(method, sessionIdentity);
   if (!reply.ok) throw new Error(reply.error);
   acceptSessionState(reply);
@@ -185,26 +201,26 @@ async function sessionRequest(method) {
 }
 async function syncSession() {
   sessionIdentity = undefined;
-  try { await sessionRequest('session.status'); } catch (error) { $('status').textContent = error.message; }
+  try { await sessionRequest('session.status'); } catch (error) { $('status').textContent = error instanceof Error ? error.message : String(error); }
 }
 $('pause').onclick = async () => {
   $('pause').disabled = true;
   try { await sessionRequest(paused ? 'session.resume' : 'session.pause'); }
-  catch (error) { $('status').textContent = error.message; await syncSession(); }
+  catch (error) { $('status').textContent = error instanceof Error ? error.message : String(error); await syncSession(); }
   finally { $('pause').disabled = false; }
 };
 $('reset').onclick = async () => {
   try { await sessionRequest('session.reset'); }
-  catch (error) { $('status').textContent = error.message; await syncSession(); }
+  catch (error) { $('status').textContent = error instanceof Error ? error.message : String(error); await syncSession(); }
 };
 $('synthetic').onclick = () => window.ares.command({ type: 'synthetic' });
 $('hd').onclick = () => window.ares.command({ type: 'synthetic', hd: true });
 function stress() { const until = performance.now() + 250; while (performance.now() < until) {} }
 $('stress').onclick = stress;
 window.ares.onStatus(text => { $('status').textContent = text; });
-const percentile = (array, p) => array.length ? [...array].sort((a, b) => a - b)[Math.min(array.length - 1, Math.floor(array.length * p))] : 0;
-function record(array, value) { array.push(value); if (array.length > 3600) array.shift(); }
-function stats() {
+const percentile = (array: number[], p: number) => array.length ? [...array].sort((a, b) => a - b)[Math.min(array.length - 1, Math.floor(array.length * p))] : 0;
+function record(array: number[], value: number) { array.push(value); if (array.length > 3600) array.shift(); }
+function stats(): RendererStats {
   return { system, frames, receivedFrames, maxPending, skipped, width, height,
     seconds: (performance.now() - started) / 1000,
     nativeFPS: lastNative > firstNative ? (last - firstSequence) * 1000 / (lastNative - firstNative) : 0,
@@ -230,13 +246,13 @@ function tick() {
     record(bridge, performance.timeOrigin + after - frame.receivedMs);
     latestQueue = frame.queueMs;
     if (inputTimes.has(frame.inputSequence)) {
-      record(inputAges, after - inputTimes.get(frame.inputSequence));
+      record(inputAges, after - inputTimes.get(frame.inputSequence)!);
       for (const seq of inputTimes.keys()) if (seq <= frame.inputSequence) inputTimes.delete(seq);
     }
     if (last) skipped += Math.max(0, frame.sequence - last - 1);
     else { firstNative = frame.nativeMs; firstSequence = frame.sequence; }
     last = frame.sequence; lastNative = frame.nativeMs; frames++;
-    port.postMessage({ ack: frame.sequence, generation: frame.generation });
+    port!.postMessage({ ack: frame.sequence, generation: frame.generation });
   }
   if (performance.now() - lastStats > 500) {
     const s = stats(); lastStats = performance.now();
@@ -245,6 +261,8 @@ function tick() {
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
+window.stats = stats;
+window.sendInput = sendInput;
 window.ares.ready();
 const params = new URLSearchParams(location.search);
 if (params.get('autotest') === '1') {

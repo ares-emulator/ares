@@ -1,31 +1,43 @@
-'use strict';
-const { app, BrowserWindow, ipcMain, dialog, MessageChannelMain } = require('electron');
-const { spawn, execFile } = require('node:child_process');
-const path = require('node:path');
-const fs = require('node:fs');
-const { performance } = require('node:perf_hooks');
-const { FrameParser } = require('./protocol.cjs');
-const { randomUUID } = require('node:crypto');
-const { NativeSessionClient } = require('./dist/services/native-client.js');
-const { LocalServiceHost } = require('./dist/services/local-endpoint.js');
-const { SessionRouter } = require('./dist/services/session-router.js');
-const sessions = new SessionRouter(reply => {
+import { app, BrowserWindow, ipcMain, dialog, MessageChannelMain, type MessagePortMain } from 'electron';
+import { spawn, execFile, type ChildProcessByStdio } from 'node:child_process';
+import type { Readable, Writable } from 'node:stream';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { performance } from 'node:perf_hooks';
+import { FrameParser, type NativeFrame } from './protocol.js';
+import { randomUUID } from 'node:crypto';
+import { NativeSessionClient } from './services/native-client.js';
+import { LocalServiceHost } from './services/local-endpoint.js';
+import { SessionRouter } from './services/session-router.js';
+import type { NativeCommand, StartOptions } from './bridge.js';
+import type { SessionIdentity, ServiceMethod, ServiceParams } from './services/contracts.js';
+// Compiled entry lives in dist/ in both checkout and copied distribution.
+const appRoot = fileURLToPath(new URL('../', import.meta.url));
+interface NativeSession {
+  child: ChildProcessByStdio<Writable, Readable, Readable>;
+  system: string; generation: number; outstanding: boolean; lastSequence: number;
+  diagnostic: string; failure?: string; lastFrame?: NativeFrame; closed: Promise<void>;
+}
+export const sessions = new SessionRouter(reply => {
   if (window && !window.isDestroyed() && !window.webContents.isDestroyed()) window.webContents.send('session-state', reply);
 });
-const serviceHost = new LocalServiceHost(sessions);
-module.exports = { sessions, serviceHost, stopNative: stop };
+export const serviceHost = new LocalServiceHost(sessions);
+export { stop as stopNative };
 const installedHost = path.join(process.resourcesPath, 'native/bin/ares-electron-host');
 const installedLayout = app.isPackaged || fs.existsSync(installedHost);
-const hostPath = process.env.ARES_HOST || (installedLayout ? installedHost : path.resolve(__dirname, '../../build-electron-make/bin/ares-electron-host'));
+const hostPath = process.env.ARES_HOST || (installedLayout ? installedHost : path.resolve(appRoot, '../../build-electron-make/bin/ares-electron-host'));
 let generation = 0, settingsFile = process.env.ARES_SETTINGS || '';
-const probe = args => new Promise((resolve, reject) => {
+const probe = (args: string[]): Promise<string> => new Promise((resolve, reject) => {
   execFile(hostPath, args, { timeout: 30000 }, (error, stdout, stderr) => {
     if (error) reject(new Error(stderr.trim() || error.message)); else resolve(stdout.trim());
   });
 });
-let window, active, port, quitting = false, operation = Promise.resolve();
-const status = text => { if (window && !window.isDestroyed()) window.webContents.send('status', text); };
-function command(text) {
+let window: BrowserWindow;
+let active: NativeSession | null = null, port: MessagePortMain | null = null;
+let quitting = false, operation: Promise<void> = Promise.resolve();
+const status = (text: string) => { if (window && !window.isDestroyed()) window.webContents.send('status', text); };
+function command(text: string) {
   if (active && !active.child.stdin.destroyed && active.child.stdin.writable) active.child.stdin.write(text + '\n');
 }
 async function stop() {
@@ -39,8 +51,8 @@ async function stop() {
   await old.closed;
   clearTimeout(timer);
 }
-async function start(options) {
-  const saveDirectory = process.env.ARES_SAVE_DIR || (installedLayout ? path.join(app.getPath('userData'), 'saves') : path.join(__dirname, 'artifacts', 'saves'));
+async function start(options: StartOptions) {
+  const saveDirectory = process.env.ARES_SAVE_DIR || (installedLayout ? path.join(app.getPath('userData'), 'saves') : path.join(appRoot, 'artifacts', 'saves'));
   fs.mkdirSync(saveDirectory, { recursive: true });
   let system = 'Synthetic';
   // Probe before stopping the running game, so an unsupported file leaves it intact.
@@ -67,15 +79,15 @@ async function start(options) {
   args.push('--save-dir', saveDirectory);
   const identity = { session: randomUUID(), epoch: 1 };
   args.push('--control-session', identity.session);
-  const child = spawn(hostPath, args, { stdio: ['pipe', 'pipe', 'pipe', 'pipe'] });
-  const session = { child, system, generation: ++generation, outstanding: false, lastSequence: 0, diagnostic: '' };
+  const child = spawn(hostPath, args, { stdio: ['pipe', 'pipe', 'pipe', 'pipe'] }) as ChildProcessByStdio<Writable, Readable, Readable>;
+  const session: NativeSession = { child, system, generation: ++generation, outstanding: false, lastSequence: 0, diagnostic: '', closed: Promise.resolve() };
   session.closed = new Promise(resolve => child.once('close', (code, signal) => {
     if (active === session) { active = null; sessions.detach(); status(session.failure || ((code !== 0 || signal) ? `Host stopped (${signal || code}). ${session.diagnostic}` : 'Host stopped. Open a ROM or restart a test.')); }
     resolve();
   }));
   active = session;
-  const client = new NativeSessionClient(child.stdin, child.stdio[3], identity, error => {
-    if (active === session) { session.failure = error.message; status(error.message); child.kill(); }
+  const client = new NativeSessionClient(child.stdin, child.stdio[3] as Readable, identity, error => {
+    if (active === session) { session.failure = String(error); status(session.failure); child.kill(); }
   });
   sessions.attach(client);
   child.on('error', error => status(`Cannot start native host: ${error.message}`));
@@ -90,12 +102,12 @@ async function start(options) {
     port?.postMessage({ ...frame, generation: session.generation, receivedMs: performance.timeOrigin + performance.now() });
   });
   child.stdout.on('data', data => {
-    try { parser.push(data); } catch (error) { session.failure = error.message; status(error.message); child.kill(); }
+    try { parser.push(data); } catch (error) { session.failure = String(error); status(session.failure); child.kill(); }
   });
   port?.postMessage({ reset: true, system });
   command('ack');
 }
-function enqueue(task) {
+function enqueue(task: () => Promise<void>) {
   operation = operation.then(task).catch(error => { status(error.message); console.error(error); });
   return operation;
 }
@@ -105,7 +117,7 @@ app.whenReady().then(async () => {
     console.error(`ares service instance ${serviceHost.instance}: ${file}`);
   }
   window = new BrowserWindow({ width: 1100, height: 800, minWidth: 650, minHeight: 480,
-    webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true,
+    webPreferences: { preload: path.join(appRoot, 'dist/preload.cjs'), contextIsolation: true,
       nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
@@ -129,7 +141,7 @@ app.whenReady().then(async () => {
       if (active.outstanding && active.lastFrame) port.postMessage({ ...active.lastFrame, generation: active.generation, receivedMs: performance.timeOrigin + performance.now() });
     } else enqueue(() => start(process.env.ARES_ROM ? { rom: process.env.ARES_ROM, system: process.env.ARES_SYSTEM } : { hd: process.env.ARES_HD === '1' }));
   });
-  ipcMain.handle('session', async (event, method, identity, params) => {
+  ipcMain.handle('session', async (event, method: ServiceMethod, identity?: SessionIdentity, params?: ServiceParams<ServiceMethod>) => {
     if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('invalid_sender');
     if (!['session.status', 'memory.regions'].includes(method) && !identity) throw new Error('invalid_request');
     return sessions.request(method, identity, params);
@@ -151,12 +163,12 @@ app.whenReady().then(async () => {
     if (!result.canceled) await enqueue(() => start({ rom: result.filePaths[0], media: result.filePaths.slice(1),
       system: typeof options?.system === 'string' ? options.system : '' }));
   });
-  ipcMain.on('command', (event, data) => {
+  ipcMain.on('command', (event, data: NativeCommand) => {
     if (event.sender !== window.webContents || !data) return;
     if (data.type === 'synthetic') enqueue(() => start({ hd: data.hd === true }));
 
     if (data.type === 'input' && Number.isInteger(data.sequence) && Number.isInteger(data.mask)) {
-      const axis = value => Number.isFinite(value) ? Math.max(-32767, Math.min(32767, Math.round(value))) : 0;
+      const axis = (value: number | undefined) => typeof value === 'number' && Number.isFinite(value) ? Math.max(-32767, Math.min(32767, Math.round(value))) : 0;
       command(`input ${data.sequence >>> 0} ${data.mask >>> 0} ${axis(data.x)} ${axis(data.y)} ${axis(data.rx)} ${axis(data.ry)}`);
     }
     if (data.type === 'key' && typeof data.name === 'string' && /^[A-Za-z0-9]{1,32}$/.test(data.name)) {
@@ -164,7 +176,7 @@ app.whenReady().then(async () => {
     }
     if (data.type === 'clear') command('clear');
     if (data.type === 'mouse') {
-      const limit = value => Number.isFinite(value) ? Math.max(-32767, Math.min(32767, Math.round(value))) : 0;
+      const limit = (value: number | undefined) => typeof value === 'number' && Number.isFinite(value) ? Math.max(-32767, Math.min(32767, Math.round(value))) : 0;
       command(`mouse ${limit(data.x)} ${limit(data.y)} ${data.mask & 15}`);
     }
     if (data.type === 'report') {
@@ -173,7 +185,7 @@ app.whenReady().then(async () => {
       if (process.env.ARES_AUTOTEST === '1') app.quit();
     }
   });
-  window.loadFile(path.join(__dirname, 'index.html'), { query: {
+  window.loadFile(path.join(appRoot, 'index.html'), { query: {
     autotest: process.env.ARES_AUTOTEST || '', duration: process.env.ARES_TEST_SECONDS || '12'
   } });
 }).catch(error => { console.error(error); app.quit(); });

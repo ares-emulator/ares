@@ -32,20 +32,20 @@
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
-          "check": "tests/session-live.test.cjs and tests/electron-session.cjs",
+          "check": "tests/session-live.test.cjs and tests/electron-session.mjs",
           "result": "passed",
           "date": "2026-10-17"
         },
         {
           "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
-          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
         },
         {
           "scope": "task 4 execution port",
-          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
-          "result": "pending live verification"
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
         }
       ],
       "knownLimits": "Native VI frame, frame kind, boundary, executor and active operation ID added. Register/input/full reference status groups remain pending."
@@ -176,8 +176,8 @@
       "testEvidence": [
         {
           "scope": "task 4 execution port",
-          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
-          "result": "pending live verification"
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
         }
       ],
       "knownLimits": "N64/synthetic VI boundaries only; relative limit 1000000, deadline 0.001\u2013600 seconds. screenshot_after/fpr/cop0 requests return unavailable; verbose adds no register groups. CPU hits/captures/input neutralization remain tasks 5\u20137."
@@ -209,8 +209,8 @@
       "testEvidence": [
         {
           "scope": "task 4 execution port",
-          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
-          "result": "pending live verification"
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
         }
       ],
       "knownLimits": "N64/synthetic current-epoch absolute VI target; past targets reject. Deadline 0.001\u2013600 seconds. CPU debug/input fields remain later tasks."
@@ -319,20 +319,20 @@
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
-          "check": "tests/session-live.test.cjs and tests/electron-session.cjs",
+          "check": "tests/session-live.test.cjs and tests/electron-session.mjs",
           "result": "passed",
           "date": "2026-10-17"
         },
         {
           "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
-          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
         },
         {
           "scope": "task 4 execution port",
-          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
-          "result": "pending live verification"
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
         }
       ],
       "knownLimits": "Native slice-boundary pause finishes the same-owner operation; UI pause can interrupt any owner. CPU breakpoint/instruction stop details remain task 5."
@@ -358,13 +358,13 @@
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
-          "check": "tests/session-live.test.cjs and tests/electron-session.cjs",
+          "check": "tests/session-live.test.cjs and tests/electron-session.mjs",
           "result": "passed",
           "date": "2026-10-17"
         },
         {
           "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
-          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
         }
@@ -385,8 +385,8 @@
       "testEvidence": [
         {
           "scope": "task 4 execution port",
-          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
-          "result": "pending live verification"
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
         }
       ],
       "knownLimits": "Alias for exactly one VI boundary, not a CPU instruction. N64/synthetic only."
@@ -430,8 +430,8 @@
       "testEvidence": [
         {
           "scope": "task 4 execution port",
-          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
-          "result": "pending live verification"
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
         }
       ],
       "knownLimits": "Live state or immutable final snapshot; retains latest 16. Session/epoch required. fpr/cop0 return unavailable; verbose has no extra register groups."
@@ -457,8 +457,8 @@
       "testEvidence": [
         {
           "scope": "task 4 execution port",
-          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
-          "result": "pending live verification"
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
         }
       ],
       "knownLimits": "Cancels owning connection operation, or UI can interrupt any owner. Null ID selects active operation; no active operation returns unknown_operation. Repeating an explicit completed ID returns its immutable result."
@@ -844,13 +844,13 @@
       "testEvidence": [
         {
           "scope": "native region service and temporary inspector only; MCP not exposed",
-          "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.cjs",
+          "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.mjs",
           "result": "passed",
           "date": "2026-10-18"
         },
         {
           "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
-          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
         }
@@ -890,13 +890,13 @@
       "testEvidence": [
         {
           "scope": "native region service and temporary inspector only; MCP not exposed",
-          "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.cjs",
+          "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.mjs",
           "result": "passed",
           "date": "2026-10-18"
         },
         {
           "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
-          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
         }
@@ -936,13 +936,13 @@
       "testEvidence": [
         {
           "scope": "native region service and temporary inspector only; MCP not exposed",
-          "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.cjs",
+          "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.mjs",
           "result": "passed",
           "date": "2026-10-18"
         },
         {
           "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
-          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
         }

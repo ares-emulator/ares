@@ -219,7 +219,7 @@ changes only).
 
 ## Task 4 — native VI coordinates and owned bounded execution
 
-Implementation and verification in progress.
+Implemented in checkpoint `bbe94d832`; final Electron gates passed during task 4.5 below.
 
 Minimum semantics were adapted from the `ares-64` reference at
 `1c9b9637476a83f7b80d3db1115a0f71529820d9` (original controlled-run work
@@ -288,3 +288,62 @@ initialize watchdog. These are recorded as failed/incomplete checks, not passes;
 their cause has not yet been established. The user requested task 4.5 (TypeScript
 and ESM migration) before further shell expansion. That detour will update the
 entry points and harnesses, then rerun these gates using this native binary.
+
+
+## Task 4.5 — TypeScript application sources and native ESM
+
+Requested by the user before further shell expansion. Main, renderer, preload and
+frame parser are now strict TypeScript (`main.ts`, `renderer.ts`, `preload.cts`,
+`protocol.ts`). Shared services and MCP emit native Node ESM; the renderer and
+inspector emit browser ESM. `bridge.ts` types IPC commands, session requests,
+frame DTOs and renderer statistics; `renderer-globals.d.ts` types `window.ares`.
+The preload emits one CJS artifact because Electron’s renderer sandbox remains
+enabled. Its runtime import is only `electron`; bridge imports are type-only.
+
+The root package declares `type: module` and starts `dist/main.js`. Relative Node
+imports include `.js`; main resolves assets from `import.meta.url`. Clean builds
+remove stale output. Packaging copies compiled application output and sets the
+same ESM metadata. Electron test entry points are `.mjs`; standalone build/test
+helpers retain explicit `.cjs` extensions. No dependencies or native source were
+changed, and no native core rebuild was performed for this detour.
+
+Verification on macOS arm64:
+
+- **Passed:** clean strict TypeScript builds for Node/main/services/MCP, browser
+  and sandbox preload.
+- **Passed:** `npm test --prefix tools/electron-spike`, all 21 tests, about 7 s in
+  the final run. This reruns exact/unpaced synthetic frames, native N64 inactive
+  VI deadline/cancel, owners, disconnect/reconnect, immutable results, real MCP
+  stdio, bounded memory, stale identities and long polling against the task 4 host.
+- **Passed:** `npm run test:electron`, including stalled-renderer responsiveness,
+  inspector write/read/restore, running/paused reloads, WebGL frame credits and
+  native replacement through the migrated ESM main and sandboxed preload.
+- **Passed:** real ESM Electron/MCP integration, eleven tool schemas/defaults,
+  shared paused GB bytes, UI pause cancelling owned work, renderer reload keeping
+  ownership, explicit cancellation, reset/ROM revocation and native disconnect.
+  The retained stage log is `/tmp/ares-esm-mcp.log`; the final integration took
+  about 1.7 s after build on the warmed machine.
+- **Passed:** separate `artifacts/task-4.5/Ares.app` development bundle and copied
+  package test. Bundled Electron 44.9.0 / Node 24.22.0 loaded the ESM application,
+  served real stdio and shared/restored GB memory without system Node/Python.
+  Checkout reads were denied for native preflight and the MCP adapter; the GUI
+  used its normal Chromium sandbox. The fixture presented 453 frames and quit
+  normally. The previous task 3 bundle was not overwritten.
+
+Earlier 20 s UI / 8 s MCP initialization / 60 s expanded-suite watchdog failures
+were not counted as passes. Harnesses now report stages, permit 30 s cold MCP
+initialization and give the expanded app integration a 120 s overall watchdog;
+ordinary MCP requests retain their 8 s deadline, and native cancellation/deadline
+assertions retain their original bounds. The final warmed run passed quickly.
+Task 4’s previously pending Electron integration gates are now closed.
+
+Full generated FastMCP schema equality, all 68 tools, controlled audible N64 game
+acceptance, hardware input takeover, long soak and non-macOS runtime checks remain
+pending in their planned tasks. The next task is task 5. The user authorized
+continuing through subsequent roadmap tasks without stopping after each commit.
+
+- **Passed:** `ARES_TEST_AUDIO=1 npm run smoke`, all 40 registered systems and
+  GB/NES identification, synthetic 640×480 59.86 fps / 1080p 59.84 fps,
+  original GB fixture with native SDL audio 56.50 fps and Famicom 60.07 fps.
+  These are transport/core-cadence checks, not a listening-quality or end-to-end
+  latency measurement. Each isolated fixture closed before the next one started.

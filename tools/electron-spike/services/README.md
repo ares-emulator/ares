@@ -1,13 +1,15 @@
-# Shared session and memory services (tasks 1–3)
+# Shared session and memory services (tasks 1–4.5)
 
 `contracts.ts` owns the JS schemas, validation, identity and service client
 interface. `native-client.ts` implements bounded request correlation over the
 native process pipes. `session-router.ts` is owned by Electron main, and survives
-renderer reloads. `main.cjs` binds the router to a narrow preload IPC call. Inspector and MCP clients use these contracts and routing rather than opening
+renderer reloads. `main.ts` binds the router to a narrow preload IPC call. Inspector and MCP clients use these contracts and routing rather than opening
 another emulator or implementing a second execution loop.
 
-Build with `npm run build:services`; generated CommonJS and declarations go into
-ignored `dist/`. `npm start`, `npm test` and `npm run smoke` build them first.
+Build with `npm run build`; generated ESM and declarations go into ignored
+`dist/`. The sandboxed preload is TypeScript source (`preload.cts`) compiled to
+`dist/preload.cjs`. `bridge.ts` types the IPC surface, and
+`renderer-globals.d.ts` types the renderer’s `window.ares` API. `npm start`, `npm test` and `npm run smoke` build them first.
 The adapter entry point is `mcp/server.ts`; task 3 adds the opt-in Electron-main
 local endpoint in `local-endpoint.ts`. See [MCP usage and distribution](../mcp/README.md). Native implementations belong in `native/` and
 runtime checks in `tests/`. No workspace/package restructuring is required.

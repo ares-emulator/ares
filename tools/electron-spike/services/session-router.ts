@@ -1,5 +1,5 @@
-import { METHODS, ServiceError, type SessionIdentity, type ServiceMethod, type ServiceParams, type ServiceResult, type SessionReply } from './contracts';
-import type { NativeSessionClient } from './native-client';
+import { METHODS, ServiceError, type SessionIdentity, type ServiceMethod, type ServiceParams, type ServiceResult, type SessionReply } from './contracts.js';
+import type { NativeSessionClient } from './native-client.js';
 
 /** Electron main owns this router, independently of renderer/plugin lifetimes. */
 export class SessionRouter {

@@ -1,8 +1,28 @@
 {
   "compilerOptions": {
-    "target": "ES2022", "module": "Node16", "moduleResolution": "Node16",
-    "strict": true, "declaration": true, "outDir": "dist", "rootDir": ".",
-    "types": ["node"], "skipLibCheck": true
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "types": [
+      "node"
+    ],
+    "skipLibCheck": true,
+    "lib": [
+      "ES2022"
+    ]
   },
-  "include": ["services/**/*.ts", "mcp/**/*.ts"]
+  "include": [
+    "main.ts",
+    "protocol.ts",
+    "bridge.ts",
+    "services/**/*.ts",
+    "mcp/**/*.ts"
+  ],
+  "exclude": [
+    "services/inspector.ts"
+  ]
 }

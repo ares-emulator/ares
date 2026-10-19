@@ -1,6 +1,5 @@
 import { MemoryClient, hexToBytes, type RegionHandle } from './memory.js';
-import type { SessionClient } from './contracts.js';
-const bridge = (window as unknown as { ares: { session: SessionClient['request'] } }).ares;
+const bridge = window.ares;
 const memory = new MemoryClient({ request: (method, identity, params) => bridge.session(method, identity, params) });
 const select = document.getElementById('memory-region') as HTMLSelectElement;
 const info = document.getElementById('memory-info')!;

@@ -1,18 +1,19 @@
-'use strict';
+import { fileURLToPath } from 'node:url';
 // Run in a disposable Electron app profile, never the user's running app.
-const { app, BrowserWindow } = require('electron');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { once } = require('node:events');
+import { app, BrowserWindow } from 'electron';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { once } from 'node:events';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'ares-electron-session-'));
 app.setPath('userData', path.join(temporary, 'profile'));
 process.env.ARES_SAVE_DIR = path.join(temporary, 'saves');
 delete process.env.ARES_ROM;
 delete process.env.ARES_AUTOTEST;
-const { sessions } = require('../main.cjs');
-const { MemoryClient, hexToBytes } = require('../dist/services/memory.js');
+const { sessions } = await import('../dist/main.js');
+import { MemoryClient, hexToBytes } from '../dist/services/memory.js';
 const memory = new MemoryClient(sessions);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(check) {
@@ -22,16 +23,21 @@ async function until(check) {
   }
   throw new Error('Electron check timed out');
 }
-const timeout = setTimeout(() => { console.error('Electron session test timed out'); app.exit(1); }, 20000);
+let stage = 'startup';
+const enter = value => { stage = value; console.log(`INTEGRATION_STAGE: ${value}`); };
+const timeout = setTimeout(() => { console.error(`Electron session test timed out: ${stage}`); app.exit(1); }, 60000);
 app.on('will-quit', () => { clearTimeout(timeout); fs.rmSync(temporary, { recursive: true, force: true }); });
 app.whenReady().then(async () => {
+  enter('native startup');
   const first = await until(() => sessions.request('session.status'));
   assert.equal(first.result.system, 'Synthetic');
+  enter('renderer startup');
   const window = BrowserWindow.getAllWindows()[0];
   const rendererErrors = [];
   window.webContents.on('console-message', (_event, details) => { if (details.level === 'error') rendererErrors.push(details.message); });
   await until(() => window.webContents.executeJavaScript("document.getElementById('pause')?.textContent === 'Pause'"));
   // Renderer JavaScript is blocked. Main/native controls must keep working.
+  enter('stalled renderer controls');
   const blocked = window.webContents.executeJavaScript('(() => { const end = performance.now() + 750; while (performance.now() < end) {} return true; })()');
   await sleep(75);
   const started = performance.now();
@@ -41,6 +47,7 @@ app.whenReady().then(async () => {
   await blocked;
   await until(() => window.webContents.executeJavaScript("document.getElementById('pause').textContent === 'Resume'"));
   await until(() => window.webContents.executeJavaScript("document.getElementById('memory-region').options.length === 3"));
+  enter('inspector');
   const fixture = (await memory.regions())[0];
   const original = await memory.read(fixture, 240, 4);
   try {
@@ -66,6 +73,7 @@ app.whenReady().then(async () => {
     await memory.write(fixture, 240, hexToBytes(original.hex));
     assert.equal((await memory.read(fixture, 240, 4)).hex, original.hex);
   }
+  enter('paused reload');
   const loaded = once(window.webContents, 'did-finish-load');
   window.webContents.reload(); await loaded;
   const after = await sessions.request('session.status');
@@ -78,6 +86,7 @@ app.whenReady().then(async () => {
   assert.equal((await sessions.request('session.status')).session, first.session);
   // Reload while running too; stale frame-port acknowledgements must not grant
   // an extra native credit or violate the renderer's one-frame queue.
+  enter('running reload');
   const loadedRunning = once(window.webContents, 'did-finish-load');
   window.webContents.reload(); await loadedRunning;
   await until(() => window.webContents.executeJavaScript('stats().frames > 5'));

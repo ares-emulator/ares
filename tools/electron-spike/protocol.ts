@@ -1,15 +1,17 @@
-'use strict';
-const HEADER = 48;
+import type { VideoFrame } from './bridge.js';
+export interface NativeFrame extends VideoFrame { pixels: Buffer<ArrayBuffer> }
+export const HEADER = 48;
 const MAX_BYTES = 1920 * 1080 * 4;
 // Incremental parser: each payload is allocated once, even with fragmented pipes.
-class FrameParser {
-  constructor(onFrame) {
+export class FrameParser {
+  private header = Buffer.alloc(HEADER);
+  private used = 0;
+  private frame: NativeFrame | null = null;
+  private onFrame: (frame: NativeFrame) => void;
+  constructor(onFrame: (frame: NativeFrame) => void) {
     this.onFrame = onFrame;
-    this.header = Buffer.alloc(HEADER);
-    this.used = 0;
-    this.frame = null;
   }
-  push(chunk) {
+  push(chunk: Buffer): void {
     let offset = 0;
     while (offset < chunk.length) {
       const target = this.frame?.pixels ?? this.header;
@@ -33,4 +35,4 @@ class FrameParser {
     }
   }
 }
-module.exports = { FrameParser, HEADER };
+

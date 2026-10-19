@@ -8,7 +8,7 @@ const { tmpdir } = require('node:os');
 const path = require('node:path');
 const { METHODS } = require('../dist/services/contracts.js');
 const { NativeSessionClient } = require('../dist/services/native-client.js');
-const { FrameParser } = require('../protocol.cjs');
+const { FrameParser } = require('../dist/protocol.js');
 const host = process.env.ARES_HOST || path.resolve(__dirname, '../../../build-electron-make/bin/ares-electron-host');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 

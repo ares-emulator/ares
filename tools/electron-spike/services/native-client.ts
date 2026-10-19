@@ -1,5 +1,5 @@
 import type { Readable, Writable } from 'node:stream';
-import { decodeReply, encodeRequest, ServiceError, type SessionClient, type SessionIdentity, type ServiceMethod, type ServiceParams, type ServiceResult, type SessionReply } from './contracts';
+import { decodeReply, encodeRequest, ServiceError, type SessionClient, type SessionIdentity, type ServiceMethod, type ServiceParams, type ServiceResult, type SessionReply } from './contracts.js';
 
 /** One native process connection. Bounded, correlated requests; never retries mutations. */
 export class NativeSessionClient implements SessionClient {

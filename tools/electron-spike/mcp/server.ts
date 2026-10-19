@@ -2,9 +2,9 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import * as z from 'zod/v4';
-import { MAX_TRANSFER, ServiceError, type ExecutionOperation, type SessionIdentity, type SessionReply } from '../services/contracts';
-import { LocalServiceClient } from '../services/local-endpoint';
-import { MemoryClient, hexToBytes, type RegionHandle } from '../services/memory';
+import { MAX_TRANSFER, ServiceError, type ExecutionOperation, type SessionIdentity, type SessionReply } from '../services/contracts.js';
+import { LocalServiceClient } from '../services/local-endpoint.js';
+import { MemoryClient, hexToBytes, type RegionHandle } from '../services/memory.js';
 
 const args = process.argv.slice(2);
 const take = (flag: string) => { const index = args.indexOf(flag); return index >= 0 ? args[index + 1] : undefined; };

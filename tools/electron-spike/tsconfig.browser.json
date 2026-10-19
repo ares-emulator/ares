@@ -1,8 +1,23 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "ES2022", "moduleResolution": "Bundler", "types": [],
-    "rootDir": "services", "outDir": "dist/browser", "lib": ["ES2022", "DOM"]
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "types": [],
+    "rootDir": ".",
+    "outDir": "dist/browser",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ]
   },
-  "include": ["services/contracts.ts", "services/memory.ts", "services/inspector.ts"]
+  "include": [
+    "renderer.ts",
+    "renderer-globals.d.ts",
+    "bridge.ts",
+    "services/contracts.ts",
+    "services/memory.ts",
+    "services/inspector.ts"
+  ],
+  "exclude": []
 }

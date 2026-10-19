@@ -251,3 +251,24 @@ a bounded iteration slice, not an instruction-stepping promise. GDB attachment
 prevents starting controlled execution. Register snapshots, break/watch stops,
 input leases/neutralization, captures and state-loading hooks remain later tasks;
 requests for unimplemented MCP snapshot/capture options fail explicitly.
+
+
+### TypeScript and module layout (task 4.5)
+
+`npm run build` cleans and compiles only the Electron side. It does not invoke
+CMake or relink the native emulator. `npm start`, the tests and packaging build
+these outputs automatically; `build:services` remains an alias for compatibility.
+
+| Source | Output / runtime |
+| --- | --- |
+| `main.ts`, `protocol.ts`, `services/`, `mcp/server.ts` | Native Node ESM in `dist/` |
+| `renderer.ts`, `services/inspector.ts` | Browser ESM in `dist/browser/` |
+| `preload.cts` | Single `dist/preload.cjs` for Electron’s sandboxed preload |
+| `bridge.ts`, `renderer-globals.d.ts` | Shared IPC, frame data and window types |
+
+The package declares `type: module` and starts `dist/main.js`. The main process
+resolves assets relative to its compiled location in both checkout and copied
+bundle. The preload’s emitted CJS is an Electron sandbox constraint; its source
+is TypeScript. Test/packaging helper scripts retain explicit `.cjs` extensions;
+Electron integration entry points are `.mjs`. Development tests use modern Node
+with synchronous `require(ESM)` support; the distributed app supplies Node 24.
