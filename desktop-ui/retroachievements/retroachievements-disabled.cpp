@@ -9,7 +9,7 @@ auto RetroAchievements::initialize() -> void {}
 auto RetroAchievements::login(const string&, const string&) -> bool { return false; }
 auto RetroAchievements::logout() -> void {}
 auto RetroAchievements::pumpUi() -> void {}
-auto RetroAchievements::requestAvatar(const string&) -> void {}
+auto RetroAchievements::requestImage(const string&) -> void {}
 auto RetroAchievements::hasUser() const -> bool { return false; }
 auto RetroAchievements::loginPending() const -> bool { return false; }
 auto RetroAchievements::username() const -> string { return {}; }
@@ -17,6 +17,16 @@ auto RetroAchievements::displayName() const -> string { return {}; }
 auto RetroAchievements::userScore() const -> u32 { return 0; }
 auto RetroAchievements::userScoreSoftcore() const -> u32 { return 0; }
 auto RetroAchievements::avatarUrl() const -> string { return {}; }
+auto RetroAchievements::gameView() const -> RetroAchievementsGameView {
+  RetroAchievementsGameView view;
+  view.message = "RetroAchievements support is unavailable in this build.";
+  return view;
+}
+auto RetroAchievements::leaderboardView() const -> RetroAchievementsLeaderboardView { return {}; }
+auto RetroAchievements::fetchLeaderboard(u32, bool) -> void {}
+auto RetroAchievements::handleLeaderboardResult(int, const char*, rc_client_leaderboard_entry_list_t*, u64) -> void {}
+auto RetroAchievements::imageForUrl(const string&, u32) -> image { return {}; }
+auto RetroAchievements::imageVersion() const -> u64 { return 0; }
 auto RetroAchievements::readMemory(u32, u8*, u32) const -> u32 { return 0; }
 auto RetroAchievements::handleClientLoginResult(int, const char*, u64) -> void {}
 auto RetroAchievements::handleClientGameLoadResult(int, const char*, u64) -> void {}

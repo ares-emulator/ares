@@ -395,6 +395,15 @@ Presentation::Presentation() {
     if (!program.paused) program.pause(true);
     program.requestFrameAdvance = true;
   });
+  achievementsViewerAction.setText("Achievements").setIcon(Icon::Action::Bookmark).onActivate([&] {
+    toolsWindow.show("Achievements");
+  });
+  leaderboardsViewerAction.setText("Leaderboards").setIcon(Icon::Emblem::Text).onActivate([&] {
+    toolsWindow.show("Leaderboards");
+  });
+  challengesViewerAction.setText("Challenges").setIcon(Icon::Emblem::Text).onActivate([&] {
+    toolsWindow.show("Challenges");
+  });
   manifestViewerAction.setText("Manifest").setIcon(Icon::Emblem::Binary).onActivate([&] {
     toolsWindow.show("Manifest");
   });

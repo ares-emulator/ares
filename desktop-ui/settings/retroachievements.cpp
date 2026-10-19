@@ -128,7 +128,7 @@ auto RetroAchievementsSettings::refresh() -> void {
       if(avatarUrl) {
         string url = avatarUrl;
         if(url.beginsWith("/")) url = {"https://media.retroachievements.org", url};
-        retroAchievements.requestAvatar(url);
+        retroAchievements.requestImage(url);
       }
     }
     profileAvatar.setIcon(cachedAvatarImage ? (multiFactorImage)cachedAvatarImage : (multiFactorImage)Icon::Action::Bookmark);

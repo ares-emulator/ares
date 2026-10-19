@@ -163,6 +163,8 @@ auto Program::main() -> void {
   }
 
   if(toolsWindowConstructed) {
+    achievementsViewer.liveRefresh();
+    leaderboardsViewer.liveRefresh();
     memoryEditor.liveRefresh();
     graphicsViewer.liveRefresh();
     propertiesViewer.liveRefresh();

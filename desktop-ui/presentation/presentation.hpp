@@ -78,6 +78,10 @@ struct Presentation : Window {
       MenuItem frameAdvance{&toolsMenu};
       MenuItem reloadGame{&toolsMenu};
       MenuSeparator toolsMenuSeparatorB{&toolsMenu};
+      MenuItem achievementsViewerAction{&toolsMenu};
+      MenuItem leaderboardsViewerAction{&toolsMenu};
+      MenuItem challengesViewerAction{&toolsMenu};
+      MenuSeparator toolsMenuSeparatorC{&toolsMenu};
       MenuItem manifestViewerAction{&toolsMenu};
       MenuItem cheatEditorAction{&toolsMenu};
       MenuItem memoryEditorAction{&toolsMenu};

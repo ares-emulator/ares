@@ -118,6 +118,9 @@ auto Program::load(string location) -> bool {
   presentation.showIcon(false);
   if(settings.video.adaptiveSizing  && !startPseudoFullScreen) presentation.resizeWindow();
   if(toolsWindowConstructed) {
+    achievementsViewer.reload();
+    leaderboardsViewer.reload();
+    challengesViewer.reload();
     manifestViewer.reload();
     cheatEditor.reload();
     memoryEditor.reload();
@@ -186,6 +189,9 @@ auto Program::unload() -> void {
   presentation.unloadEmulator();
   if(toolsWindowConstructed) {
     toolsWindow.setVisible(false);
+    achievementsViewer.unload();
+    leaderboardsViewer.unload();
+    challengesViewer.unload();
     manifestViewer.unload();
     cheatEditor.unload();
     memoryEditor.unload();

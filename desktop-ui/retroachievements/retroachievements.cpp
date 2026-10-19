@@ -5,6 +5,7 @@
 #include <rc_api_user.h>
 #include <rc_client.h>
 #include <rc_hash.h>
+#include <algorithm>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
@@ -12,6 +13,11 @@
 
 namespace {
 struct ClientCallbackData {
+  RetroAchievements* self = nullptr;
+  u64 generation = 0;
+};
+
+struct LeaderboardCallbackData {
   RetroAchievements* self = nullptr;
   u64 generation = 0;
 };
@@ -127,6 +133,12 @@ auto clientLoadGameCallback(int result, const char* errorMessage, rc_client_t* c
   data->self->handleClientGameLoadResult(result, errorMessage, data->generation);
 }
 
+auto clientLeaderboardCallback(int result, const char* errorMessage, rc_client_leaderboard_entry_list_t* list, rc_client_t*, void* userdata) -> void {
+  std::unique_ptr<LeaderboardCallbackData> data{static_cast<LeaderboardCallbackData*>(userdata)};
+  if(data && data->self) data->self->handleLeaderboardResult(result, errorMessage, list, data->generation);
+  if(list) rc_client_destroy_leaderboard_entry_list(list);
+}
+
 auto loginRequest(const string& username, const string& password, const string& token) -> RetroAchievementsLoginResult {
   RetroAchievementsLoginResult result;
 
@@ -212,8 +224,10 @@ auto loginRequest(const string& username, const string& password, const string& 
 }
 
 struct HttpWorker {
+  explicit HttpWorker(bool manageCurl = true) : manageCurl(manageCurl) {}
+
   struct Task {
-    enum class Kind { Client, Login, Avatar } kind;
+    enum class Kind { Client, Login, Image } kind;
     std::string url;
     std::string postData;
     std::string contentType;
@@ -236,7 +250,7 @@ struct HttpWorker {
     u64 generation = 0;
     RetroAchievementsLoginResult result;
   };
-  struct AvatarResponse {
+  struct ImageResponse {
     string url;
     std::vector<u8> bytes;
   };
@@ -246,14 +260,15 @@ struct HttpWorker {
   std::deque<Task> tasks;
   std::deque<ClientResponse> clientResponses;
   std::deque<LoginResponse> loginResponses;
-  std::deque<AvatarResponse> avatarResponses;
+  std::deque<ImageResponse> imageResponses;
   std::thread thread;
   bool started = false;
   bool stopping = false;
+  bool manageCurl = true;
 
   auto start() -> bool {
     if(started) return true;
-    if(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) return false;
+    if(manageCurl && curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) return false;
     stopping = false;
     started = true;
     thread = std::thread([this] { run(); });
@@ -286,10 +301,10 @@ struct HttpWorker {
     return out;
   }
 
-  auto takeAvatarResponses() -> std::deque<AvatarResponse> {
+  auto takeImageResponses() -> std::deque<ImageResponse> {
     std::lock_guard lock{mutex};
-    std::deque<AvatarResponse> out;
-    out.swap(avatarResponses);
+    std::deque<ImageResponse> out;
+    out.swap(imageResponses);
     return out;
   }
 
@@ -325,7 +340,7 @@ struct HttpWorker {
       }
       pumpClient();
     }
-    curl_global_cleanup();
+    if(manageCurl) curl_global_cleanup();
     started = false;
   }
 
@@ -391,13 +406,14 @@ struct HttpWorker {
       } else {
         std::vector<u8> bytes;
         if(status >= 200 && status < 300) bytes.assign(body.begin(), body.end());
-        avatarResponses.push_back({task.url.c_str(), std::move(bytes)});
+        imageResponses.push_back({task.url.c_str(), std::move(bytes)});
       }
     }
   }
 };
 
 HttpWorker httpWorker;
+HttpWorker imageWorker{false};
 
 struct StartupLoginDialog {
   auto construct() -> void {
@@ -536,6 +552,7 @@ RetroAchievements retroAchievements;
 
 RetroAchievements::~RetroAchievements() {
   unloadClientGame();
+  imageWorker.stop();
   httpWorker.stop();
   if(_client) {
     rc_client_destroy(_client);
@@ -570,6 +587,8 @@ auto RetroAchievements::syncClientLogin() -> void {
 auto RetroAchievements::loadGame() -> void {
   _gameReady = false;
   _gameLoadPending = false;
+  _gameLoadError = {};
+  _gameUnrecognized = false;
   if(!settings.retroAchievements.enabled) return;
   if(!_authenticated) return;
   if(!emulator) return;
@@ -600,8 +619,14 @@ auto RetroAchievements::loadGame() -> void {
 
 auto RetroAchievements::unloadClientGame() -> void {
   ++_gameGeneration;
+  ++_leaderboardGeneration;
+  if(_client && _leaderboardFetch) rc_client_abort_async(_client, _leaderboardFetch);
+  _leaderboardFetch = nullptr;
+  _leaderboardView = {};
   _gameReady = false;
   _gameLoadPending = false;
+  _gameLoadError = {};
+  _gameUnrecognized = false;
   if(_client) rc_client_unload_game(_client);
   _pendingRomData.clear();
 }
@@ -695,18 +720,30 @@ auto RetroAchievements::pumpUi() -> void {
   for(auto& response : httpWorker.takeLoginResponses()) {
     completeLogin(response.generation, response.result);
   }
-  for(auto& response : httpWorker.takeAvatarResponses()) {
+  for(auto& response : imageWorker.takeImageResponses()) {
+    auto key = std::string{(const char*)response.url};
+    if(_pendingImages.erase(key)) {
+      if(!response.bytes.empty()) {
+        image picture{response.bytes};
+        if(picture) {
+          _images.emplace(std::move(key), std::move(picture));
+          ++_imageVersion;
+        } else _failedImages.insert(std::move(key));
+      } else {
+        _failedImages.insert(std::move(key));
+      }
+    }
     retroAchievementsSettings.acceptAvatar(response.url, response.bytes);
   }
   startupLoginDialog.pump();
 }
 
-auto RetroAchievements::requestAvatar(const string& url) -> void {
-  if(!url || !httpWorker.start()) return;
+auto RetroAchievements::requestImage(const string& url) -> void {
+  if(!url || !httpWorker.start() || !imageWorker.start()) return;
   HttpWorker::Task task;
-  task.kind = HttpWorker::Task::Kind::Avatar;
+  task.kind = HttpWorker::Task::Kind::Image;
   task.url = (const char*)url;
-  httpWorker.enqueue(std::move(task));
+  imageWorker.enqueue(std::move(task));
 }
 
 auto RetroAchievements::hasUser() const -> bool {
@@ -744,6 +781,198 @@ auto RetroAchievements::avatarUrl() const -> string {
   return _avatarUrl;
 }
 
+auto RetroAchievements::imageForUrl(const string& url, u32 size) -> image {
+  if(!url) return {};
+  string absoluteUrl = url;
+  if(absoluteUrl.beginsWith("/")) absoluteUrl = {"https://media.retroachievements.org", absoluteUrl};
+  auto key = std::string{(const char*)absoluteUrl};
+  if(auto it = _images.find(key); it != _images.end()) {
+    image picture = it->second;
+    if(picture && (picture.width() != size || picture.height() != size)) picture.scale(size, size);
+    return picture;
+  }
+  if(_failedImages.count(key)) return {};
+  if(_pendingImages.insert(key).second) requestImage(absoluteUrl);
+  return {};
+}
+
+auto RetroAchievements::imageVersion() const -> u64 { return _imageVersion; }
+
+auto RetroAchievements::gameView() const -> RetroAchievementsGameView {
+  Program::Guard guard;
+  RetroAchievementsGameView view;
+  if(!settings.retroAchievements.enabled) {
+    view.message = "RetroAchievements is disabled.";
+    return view;
+  }
+  if(!_authenticated) {
+    view.status = RetroAchievementsGameView::Status::LoginRequired;
+    view.message = "Log in to RetroAchievements to view game achievements.";
+    return view;
+  }
+  if(_gameLoadPending) {
+    view.status = RetroAchievementsGameView::Status::Loading;
+    view.message = "Loading RetroAchievements game data...";
+    return view;
+  }
+  if(_gameUnrecognized) {
+    view.status = RetroAchievementsGameView::Status::Unrecognized;
+    view.message = "Game not recognized by RetroAchievements.";
+    return view;
+  }
+  if(_gameLoadError) {
+    view.status = RetroAchievementsGameView::Status::Error;
+    view.message = _gameLoadError;
+    return view;
+  }
+  if(!_gameReady || !_client) {
+    view.status = RetroAchievementsGameView::Status::NoGame;
+    view.message = "No RetroAchievements game session is active.";
+    return view;
+  }
+
+  view.status = RetroAchievementsGameView::Status::Ready;
+  if(auto* game = rc_client_get_game_info(_client); game && game->title) view.gameTitle = game->title;
+  if(auto* list = rc_client_create_subset_list(_client)) {
+    for(u32 index : range(list->num_subsets)) {
+      auto* subset = list->subsets[index];
+      if(!subset) continue;
+      RetroAchievementsGameView::Set set;
+      set.id = subset->id;
+      set.title = subset->title ? subset->title : "Base Set";
+      set.badgeUrl = subset->badge_url ? subset->badge_url : "";
+      set.core = index == 0;
+      view.sets.push_back(std::move(set));
+    }
+    rc_client_destroy_subset_list(list);
+  }
+  if(view.sets.empty()) {
+    RetroAchievementsGameView::Set set;
+    set.title = "Base Set";
+    set.core = true;
+    view.sets.push_back(std::move(set));
+  }
+  auto coreId = view.sets.front().id;
+  if(auto* list = rc_client_create_achievement_list(_client, RC_CLIENT_ACHIEVEMENT_CATEGORY_CORE_AND_UNOFFICIAL,
+       RC_CLIENT_ACHIEVEMENT_LIST_GROUPING_LOCK_STATE)) {
+    for(u32 bucketIndex : range(list->num_buckets)) {
+      auto& bucket = list->buckets[bucketIndex];
+      for(u32 index : range(bucket.num_achievements)) {
+        auto* achievement = bucket.achievements[index];
+        if(!achievement || achievementIsWarning(achievement)) continue;
+        RetroAchievementsGameView::Achievement row;
+        row.id = achievement->id;
+        row.setId = bucket.subset_id ? bucket.subset_id : coreId;
+        row.title = achievement->title ? achievement->title : "Untitled";
+        row.description = achievement->description ? achievement->description : "";
+        row.badgeUrl = achievement->badge_url ? achievement->badge_url : "";
+        row.lockedBadgeUrl = achievement->badge_locked_url ? achievement->badge_locked_url : "";
+        char badgeUrl[512] = {};
+        if(!row.badgeUrl && rc_client_achievement_get_image_url(achievement, RC_CLIENT_ACHIEVEMENT_STATE_UNLOCKED,
+             badgeUrl, sizeof(badgeUrl)) == RC_OK) row.badgeUrl = badgeUrl;
+        if(!row.lockedBadgeUrl && rc_client_achievement_get_image_url(achievement, RC_CLIENT_ACHIEVEMENT_STATE_ACTIVE,
+             badgeUrl, sizeof(badgeUrl)) == RC_OK) row.lockedBadgeUrl = badgeUrl;
+        row.progress = achievement->measured_progress[0] ? achievement->measured_progress : "";
+        row.points = achievement->points;
+        row.unlocked = achievementUnlocked(achievement);
+        row.hardcoreUnlocked = achievement->unlocked & RC_CLIENT_ACHIEVEMENT_UNLOCKED_HARDCORE;
+        row.unlockTime = row.unlocked ? (u64)achievement->unlock_time : 0;
+        switch(achievement->type) {
+        case RC_CLIENT_ACHIEVEMENT_TYPE_MISSABLE: row.type = "Missable"; break;
+        case RC_CLIENT_ACHIEVEMENT_TYPE_PROGRESSION: row.type = "Progression"; break;
+        case RC_CLIENT_ACHIEVEMENT_TYPE_WIN: row.type = "Win Condition"; break;
+        }
+        for(auto& set : view.sets) {
+          if(set.id != row.setId) continue;
+          ++set.total;
+          set.pointsTotal += row.points;
+          if(row.unlocked) {
+            ++set.unlocked;
+            set.pointsUnlocked += row.points;
+          }
+          break;
+        }
+        view.achievements.push_back(std::move(row));
+      }
+    }
+    rc_client_destroy_achievement_list(list);
+  }
+  if(auto* list = rc_client_create_leaderboard_list(_client, RC_CLIENT_LEADERBOARD_LIST_GROUPING_NONE)) {
+    for(u32 bucketIndex : range(list->num_buckets)) {
+      auto& bucket = list->buckets[bucketIndex];
+      for(u32 index : range(bucket.num_leaderboards)) {
+        auto* leaderboard = bucket.leaderboards[index];
+        if(!leaderboard) continue;
+        RetroAchievementsGameView::Leaderboard row;
+        row.id = leaderboard->id;
+        row.setId = bucket.subset_id ? bucket.subset_id : coreId;
+        row.title = leaderboard->title ? leaderboard->title : "Untitled";
+        row.description = leaderboard->description ? leaderboard->description : "";
+        row.trackerValue = leaderboard->tracker_value ? leaderboard->tracker_value : "";
+        row.active = leaderboard->state == RC_CLIENT_LEADERBOARD_STATE_ACTIVE || leaderboard->state == RC_CLIENT_LEADERBOARD_STATE_TRACKING;
+        row.lowerIsBetter = leaderboard->lower_is_better;
+        view.leaderboards.push_back(std::move(row));
+      }
+    }
+    rc_client_destroy_leaderboard_list(list);
+  }
+  std::stable_sort(view.leaderboards.begin(), view.leaderboards.end(), [](const auto& a, const auto& b) {
+    if(a.active != b.active) return a.active > b.active;
+    return a.title < b.title;
+  });
+  return view;
+}
+
+auto RetroAchievements::leaderboardView() const -> RetroAchievementsLeaderboardView {
+  Program::Guard guard;
+  return _leaderboardView;
+}
+
+auto RetroAchievements::fetchLeaderboard(u32 leaderboardId, bool topEntries) -> void {
+  Program::Guard guard;
+  if(!_client || !_gameReady || !leaderboardId) return;
+  ++_leaderboardGeneration;
+  if(_leaderboardFetch) rc_client_abort_async(_client, _leaderboardFetch);
+  _leaderboardFetch = nullptr;
+  _leaderboardView = {};
+  _leaderboardView.leaderboardId = leaderboardId;
+  _leaderboardView.topEntries = topEntries;
+  _leaderboardView.pending = true;
+  _leaderboardView.status = "Downloading leaderboard data...";
+  auto* data = new LeaderboardCallbackData{this, _leaderboardGeneration};
+  if(topEntries) {
+    _leaderboardFetch = rc_client_begin_fetch_leaderboard_entries(_client, leaderboardId, 1, 100, clientLeaderboardCallback, data);
+  } else {
+    _leaderboardFetch = rc_client_begin_fetch_leaderboard_entries_around_user(_client, leaderboardId, 25, clientLeaderboardCallback, data);
+  }
+}
+
+auto RetroAchievements::handleLeaderboardResult(int result, const char* errorMessage, rc_client_leaderboard_entry_list_t* list, u64 generation) -> void {
+  if(generation != _leaderboardGeneration) return;
+  _leaderboardFetch = nullptr;
+  _leaderboardView.pending = false;
+  if(result != RC_OK || !list) {
+    _leaderboardView.status = {"Fetch failed: ", errorMessage ? errorMessage : rc_error_str(result)};
+    return;
+  }
+  for(u32 index : range(list->num_entries)) {
+    auto& entry = list->entries[index];
+    RetroAchievementsLeaderboardView::Entry row;
+    row.rank = entry.rank;
+    row.user = entry.user ? entry.user : "Unknown";
+    row.score = entry.display;
+    row.isSelf = _username && row.user == _username;
+    char url[512] = {};
+    if(rc_client_leaderboard_entry_get_user_image_url(&entry, url, sizeof(url)) == RC_OK) row.avatarUrl = url;
+    _leaderboardView.entries.push_back(std::move(row));
+  }
+  _leaderboardView.status = _leaderboardView.topEntries
+    ? string{"Showing top ", list->num_entries, " of ", list->total_entries, " entries"}
+    : list->user_index >= 0
+      ? string{"Showing entries around your rank (", list->num_entries, " of ", list->total_entries, ")"}
+      : string{"No submitted score found for your account. Showing top ", list->num_entries, " entries instead."};
+}
+
 auto RetroAchievements::readMemory(u32 address, u8* buffer, u32 size) const -> u32 {
   if(!emulator) return 0;
   if(!settings.retroAchievements.enabled) return 0;
@@ -776,8 +1005,10 @@ auto RetroAchievements::handleClientGameLoadResult(int result, const char* error
   if(result != RC_OK) {
     _gameReady = false;
     if(result == RC_NO_GAME_LOADED) {
+      _gameUnrecognized = true;
       program.showMessage("[RA] Game not recognized by RetroAchievements");
     } else {
+      _gameLoadError = {"Game load failed: ", errorMessage ? errorMessage : rc_error_str(result)};
       program.showMessage({"[RA] Game load failed: ", errorMessage ? errorMessage : rc_error_str(result)});
     }
     return;
