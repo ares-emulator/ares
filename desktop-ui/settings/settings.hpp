@@ -4,6 +4,8 @@
   constexpr u32 layoutVertSize = 18;
 #endif
 
+#include <map>
+
 struct Settings : Markup::Node {
   using string = nall::string;
 
@@ -12,6 +14,7 @@ struct Settings : Markup::Node {
   auto process(bool load) -> void;
 
   string filePath;
+  std::map<string, string> cliPeripheralSettings;
 
   struct Video {
     string driver;

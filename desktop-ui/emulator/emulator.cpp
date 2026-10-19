@@ -239,8 +239,9 @@ auto Emulator::applyPortSettings() -> void {
       auto peripheralKey = settingKey(port->name());
       auto peripheralPath = string{"Peripherals/", core, "/", peripheralKey};
 
-      string peripheral;
-      if(auto node = settings[peripheralPath]) peripheral = string{node.string()}.strip();
+      auto configured = settings.cliPeripheralSettings.find(peripheralPath);
+      if(configured == settings.cliPeripheralSettings.end()) continue;
+      string peripheral = string{configured->second}.strip();
       if(!peripheral) continue;
 
       if(settingKey(peripheral).imatch("None")) {

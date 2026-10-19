@@ -215,7 +215,10 @@ auto nall::main(Arguments arguments) -> void {
       for(auto& port : emulator->ports) {
         string portKey = settingKey(port.name);
         if(!portKey.beginsWith("ControllerPort")) continue;
-        peripheralSettings.push_back({"Peripherals/", core, "/", portKey});
+        string path = {"Peripherals/", core, "/", portKey};
+        if(std::ranges::find(peripheralSettings, path) == peripheralSettings.end()) {
+          peripheralSettings.push_back(path);
+        }
       }
     }
   }
@@ -227,6 +230,8 @@ auto nall::main(Arguments arguments) -> void {
   };
 
   auto enumerateDumpableSettings = [&]() -> std::vector<string> {
+    Settings currentSettings;
+    currentSettings.process(false);
     std::vector<string> dumpableSettings;
     std::function<void(const Markup::Node&, string)> dump;
     dump = [&](const Markup::Node& node, string prefix) -> void {
@@ -242,7 +247,7 @@ auto nall::main(Arguments arguments) -> void {
         dump(setting, path);
       }
     };
-    dump(settings, {});
+    dump(currentSettings, {});
     for(auto& path : peripheralSettings) dumpableSettings.push_back(path);
     return dumpableSettings;
   };
@@ -254,8 +259,9 @@ auto nall::main(Arguments arguments) -> void {
       if(kv.size() == 2) {
         auto path = kv[0];
         if(auto port = portSettings.find(path); port != portSettings.end()) path = port->second;
-        auto node = settings[path];
-        if(node) {
+        if(isDynamicSetting(path)) {
+          settings.cliPeripheralSettings[path] = kv[1];
+        } else if(auto node = settings[path]) {
           bool found = false;
           for(auto& override : cliSettingOverrides) {
             if(override.path != path) continue;
@@ -267,8 +273,6 @@ auto nall::main(Arguments arguments) -> void {
             cliSettingOverrides.push_back({path, node.value(), kv[1]});
           }
           node.setValue(kv[1]);
-        } else if(isDynamicSetting(path)) {
-          settings(path).setValue(kv[1]);
         } else {
           print("Invalid setting: ", settingValue, "\n");
           return;
@@ -328,6 +332,7 @@ auto nall::main(Arguments arguments) -> void {
 
   if(arguments.take("--list-sys-aliases")) {
     for(const auto& [system, aliases] : systemAliases) {
+      if(std::ranges::none_of(emulators, [&](const auto& emulator) { return emulator->name == system; })) continue;
       print(system, ": ");
       for(u32 index : range(aliases.size())) {
         if(index) print(", ");
