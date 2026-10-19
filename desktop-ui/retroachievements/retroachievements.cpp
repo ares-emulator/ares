@@ -739,8 +739,10 @@ auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLog
     settings.retroAchievements.token = "";
     settings.save();
   }
-  retroAchievementsSettings.statusLabel.setText(result.message);
-  retroAchievementsSettings.refresh();
+  if(program.settingsWindowConstructed) {
+    retroAchievementsSettings.statusLabel.setText(result.message);
+    retroAchievementsSettings.refresh();
+  }
 }
 
 auto RetroAchievements::pumpUi() -> void {
@@ -760,7 +762,7 @@ auto RetroAchievements::pumpUi() -> void {
         _failedImages.insert(std::move(key));
       }
     }
-    retroAchievementsSettings.acceptAvatar(response.url, response.bytes);
+    if(program.settingsWindowConstructed) retroAchievementsSettings.acceptAvatar(response.url, response.bytes);
   }
   startupLoginDialog.pump();
 }
