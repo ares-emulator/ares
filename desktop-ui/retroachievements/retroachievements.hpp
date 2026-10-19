@@ -151,6 +151,7 @@ private:
   std::unordered_set<std::string> _pendingImages;
   std::unordered_set<std::string> _failedImages;
   u64 _imageVersion = 0;
+  bool _shuttingDown = false;
 };
 
 extern RetroAchievements retroAchievements;

@@ -229,6 +229,7 @@ struct HttpWorker {
   struct Task {
     enum class Kind { Client, Login, Image } kind;
     std::string url;
+    std::string cachePath;
     std::string postData;
     std::string contentType;
     std::string username;
@@ -362,6 +363,16 @@ struct HttpWorker {
         continue;
       }
 
+      if(task.kind == Task::Kind::Image && !task.cachePath.empty()) {
+        auto cached = file::read(task.cachePath.c_str());
+        if(!cached.empty() && image{cached}) {
+          std::lock_guard lock{mutex};
+          imageResponses.push_back({task.url.c_str(), std::move(cached)});
+          continue;
+        }
+        if(file::exists(task.cachePath.c_str())) file::remove(task.cachePath.c_str());
+      }
+
       CURL* curl = curl_easy_init();
       std::vector<char> body;
       int status = RC_API_SERVER_RESPONSE_RETRYABLE_CLIENT_ERROR;
@@ -400,12 +411,27 @@ struct HttpWorker {
         curl_easy_cleanup(curl);
       }
 
-      std::lock_guard lock{mutex};
       if(task.kind == Task::Kind::Client) {
+        std::lock_guard lock{mutex};
         clientResponses.push_back({std::move(body), status, task.callback, task.callbackData});
       } else {
         std::vector<u8> bytes;
         if(status >= 200 && status < 300) bytes.assign(body.begin(), body.end());
+        if(!bytes.empty()) {
+          if(image{bytes}) {
+            auto path = string{task.cachePath.c_str()};
+            directory::create(Location::path(path));
+            auto temporaryPath = string{path, ".tmp"};
+            if(file::write(temporaryPath, {bytes.data(), bytes.size()})) {
+              if(!file::move(temporaryPath, path)) file::remove(temporaryPath);
+            } else {
+              file::remove(temporaryPath);
+            }
+          } else {
+            bytes.clear();
+          }
+        }
+        std::lock_guard lock{mutex};
         imageResponses.push_back({task.url.c_str(), std::move(bytes)});
       }
     }
@@ -551,6 +577,7 @@ auto clientServerCall(const rc_api_request_t* request, rc_client_server_callback
 RetroAchievements retroAchievements;
 
 RetroAchievements::~RetroAchievements() {
+  _shuttingDown = true;
   unloadClientGame();
   imageWorker.stop();
   httpWorker.stop();
@@ -739,10 +766,12 @@ auto RetroAchievements::pumpUi() -> void {
 }
 
 auto RetroAchievements::requestImage(const string& url) -> void {
-  if(!url || !httpWorker.start() || !imageWorker.start()) return;
+  if(_shuttingDown || !url || !httpWorker.start() || !imageWorker.start()) return;
   HttpWorker::Task task;
   task.kind = HttpWorker::Task::Kind::Image;
   task.url = (const char*)url;
+  auto digest = Hash::SHA256({(const u8*)url.data(), url.size()}).digest();
+  task.cachePath = (const char*)string{Path::userData(), "ares/cheevos/images/", digest, ".png"};
   imageWorker.enqueue(std::move(task));
 }
 
