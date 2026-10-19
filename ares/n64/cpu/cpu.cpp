@@ -35,9 +35,14 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
+  u32 remaining = executionCoordinate.sliceBudget;
   while(!vi.refreshed && GDB::server.reportPC(ipu.pc & 0xFFFFFFFF)) {
+    if(executionCoordinate.sliceBudget && !remaining--) break;
     if(instruction()) synchronize();
   }
+  executionCoordinate.livenessYield = vi.refreshed && !executionCoordinate.boundaryLatched;
+  executionCoordinate.atBoundary = vi.refreshed && executionCoordinate.boundaryLatched;
+  executionCoordinate.boundaryLatched = false;
 
   vi.refreshed = false;
   queue.remove(Queue::GDB_Poll);

@@ -87,10 +87,13 @@ export class LocalServiceHost {
     if (this.sockets.size >= 8) { socket.destroy(); return; }
     this.sockets.add(socket);
     const connection = randomUUID(), seen = new Set<string>();
-    let authenticated = false, inFlight = 0;
+    let authenticated = false, inFlight = 0, lastLocalId = 0;
     const helloTimeout = setTimeout(() => socket.destroy(), 3000);
     socket.on('error', () => {});
-    socket.once('close', () => { clearTimeout(helloTimeout); this.sockets.delete(socket); });
+    socket.once('close', () => {
+      clearTimeout(helloTimeout); this.sockets.delete(socket);
+      if (authenticated) void this.client.request('execution.release', undefined, undefined, connection).catch(() => {});
+    });
     lines(socket, message => {
       const error = (code: string, end = false) => {
         send(socket, { protocol: 1, type: 'reply', id: token(message?.id) ? message.id : 'invalid', connection, ok: false, error: code });
@@ -104,17 +107,29 @@ export class LocalServiceHost {
         send(socket, { protocol: 1, type: 'hello', id: message.id, instance: this.instance, connection, ok: true }); return;
       }
       if (message.type !== 'request' || message.connection !== connection) { error('stale_connection'); return; }
-      if (seen.has(message.id)) { error('duplicate_request'); return; }
-      if (seen.size >= 1024) { error('connection_request_limit', true); return; }
-      seen.add(message.id);
+      // Our clients use monotonically increasing localN IDs. A high-water mark
+      // rejects replays with constant storage, permitting long operation polling.
+      // Arbitrary third-party IDs retain the bounded deduplication quota.
+      const localId = /^local([0-9]+)$/.exec(message.id);
+      if (localId) {
+        const sequence = Number(localId[1]);
+        if (!Number.isSafeInteger(sequence) || sequence < 1) { error('invalid_request'); return; }
+        if (sequence <= lastLocalId) { error('duplicate_request'); return; }
+        lastLocalId = sequence;
+      } else {
+        if (seen.has(message.id)) { error('duplicate_request'); return; }
+        if (seen.size >= 1024) { error('connection_request_limit', true); return; }
+        seen.add(message.id);
+      }
       if (inFlight >= 16) { error('busy'); return; }
-      // Reset stays a UI action. Execution ownership/long operations are task 4.
-      if (message.method === 'session.reset') { error('unavailable'); return; }
+      // Reset and owner-release stay main-owned actions. Owners come from this
+      // authenticated connection generation, never from untrusted request data.
+      if (['session.reset', 'execution.release'].includes(message.method)) { error('unavailable'); return; }
       if (!['session.status', 'memory.regions'].includes(message.method) && !message.identity) { error('session_required'); return; }
       try { encodeRequest('validation', message.identity ?? { session: 'discovery', epoch: 1 }, message.method, message.params); }
       catch { error('invalid_request'); return; }
       ++inFlight;
-      void this.client.request(message.method, message.identity, message.params).then(reply => {
+      void this.client.request(message.method, message.identity, message.params, connection).then(reply => {
         if (!socket.destroyed) send(socket, { protocol: 1, type: 'reply', id: message.id, connection, ok: true, reply });
       }, failure => error(failure instanceof ServiceError ? failure.code : 'native_host_disconnected')).finally(() => --inFlight);
     });

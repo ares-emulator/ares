@@ -9,7 +9,7 @@
       "Address": "Union[int, str]"
     }
   },
-  "extraction": "AST annotations, required flags, default expressions and docstrings; FastMCP generated JSON Schema has not been executed or verified. No source implementation was transplanted.",
+  "extraction": "AST annotations, required flags, default expressions and docstrings; FastMCP generated JSON Schema has not been executed or verified. Task 4 adapts minimum native VI/scheduler semantics from the same fork; source hashes are recorded in EXECUTION-LOG.md.",
   "tools": [
     {
       "name": "emu_status",
@@ -27,8 +27,8 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 1,
-      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
-      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
+      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
+      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
@@ -41,9 +41,14 @@
           "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
+        },
+        {
+          "scope": "task 4 execution port",
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
+          "result": "pending live verification"
         }
       ],
-      "knownLimits": "Generic paused/system/session/epoch/services only. Full N64 status/VI/executor/ownership fields remain deferred; verbose=true reports current limits."
+      "knownLimits": "Native VI frame, frame kind, boundary, executor and active operation ID added. Register/input/full reference status groups remain pending."
     },
     {
       "name": "cpu_registers",
@@ -166,10 +171,16 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 4,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
+      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 4 execution port",
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
+          "result": "pending live verification"
+        }
+      ],
+      "knownLimits": "N64/synthetic VI boundaries only; relative limit 1000000, deadline 0.001\u2013600 seconds. screenshot_after/fpr/cop0 requests return unavailable; verbose adds no register groups. CPU hits/captures/input neutralization remain tasks 5\u20137."
     },
     {
       "name": "run_until_frame",
@@ -193,10 +204,16 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 4,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
+      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 4 execution port",
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
+          "result": "pending live verification"
+        }
+      ],
+      "knownLimits": "N64/synthetic current-epoch absolute VI target; past targets reject. Deadline 0.001\u2013600 seconds. CPU debug/input fields remain later tasks."
     },
     {
       "name": "step_instructions",
@@ -297,8 +314,8 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 1,
-      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
-      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
+      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
+      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
@@ -311,9 +328,14 @@
           "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
+        },
+        {
+          "scope": "task 4 execution port",
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
+          "result": "pending live verification"
         }
       ],
-      "knownLimits": "Outer-loop safe-point pause. Bounded-operation cancellation and instruction-stop semantics await task 4/5."
+      "knownLimits": "Native slice-boundary pause finishes the same-owner operation; UI pause can interrupt any owner. CPU breakpoint/instruction stop details remain task 5."
     },
     {
       "name": "resume",
@@ -358,10 +380,16 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
+      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 4 execution port",
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
+          "result": "pending live verification"
+        }
+      ],
+      "knownLimits": "Alias for exactly one VI boundary, not a CPU instruction. N64/synthetic only."
     },
     {
       "name": "operation_status",
@@ -397,10 +425,16 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 4,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
+      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 4 execution port",
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
+          "result": "pending live verification"
+        }
+      ],
+      "knownLimits": "Live state or immutable final snapshot; retains latest 16. Session/epoch required. fpr/cop0 return unavailable; verbose has no extra register groups."
     },
     {
       "name": "cancel_operation",
@@ -418,10 +452,16 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 4,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
+      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 4 execution port",
+          "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.cjs",
+          "result": "pending live verification"
+        }
+      ],
+      "knownLimits": "Cancels owning connection operation, or UI can interrupt any owner. Null ID selects active operation; no active operation returns unknown_operation. Repeating an explicit completed ID returns its immutable result."
     },
     {
       "name": "break_add",

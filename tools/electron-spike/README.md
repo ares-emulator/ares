@@ -219,3 +219,35 @@ for end-to-end latency, audio underrun instrumentation, cross-platform packaging
 and unusual multi-screen/peripheral configurations. Runtime disc swapping and the
 full desktop menu/debugger feature set are outside this spike. Original loader
 support and missing-firmware diagnostics remain available for all compiled systems.
+
+### Controlled VI execution
+
+Task 4 adds `run_frames(n, max_seconds=60)`, `run_until_frame(k,
+max_seconds=60)`, `step()`, `operation_status(operation_id)` and
+`cancel_operation(operation_id=null)` to MCP. These support N64 and the explicitly
+labelled synthetic fixture; other systems return `unavailable`. A VI coordinate
+counts active scanout boundaries (interlaced fields count separately), not canvas
+frames or inactive-display liveness yields. From a partial frame, one frame means
+the next boundary. Zero frames completes immediately without advancing; absolute
+targets in the past reject. Each new native process has a new session; reset
+increments its epoch and resets the coordinate to zero.
+
+The shared service methods are `execution.runFrames({count, timeoutMs})`,
+`execution.runUntilFrame({frame, timeoutMs})`,
+`execution.status({operationId})` and `execution.cancel({operationId})`.
+Starts return a running operation or an immediate final result. Poll with the
+original session/epoch. Completed snapshots are immutable and the latest 16 are
+retained. Deadlines are 1–600000 ms; relative runs cap at 1000000 frames.
+MCP polls internally while accepting concurrent status/cancel requests.
+
+Each authenticated local connection owns its operations by connection generation.
+A competing start, resume, write or cancel returns `busy`; reads and polling stay
+available. Disconnect stops that connection's operation, and reconnect never
+replays it. UI pause may interrupt any owner and UI reset revokes the old epoch.
+Renderer reload leaves external ownership intact. Completion leaves ordinary play
+paused. Controlled runs drain/discard audio and bypass normal frame pacing;
+ordinary play keeps its configured executor and pacing. The native CPU loop has
+a bounded iteration slice, not an instruction-stepping promise. GDB attachment
+prevents starting controlled execution. Register snapshots, break/watch stops,
+input leases/neutralization, captures and state-loading hooks remain later tasks;
+requests for unimplemented MCP snapshot/capture options fail explicitly.

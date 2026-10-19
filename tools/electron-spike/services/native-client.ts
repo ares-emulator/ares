@@ -34,12 +34,19 @@ export class NativeSessionClient implements SessionClient {
     output.on('error', error => this.fail(error));
     input.on('error', () => this.fail(new ServiceError('native_host_disconnected')));
   }
-  request<M extends ServiceMethod>(method: M, identity = this.identity, params?: ServiceParams<M>): Promise<SessionReply<ServiceResult<M>>> {
+  request<M extends ServiceMethod>(method: M, identity = this.identity, params?: ServiceParams<M>, owner = 'ui'): Promise<SessionReply<ServiceResult<M>>> {
     if (this.closed) return Promise.reject(new ServiceError('native_host_disconnected'));
-    if (this.pending.size >= 32 || this.input.writableLength > 16384) return Promise.reject(new ServiceError('busy'));
+    // Reserve capacity for the endpoint's eight owner revocations. If even the
+    // bounded reserve is exhausted, fail closed: main terminates the host rather
+    // than leaving disconnected execution running until its deadline.
+    const release = method === 'execution.release';
+    if (this.pending.size >= (release ? 40 : 32) || this.input.writableLength > (release ? 49152 : 16384)) {
+      if (release) this.fail(new ServiceError('owner_revocation_failed'));
+      return Promise.reject(new ServiceError(release ? 'owner_revocation_failed' : 'busy'));
+    }
     const id = `req${++this.nextId}`;
     let wire: string;
-    try { wire = encodeRequest(id, identity, method, params); } catch (error) { return Promise.reject(error); }
+    try { wire = encodeRequest(id, identity, method, params, owner); } catch (error) { return Promise.reject(error); }
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => this.fail(new ServiceError('request_timeout')), this.timeoutMs);
       this.pending.set(id, { method, resolve: reply => resolve(reply as SessionReply<ServiceResult<M>>), reject, timer });

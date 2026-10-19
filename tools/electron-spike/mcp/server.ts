@@ -2,7 +2,7 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import * as z from 'zod/v4';
-import { MAX_TRANSFER, ServiceError, type SessionReply } from '../services/contracts';
+import { MAX_TRANSFER, ServiceError, type ExecutionOperation, type SessionIdentity, type SessionReply } from '../services/contracts';
 import { LocalServiceClient } from '../services/local-endpoint';
 import { MemoryClient, hexToBytes, type RegionHandle } from '../services/memory';
 
@@ -15,6 +15,8 @@ if (!file || !path.isAbsolute(file) || !instance || args.length !== 4 || args.fi
 const local = new LocalServiceClient(file, instance);
 const memory = new MemoryClient(local);
 let regions: RegionHandle[] | undefined;
+// Retain identity with recent operation handles, just as region handles do.
+const operationIdentities = new Map<number, SessionIdentity>();
 function unwrap<T>(r: SessionReply<T>): T { if (!r.ok || !r.result) throw new ServiceError(r.error || 'invalid_reply'); return r.result; }
 function address(value: number | string): number {
   const text = typeof value === 'string' ? value.trim().replace(/_/g, '') : String(value);
@@ -35,8 +37,8 @@ function createServer(): McpServer {
   const server = new McpServer({ name: 'ares', version: '0.2.0' });
   const status = async () => { const reply = await local.request('session.status'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch }; };
   const call = (fn: () => Promise<unknown>) => fn().then(output, failure);
-  server.registerTool('emu_status', { description: 'Generic emulator status and session identity. VI/CPU/debug fields are not implemented yet.', inputSchema: z.object({ verbose: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true } }, async ({ verbose }) => call(async () => ({ ...await status(), ...(verbose ? { limits: ['No VI coordinates, CPU registers, execution ownership or input overrides yet.'] } : {}) })));
-  server.registerTool('pause', { description: 'Pause at the native outer-loop safe point.', inputSchema: z.object({}).strict() }, async () => call(async () => {
+  server.registerTool('emu_status', { description: 'Emulator status, native VI coordinates and current execution operation.', inputSchema: z.object({ verbose: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true } }, async ({ verbose }) => call(async () => ({ ...await status(), ...(verbose ? { limits: ['CPU register/debug snapshots and input overrides are not implemented yet; VI runs support N64 and the synthetic fixture only.'] } : {}) })));
+  server.registerTool('pause', { description: 'Pause at a native slice boundary and finish an owned operation with reason paused.', inputSchema: z.object({}).strict() }, async () => call(async () => {
     if (!local.identity) await status(); const reply = await local.request('session.pause'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch };
   }));
   server.registerTool('resume', { description: 'Resume ordinary execution. Input override control is not implemented yet.', inputSchema: z.object({ keep_overrides: z.boolean().default(false) }).strict() }, async ({ keep_overrides }) => call(async () => {
@@ -56,6 +58,38 @@ function createServer(): McpServer {
     if (!hex.length || hex.length > MAX_TRANSFER * 2) throw new ServiceError('invalid_request');
     const r = await region(name), result = await memory.write(r, address(addr), hexToBytes(hex));
     return { region: r.name, region_id: r.id, addr: `0x${result.offset.toString(16).toUpperCase()}`, written: result.written, ...r.identity };
+  }));
+  const maxSeconds = z.number().min(0.001).max(600).default(60);
+  const flags = { fpr: z.boolean().default(false), cop0: z.boolean().default(false), verbose: z.boolean().default(false) };
+  async function operation(method: 'execution.runFrames' | 'execution.runUntilFrame', amount: number, seconds: number): Promise<ExecutionOperation> {
+    if (!local.identity) await status();
+    // Keep the starting identity through every poll. A ROM/reset never silently
+    // rebinds this operation to the replacement session.
+    const identity = { ...local.identity! };
+    const params = method === 'execution.runFrames' ? { count: amount, timeoutMs: Math.ceil(seconds * 1000) } : { frame: amount, timeoutMs: Math.ceil(seconds * 1000) };
+    let result = unwrap(await local.request(method, identity, params));
+    operationIdentities.delete(result.operation_id); operationIdentities.set(result.operation_id, identity);
+    if (operationIdentities.size > 32) operationIdentities.delete(operationIdentities.keys().next().value!);
+    while (result.state === 'running') {
+      await new Promise(resolve => setTimeout(resolve, 20));
+      result = unwrap(await local.request('execution.status', identity, { operationId: result.operation_id }));
+    }
+    return result;
+  }
+  server.registerTool('run_frames', { description: 'Run exactly n active VI boundaries and stop; zero advances nothing. A partial starting frame counts toward the next boundary. N64 only (plus synthetic fixture).', inputSchema: z.object({ n: z.number().int().min(0).max(1000000), max_seconds: maxSeconds, screenshot_after: z.record(z.string(), z.unknown()).nullable().default(null), ...flags }).strict() }, async ({ n, max_seconds, screenshot_after, fpr, cop0 }) => call(async () => {
+    if (screenshot_after !== null || fpr || cop0) throw new ServiceError('unavailable');
+    return operation('execution.runFrames', n, max_seconds);
+  }));
+  server.registerTool('run_until_frame', { description: 'Run to absolute VI frame k in this epoch; past targets reject.', inputSchema: z.object({ k: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER), max_seconds: maxSeconds }).strict() }, async ({ k, max_seconds }) => call(() => operation('execution.runUntilFrame', k, max_seconds)));
+  server.registerTool('step', { description: 'Alias for run_frames(1), advancing to the next VI boundary.', inputSchema: z.object({}).strict() }, async () => call(() => operation('execution.runFrames', 1, 60)));
+  server.registerTool('operation_status', { description: 'Poll running state or the immutable final result. The last 16 completed operations are retained.', inputSchema: z.object({ operation_id: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER), ...flags }).strict(), annotations: { readOnlyHint: true } }, async ({ operation_id, fpr, cop0 }) => call(async () => {
+    if (fpr || cop0) throw new ServiceError('unavailable');
+    if (!local.identity) await status();
+    return unwrap(await local.request('execution.status', operationIdentities.get(operation_id), { operationId: operation_id }));
+  }));
+  server.registerTool('cancel_operation', { description: 'Cancel this connection’s current operation, or a specific ID. UI pause can interrupt any owner.', inputSchema: z.object({ operation_id: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).nullable().default(null) }).strict() }, async ({ operation_id }) => call(async () => {
+    if (!local.identity) await status();
+    return unwrap(await local.request('execution.cancel', operation_id === null ? undefined : operationIdentities.get(operation_id), { operationId: operation_id ?? 0 }));
   }));
   server.server.onclose = () => local.close();
   return server;

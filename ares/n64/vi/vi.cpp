@@ -86,6 +86,7 @@ auto VI::main() -> void {
       }
 
       if(io.vcounter == io.vstart >> 1) {
+        executionCoordinate.boundary();
         #if defined(VULKAN)
         if (vulkan.enable) {
           gpuOutputValid = vulkan.scanoutAsync(io.field);

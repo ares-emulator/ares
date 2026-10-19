@@ -19,6 +19,8 @@
 #include <io.h>
 #endif
 #include <desktop-ui/desktop-ui.hpp>
+#include <n64/n64.hpp>
+#include <nall/gdb/server.hpp>
 namespace ruby { Video video; Audio audio; Input input; }
 
 // Resource/config lookup shared with existing loaders, without changing user settings.
@@ -125,7 +127,7 @@ struct Host : ares::Platform {
         mixed[1] += samples[channels == 1 ? 0 : 1];
       }
       for(auto& sample : mixed) sample = std::clamp(sample, -1.0, 1.0) * 0.4;
-      if(sound) output.output(mixed);
+      if(sound && !service.execution.active) output.output(mixed);
     }
   }
   auto input(ares::Node::Input::Input node) -> void override {
@@ -366,28 +368,60 @@ int main(int argc, char** argv) {
   std::vector<u32> pixels(synthetic ? (width + 8) * height : 0);
   auto deadline = Clock::now();
   uint32_t tick = 0;
+  unsigned syntheticPhase = 0;
+  bool n64 = !synthetic && host.root && host.root->name() == "Nintendo 64";
+  auto& execution = host.service.execution;
+  execution.supported = synthetic || n64;
+  execution.frameKind = synthetic ? "synthetic-vi" : n64 ? "vi" : "unavailable";
+  execution.executor = synthetic ? "synthetic" : n64 ? (ares::Nintendo64::Accuracy::CPU::Recompiler && ares::Nintendo64::cpu.recompiler.enabled ? "recompiler" : "interpreter") : "unavailable";
+  ares::Nintendo64::executionCoordinate.reset();
+  // Yield even during ordinary N64 play so UI control stays serviceable if VI is
+  // inactive. This is an outer CPU-loop budget, not an instruction-step count.
+  if(n64) ares::Nintendo64::executionCoordinate.sliceBudget = 20000;
   while(!host.quit) {
+    if(n64) {
+      execution.frame = ares::Nintendo64::executionCoordinate.frame;
+      execution.atBoundary = ares::Nintendo64::executionCoordinate.atBoundary;
+      execution.supported = !nall::GDB::server.hasClient();
+    }
+    bool wasControlled = bool(execution.active);
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
       if(host.root) { host.output.clear(); host.root->power(); }
+      ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
     }, host.memory)) { host.quit = true; break; }
-    if(host.service.paused) {
+    if(!wasControlled && execution.active && host.sound) host.output.clear();
+    if(host.service.paused && !execution.active) {
       if(host.sound && !synthetic) host.output.clear();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
       deadline = Clock::now(); continue;
     }
+    bool controlled = bool(execution.active);
+    auto frameBefore = execution.frame;
     if(synthetic) {
+      // Two deterministic slices per synthetic VI: the first ends mid-frame.
+      execution.atBoundary = (++syntheticPhase == 2);
+      if(!execution.atBoundary) { if(execution.active) ++execution.active->slices; continue; }
+      syntheticPhase = 0; ++execution.frame;
       host.appliedInput = host.controls.load() >> 32;
       for(unsigned y = 0; y < height; y++) for(unsigned x = 0; x < width; x++) {
         pixels[y * (width + 8) + x] = 0xff000000u | ((x + tick) % 256 << 16) | ((y + tick) % 256 << 8) | (tick % 256);
       }
       host.video({}, pixels.data(), (width + 8) * 4, width, height); ++tick;
     } else host.root->run();
-    if(synthetic || !host.sound) {
+    if(execution.active) ++execution.active->slices;
+    if(n64) {
+      execution.frame = ares::Nintendo64::executionCoordinate.frame;
+      execution.atBoundary = ares::Nintendo64::executionCoordinate.atBoundary;
+    }
+    execution.service(host.service.paused);
+    if(controlled) { deadline = Clock::now(); continue; }
+    if((synthetic || !host.sound) && (!n64 || execution.frame != frameBefore || ares::Nintendo64::executionCoordinate.livenessYield)) {
       deadline += std::chrono::nanoseconds(synthetic ? 16666667 : int64_t(1e9 / host.refreshRate.load()));
       std::this_thread::sleep_until(deadline);
       if(Clock::now() - deadline > std::chrono::milliseconds(100)) deadline = Clock::now();
     }
   }
+  execution.complete("shutdown", host.service.paused);
   host.quit = true; host.wake.notify_all();
   host.service.close();
   writer.join(); reader.join();

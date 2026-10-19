@@ -216,3 +216,75 @@ queue/client-count saturation and long soak remain **not run**. Prior pending
 manual checks carry forward. Task 3 needed no new native-core rebuild; the tested
 native binary is the task 2 binary (the copied artifact gets local rpath/signature
 changes only).
+
+## Task 4 — native VI coordinates and owned bounded execution
+
+Implementation and verification in progress.
+
+Minimum semantics were adapted from the `ares-64` reference at
+`1c9b9637476a83f7b80d3db1115a0f71529820d9` (original controlled-run work
+`bdcadf33d`). The port retains active VI scanout boundary counting, partial-frame
+coordinates, bounded service slices, single completion, bounded final-result
+retention and connection-generation ownership. It does not import the fork's
+Python/TCP transport, desktop event loop, CPU debug engine or capture/input code.
+Reference-file SHA-256 hashes:
+
+| Reference file | SHA-256 |
+| --- | --- |
+| `ares/n64/system/debug-session.hpp` | `a2d09f5aee1edde6caf7d8a330fe95756d1a6de6ad4ff79f7e17b8305cb44e2f` |
+| `desktop-ui/program/debug-session.cpp` | `93c4061ac352f8fc887e793e2d8f5317446c17dabc4e3c7027043dd2c877f700` |
+| `ares/n64/cpu/cpu.cpp` | `f897cd8b6a93fa8afe2a6d75644fa114d931ed0246926db4b8d79da69bf94292` |
+| `ares/n64/vi/vi.cpp` | `5a0fa9b3fc540e05f499cdbb40a20ff4a234055496aa1a1b4e2a5225f7dd70cd` |
+
+The Electron native loop enables a 20000-iteration CPU slice on N64 without
+forcing its interpreter. Active VI boundaries increment the native coordinate;
+blank-display liveness yields and renderer credits do not. The synthetic host
+uses two slices per explicit synthetic VI to exercise partial-frame starts.
+Operations drive the same root loop without normal frame/audio pacing, and leave
+ordinary play paused. Buffered native audio is cleared at entry; streams are
+drained/discarded during controlled runs. Default desktop use keeps a zero slice
+budget. This is bounded outer-loop servicing, not instruction counting or a hard
+real-time guarantee for every device/backend call.
+
+The authenticated endpoint supplies connection UUID owners. Competing starts,
+resume, writes and cancellation return `busy`; reads/polls remain available.
+UI pause interrupts any owner. Reset finishes active work before incrementing the
+epoch; native replacement creates a new session. Disconnect releases only that
+connection generation. Native request capacity reserves eight cleanup slots; if
+cleanup cannot be queued within the bounded reserve, main terminates the host.
+One final snapshot is retained per operation (latest 16), including cancel,
+timeout, pause, disconnect, reset and shutdown paths. The MCP adapter polls with
+its original identity and never rebinds/replays across reset/ROM replacement.
+
+Five tools are added: `run_frames`, `run_until_frame`, `step`,
+`operation_status`, `cancel_operation`. Source names/defaults are retained,
+with explicit limits (one million relative frames, deadlines 0.001–600 seconds)
+and `unavailable` for requested register/capture options. Other systems' bounded
+VI runs return `unavailable`. CPU break/watch/register semantics, input leases
+and neutralization, state-load epochs and captures remain tasks 5–8. The ledger
+continues to target all 68 tools; eleven are now registered as bounded slices.
+
+Long polling keeps the same connection owner: monotonic `localN` request IDs use
+a constant-space replay high-water mark instead of exhausting the old 1024-ID
+quota. Arbitrary-ID clients retain bounded deduplication and the quota. A focused
+1050-request same-connection regression passed. Recent MCP operation handles
+also retain their original session/epoch (32 adapter handles; 16 native finals),
+so explicit status refresh does not silently rebind a recent old operation ID.
+
+Intermediate verification caught a stale host object because the first build
+overlapped final host edits: 19/21 checks passed, while slice-count and executor
+assertions saw the old values. The host source was then touched for an explicit
+fresh compilation. These intermediate failures are not counted as passing
+runtime evidence. A load-sensitive 30 ms transport test was also replaced with
+a deterministic held/released reply and a separate timeout; its focused rerun
+passed all four transport checks.
+
+The fresh native build completed and **all 21 service tests passed**, including
+real MCP stdio, exact/unpaced synthetic VI runs, N64 inactive-VI timeout/cancel,
+owner conflict/disconnect/reconnect, reset revocation and immutable finals.
+Electron integration remains pending: the existing UI harness reached its
+20-second watchdog, and the Electron-hosted MCP harness reached its 8-second
+initialize watchdog. These are recorded as failed/incomplete checks, not passes;
+their cause has not yet been established. The user requested task 4.5 (TypeScript
+and ESM migration) before further shell expansion. That detour will update the
+entry points and harnesses, then rerun these gates using this native binary.

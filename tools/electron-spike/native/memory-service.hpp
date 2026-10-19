@@ -11,7 +11,7 @@ inline auto controlQuote(const std::string& value) -> std::string {
   }
   return result + "\"";
 }
-struct ControlResult { std::string error, json; };
+#include "control-result.hpp"
 
 // This service exposes debugger-region offsets, never CPU virtual addresses.
 struct MemoryService {

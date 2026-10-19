@@ -41,3 +41,23 @@ test('schema validation rejects malformed envelopes, identities and methods', ()
   assert.throws(() => encodeRequest('a', { ...identity, session: 'injected\nquit' }, 'session.pause'), /invalid_request/);
   assert.throws(() => encodeRequest('a', identity, 'unknown'), /invalid_request/);
 });
+test('execution requests bound targets, deadlines, IDs and internal owner tokens', () => {
+  assert.match(encodeRequest('op', identity, 'execution.runFrames', { count: 2, timeoutMs: 60000 }, 'connection-1'), /execution.runFrames 2 60000 owner=connection-1\n$/);
+  for (const params of [{ count: -1, timeoutMs: 100 }, { count: 1000001, timeoutMs: 100 }, { count: 1, timeoutMs: 0 }, { count: 1, timeoutMs: 600001 }, { count: 1, timeoutMs: 1, owner: 'spoof' }])
+    assert.throws(() => encodeRequest('op', identity, 'execution.runFrames', params), /invalid_request/);
+  assert.throws(() => encodeRequest('op', identity, 'execution.status', { operationId: 0.5 }), /invalid_request/);
+  assert.throws(() => encodeRequest('op', identity, 'execution.runFrames', { count: 1, timeoutMs: 100 }, 'owner\nquit'), /invalid_request/);
+});
+test('owner disconnects have reserved capacity and fail closed if revocation cannot be queued', async () => {
+  const input = new PassThrough(), output = new PassThrough(); let failure;
+  const client = new NativeSessionClient(input, output, identity, e => { failure = e; });
+  const pending = Array.from({ length: 32 }, () => client.request('session.status').catch(e => e.code));
+  await assert.rejects(client.request('session.status'), /busy/);
+  const release = client.request('execution.release', undefined, undefined, 'departed-owner');
+  output.write(JSON.stringify({ protocol: 1, id: 'req33', ...identity, ok: true, result: { released: true } }) + '\n');
+  assert.equal((await release).result.released, true);
+  for (let i = 0; i < 8; i++) pending.push(client.request('execution.release', undefined, undefined, `owner-${i}`).catch(e => e.code));
+  await assert.rejects(client.request('execution.release', undefined, undefined, 'overflow-owner'), /owner_revocation_failed/);
+  assert.equal(failure.code, 'owner_revocation_failed');
+  assert.ok((await Promise.all(pending)).every(code => code === 'owner_revocation_failed'));
+});

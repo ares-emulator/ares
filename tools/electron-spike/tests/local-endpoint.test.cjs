@@ -11,23 +11,24 @@ const { ServiceError } = require('../dist/services/contracts.js');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function fixture(check) {
   const directory = fs.mkdtempSync(path.join(process.platform === 'darwin' ? '/tmp' : os.tmpdir(), 'ares-local-'));
-  let writes = 0;
+  let writes = 0, releasePause;
   const backend = { request: async method => {
-    if (method === 'session.pause') { ++writes; await sleep(100); }
+    if (method === 'session.pause') { ++writes; await new Promise(resolve => { releasePause = resolve; }); }
     return { protocol: 1, id: 'native1', session: 'fixture', epoch: 1, ok: true, result: { paused: false, system: 'Fixture', synthetic: true, capabilities: ['session.status', 'session.pause'] } };
   } };
   const host = new LocalServiceHost(backend); const file = await host.listen(directory);
-  const client = new LocalServiceClient(file, host.instance, 30);
-  try { await check({ host, file, client, directory, writes: () => writes }); }
-  finally { client.close(); await host.close(); fs.rmSync(directory, { recursive: true, force: true }); }
+  const client = new LocalServiceClient(file, host.instance, 500);
+  try { await check({ host, file, client, directory, writes: () => writes, releasePause: () => releasePause?.() }); }
+  finally { releasePause?.(); client.close(); await host.close(); fs.rmSync(directory, { recursive: true, force: true }); }
 }
 test('explicit instance selection, private metadata, disconnect/reconnect and timeout never replay a mutation', async () => {
-  await fixture(async ({ host, file, client, writes }) => {
+  await fixture(async ({ host, file, client, writes, releasePause }) => {
     assert.equal((await client.request('session.status')).session, 'fixture');
     await assert.rejects(client.request('session.pause'), /request_timeout/);
     assert.equal(writes(), 1);
+    releasePause();
     assert.equal((await client.request('session.status')).session, 'fixture');
-    await sleep(130); assert.equal(writes(), 1);
+    await sleep(50); assert.equal(writes(), 1);
     const wrong = new LocalServiceClient(file, 'different-instance');
     await assert.rejects(wrong.request('session.status'), /wrong_instance/); wrong.close();
     fs.chmodSync(file, 0o644);
@@ -69,5 +70,14 @@ test('the socket handshake rejects a different app instance and an invalid authe
       assert.equal(JSON.parse((await response)[0]).error, expected); socket.destroy();
     }
     assert.equal(writes(), 0);
+  });
+});
+test('operation polling can outlive the arbitrary-ID quota without reconnecting or replaying', { timeout: 15000 }, async () => {
+  await fixture(async ({ host, file }) => {
+    const client = new LocalServiceClient(file, host.instance);
+    try {
+      for (let i = 0; i < 1050; i++) assert.equal((await client.request('session.status')).ok, true);
+      assert.equal(host.sockets.size, 1, 'same connection, and therefore same owner generation');
+    } finally { client.close(); }
   });
 });

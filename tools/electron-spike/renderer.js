@@ -172,7 +172,7 @@ let sessionIdentity;
 function acceptSessionState(reply) {
   const previous = sessionIdentity;
   sessionIdentity = { session: reply.session, epoch: reply.epoch };
-  paused = reply.result.paused;
+  paused = reply.result.paused && reply.result.operation_id == null;
   $('pause').textContent = paused ? 'Resume' : 'Pause';
   if (previous && (previous.session !== reply.session || previous.epoch !== reply.epoch)) window.dispatchEvent(new Event('ares-session-reset'));
 }
