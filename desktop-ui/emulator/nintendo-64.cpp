@@ -100,7 +100,8 @@ auto Nintendo64::controllerPakIndex(string portName) -> s32 {
 }
 
 auto Nintendo64::controllerPakExtension(u32 index) -> string {
-  return index == 0 ? ".pak" : string{".", index + 1, ".pak"};
+  if(index == 0) return ".pak";
+  return {".", index + 1, ".pak"};
 }
 
 auto Nintendo64::createControllerPak(ares::Node::Object port) -> void {
