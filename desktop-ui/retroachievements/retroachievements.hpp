@@ -10,9 +10,7 @@ struct RetroAchievementsLoginResult {
   string message;
 };
 
-#if defined(ARES_ENABLE_RCHEEVOS)
 struct rc_client_t;
-#endif
 
 struct RetroAchievements {
   ~RetroAchievements();
@@ -54,9 +52,7 @@ private:
   auto clearUser() -> void;
   auto completeLogin(u64 generation, const RetroAchievementsLoginResult& result) -> void;
 
-#if defined(ARES_ENABLE_RCHEEVOS)
   rc_client_t* _client = nullptr;
-#endif
   string _gameHash;
   std::vector<u8> _pendingRomData;
   bool _gameReady = false;

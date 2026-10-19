@@ -1,7 +1,5 @@
 #pragma once
 
-#if defined(ARES_ENABLE_RCHEEVOS)
-
 namespace RA::Platform {
 
 struct Adapter {
@@ -76,5 +74,3 @@ auto adapters() -> std::vector<Adapter*>&;
 auto selectAdapter(const Emulator& emu) -> Adapter*;
 
 }
-
-#endif

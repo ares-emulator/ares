@@ -24,7 +24,7 @@ target_sources(
 
 target_sources(desktop-ui PRIVATE resource/resource.cpp resource/resource.hpp)
 
-target_sources(desktop-ui PRIVATE retroachievements/retroachievements.cpp retroachievements/retroachievements.hpp)
+target_sources(desktop-ui PRIVATE retroachievements/retroachievements.cpp retroachievements/retroachievements-disabled.cpp retroachievements/retroachievements.hpp)
 
 target_sources(
   desktop-ui

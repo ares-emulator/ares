@@ -3,8 +3,6 @@
 
 #include <rc_consoles.h>
 
-#if defined(ARES_ENABLE_RCHEEVOS)
-
 namespace {
 
 using namespace RA::Platform;
@@ -80,5 +78,3 @@ auto registerNintendoAdapters(std::vector<Adapter*>& list) -> void {
 }
 
 }
-
-#endif

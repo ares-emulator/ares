@@ -1,18 +1,15 @@
 #include "../desktop-ui.hpp"
 
-#if defined(ARES_ENABLE_RCHEEVOS)
-  #include "platform/adapter.hpp"
-  #include <curl/curl.h>
-  #include <rc_api_user.h>
-  #include <rc_client.h>
-  #include <rc_hash.h>
-  #include <condition_variable>
-  #include <deque>
-  #include <mutex>
-  #include <thread>
-#endif
+#include "platform/adapter.hpp"
+#include <curl/curl.h>
+#include <rc_api_user.h>
+#include <rc_client.h>
+#include <rc_hash.h>
+#include <condition_variable>
+#include <deque>
+#include <mutex>
+#include <thread>
 
-#if defined(ARES_ENABLE_RCHEEVOS)
 namespace {
 struct ClientCallbackData {
   RetroAchievements* self = nullptr;
@@ -534,23 +531,19 @@ auto clientServerCall(const rc_api_request_t* request, rc_client_server_callback
   httpWorker.enqueue(std::move(task));
 }
 }
-#endif
 
 RetroAchievements retroAchievements;
 
 RetroAchievements::~RetroAchievements() {
-#if defined(ARES_ENABLE_RCHEEVOS)
   unloadClientGame();
   httpWorker.stop();
   if(_client) {
     rc_client_destroy(_client);
     _client = nullptr;
   }
-#endif
 }
 
 auto RetroAchievements::ensureClient() -> bool {
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(_client) return true;
   if(!httpWorker.start()) return false;
   _client = rc_client_create(clientReadMemory, clientServerCall);
@@ -560,13 +553,9 @@ auto RetroAchievements::ensureClient() -> bool {
   rc_client_set_allow_background_memory_reads(_client, 0);
   rc_client_set_hardcore_enabled(_client, settings.retroAchievements.hardcore ? 1 : 0);
   return true;
-#else
-  return false;
-#endif
 }
 
 auto RetroAchievements::syncClientLogin() -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(!_authenticated) return;
   if(!_username || !_token) return;
   if(!ensureClient()) return;
@@ -576,11 +565,9 @@ auto RetroAchievements::syncClientLogin() -> void {
   }
 
   rc_client_begin_login_with_token(_client, _username, _token, clientLoginCallback, new ClientCallbackData{this, _loginGeneration});
-#endif
 }
 
 auto RetroAchievements::loadGame() -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   _gameReady = false;
   _gameLoadPending = false;
   if(!settings.retroAchievements.enabled) return;
@@ -609,22 +596,18 @@ auto RetroAchievements::loadGame() -> void {
     clientLoadGameCallback,
     new ClientCallbackData{this, _gameGeneration}
   );
-#endif
 }
 
 auto RetroAchievements::unloadClientGame() -> void {
   ++_gameGeneration;
-#if defined(ARES_ENABLE_RCHEEVOS)
   _gameReady = false;
   _gameLoadPending = false;
   if(_client) rc_client_unload_game(_client);
   _pendingRomData.clear();
-#endif
 }
 
 auto RetroAchievements::initialize() -> void {
   Program::Guard guard;
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(!settings.retroAchievements.enabled) return;
   startupLoginDialog.dismissed = false;
   if(!settings.retroAchievements.username || !settings.retroAchievements.token) {
@@ -635,11 +618,9 @@ auto RetroAchievements::initialize() -> void {
   if(!beginSavedTokenLogin(true)) {
     if(!program.kiosk) startupLoginDialog.request("RetroAchievements network initialization failed.");
   }
-#endif
 }
 
 auto RetroAchievements::beginSavedTokenLogin(bool startup) -> bool {
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(!settings.retroAchievements.username || !settings.retroAchievements.token || !httpWorker.start()) return false;
   HttpWorker::Task task;
   task.kind = HttpWorker::Task::Kind::Login;
@@ -650,15 +631,10 @@ auto RetroAchievements::beginSavedTokenLogin(bool startup) -> bool {
   _startupTokenLoginPending = startup;
   httpWorker.enqueue(std::move(task));
   return true;
-#else
-  (void)startup;
-  return false;
-#endif
 }
 
 auto RetroAchievements::login(const string& username, const string& password) -> bool {
   Program::Guard guard;
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(!username || !password || !httpWorker.start()) return false;
   _startupTokenLoginPending = false;
   HttpWorker::Task task;
@@ -669,11 +645,6 @@ auto RetroAchievements::login(const string& username, const string& password) ->
   _loginPending = true;
   httpWorker.enqueue(std::move(task));
   return true;
-#else
-  (void)username;
-  (void)password;
-  return false;
-#endif
 }
 
 auto RetroAchievements::logout() -> void {
@@ -681,16 +652,13 @@ auto RetroAchievements::logout() -> void {
   ++_loginGeneration;
   _loginPending = false;
   _startupTokenLoginPending = false;
-#if defined(ARES_ENABLE_RCHEEVOS)
   startupLoginDialog.close(true);
   unloadClientGame();
   if(_client) rc_client_logout(_client);
-#endif
   clearUser();
 }
 
 auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLoginResult& result) -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   Program::Guard guard;
   if(generation != _loginGeneration) return;
   bool startupTokenLogin = _startupTokenLoginPending;
@@ -721,14 +689,9 @@ auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLog
   }
   retroAchievementsSettings.statusLabel.setText(result.message);
   retroAchievementsSettings.refresh();
-#else
-  (void)generation;
-  (void)result;
-#endif
 }
 
 auto RetroAchievements::pumpUi() -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   for(auto& response : httpWorker.takeLoginResponses()) {
     completeLogin(response.generation, response.result);
   }
@@ -736,19 +699,14 @@ auto RetroAchievements::pumpUi() -> void {
     retroAchievementsSettings.acceptAvatar(response.url, response.bytes);
   }
   startupLoginDialog.pump();
-#endif
 }
 
 auto RetroAchievements::requestAvatar(const string& url) -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(!url || !httpWorker.start()) return;
   HttpWorker::Task task;
   task.kind = HttpWorker::Task::Kind::Avatar;
   task.url = (const char*)url;
   httpWorker.enqueue(std::move(task));
-#else
-  (void)url;
-#endif
 }
 
 auto RetroAchievements::hasUser() const -> bool {
@@ -787,22 +745,15 @@ auto RetroAchievements::avatarUrl() const -> string {
 }
 
 auto RetroAchievements::readMemory(u32 address, u8* buffer, u32 size) const -> u32 {
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(!emulator) return 0;
   if(!settings.retroAchievements.enabled) return 0;
   if(auto* adapter = RA::Platform::selectAdapter(*emulator)) {
     return adapter->readMemory(*emulator, address, buffer, size);
   }
-#else
-  (void)address;
-  (void)buffer;
-  (void)size;
-#endif
   return 0;
 }
 
 auto RetroAchievements::handleClientLoginResult(int result, const char* errorMessage, u64 generation) -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(generation != _loginGeneration || !_authenticated) return;
   if(result != RC_OK) {
     _gameReady = false;
@@ -814,15 +765,9 @@ auto RetroAchievements::handleClientLoginResult(int result, const char* errorMes
     program.showMessage({"[RA] Client session ready for ", user->display_name ? user->display_name : user->username});
   }
   if(_gameHash) loadGame();
-#else
-  (void)result;
-  (void)errorMessage;
-  (void)generation;
-#endif
 }
 
 auto RetroAchievements::handleClientGameLoadResult(int result, const char* errorMessage, u64 generation) -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(generation != _gameGeneration) return;
   _pendingRomData.clear();
   _gameLoadPending = false;
@@ -855,39 +800,29 @@ auto RetroAchievements::handleClientGameLoadResult(int result, const char* error
     " (", counts.unlocked, "/", counts.total,
     " achievements, ", subsetCount, " sets, ", hardcore() ? "Hardcore" : "Casual", ")"
   });
-#else
-  (void)result;
-  (void)errorMessage;
-  (void)generation;
-#endif
 }
 
 auto RetroAchievements::frame() -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   httpWorker.pumpClient();
   if(!_client) return;
   if(!settings.retroAchievements.enabled) return;
   if(!_authenticated) return;
   if(_gameReady) rc_client_do_frame(_client);
   else rc_client_idle(_client);
-#endif
 }
 
 auto RetroAchievements::idle() -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   httpWorker.pumpClient();
   if(!_client) return;
   if(!settings.retroAchievements.enabled) return;
   if(!_authenticated) return;
   rc_client_idle(_client);
-#endif
 }
 
 auto RetroAchievements::gameLoaded() -> void {
   Program::Guard guard;
   _gameHash = {};
 
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(!emulator) return;
   if(!settings.retroAchievements.enabled) return;
   unloadClientGame();
@@ -908,7 +843,6 @@ auto RetroAchievements::gameLoaded() -> void {
   _gameHash = hash;
   program.showMessage({"[RA] Game hash: ", _gameHash});
   loadGame();
-#endif
 }
 
 auto RetroAchievements::gameUnloaded() -> void {
@@ -923,26 +857,17 @@ auto RetroAchievements::gameHash() const -> string {
 }
 
 auto RetroAchievements::hardcore() const -> bool {
-#if defined(ARES_ENABLE_RCHEEVOS)
   return settings.retroAchievements.enabled && settings.retroAchievements.hardcore &&
     supportsGame() &&
     !(emulator->game && emulator->game->pak && emulator->game->pak->attribute("label") == "Game Genie");
-#else
-  return false;
-#endif
 }
 
 auto RetroAchievements::supportsGame() const -> bool {
-#if defined(ARES_ENABLE_RCHEEVOS)
   return emulator && RA::Platform::selectAdapter(*emulator);
-#else
-  return false;
-#endif
 }
 
 auto RetroAchievements::enableHardcore(bool enabled) -> bool {
   Program::Guard guard;
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(enabled && supportsGame() && emulator->game && emulator->game->pak && emulator->game->pak->attribute("label") == "Game Genie") {
     program.showMessage("[RA] Hardcore is unavailable with a Game Genie cartridge");
     return false;
@@ -969,15 +894,10 @@ auto RetroAchievements::enableHardcore(bool enabled) -> bool {
   settings.save();
   program.showMessage(enabled ? "[RA] Hardcore enabled" : "[RA] Hardcore disabled");
   return true;
-#else
-  (void)enabled;
-  return false;
-#endif
 }
 
 auto RetroAchievements::setEnabled(bool enabled) -> void {
   Program::Guard guard;
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(settings.retroAchievements.enabled == enabled) return;
   settings.retroAchievements.enabled = enabled;
   if(!enabled) {
@@ -997,15 +917,10 @@ auto RetroAchievements::setEnabled(bool enabled) -> void {
   }
   settings.save();
   program.showMessage(enabled ? "[RA] Enabled" : "[RA] Disabled");
-#else
-  (void)enabled;
-#endif
 }
 
 auto RetroAchievements::reset() -> void {
-#if defined(ARES_ENABLE_RCHEEVOS)
   if(_client && _gameReady) rc_client_reset(_client);
-#endif
 }
 
 auto RetroAchievements::resetGame() -> void {

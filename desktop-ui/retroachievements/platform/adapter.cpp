@@ -1,8 +1,6 @@
 #include "../../desktop-ui.hpp"
 #include "adapter.hpp"
 
-#if defined(ARES_ENABLE_RCHEEVOS)
-
 namespace RA::Platform {
 
 auto Adapter::supportsAnyName(const Emulator& emu, std::initializer_list<const char*> names) -> bool {
@@ -161,5 +159,3 @@ auto selectAdapter(const Emulator& emu) -> Adapter* {
 }
 
 }
-
-#endif

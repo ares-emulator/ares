@@ -1,3 +1,9 @@
+if(ARES_ENABLE_RCHEEVOS)
+  set(retroachievements_source retroachievements/retroachievements.cpp)
+else()
+  set(retroachievements_source retroachievements/retroachievements-disabled.cpp)
+endif()
+
 add_executable(
   desktop-ui
   desktop-ui.cpp
@@ -7,7 +13,7 @@ add_executable(
   game-browser/game-browser.cpp
   program/program.cpp
   presentation/presentation.cpp
-  retroachievements/retroachievements.cpp
+  ${retroachievements_source}
   settings/settings.cpp
   tools/tools.cpp
 )
@@ -29,7 +35,7 @@ set_source_files_properties(
   game-browser/game-browser.cpp
   program/program.cpp
   presentation/presentation.cpp
-  retroachievements/retroachievements.cpp
+  ${retroachievements_source}
   settings/settings.cpp
   tools/tools.cpp
   PROPERTIES HEADER_FILE_ONLY FALSE

@@ -3,8 +3,6 @@
 
 #include <rc_consoles.h>
 
-#if defined(ARES_ENABLE_RCHEEVOS)
-
 namespace {
 
 using namespace RA::Platform;
@@ -81,5 +79,3 @@ auto registerSegaAdapters(std::vector<Adapter*>& list) -> void {
 }
 
 }
-
-#endif
