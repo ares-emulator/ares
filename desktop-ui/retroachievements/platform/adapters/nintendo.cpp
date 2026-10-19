@@ -9,6 +9,9 @@
 #if defined(CORE_GBA)
 #include <gba/gba.hpp>
 #endif
+#if defined(CORE_SFC)
+#include <sfc/sfc.hpp>
+#endif
 
 namespace {
 
@@ -23,6 +26,31 @@ auto appendPakFile(const std::shared_ptr<vfs::directory>& pak, const string& nam
   for(u32 index : range(fp->size())) out[offset + index] = fp->read();
   return true;
 }
+
+#if defined(CORE_SFC)
+auto readSfcRomFromManifest(const std::shared_ptr<vfs::directory>& pak, std::vector<u8>& out) -> bool {
+  out.clear();
+  if(!pak) return false;
+  auto fp = pak->read("manifest.bml");
+  if(!fp) return false;
+
+  auto document = BML::unserialize(fp->reads());
+  if(!document) return false;
+
+  bool found = false;
+  for(auto node : document.find("game/board/memory(type=ROM)")) {
+    string name;
+    if(auto architecture = node["architecture"].string()) name.append(architecture.downcase(), ".");
+    name.append(node["content"].string().downcase(), ".rom");
+    if(!appendPakFile(pak, name, out)) {
+      out.clear();
+      return false;
+    }
+    found = true;
+  }
+  return found;
+}
+#endif
 
 #if defined(CORE_GB)
 struct GameBoyAdapter final : Adapter {
@@ -224,6 +252,119 @@ struct GameBoyAdvanceAdapter final : Adapter {
 };
 #endif
 
+#if defined(CORE_SFC)
+struct SuperFamicomAdapter final : Adapter {
+  struct Cache : NodeCache {
+    ares::Node::Debugger::Memory wram;
+    ares::Node::Debugger::Memory cartridgeRam;
+    ares::Node::Debugger::Memory sa1Bwram;
+    ares::Node::Debugger::Memory sa1Iram;
+    CompiledMap memoryMap;
+  };
+
+  mutable Cache cache;
+
+  static auto sufamiRam(u32 address, u32& offset) -> ares::SuperFamicom::WritableMemory* {
+    if(address < 0x020000 || address > 0x09ffff) return nullptr;
+    auto& slotA = ares::SuperFamicom::sufamiturboA;
+    auto& slotB = ares::SuperFamicom::sufamiturboB;
+    offset = address - 0x020000;
+    if(slotA.node && offset < slotA.ram.size()) return &slotA.ram;
+    if(slotA.node) offset -= slotA.ram.size();
+    if(slotB.node && offset < slotB.ram.size()) return &slotB.ram;
+    return nullptr;
+  }
+
+  auto refreshMemoryMap(const Emulator& emu) const -> void {
+    bool changed = false;
+    if(!refreshMemoryNodeCache(cache, &emu.root, {
+      {"CPU WRAM", &cache.wram},
+      {"Cartridge RAM", &cache.cartridgeRam},
+      {"SA1 BWRAM", &cache.sa1Bwram},
+      {"SA1 IRAM", &cache.sa1Iram},
+    }, &changed)) return;
+    if(!changed && !cache.memoryMap.empty()) return;
+
+    auto saveRam = cache.sa1Bwram ? &cache.sa1Bwram : &cache.cartridgeRam;
+    cache.memoryMap = compileMemoryMap({
+      {0x000000, 0x01ffff, ReadMode::Linear, 0x20000, &cache.wram},
+      {0x020000, 0x09ffff, ReadMode::Linear, 0x80000, saveRam},
+      {0x0a0000, 0x0a07ff, ReadMode::Linear, 0x800, &cache.sa1Iram},
+    });
+  }
+
+  auto supports(const Emulator& emu) const -> bool override {
+    return supportsAnyName(emu, {"Super Famicom"});
+  }
+
+  auto consoleId(const Emulator&) const -> u32 override {
+    return RC_CONSOLE_SUPER_NINTENDO;
+  }
+
+  auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool override {
+    out.clear();
+    if(!emu.game) return false;
+
+    // Sufami Turbo games reside in the attached slots, not in the base cart.
+    if(emu.root) {
+      std::vector<u8> slotA, slotB;
+      for(auto node : ares::Node::enumerate<ares::Node::Peripheral>(emu.root)) {
+        if(!node || node->name() != "Sufami Turbo Cartridge") continue;
+        auto parent = node->parent().lock();
+        if(!parent) continue;
+        auto pak = const_cast<Emulator&>(emu).pak(node);
+        if(parent->name() == "Sufami Turbo Slot A") readSfcRomFromManifest(pak, slotA);
+        if(parent->name() == "Sufami Turbo Slot B") readSfcRomFromManifest(pak, slotB);
+      }
+      if(!slotA.empty() || !slotB.empty()) {
+        out = std::move(slotA);
+        out.insert(out.end(), slotB.begin(), slotB.end());
+        return true;
+      }
+    }
+
+    // Hash the original cartridge image: mia can split its ROM and append
+    // coprocessor firmware while preparing the pak for the core.
+    if(file::exists(emu.game->location)) {
+      mia::Cartridge cartridge;
+      out = cartridge.read(emu.game->location, {"*.sfc", "*.smc", "*.swc", "*.fig"});
+      if(!out.empty()) return true;
+    }
+    return readSfcRomFromManifest(emu.game->pak, out);
+  }
+
+  auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 override {
+    if(!buffer || !size) return 0;
+    if(address >= 0x020000 && address <= 0x09ffff &&
+       (ares::SuperFamicom::sufamiturboA.node || ares::SuperFamicom::sufamiturboB.node)) {
+      u32 offset = 0;
+      auto ram = sufamiRam(address, offset);
+      if(!ram) return 0;
+      auto readable = min(size, ram->size() - offset);
+      for(u32 index : range(readable)) buffer[index] = ram->read(offset + index);
+      return readable;
+    }
+    refreshMemoryMap(emu);
+    return Adapter::readMemoryMap(cache.memoryMap, address, buffer, size);
+  }
+
+  auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
+    if(!buffer || !size) return 0;
+    if(address >= 0x020000 && address <= 0x09ffff &&
+       (ares::SuperFamicom::sufamiturboA.node || ares::SuperFamicom::sufamiturboB.node)) {
+      u32 offset = 0;
+      auto ram = sufamiRam(address, offset);
+      if(!ram) return 0;
+      auto writable = min(size, ram->size() - offset);
+      for(u32 index : range(writable)) ram->write(offset + index, buffer[index]);
+      return writable;
+    }
+    refreshMemoryMap(emu);
+    return Adapter::writeMemoryMap(cache.memoryMap, address, buffer, size);
+  }
+};
+#endif
+
 struct FamicomAdapter final : Adapter {
   struct Cache : NodeCache {
     ares::Node::Debugger::Memory cpuRamMemory;
@@ -352,6 +493,10 @@ auto registerNintendoAdapters(std::vector<Adapter*>& list) -> void {
 #if defined(CORE_GBA)
   static GameBoyAdvanceAdapter gameBoyAdvance;
   list.push_back(&gameBoyAdvance);
+#endif
+#if defined(CORE_SFC)
+  static SuperFamicomAdapter superFamicom;
+  list.push_back(&superFamicom);
 #endif
 #if defined(CORE_FC)
   static FamicomAdapter famicom;
