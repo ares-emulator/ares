@@ -12,3 +12,6 @@ aside { width:260px; min-width:210px; max-width:45vw; overflow:auto; resize:hori
 h2 { font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:0 0 16px; } h2:not(:first-child) { margin-top:24px; } label { display:block; margin:12px 0; } select { display:block; width:100%; margin-top:7px; } input { accent-color:var(--accent); } p { font-size:12px; line-height:1.7; color:var(--muted); } pre { font-size:11px; line-height:1.8; white-space:pre-wrap; } footer { color:var(--muted); font:11px monospace; min-height:14px; }
 
 nav select { width:220px; margin:0; } footer { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+
+#memory-offset, #memory-length, #memory-bytes { width:100%; margin-top:7px; padding:7px; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:5px; }
+#memory-output { overflow-wrap:anywhere; }

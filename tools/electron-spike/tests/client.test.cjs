@@ -33,7 +33,7 @@ test('disconnection rejects pending requests; router detach revokes old connecti
   await assert.rejects(pending, /native_host_disconnected/);
   router.detach();
   await assert.rejects(router.request('session.pause'), /native_host_disconnected/);
-  await assert.rejects(router.request('memory.read'), /invalid_request/);
+  await assert.rejects(router.request('n64.debug'), /invalid_request/);
 });
 test('schema validation rejects malformed envelopes, identities and methods', () => {
   for (const invalid of ['null', '{}', '{', JSON.stringify({ ...reply('a'), protocol: 9 }), JSON.stringify({ ...reply('a'), result: { paused: 'yes' } })])

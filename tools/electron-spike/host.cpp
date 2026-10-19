@@ -1,5 +1,6 @@
 // Experimental native host. stdout is exclusively the AEF2 binary protocol.
 #include <atomic>
+#include <array>
 #include <chrono>
 #include <condition_variable>
 #include <cstdio>
@@ -43,6 +44,7 @@ struct Host : ares::Platform {
   ruby::Audio output;
   std::vector<ares::Node::Audio::Stream> streams;
   SessionService service;
+  MemoryService memory;
   std::atomic<bool> quit{false};
   std::atomic<uint64_t> controls{0}; // sequence << 32 | button mask
   std::atomic<uint32_t> appliedInput{0};
@@ -266,6 +268,7 @@ int main(int argc, char** argv) {
 #endif
       if(!host.service.output) return 2;
     }
+    else if(arg == "--paused") host.service.paused = true;
     else if(arg == "--synthetic") synthetic = true;
     else if(arg == "--1080p") { width = 1920; height = 1080; }
     else if(arg == "--systems") listSystems = true;
@@ -338,6 +341,23 @@ int main(int argc, char** argv) {
   }
   std::cerr << "ready: " << (synthetic ? "synthetic RGBA source" : host.systemName.data())
             << "; audio=" << (!synthetic && host.sound ? "native SDL" : "off") << "\n";
+  auto memoryRoot = host.root;
+  std::array<uint8_t, 256> fixtureMemory;
+  if(synthetic) {
+    // Explicit synthetic debugger nodes exercise access metadata without a ROM.
+    for(size_t i = 0; i < fixtureMemory.size(); ++i) fixtureMemory[i] = i;
+    memoryRoot = std::make_shared<ares::Core::System>("Synthetic");
+    auto ram = memoryRoot->append<ares::Node::Debugger::Memory>("Fixture RAM");
+    ram->setSize(fixtureMemory.size());
+    ram->setRead([&](u32 offset) -> u8 { return fixtureMemory[offset]; });
+    ram->setWrite([&](u32 offset, u8 byte) { fixtureMemory[offset] = byte; });
+    auto rom = memoryRoot->append<ares::Node::Debugger::Memory>("Fixture read-only");
+    rom->setSize(fixtureMemory.size());
+    rom->setRead([&](u32 offset) -> u8 { return fixtureMemory[offset]; });
+    auto absent = memoryRoot->append<ares::Node::Debugger::Memory>("Fixture unavailable");
+    absent->setSize(16);
+  }
+  host.memory.bind(memoryRoot, host.service.session, memoryRoot && memoryRoot->name() == "Nintendo 64");
   std::thread reader([&] { host.readCommands(); });
   std::thread writer([&] { host.writeFrames(); });
   std::thread replies;
@@ -349,7 +369,7 @@ int main(int argc, char** argv) {
   while(!host.quit) {
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
       if(host.root) { host.output.clear(); host.root->power(); }
-    })) { host.quit = true; break; }
+    }, host.memory)) { host.quit = true; break; }
     if(host.service.paused) {
       if(host.sound && !synthetic) host.output.clear();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));

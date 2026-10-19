@@ -9,7 +9,7 @@
     "test": "npm run build:services && node --test --test-concurrency=1 protocol.test.cjs tests/*.test.cjs",
     "fixture": "node fixture.cjs artifacts/spike.gb",
     "smoke": "node smoke.cjs",
-    "build:services": "tsc -p tsconfig.json",
+    "build:services": "tsc -p tsconfig.json && tsc -p tsconfig.browser.json",
     "prestart": "npm run build:services",
     "test:session": "npm run build:services && node --test tests/session-live.test.cjs",
     "presmoke": "npm run build:services",

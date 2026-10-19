@@ -8,8 +8,9 @@
 #include <string>
 #include <utility>
 #include <functional>
+#include "memory-service.hpp"
 
-// Host-only protocol v1. Requests are six ASCII tokens; responses are JSON lines
+// Host-only protocol v1. Requests are bounded ASCII tokens; responses are JSON lines
 // on fd 3. No fork code or legacy telemetry transport is used here.
 struct SessionService {
   std::string session;
@@ -44,23 +45,31 @@ struct SessionService {
     }
   }
   // Called only between root->run() invocations, including while paused.
-  bool dispatch(const std::string& system, bool synthetic, const std::function<void()>& reset) {
+  bool dispatch(const std::string& system, bool synthetic, const std::function<void()>& reset, MemoryService& memory) {
     std::deque<std::string> pending;
     { std::lock_guard guard(lock); pending.swap(requests); }
     for(auto& line : pending) {
       std::istringstream input(line);
       std::string prefix, version, id, identity, revision, method, extra;
       input >> prefix >> version >> id >> identity >> revision >> method;
+      std::vector<std::string> arguments;
+      while(input >> extra) arguments.push_back(extra);
       auto token = [](const std::string& value) {
         return !value.empty() && value.size() <= 64 && value.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_") == std::string::npos;
       };
       bool validId = token(id);
       if(!validId) id = "invalid";
       std::string error;
-      if(prefix != "control" || version != "1" || method.empty() || (input >> extra) || !validId) error = "invalid_request";
+      if(prefix != "control" || version != "1" || method.empty() || !validId) error = "invalid_request";
       else if(identity != session) error = "stale_session";
       else if(revision != std::to_string(epoch)) error = "stale_epoch";
-      else if(method != "session.status" && method != "session.pause" && method != "session.resume" && method != "session.reset") error = "unavailable";
+      else if(method.starts_with("session.") && !arguments.empty()) error = "invalid_request";
+      else if(method != "session.status" && method != "session.pause" && method != "session.resume" && method != "session.reset" && !method.starts_with("memory.")) error = "unavailable";
+      ControlResult memoryResult;
+      if(error.empty() && method.starts_with("memory.")) {
+        memoryResult = memory.execute(method, arguments);
+        error = memoryResult.error;
+      }
       if(error.empty()) {
         if(method == "session.pause") paused = true;
         if(method == "session.resume") paused = false;
@@ -74,7 +83,8 @@ struct SessionService {
       }
       std::string reply = "{\"protocol\":1,\"id\":\"" + id + "\",\"session\":\"" + session + "\",\"epoch\":" + std::to_string(epoch);
       if(!error.empty()) reply += ",\"ok\":false,\"error\":\"" + error + "\"}";
-      else reply += ",\"ok\":true,\"result\":{\"paused\":" + std::string(paused ? "true" : "false") + ",\"system\":\"" + escaped + "\",\"synthetic\":" + (synthetic ? "true" : "false") + ",\"capabilities\":[\"session.status\",\"session.pause\",\"session.resume\",\"session.reset\"]}}";
+      else if(!memoryResult.json.empty()) reply += ",\"ok\":true,\"result\":" + memoryResult.json + "}";
+      else reply += ",\"ok\":true,\"result\":{\"paused\":" + std::string(paused ? "true" : "false") + ",\"system\":\"" + escaped + "\",\"synthetic\":" + (synthetic ? "true" : "false") + ",\"capabilities\":[\"session.status\",\"session.pause\",\"session.resume\",\"session.reset\",\"memory.regions\",\"memory.read\",\"memory.write\"]}}";
       std::lock_guard guard(lock);
       if(replies.size() >= limit) return false; // bounded even if peer stops reading
       replies.push_back(reply + "\n"); ready.notify_one();

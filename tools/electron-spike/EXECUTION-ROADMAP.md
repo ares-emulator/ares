@@ -1,6 +1,6 @@
 # Execution roadmap: how to tackle the implementation plans
 
-Status: task 1 implemented; runtime evidence and pending checks are recorded in
+Status: tasks 1–2 implemented; runtime evidence and pending checks are recorded in
 [EXECUTION-LOG.md](EXECUTION-LOG.md). Remaining tasks are planned. Start here when
 choosing the next task.
 
@@ -66,6 +66,9 @@ Build on task 1. Enumerate ares debugger regions using opaque session-scoped IDs
 implement bounded bulk reads/writes on the emulation thread and explicit-endian
 typed helpers on the JS side. Audit writable metadata and reject unsupported
 access rather than silently wrapping. Add a temporary inspector against this API.
+The task 2 audit found that N64 `RDRAM` follows chip mapping and can ignore writes
+before initialization; this view is read-only here. `DCache` is unavailable. Their
+explicit N64 write/cache services remain task 5 work and remain parity targets.
 
 Done when: N64 and GBA regions can be inspected; deterministic fixture memory can
 be written/read back/restored; boundary and stale-session checks pass. Label
@@ -259,6 +262,6 @@ Conversely, none of those deferrals removes an existing MCP tool from the parity
 target without an explicit scope decision. A clean host-library extraction can
 follow when concrete coupling impedes a task; it is not an initial rewrite mandate.
 
-The immediate next action is **task 2**, then task 3 (task 1 is recorded in the execution log). Those three
+The immediate next action is **task 3** (tasks 1–2 are recorded in the execution log). Those three
 produce the first shared MCP-and-UI vertical slice; they are not three competing
 implementations of the same service.

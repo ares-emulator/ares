@@ -781,10 +781,17 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 2,
-      "implementationStatus": "not implemented",
+      "implementationStatus": "native service only",
       "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "testEvidence": [
+        {
+          "scope": "native region service and temporary inspector only; MCP not exposed",
+          "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.cjs",
+          "result": "passed",
+          "date": "2026-10-18"
+        }
+      ],
+      "knownLimits": "MCP adapter/schema/result parity not implemented. Opaque session-scoped IDs; 1024-byte request limit. N64 DCache unavailable; mapped RDRAM writes deferred to task 5. No VA/cache coherence promise."
     },
     {
       "name": "read_memory",
@@ -814,10 +821,17 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 2,
-      "implementationStatus": "not implemented",
+      "implementationStatus": "native service only",
       "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "testEvidence": [
+        {
+          "scope": "native region service and temporary inspector only; MCP not exposed",
+          "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.cjs",
+          "result": "passed",
+          "date": "2026-10-18"
+        }
+      ],
+      "knownLimits": "MCP adapter/schema/result parity not implemented. Opaque session-scoped IDs; 1024-byte request limit. N64 DCache unavailable; mapped RDRAM writes deferred to task 5. No VA/cache coherence promise."
     },
     {
       "name": "write_memory",
@@ -847,10 +861,17 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 2,
-      "implementationStatus": "not implemented",
+      "implementationStatus": "native service only",
       "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "testEvidence": [
+        {
+          "scope": "native region service and temporary inspector only; MCP not exposed",
+          "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.cjs",
+          "result": "passed",
+          "date": "2026-10-18"
+        }
+      ],
+      "knownLimits": "MCP adapter/schema/result parity not implemented. Opaque session-scoped IDs; 1024-byte request limit. N64 DCache unavailable; mapped RDRAM writes deferred to task 5. No VA/cache coherence promise."
     },
     {
       "name": "screenshot",

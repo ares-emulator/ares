@@ -82,7 +82,7 @@ test('native boundary rejects invalid versions, arguments and methods', { timeou
     const requests = [
       'control 99 a validation 1 session.pause',
       'control 1 b validation 1 session.pause extra',
-      'control 1 c validation 1 memory.read',
+      'control 1 c validation 1 memory.unimplemented',
       'control 1 d validation 1',
       'wrong-prefix 1 e validation 1 session.pause',
       'control 1 f validation 1 session.status',

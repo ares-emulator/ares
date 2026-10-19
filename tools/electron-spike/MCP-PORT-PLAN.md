@@ -213,7 +213,11 @@ Split dependency work into: existing upstream facilities, fork core instrumentat
 your native engine changes, reusable services, obsolete frontend coupling.
 
 First port safe-point dispatch, status/session identity, region access and native
-pause/resume. Connect both the TypeScript MCP adapter and a temporary JS inspector
+pause/resume. The task 2 audit keeps the existing mapped N64 `RDRAM` debugger
+view read-only and rejects `DCache` through this raw API; callbacks can silently
+ignore unmapped RDRAM writes. Task 5 still owns explicit N64 memory semantics and
+restoring the affected reference write/cache behavior. These are temporary backend
+limits, not tools removed from the 68-tool target. Connect both the TypeScript MCP adapter and a temporary JS inspector
 to the same host. Validate unsupported tools honestly until their dependencies land.
 This is the shared foundation from plugin-plan step 1, not a parallel implementation.
 

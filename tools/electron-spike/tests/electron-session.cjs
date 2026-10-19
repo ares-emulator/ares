@@ -12,6 +12,8 @@ process.env.ARES_SAVE_DIR = path.join(temporary, 'saves');
 delete process.env.ARES_ROM;
 delete process.env.ARES_AUTOTEST;
 const { sessions } = require('../main.cjs');
+const { MemoryClient, hexToBytes } = require('../dist/services/memory.js');
+const memory = new MemoryClient(sessions);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(check) {
   for (let i = 0; i < 200; i++) {
@@ -37,6 +39,33 @@ app.whenReady().then(async () => {
   assert.equal(paused.result.paused, true);
   assert.ok(performance.now() - started < 350, 'Native control waited for the renderer');
   await blocked;
+  await until(() => window.webContents.executeJavaScript("document.getElementById('pause').textContent === 'Resume'"));
+  await until(() => window.webContents.executeJavaScript("document.getElementById('memory-region').options.length === 3"));
+  const fixture = (await memory.regions())[0];
+  const original = await memory.read(fixture, 240, 4);
+  try {
+    await window.webContents.executeJavaScript(`
+      document.getElementById('memory-offset').value = '0xf0';
+      document.getElementById('memory-length').value = '4';
+      document.getElementById('memory-bytes').value = 'de ad be ef';
+      document.getElementById('memory-write').click();
+    `);
+    await until(() => window.webContents.executeJavaScript("document.getElementById('memory-output').textContent.includes('Wrote 4 bytes')"));
+    assert.equal((await memory.read(fixture, 240, 4)).hex, 'deadbeef');
+    await window.webContents.executeJavaScript("document.getElementById('memory-read').click()");
+    await until(() => window.webContents.executeJavaScript("document.getElementById('memory-output').textContent.includes('deadbeef')"));
+    await window.webContents.executeJavaScript(`(async () => {
+      const aside = document.querySelector('aside'), target = document.getElementById('memory-refresh');
+      aside.scrollTop += target.getBoundingClientRect().top - aside.getBoundingClientRect().top - 12;
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    })()`);
+    const screenshot = await window.webContents.capturePage();
+    const artifact = path.resolve(__dirname, '../artifacts/memory-inspector.png');
+    fs.mkdirSync(path.dirname(artifact), { recursive: true }); fs.writeFileSync(artifact, screenshot.toPNG());
+  } finally {
+    await memory.write(fixture, 240, hexToBytes(original.hex));
+    assert.equal((await memory.read(fixture, 240, 4)).hex, original.hex);
+  }
   const loaded = once(window.webContents, 'did-finish-load');
   window.webContents.reload(); await loaded;
   const after = await sessions.request('session.status');
@@ -64,6 +93,6 @@ app.whenReady().then(async () => {
   assert.equal(replacement.epoch, 1);
   assert.equal((await sessions.request('session.pause', { session: first.session, epoch: first.epoch })).error, 'stale_session');
   assert.equal((await sessions.request('session.status')).result.paused, false);
-  console.log('ELECTRON_SESSION_PASS: stalled renderer controls, reload identity, authoritative pause/resume');
+  console.log('ELECTRON_SESSION_PASS: stalled renderer controls, reload identity, authoritative pause/resume, inspector read/write/restore');
   app.quit();
 }).catch(error => { console.error(error); app.exit(1); });

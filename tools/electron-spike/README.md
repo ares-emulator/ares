@@ -83,6 +83,9 @@ backpressure while native audio/emulation continue.
   Electron main router. [Protocol and module details](services/README.md).
 - `native/session-service.hpp` queues versioned control requests and dispatches
   status/pause/resume/reset on the emulation thread, including while paused.
+- `native/memory-service.hpp` provides bounded debugger-region access through the
+  same dispatcher. The temporary memory inspector uses the shared browser/Node
+  `MemoryClient`; offsets are region-relative and byte order is explicit in helpers.
 - `host.cpp` supplies an `ares::Platform` adapter, native SDL audio, virtual HID
   input, and the emulator loop. System loading, firmware, peripherals, and saves
   are delegated to the existing `Emulator` implementations.
@@ -154,12 +157,19 @@ npm run smoke --prefix tools/electron-spike
 npm run test:electron --prefix tools/electron-spike
 ```
 
-Task 1 results and remaining checks are recorded in [EXECUTION-LOG.md](EXECUTION-LOG.md).
+Tasks 1–2 results and remaining checks are recorded in [EXECUTION-LOG.md](EXECUTION-LOG.md).
+Memory transfers are limited to 1024 bytes. The synthetic source exposes
+deterministic fixture memory for inspector experiments. N64 `DCache` is unavailable
+and its mapped `RDRAM` view is read-only pending task 5; no CPU VA/cache semantics
+are implied by region access.
+
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
 schemas/defaults and dependencies; no MCP tools are exposed yet. `npm test` requires
 the built native host and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
-reload/session identity, frame credit, and native pause-button behavior.
+reload/session identity, frame credit, native pause-button behavior, and inspector
+read/write/restore against the same paused bytes as a Node client. It writes an
+ignored screenshot to `artifacts/memory-inspector.png`.
 
 Parser tests cover fragmented/coalesced frames and malformed lengths/aspect ratios.
 Native smoke tests cover synthetic 640×480 and 1080p frames (with padded source

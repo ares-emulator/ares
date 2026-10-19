@@ -80,7 +80,7 @@ window.addEventListener('message', event => {
         : 'Arrows · D-pad / Z X C V · Face buttons / Q E · Shoulders / Shift · Select / Enter · Start / WASD & IJKL · Analog sticks. Keyboard and mouse are forwarded while the canvas is focused.';
       pending = null; frames = skipped = last = firstNative = lastNative = firstSequence = receivedFrames = maxPending = 0;
       bridge = []; upload = []; inputAges = []; inputTimes.clear(); started = performance.now();
-      lastMask = -1; syncSession(); return;
+      lastMask = -1; syncSession(); window.dispatchEvent(new Event('ares-session-reset')); return;
     }
     receivedFrames++;
     if (pending) throw new Error('Frame credit invariant violated');
@@ -169,12 +169,18 @@ window.ares.systems().then(systems => {
   for (const name of systems) { const option = document.createElement('option'); option.value = option.textContent = name; $('system').append(option); }
 }).catch(error => { $('status').textContent = error.message; });
 let sessionIdentity;
-async function sessionRequest(method) {
-  const reply = await window.ares.session(method, sessionIdentity);
+function acceptSessionState(reply) {
+  const previous = sessionIdentity;
   sessionIdentity = { session: reply.session, epoch: reply.epoch };
-  if (!reply.ok) throw new Error(reply.error);
   paused = reply.result.paused;
   $('pause').textContent = paused ? 'Resume' : 'Pause';
+  if (previous && (previous.session !== reply.session || previous.epoch !== reply.epoch)) window.dispatchEvent(new Event('ares-session-reset'));
+}
+window.ares.onSessionState(acceptSessionState);
+async function sessionRequest(method) {
+  const reply = await window.ares.session(method, sessionIdentity);
+  if (!reply.ok) throw new Error(reply.error);
+  acceptSessionState(reply);
   return reply;
 }
 async function syncSession() {

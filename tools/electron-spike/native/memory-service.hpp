@@ -1,0 +1,93 @@
+#pragma once
+#include <charconv>
+#include <string>
+#include <vector>
+
+inline auto controlQuote(const std::string& value) -> std::string {
+  std::string result = "\"";
+  for(unsigned char c : value) {
+    if(c == '"' || c == '\\') result += '\\';
+    if(c >= 32) result += c;
+  }
+  return result + "\"";
+}
+struct ControlResult { std::string error, json; };
+
+// This service exposes debugger-region offsets, never CPU virtual addresses.
+struct MemoryService {
+  static constexpr uint32_t maxTransfer = 1024;
+  struct Region { std::string id; ares::Node::Debugger::Memory node; bool supported, writesAllowed; };
+  std::vector<Region> regions;
+  void bind(ares::Node::System root, const std::string& session, bool n64) {
+    regions.clear();
+    if(!root) return;
+    for(auto node : root->find<ares::Node::Debugger::Memory>()) {
+      // DCache has CPU-view semantics and a size independent of installed RDRAM.
+      // It must not masquerade as bounded raw storage (task 5 owns that service).
+      bool supported = !(n64 && node->name() == "DCache");
+      regions.push_back({"r_" + session + "_" + std::to_string(regions.size()), node, supported, !(n64 && node->name() == "RDRAM")});
+    }
+  }
+  static bool number(const std::string& text, uint32_t& value) {
+    if(text.empty()) return false;
+    auto [end, error] = std::from_chars(text.data(), text.data() + text.size(), value);
+    return error == std::errc{} && end == text.data() + text.size();
+  }
+  static int nibble(char c) {
+    if(c >= '0' && c <= '9') return c - '0';
+    if(c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if(c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+  }
+  auto execute(const std::string& method, const std::vector<std::string>& args) -> ControlResult {
+    if(method == "memory.regions") {
+      if(!args.empty()) return {"invalid_request", {}};
+      if(regions.size() > 128) return {"too_many_regions", {}};
+      std::string json = "{\"regions\":[";
+      for(auto& r : regions) {
+        if(json.back() != '[') json += ',';
+        json += "{\"id\":" + controlQuote(r.id) + ",\"name\":" + controlQuote(r.node->name().data()) + ",\"size\":" + std::to_string(r.node->size()) + ",\"readable\":" + (r.supported && r.node->readable() ? "true" : "false") + ",\"writable\":" + (r.supported && r.writesAllowed && r.node->writable() ? "true" : "false") + ",\"addressing\":\"region-offset\"";
+        if(!r.supported) json += ",\"unavailableReason\":\"Requires N64 cache-aware service\"";
+        else if(!r.writesAllowed) json += ",\"unavailableReason\":\"Writes require N64 memory service; debugger view follows chip mapping\"";
+        json += '}';
+      }
+      return {{}, json + "]}"};
+    }
+    if(method != "memory.read" && method != "memory.write") return {"unavailable", {}};
+    if(args.size() != 3) return {"invalid_request", {}};
+    uint32_t offset, length;
+    if(!number(args[1], offset)) return {"invalid_request", {}};
+    std::vector<uint8_t> bytes;
+    if(method == "memory.read") {
+      if(!number(args[2], length) || !length || length > maxTransfer) return {"invalid_request", {}};
+    } else {
+      const auto& hex = args[2];
+      if(hex.empty() || hex.size() % 2 || hex.size() > maxTransfer * 2) return {"invalid_request", {}};
+      for(size_t i = 0; i < hex.size(); i += 2) {
+        int a = nibble(hex[i]), b = nibble(hex[i + 1]);
+        if(a < 0 || b < 0) return {"invalid_request", {}};
+        bytes.push_back((a << 4) | b);
+      }
+      length = bytes.size();
+    }
+    Region* region = nullptr;
+    for(auto& r : regions) if(r.id == args[0]) { region = &r; break; }
+    if(!region) return {"stale_region", {}};
+    auto& node = region->node;
+    if(!region->supported) return {"unsupported_region", {}};
+    if(offset > node->size() || length > node->size() - offset) return {"out_of_bounds", {}};
+    // Validate the entire operation before invoking any callback. No wraparound,
+    // read-modify-write, partial validation or fabricated writable metadata.
+    std::string json = "{\"region\":" + controlQuote(region->id) + ",\"offset\":" + std::to_string(offset);
+    if(method == "memory.read") {
+      if(!node->readable()) return {"region_not_readable", {}};
+      const char* digits = "0123456789abcdef";
+      std::string hex; hex.reserve(length * 2);
+      for(uint32_t i = 0; i < length; ++i) { uint8_t value = node->read(offset + i); hex += digits[value >> 4]; hex += digits[value & 15]; }
+      return {{}, json + ",\"length\":" + std::to_string(length) + ",\"hex\":" + controlQuote(hex) + "}"};
+    }
+    if(!region->writesAllowed || !node->writable()) return {"region_not_writable", {}};
+    for(uint32_t i = 0; i < length; ++i) node->write(offset + i, bytes[i]);
+    return {{}, json + ",\"written\":" + std::to_string(length) + "}"};
+  }
+};

@@ -8,7 +8,9 @@ const { FrameParser } = require('./protocol.cjs');
 const { randomUUID } = require('node:crypto');
 const { NativeSessionClient } = require('./dist/services/native-client.js');
 const { SessionRouter } = require('./dist/services/session-router.js');
-const sessions = new SessionRouter();
+const sessions = new SessionRouter(reply => {
+  if (window && !window.isDestroyed() && !window.webContents.isDestroyed()) window.webContents.send('session-state', reply);
+});
 module.exports = { sessions };
 const hostPath = process.env.ARES_HOST || path.resolve(__dirname, '../../build-electron-make/bin/ares-electron-host');
 let generation = 0, settingsFile = process.env.ARES_SETTINGS || '';
@@ -119,10 +121,10 @@ app.whenReady().then(() => {
       if (active.outstanding && active.lastFrame) port.postMessage({ ...active.lastFrame, generation: active.generation, receivedMs: performance.timeOrigin + performance.now() });
     } else enqueue(() => start(process.env.ARES_ROM ? { rom: process.env.ARES_ROM, system: process.env.ARES_SYSTEM } : { hd: process.env.ARES_HD === '1' }));
   });
-  ipcMain.handle('session', async (event, method, identity) => {
+  ipcMain.handle('session', async (event, method, identity, params) => {
     if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('invalid_sender');
-    if (method !== 'session.status' && !identity) throw new Error('invalid_request');
-    return sessions.request(method, identity);
+    if (!['session.status', 'memory.regions'].includes(method) && !identity) throw new Error('invalid_request');
+    return sessions.request(method, identity, params);
   });
   ipcMain.handle('systems', async event => {
     if (event.sender !== window.webContents) return [];

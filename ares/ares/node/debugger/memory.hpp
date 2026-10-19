@@ -4,6 +4,9 @@ struct Memory : Debugger {
   Memory(string name = {}) : Debugger(name) {
   }
 
+  auto readable() const -> bool { return bool(_read); }
+  auto writable() const -> bool { return bool(_write); }
+
   auto size() const -> u32 { return _size; }
   auto read(u32 address) const -> n8 { if(_read) return _read(address); return 0; }
   auto write(u32 address, u8 data) const -> void { if(_write) return _write(address, data); }
