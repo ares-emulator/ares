@@ -338,6 +338,7 @@ auto RetroAchievements::unloadClientGame() -> void {
 }
 
 auto RetroAchievements::initialize() -> void {
+  Program::Guard guard;
 #if defined(ARES_ENABLE_RCHEEVOS)
   if(!settings.retroAchievements.enabled) return;
   if(!settings.retroAchievements.username || !settings.retroAchievements.token) return;
@@ -356,6 +357,7 @@ auto RetroAchievements::initialize() -> void {
 }
 
 auto RetroAchievements::login(const string& username, const string& password) -> RetroAchievementsLoginResult {
+  Program::Guard guard;
 #if defined(ARES_ENABLE_RCHEEVOS)
   auto result = loginRequest(username, password, "");
   if(result.success) {
@@ -372,6 +374,7 @@ auto RetroAchievements::login(const string& username, const string& password) ->
 }
 
 auto RetroAchievements::logout() -> void {
+  Program::Guard guard;
 #if defined(ARES_ENABLE_RCHEEVOS)
   unloadClientGame();
   if(_client) rc_client_logout(_client);
@@ -380,26 +383,32 @@ auto RetroAchievements::logout() -> void {
 }
 
 auto RetroAchievements::hasUser() const -> bool {
+  Program::Guard guard;
   return _authenticated;
 }
 
 auto RetroAchievements::username() const -> string {
+  Program::Guard guard;
   return _username;
 }
 
 auto RetroAchievements::displayName() const -> string {
+  Program::Guard guard;
   return _displayName ? _displayName : _username;
 }
 
 auto RetroAchievements::userScore() const -> u32 {
+  Program::Guard guard;
   return _score;
 }
 
 auto RetroAchievements::userScoreSoftcore() const -> u32 {
+  Program::Guard guard;
   return _scoreSoftcore;
 }
 
 auto RetroAchievements::avatarUrl() const -> string {
+  Program::Guard guard;
   return _avatarUrl;
 }
 
@@ -493,6 +502,7 @@ auto RetroAchievements::idle() -> void {
 }
 
 auto RetroAchievements::gameLoaded() -> void {
+  Program::Guard guard;
   _gameHash = {};
 
 #if defined(ARES_ENABLE_RCHEEVOS)
@@ -515,11 +525,13 @@ auto RetroAchievements::gameLoaded() -> void {
 }
 
 auto RetroAchievements::gameUnloaded() -> void {
+  Program::Guard guard;
   _gameHash = {};
   unloadClientGame();
 }
 
 auto RetroAchievements::gameHash() const -> string {
+  Program::Guard guard;
   return _gameHash;
 }
 

@@ -48,6 +48,7 @@ auto RetroAchievementsSettings::construct() -> void {
 
 #if defined(ARES_ENABLE_RCHEEVOS)
   enabled.setText("Enable RetroAchievements").setChecked(settings.retroAchievements.enabled).onToggle([&] {
+    Program::Guard guard;
     settings.retroAchievements.enabled = enabled.checked();
     settings.save();
     if(settings.retroAchievements.enabled) retroAchievements.initialize();
@@ -72,6 +73,7 @@ auto RetroAchievementsSettings::construct() -> void {
   profilePoints.setForegroundColor(SystemColor::Sublabel);
 
   loginButton.setText("Login").onActivate([&] {
+    Program::Guard guard;
     settings.retroAchievements.username = usernameValue.text();
     auto result = retroAchievements.login(settings.retroAchievements.username, passwordValue.text());
     passwordValue.setText();
@@ -91,6 +93,7 @@ auto RetroAchievementsSettings::construct() -> void {
   });
 
   auto logout = [&] {
+    Program::Guard guard;
     retroAchievements.logout();
     settings.retroAchievements.username = "";
     settings.retroAchievements.token = "";

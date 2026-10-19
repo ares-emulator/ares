@@ -22,10 +22,10 @@ auto Program::create() -> void {
     if(startPseudoFullScreen) videoPseudoFullScreenToggle();
   }
 
-  _isRunning = true;
-  worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
   program.rewindReset();
   retroAchievements.initialize();
+  _isRunning = true;
+  worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
 
   if(!startGameLoad.empty()) {
     Program::Guard guard;
