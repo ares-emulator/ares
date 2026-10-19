@@ -466,6 +466,7 @@ struct DeveloperSettings : VerticalLayout {
 struct RetroAchievementsSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
+  auto acceptAvatar(const string& url, const std::vector<u8>& bytes) -> void;
   auto setVisible(bool visible = true) -> RetroAchievementsSettings&;
 
   Label accountLabel{this, Size{~0, 0}, 5};

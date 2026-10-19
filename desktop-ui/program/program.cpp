@@ -82,6 +82,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
     if(emulator && nall::GDB::server.isHalted()) {
       ruby::audio.clear();
       nall::GDB::server.updateLoop(); // sleeps internally
+      retroAchievements.idle();
       continue;
     }
 
@@ -132,6 +133,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
 }
 
 auto Program::main() -> void {
+  retroAchievements.pumpUi();
   if(Application::modal()) {
     ruby::audio.clear();
     return;

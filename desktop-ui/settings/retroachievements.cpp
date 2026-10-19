@@ -1,45 +1,3 @@
-#if defined(ARES_ENABLE_RCHEEVOS)
-  #include <curl/curl.h>
-#endif
-
-#if defined(ARES_ENABLE_RCHEEVOS)
-namespace {
-auto avatarWrite(char* data, size_t size, size_t count, void* userdata) -> size_t {
-  auto& output = *static_cast<std::vector<u8>*>(userdata);
-  auto bytes = size * count;
-  output.insert(output.end(), data, data + bytes);
-  return bytes;
-}
-
-auto fetchAvatar(const string& avatarUrl) -> image {
-  if(!avatarUrl) return {};
-
-  string url = avatarUrl;
-  if(url.beginsWith("/")) url = {"https://media.retroachievements.org", url};
-
-  CURL* curl = curl_easy_init();
-  if(!curl) return {};
-
-  std::vector<u8> responseBody;
-  curl_easy_setopt(curl, CURLOPT_URL, url.data());
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, avatarWrite);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
-  curl_easy_setopt(curl, CURLOPT_USERAGENT, "ares");
-  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
-
-  auto curlResult = curl_easy_perform(curl);
-  curl_easy_cleanup(curl);
-  if(curlResult != CURLE_OK || responseBody.empty()) return {};
-
-  image avatar{responseBody};
-  if(!avatar) return {};
-  avatar.scale(48, 48);
-  return avatar;
-}
-}
-#endif
-
 auto RetroAchievementsSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
@@ -75,21 +33,10 @@ auto RetroAchievementsSettings::construct() -> void {
   loginButton.setText("Login").onActivate([&] {
     Program::Guard guard;
     settings.retroAchievements.username = usernameValue.text();
-    auto result = retroAchievements.login(settings.retroAchievements.username, passwordValue.text());
+    bool started = retroAchievements.login(settings.retroAchievements.username, passwordValue.text());
     passwordValue.setText();
-
-    if(result.success) {
-      settings.retroAchievements.enabled = true;
-      settings.retroAchievements.username = result.username;
-      settings.retroAchievements.token = result.token;
-      enabled.setChecked(true);
-      usernameValue.setText(result.username);
-      settings.save();
-    }
-
-    statusLabel.setText(result.message);
-    program.showMessage({"[RA] ", result.message});
-    refresh();
+    statusLabel.setText(started ? "Signing in..." : "Enter a username and password");
+    loginButton.setEnabled(!started);
   });
 
   auto logout = [&] {
@@ -131,7 +78,7 @@ auto RetroAchievementsSettings::construct() -> void {
 
 auto RetroAchievementsSettings::refresh() -> void {
 #if defined(ARES_ENABLE_RCHEEVOS)
-  if(!settings.retroAchievements.enabled || !settings.retroAchievements.username || !settings.retroAchievements.token) {
+  if(!retroAchievements.loginPending() && (!settings.retroAchievements.enabled || !settings.retroAchievements.username || !settings.retroAchievements.token)) {
     retroAchievements.logout();
   }
 
@@ -145,7 +92,7 @@ auto RetroAchievementsSettings::refresh() -> void {
   profileLayout.setVisible(enabledSetting && loggedIn);
   usernameValue.setText(loggedIn ? retroAchievements.username() : settings.retroAchievements.username).setEnabled(enabledSetting && !loggedIn);
   passwordValue.setEnabled(enabledSetting && !loggedIn);
-  loginButton.setEnabled(enabledSetting && !loggedIn);
+  loginButton.setEnabled(enabledSetting && !loggedIn && !retroAchievements.loginPending());
   clearButton.setEnabled(false);
   profileLogoutButton.setEnabled(enabledSetting && loggedIn);
 
@@ -160,7 +107,12 @@ auto RetroAchievementsSettings::refresh() -> void {
     auto avatarUrl = retroAchievements.avatarUrl();
     if(avatarUrl != cachedAvatarUrl) {
       cachedAvatarUrl = avatarUrl;
-      cachedAvatarImage = fetchAvatar(avatarUrl);
+      cachedAvatarImage = {};
+      if(avatarUrl) {
+        string url = avatarUrl;
+        if(url.beginsWith("/")) url = {"https://media.retroachievements.org", url};
+        retroAchievements.requestAvatar(url);
+      }
     }
     profileAvatar.setIcon(cachedAvatarImage ? (multiFactorImage)cachedAvatarImage : (multiFactorImage)Icon::Action::Bookmark);
   } else if(!enabledSetting) {
@@ -177,6 +129,21 @@ auto RetroAchievementsSettings::refresh() -> void {
     profileAvatar.setIcon();
   }
   settingsWindow.panelContainer.resize();
+#endif
+}
+
+auto RetroAchievementsSettings::acceptAvatar(const string& url, const std::vector<u8>& bytes) -> void {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  string expectedUrl = cachedAvatarUrl;
+  if(expectedUrl.beginsWith("/")) expectedUrl = {"https://media.retroachievements.org", expectedUrl};
+  if(url != expectedUrl || bytes.empty()) return;
+  cachedAvatarImage = image{bytes};
+  if(!cachedAvatarImage) return;
+  cachedAvatarImage.scale(48, 48);
+  profileAvatar.setIcon((multiFactorImage)cachedAvatarImage);
+#else
+  (void)url;
+  (void)bytes;
 #endif
 }
 

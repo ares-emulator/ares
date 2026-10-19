@@ -6,14 +6,17 @@
   #include <rc_api_user.h>
   #include <rc_client.h>
   #include <rc_hash.h>
+  #include <condition_variable>
+  #include <deque>
+  #include <mutex>
+  #include <thread>
 #endif
-
-RetroAchievements retroAchievements;
 
 #if defined(ARES_ENABLE_RCHEEVOS)
 namespace {
 struct ClientCallbackData {
   RetroAchievements* self = nullptr;
+  u64 generation = 0;
 };
 
 struct AchievementCounts {
@@ -91,56 +94,6 @@ auto clientReadMemory(u32 address, u8* buffer, u32 size, rc_client_t* client) ->
   return self->readMemory(address, buffer, size);
 }
 
-auto clientServerCall(const rc_api_request_t* request, rc_client_server_callback_t callback, void* callbackData, rc_client_t*) -> void {
-  rc_api_server_response_t response = {};
-  response.http_status_code = RC_API_SERVER_RESPONSE_CLIENT_ERROR;
-
-  if(!request || !callback || !request->url) {
-    if(callback) callback(&response, callbackData);
-    return;
-  }
-
-  CURL* curl = curl_easy_init();
-  if(!curl) {
-    callback(&response, callbackData);
-    return;
-  }
-
-  std::string responseBody;
-  curl_slist* headers = nullptr;
-
-  curl_easy_setopt(curl, CURLOPT_URL, request->url);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWrite);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
-  curl_easy_setopt(curl, CURLOPT_USERAGENT, "ares/retroachievements-minimal");
-  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
-
-  if(request->post_data) {
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request->post_data);
-  }
-
-  if(request->content_type) {
-    string contentType = {"Content-Type: ", request->content_type};
-    headers = curl_slist_append(headers, contentType.data());
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-  }
-
-  auto curlResult = curl_easy_perform(curl);
-  long statusCode = 0;
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &statusCode);
-  if(headers) curl_slist_free_all(headers);
-  curl_easy_cleanup(curl);
-
-  if(curlResult == CURLE_OK) {
-    response.body = responseBody.c_str();
-    response.body_length = responseBody.size();
-    response.http_status_code = (int)statusCode;
-  }
-
-  callback(&response, callbackData);
-}
-
 auto clientEvent(const rc_client_event_t* event, rc_client_t*) -> void {
   if(!event) return;
   switch(event->type) {
@@ -165,13 +118,13 @@ auto clientEvent(const rc_client_event_t* event, rc_client_t*) -> void {
 auto clientLoginCallback(int result, const char* errorMessage, rc_client_t* client, void* userdata) -> void {
   std::unique_ptr<ClientCallbackData> data{static_cast<ClientCallbackData*>(userdata)};
   if(!data || !data->self || !client) return;
-  data->self->handleClientLoginResult(result, errorMessage);
+  data->self->handleClientLoginResult(result, errorMessage, data->generation);
 }
 
 auto clientLoadGameCallback(int result, const char* errorMessage, rc_client_t* client, void* userdata) -> void {
   std::unique_ptr<ClientCallbackData> data{static_cast<ClientCallbackData*>(userdata)};
   if(!data || !data->self || !client) return;
-  data->self->handleClientGameLoadResult(result, errorMessage);
+  data->self->handleClientGameLoadResult(result, errorMessage, data->generation);
 }
 
 auto loginRequest(const string& username, const string& password, const string& token) -> RetroAchievementsLoginResult {
@@ -207,7 +160,8 @@ auto loginRequest(const string& username, const string& password, const string& 
   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.post_data);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWrite);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
-  curl_easy_setopt(curl, CURLOPT_USERAGENT, "ares");
+  string userAgent = {"ares/", ares::Version};
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, (const char*)userAgent);
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
 
@@ -255,12 +209,223 @@ auto loginRequest(const string& username, const string& password, const string& 
 
   return result;
 }
+
+struct HttpWorker {
+  struct Task {
+    enum class Kind { Client, Login, Avatar } kind;
+    std::string url;
+    std::string postData;
+    std::string contentType;
+    std::string username;
+    std::string password;
+    std::string token;
+    bool post = false;
+    u64 generation = 0;
+    rc_client_server_callback_t callback = nullptr;
+    void* callbackData = nullptr;
+  };
+
+  struct ClientResponse {
+    std::vector<char> body;
+    int status = RC_API_SERVER_RESPONSE_RETRYABLE_CLIENT_ERROR;
+    rc_client_server_callback_t callback = nullptr;
+    void* callbackData = nullptr;
+  };
+  struct LoginResponse {
+    u64 generation = 0;
+    RetroAchievementsLoginResult result;
+  };
+  struct AvatarResponse {
+    string url;
+    std::vector<u8> bytes;
+  };
+
+  std::mutex mutex;
+  std::condition_variable cv;
+  std::deque<Task> tasks;
+  std::deque<ClientResponse> clientResponses;
+  std::deque<LoginResponse> loginResponses;
+  std::deque<AvatarResponse> avatarResponses;
+  std::thread thread;
+  bool started = false;
+  bool stopping = false;
+
+  auto start() -> bool {
+    if(started) return true;
+    if(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) return false;
+    stopping = false;
+    started = true;
+    thread = std::thread([this] { run(); });
+    return true;
+  }
+
+  auto enqueue(Task task) -> void {
+    std::lock_guard lock{mutex};
+    if(stopping) {
+      if(task.kind == Task::Kind::Client) {
+        clientResponses.push_back({{}, RC_API_SERVER_RESPONSE_CLIENT_ERROR, task.callback, task.callbackData});
+      }
+      return;
+    }
+    tasks.push_back(std::move(task));
+    cv.notify_one();
+  }
+
+  auto takeClientResponses() -> std::deque<ClientResponse> {
+    std::lock_guard lock{mutex};
+    std::deque<ClientResponse> out;
+    out.swap(clientResponses);
+    return out;
+  }
+
+  auto takeLoginResponses() -> std::deque<LoginResponse> {
+    std::lock_guard lock{mutex};
+    std::deque<LoginResponse> out;
+    out.swap(loginResponses);
+    return out;
+  }
+
+  auto takeAvatarResponses() -> std::deque<AvatarResponse> {
+    std::lock_guard lock{mutex};
+    std::deque<AvatarResponse> out;
+    out.swap(avatarResponses);
+    return out;
+  }
+
+  auto pumpClient() -> void {
+    for(auto& item : takeClientResponses()) {
+      if(!item.callback) continue;
+      rc_api_server_response_t response{};
+      response.body = item.body.empty() ? nullptr : item.body.data();
+      response.body_length = item.body.size();
+      response.http_status_code = item.status;
+      item.callback(&response, item.callbackData);
+    }
+  }
+
+  auto stop() -> void {
+    if(!started) return;
+    {
+      std::lock_guard lock{mutex};
+      stopping = true;
+      for(auto& task : tasks) {
+        if(task.kind == Task::Kind::Client) {
+          clientResponses.push_back({{}, RC_API_SERVER_RESPONSE_CLIENT_ERROR, task.callback, task.callbackData});
+        }
+      }
+      tasks.clear();
+    }
+    cv.notify_one();
+    if(thread.joinable()) thread.join();
+    while(true) {
+      {
+        std::lock_guard lock{mutex};
+        if(clientResponses.empty()) break;
+      }
+      pumpClient();
+    }
+    curl_global_cleanup();
+    started = false;
+  }
+
+  auto run() -> void {
+    while(true) {
+      Task task;
+      {
+        std::unique_lock lock{mutex};
+        cv.wait(lock, [&] { return stopping || !tasks.empty(); });
+        if(stopping && tasks.empty()) return;
+        task = std::move(tasks.front());
+        tasks.pop_front();
+      }
+
+      if(task.kind == Task::Kind::Login) {
+        auto result = loginRequest(task.username.c_str(), task.password.c_str(), task.token.c_str());
+        std::lock_guard lock{mutex};
+        loginResponses.push_back({task.generation, std::move(result)});
+        continue;
+      }
+
+      CURL* curl = curl_easy_init();
+      std::vector<char> body;
+      int status = RC_API_SERVER_RESPONSE_RETRYABLE_CLIENT_ERROR;
+      if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, task.url.c_str());
+        string userAgent = {"ares/", ares::Version};
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, (const char*)userAgent);
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, +[](char* data, size_t size, size_t count, void* userdata) -> size_t {
+          auto* out = (std::vector<char>*)userdata;
+          auto bytes = size * count;
+          out->insert(out->end(), data, data + bytes);
+          return bytes;
+        });
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body);
+        curl_slist* headers = nullptr;
+        if(task.kind == Task::Kind::Client && !task.contentType.empty()) {
+          std::string contentType = "Content-Type: " + task.contentType;
+          headers = curl_slist_append(headers, contentType.c_str());
+          curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        }
+        if(task.post) {
+          curl_easy_setopt(curl, CURLOPT_POST, 1L);
+          curl_easy_setopt(curl, CURLOPT_POSTFIELDS, task.postData.c_str());
+          curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)task.postData.size());
+        }
+        if(curl_easy_perform(curl) == CURLE_OK) {
+          long code = 0;
+          curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+          status = code ? (int)code : RC_API_SERVER_RESPONSE_RETRYABLE_CLIENT_ERROR;
+        } else {
+          body.clear();
+        }
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+      }
+
+      std::lock_guard lock{mutex};
+      if(task.kind == Task::Kind::Client) {
+        clientResponses.push_back({std::move(body), status, task.callback, task.callbackData});
+      } else {
+        std::vector<u8> bytes;
+        if(status >= 200 && status < 300) bytes.assign(body.begin(), body.end());
+        avatarResponses.push_back({task.url.c_str(), std::move(bytes)});
+      }
+    }
+  }
+};
+
+HttpWorker httpWorker;
+
+auto clientServerCall(const rc_api_request_t* request, rc_client_server_callback_t callback, void* callbackData, rc_client_t*) -> void {
+  if(!callback) return;
+  if(!request || !request->url) {
+    rc_api_server_response_t response{};
+    response.http_status_code = RC_API_SERVER_RESPONSE_CLIENT_ERROR;
+    callback(&response, callbackData);
+    return;
+  }
+
+  HttpWorker::Task task;
+  task.kind = HttpWorker::Task::Kind::Client;
+  task.url = request->url;
+  if(request->post_data) task.postData = request->post_data;
+  if(request->content_type) task.contentType = request->content_type;
+  task.post = request->post_data != nullptr;
+  task.callback = callback;
+  task.callbackData = callbackData;
+  httpWorker.enqueue(std::move(task));
+}
 }
 #endif
+
+RetroAchievements retroAchievements;
 
 RetroAchievements::~RetroAchievements() {
 #if defined(ARES_ENABLE_RCHEEVOS)
   unloadClientGame();
+  httpWorker.stop();
   if(_client) {
     rc_client_destroy(_client);
     _client = nullptr;
@@ -271,6 +436,7 @@ RetroAchievements::~RetroAchievements() {
 auto RetroAchievements::ensureClient() -> bool {
 #if defined(ARES_ENABLE_RCHEEVOS)
   if(_client) return true;
+  if(!httpWorker.start()) return false;
   _client = rc_client_create(clientReadMemory, clientServerCall);
   if(!_client) return false;
   rc_client_set_userdata(_client, this);
@@ -293,7 +459,7 @@ auto RetroAchievements::syncClientLogin() -> void {
     if(user->username && _username == user->username) return;
   }
 
-  rc_client_begin_login_with_token(_client, _username, _token, clientLoginCallback, new ClientCallbackData{this});
+  rc_client_begin_login_with_token(_client, _username, _token, clientLoginCallback, new ClientCallbackData{this, _loginGeneration});
 #endif
 }
 
@@ -309,8 +475,8 @@ auto RetroAchievements::loadGame() -> void {
   auto* adapter = RA::Platform::selectAdapter(*emulator);
   if(!adapter) return;
 
-  std::vector<u8> rom;
-  if(!adapter->romData(*emulator, rom) || rom.empty()) {
+  _pendingRomData.clear();
+  if(!adapter->romData(*emulator, _pendingRomData) || _pendingRomData.empty()) {
     program.showMessage("[RA] Could not read ROM data for game lookup");
     return;
   }
@@ -321,19 +487,21 @@ auto RetroAchievements::loadGame() -> void {
     _client,
     adapter->consoleId(*emulator),
     path ? (const char*)path : nullptr,
-    rom.data(),
-    rom.size(),
+    _pendingRomData.data(),
+    _pendingRomData.size(),
     clientLoadGameCallback,
-    new ClientCallbackData{this}
+    new ClientCallbackData{this, _gameGeneration}
   );
 #endif
 }
 
 auto RetroAchievements::unloadClientGame() -> void {
+  ++_gameGeneration;
 #if defined(ARES_ENABLE_RCHEEVOS)
   _gameReady = false;
   _gameLoadPending = false;
   if(_client) rc_client_unload_game(_client);
+  _pendingRomData.clear();
 #endif
 }
 
@@ -342,39 +510,40 @@ auto RetroAchievements::initialize() -> void {
 #if defined(ARES_ENABLE_RCHEEVOS)
   if(!settings.retroAchievements.enabled) return;
   if(!settings.retroAchievements.username || !settings.retroAchievements.token) return;
-
-  auto result = loginRequest(settings.retroAchievements.username, "", settings.retroAchievements.token);
-  if(result.success) {
-    setUser(result);
-    settings.retroAchievements.username = result.username;
-    settings.retroAchievements.token = result.token;
-    settings.save();
-    syncClientLogin();
-    if(_gameHash) loadGame();
-  }
-  program.showMessage({"[RA] ", result.message});
+  if(!httpWorker.start()) return;
+  HttpWorker::Task task;
+  task.kind = HttpWorker::Task::Kind::Login;
+  task.username = (const char*)settings.retroAchievements.username;
+  task.token = (const char*)settings.retroAchievements.token;
+  task.generation = ++_loginGeneration;
+  _loginPending = true;
+  httpWorker.enqueue(std::move(task));
 #endif
 }
 
-auto RetroAchievements::login(const string& username, const string& password) -> RetroAchievementsLoginResult {
+auto RetroAchievements::login(const string& username, const string& password) -> bool {
   Program::Guard guard;
 #if defined(ARES_ENABLE_RCHEEVOS)
-  auto result = loginRequest(username, password, "");
-  if(result.success) {
-    setUser(result);
-    syncClientLogin();
-    if(_gameHash) loadGame();
-  }
-  return result;
+  if(!username || !password || !httpWorker.start()) return false;
+  HttpWorker::Task task;
+  task.kind = HttpWorker::Task::Kind::Login;
+  task.username = (const char*)username;
+  task.password = (const char*)password;
+  task.generation = ++_loginGeneration;
+  _loginPending = true;
+  httpWorker.enqueue(std::move(task));
+  return true;
 #else
-  RetroAchievementsLoginResult result;
-  result.message = "Rebuild with ARES_ENABLE_RCHEEVOS to use RetroAchievements";
-  return result;
+  (void)username;
+  (void)password;
+  return false;
 #endif
 }
 
 auto RetroAchievements::logout() -> void {
   Program::Guard guard;
+  ++_loginGeneration;
+  _loginPending = false;
 #if defined(ARES_ENABLE_RCHEEVOS)
   unloadClientGame();
   if(_client) rc_client_logout(_client);
@@ -382,9 +551,54 @@ auto RetroAchievements::logout() -> void {
   clearUser();
 }
 
+auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLoginResult& result) -> void {
+  Program::Guard guard;
+  if(generation != _loginGeneration) return;
+  _loginPending = false;
+  program.showMessage({"[RA] ", result.message});
+  if(result.success) {
+    setUser(result);
+    settings.retroAchievements.enabled = true;
+    settings.retroAchievements.username = result.username;
+    settings.retroAchievements.token = result.token;
+    settings.save();
+    syncClientLogin();
+  }
+  retroAchievementsSettings.statusLabel.setText(result.message);
+  retroAchievementsSettings.refresh();
+}
+
+auto RetroAchievements::pumpUi() -> void {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  for(auto& response : httpWorker.takeLoginResponses()) {
+    completeLogin(response.generation, response.result);
+  }
+  for(auto& response : httpWorker.takeAvatarResponses()) {
+    retroAchievementsSettings.acceptAvatar(response.url, response.bytes);
+  }
+#endif
+}
+
+auto RetroAchievements::requestAvatar(const string& url) -> void {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(!url || !httpWorker.start()) return;
+  HttpWorker::Task task;
+  task.kind = HttpWorker::Task::Kind::Avatar;
+  task.url = (const char*)url;
+  httpWorker.enqueue(std::move(task));
+#else
+  (void)url;
+#endif
+}
+
 auto RetroAchievements::hasUser() const -> bool {
   Program::Guard guard;
   return _authenticated;
+}
+
+auto RetroAchievements::loginPending() const -> bool {
+  Program::Guard guard;
+  return _loginPending;
 }
 
 auto RetroAchievements::username() const -> string {
@@ -427,8 +641,9 @@ auto RetroAchievements::readMemory(u32 address, u8* buffer, u32 size) const -> u
   return 0;
 }
 
-auto RetroAchievements::handleClientLoginResult(int result, const char* errorMessage) -> void {
+auto RetroAchievements::handleClientLoginResult(int result, const char* errorMessage, u64 generation) -> void {
 #if defined(ARES_ENABLE_RCHEEVOS)
+  if(generation != _loginGeneration || !_authenticated) return;
   if(result != RC_OK) {
     _gameReady = false;
     program.showMessage({"[RA] Client login failed: ", errorMessage ? errorMessage : rc_error_str(result)});
@@ -438,14 +653,18 @@ auto RetroAchievements::handleClientLoginResult(int result, const char* errorMes
   if(auto user = _client ? rc_client_get_user_info(_client) : nullptr) {
     program.showMessage({"[RA] Client session ready for ", user->display_name ? user->display_name : user->username});
   }
+  if(_gameHash) loadGame();
 #else
   (void)result;
   (void)errorMessage;
+  (void)generation;
 #endif
 }
 
-auto RetroAchievements::handleClientGameLoadResult(int result, const char* errorMessage) -> void {
+auto RetroAchievements::handleClientGameLoadResult(int result, const char* errorMessage, u64 generation) -> void {
 #if defined(ARES_ENABLE_RCHEEVOS)
+  if(generation != _gameGeneration) return;
+  _pendingRomData.clear();
   _gameLoadPending = false;
   _gameReady = result == RC_OK && _client && rc_client_is_game_loaded(_client);
 
@@ -479,11 +698,13 @@ auto RetroAchievements::handleClientGameLoadResult(int result, const char* error
 #else
   (void)result;
   (void)errorMessage;
+  (void)generation;
 #endif
 }
 
 auto RetroAchievements::frame() -> void {
 #if defined(ARES_ENABLE_RCHEEVOS)
+  httpWorker.pumpClient();
   if(!_client) return;
   if(!settings.retroAchievements.enabled) return;
   if(!_authenticated) return;
@@ -494,6 +715,7 @@ auto RetroAchievements::frame() -> void {
 
 auto RetroAchievements::idle() -> void {
 #if defined(ARES_ENABLE_RCHEEVOS)
+  httpWorker.pumpClient();
   if(!_client) return;
   if(!settings.retroAchievements.enabled) return;
   if(!_authenticated) return;
