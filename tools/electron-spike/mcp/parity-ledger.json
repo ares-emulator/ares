@@ -1692,10 +1692,16 @@
       "family": "Traces/provenance/profiling",
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 PI provenance; task 6 incomplete)",
+      "mcpSchemaParity": "Source tool/defaults retained; native pages capped at 16 and MCP responses at 128 with next_since_id. Unconfirmed writes/history loss are explicit; full generated/result parity pending.",
+      "testEvidence": [
+        {
+          "scope": "task 6 DMA slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: real CPU SW starts PI DMA, aligned and short misaligned ranges match RAM, DMA excludes CPU watches, 4097 real transfer loops verify overwrite metadata, native/JS serialization, reset and real Electron/N64 startup opt-in."
+        }
+      ],
+      "knownLimits": "PI cartridge-to-RDRAM only, opt-in from services-enabled startup or first query. 4096-record/64-range ring, dropped/truncation markers. Confirmed linear writes clipped to installed RAM; unknown mappings return bytes_written=null. Code candidates are heuristic, not overlays/decompressed-code proof."
     },
     {
       "name": "cpu_profiler_top",

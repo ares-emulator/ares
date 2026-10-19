@@ -3,10 +3,10 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. There are 30 registered tools: the original eleven generic/session/run
+emulator. There are 31 registered tools: the original eleven generic/session/run
 tools plus `cpu_registers`, `step_instructions`, `run_until_hit`,
 `break_add/remove/list`, `watch_add/remove/list`, `last_stop`, `read_memory_va`,
-`write_memory_va`, and `controller_set/release/state/host_mode`, and `trace_pc/calls/page`. The CPU, VA, controller and trace tools are N64-specific. Diagnostics go to
+`write_memory_va`, and `controller_set/release/state/host_mode`, and `trace_pc/calls/page`, plus `overlay_log`. The CPU, VA, controller and trace tools are N64-specific. Diagnostics go to
 stderr; stdout carries MCP JSON-RPC only.
 
 ## Start and explicitly select an app
@@ -91,7 +91,7 @@ This is incremental compatibility, not full reference-result parity:
   register values or legacy telemetry-protocol compatibility are advertised.
 
 `parity-ledger.json` still tracks all 68 tools and the remaining differences.
-The other 38 tools are not registered. No tool was removed from the target.
+The other 37 tools are not registered. No tool was removed from the target.
 
 ## Bundled runtime and distribution
 
@@ -177,7 +177,7 @@ closure revokes the departed connection's holds without touching other owners.
 
 New host keyboard/gamepad/button events can take back ordinary play. Automated
 coverage uses real ares controller nodes and generated host keyboard events;
-physical device acceptance is still pending. `controller_tap`, DMA provenance and profiler tools remain unregistered until
+physical device acceptance is still pending. `controller_tap` and profiler tools remain unregistered until
 their backends are ported.
 
 
@@ -197,3 +197,22 @@ defaults are accepted, with an effective MCP response ceiling of 1024 entries an
 inside the control transport bound. Captures are immutable after completion;
 starting another trace supersedes the stored pages. A non-null file path returns
 `unavailable` until artifact exports land in task 7.
+
+
+## PI provenance
+
+`overlay_log` returns PI cartridge-to-RDRAM transfers with initiating PC, ROM
+address/offset and observed write-loop ranges. A services-enabled app passes
+--debug-provenance to record from boot. A raw host enables recording on first
+query and reports incomplete earlier history. `recording_from_epoch_start`
+distinguishes recording start; `history_complete` also becomes false after ring
+overwrite. The 4096-record ring reports dropped records, and each record reports
+range truncation at 64 ranges.
+
+Initialized linear RDRAM writes are clipped to installed storage and confirmed;
+nonidentity mappings return attempted ranges with writes_confirmed=false and
+bytes_written=null. Code candidates are only confirmed ROM-address transfers
+overlapping the requested physical code range, not proof of overlays or generated
+code. Native replies page 16 records; the MCP effective limit is 128 with
+next_since_id/more for continuation. No GPU, decompression or general DMA source
+is inferred from PI history.

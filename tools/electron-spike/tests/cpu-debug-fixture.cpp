@@ -4,6 +4,7 @@
 #include "../native/n64-service.hpp"
 #include "../native/input-service.hpp"
 #include "../native/trace-service.hpp"
+#include "../native/dma-service.hpp"
 #include <cstdio>
 #include <cstdlib>
 using namespace ares::Nintendo64;
@@ -214,6 +215,49 @@ int main() {
   for(unsigned n = 0; n < 3; ++n) cpu.instruction();
   auto section = cpu.recompiler.sections[cpu.recompiler.sectionIndex(0x1080)];
   check(section && section->blocks[cpu.recompiler.blockIndex(0x1080)] && !d.active && d.trace.instructionsObserved == observed, "trace disable returns to real JIT blocks without capturing");
+  // An actual SW to PI_WR_LEN starts the transfer; metadata must match bytes.
+  pi.load(root); pi.power(false); cartridge.rom.allocate(16, 0);
+  for(unsigned n = 0; n < 16; ++n) cartridge.rom.data[n ^ 3] = 0x80 + n;
+  pi.attach(cartridge.romDevice, 0);
+  dmaProvenance.enabled = true; dmaProvenance.reset(7);
+  word(0x200, 0x3c08a460); word(0x204, 0x24093000); word(0x208, mem(0x2b, 9, 0));
+  word(0x20c, 0x3c091000); word(0x210, mem(0x2b, 9, 4)); word(0x214, 0x24090007); word(0x218, mem(0x2b, 9, 12));
+  auto dmaWatch = d.addWatchpoint(0x3000, 8, Debug::AccessWrite, {}, error);
+  cpu.icache.power(false); pc(base + 0x200); steps(7);
+  check(d.stop.reason == Debug::StopReason::InstructionsDone && d.watchpoints[0].hits == 0, "PI DMA is provenance, not a CPU data-watch hit");
+  d.removeWatchpoint(dmaWatch);
+  check(dmaProvenance.records.size() == 1 && dmaProvenance.current == nullptr, "CPU-initiated PI DMA captured once");
+  auto transfer = dmaProvenance.records[0];
+  check(transfer.pc == base + 0x218 && transfer.epoch == 7 && transfer.frame == 10 && transfer.fromRom && transfer.romOffset == 0, "DMA initiating PC, epoch, frame and ROM offset");
+  check(transfer.requestedLength == 8 && transfer.bytesWritten == 8 && transfer.bytesAttempted == 8 && transfer.ranges.size() == 1 && transfer.ranges[0].address == 0x3000 && transfer.ranges[0].length == 8, "DMA metadata matches aligned write range");
+  for(unsigned n = 0; n < 8; ++n) check(rdram.ram.read<Byte>(0x3000 + n, RBusDevice::ARES_DEBUGGER) == 0x80 + n, "real PI bytes match original ROM pattern");
+  pi.power(false); pi.io.pbusAddress = 0x10000000; pi.io.dramAddress = 0x3012; pi.io.writeLength = 7; pi.io.originPc = base + 0x218;
+  pi.dmaWrite();
+  auto partial = dmaProvenance.records.back();
+  check(partial.requestedLength == 8 && partial.bytesWritten == 6 && partial.ranges[0].address == 0x3012 && partial.ranges[0].length == 6, "PI misalignment records actual short first-block writes");
+  for(unsigned n = 0; n < 6; ++n) check(rdram.ram.read<Byte>(0x3012 + n, RBusDevice::ARES_DEBUGGER) == 0x80 + n, "short PI range agrees with actual RAM");
+  check(rdram.ram.read<Byte>(0x3018, RBusDevice::ARES_DEBUGGER) == 0, "PI provenance does not extend through untouched bytes");
+  DmaService dmaView; dmaView.available = true;
+  auto dmaPage = dmaView.execute({"0", "16", "1024", "2359296"});
+  check(dmaPage.error.empty(), "DMA log serializes actual transfers");
+  std::printf("DMA_PAGE %s\n", dmaPage.json.c_str());
+  // Stress the history boundary with real transfer loops (guest scheduling is not advanced).
+  dmaProvenance.reset(8);
+  for(unsigned n = 0; n < DmaProvenance::capacity + 1; ++n) {
+    pi.power(false); pi.io.pbusAddress = 0x10000000; pi.io.dramAddress = 0x3000; pi.io.writeLength = 7; pi.io.originPc = base + 0x218; pi.dmaWrite();
+  }
+  check(dmaProvenance.records.size() == DmaProvenance::capacity && dmaProvenance.dropped == 1, "real DMA history is a bounded overwrite ring");
+  auto ringPage = dmaView.execute({"0", "16", "1024", "2359296"});
+  check(ringPage.error.empty(), "overwritten DMA history serializes");
+  std::printf("DMA_RING_PAGE %s\n", ringPage.json.c_str());
+  DmaProvenance bounded; bounded.enabled = true; bounded.reset(1);
+  bounded.begin(0x10000000, 0, 1000, base, 16, 4 * 1024 * 1024, true);
+  for(unsigned n = 0; n < DmaProvenance::maxRanges + 1; ++n) bounded.wrote(n * 16, 1);
+  check(bounded.current->ranges.size() == DmaProvenance::maxRanges && bounded.current->rangesTruncated && bounded.current->bytesWritten == DmaProvenance::maxRanges + 1, "DMA range truncation is explicit and byte totals survive");
+  bounded.begin(0x10000000, 0, 8, base, 16, 4 * 1024 * 1024, false); bounded.wrote(0, 8);
+  check(!bounded.current->writesConfirmed && bounded.current->bytesAttempted == 8, "nonidentity RDRAM writes remain unconfirmed");
+  bounded.reset(2); check(bounded.records.empty() && bounded.current == nullptr && bounded.epoch == 2, "epoch reset revokes old provenance");
+  pi.detach(cartridge.romDevice); cartridge.rom.reset();
   rdram.ram.reset();
   std::puts("CPU_DEBUG_FIXTURE_PASS");
 }

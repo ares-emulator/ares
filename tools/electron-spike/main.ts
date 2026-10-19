@@ -72,6 +72,7 @@ async function start(options: StartOptions) {
   await stop();
   const args = options.rom ? ['--rom', options.rom] : ['--synthetic'];
   if (options.rom) args.push('--system', system);
+  if (process.env.ARES_ENABLE_SERVICES === '1' || process.argv.includes('--services')) args.push('--debug-provenance');
   for (const media of options.media || []) args.push('--media', media);
   if (settingsFile) args.push('--settings', settingsFile);
   if (options.hd) args.push('--1080p');

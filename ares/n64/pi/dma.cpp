@@ -26,6 +26,7 @@ auto PI::dmaWrite() -> void {
   auto& bsd = bsdForAddress(io.pbusAddress);
   u32 pageMask = (1 << (bsd.pageSize + 2)) - 1;
   bool addressSelected = false;
+  dmaProvenance.begin(io.pbusAddress, io.dramAddress, length, io.originPc, cartridge.rom.size, rdram.ram.size, rdram.mapIdentity);
 
   while(length > 0) {
     i32 misalign = io.dramAddress & 7;
@@ -45,6 +46,10 @@ auto PI::dmaWrite() -> void {
       length -= 2;
     }
 
+    if(curLen - misalign > 0) {
+      bool single = firstBlock && curLen < 127-misalign;
+      dmaProvenance.wrote(io.dramAddress, single ? curLen - misalign : (curLen - misalign + 1) & ~1);
+    }
     if(firstBlock && curLen < 127-misalign) {
       for(i32 i = 0; i < curLen-misalign; i++) {
         rdram.ram.write<Byte>(io.dramAddress++, mem[i], RBusDevice::PI_DMA);
@@ -61,6 +66,7 @@ auto PI::dmaWrite() -> void {
     firstBlock = false;
     maxBlockSize = distEndOfRow < 8 ? 128-misalign : 128;
   }
+  dmaProvenance.end();
 }
 
 auto PI::dmaFinished() -> void {

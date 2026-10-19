@@ -1,10 +1,11 @@
+import { encodeDma, validDma, type DmaServiceMap } from './dma-contracts.js';
 import { TRACE_METHODS, encodeTrace, validTracePage, type TraceServiceMap } from './trace-contracts.js';
 import { INPUT_METHODS, encodeInput, validInput, type InputMethod, type InputServiceMap } from './input-contracts.js';
 import { N64_METHODS, encodeN64, validN64, type N64Method, type N64ServiceMap, type Stop, validStop } from './n64-contracts.js';
 /** Shared contract for Electron routing, the inspector and the future MCP adapter. */
 export const PROTOCOL = 1 as const;
 export const MAX_TRANSFER = 1024;
-export const METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS, ...TRACE_METHODS] as const;
+export const METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS, ...TRACE_METHODS, 'n64.dma.log'] as const;
 export type ServiceMethod = typeof METHODS[number];
 export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
 export interface SessionIdentity { session: string; epoch: number }
@@ -18,7 +19,7 @@ export interface ExecutionOperation {
 export interface MemoryRegion { id: string; name: string; size: number; readable: boolean; writable: boolean; addressing: 'region-offset'; unavailableReason?: string }
 export interface MemoryRead { region: string; offset: number; length: number; hex: string }
 export interface MemoryWritten { region: string; offset: number; written: number }
-export interface ServiceMap extends N64ServiceMap, InputServiceMap, TraceServiceMap {
+export interface ServiceMap extends N64ServiceMap, InputServiceMap, TraceServiceMap, DmaServiceMap {
   'execution.stepInstructions': { params: { count: number; timeoutMs: number }; result: ExecutionOperation };
   'session.status': { params: undefined; result: SessionStatus };
   'session.pause': { params: undefined; result: SessionStatus };
@@ -56,6 +57,10 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
     const p = params as { keepOverrides: boolean };
     if (!keys(p, ['keepOverrides']) || typeof p.keepOverrides !== 'boolean') throw new ServiceError('invalid_request');
     suffix = ` ${p.keepOverrides ? 1 : 0}`;
+  } else if (method === 'n64.dma.log') {
+    const encoded = encodeDma(params);
+    if (encoded === undefined) throw new ServiceError('invalid_request');
+    suffix = encoded;
   } else if (method.startsWith('n64.trace.')) {
     const encoded = encodeTrace(method, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
@@ -64,7 +69,7 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
     const encoded = encodeInput(method as InputMethod, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
     suffix = encoded;
-  } else if (method.startsWith('n64.')) {
+  } else if (N64_METHODS.includes(method as N64Method)) {
     const encoded = encodeN64(method as N64Method, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
     suffix = encoded;
@@ -95,8 +100,9 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
   if (r.ok) {
     const s = r.result;
     let valid = false;
-    if (method.startsWith('n64.') && !method.startsWith('n64.input.') && !method.startsWith('n64.trace.')) valid = validN64(method as N64Method, s);
-    if (method === 'n64.trace.page') valid = validTracePage(s);
+    if (N64_METHODS.includes(method as N64Method)) valid = validN64(method as N64Method, s);
+    if (method === 'n64.dma.log') valid = validDma(s) && s.epoch === r.epoch;
+    if (method === 'n64.trace.page') valid = validTracePage(s) && s.epoch === r.epoch;
     if (method === 'n64.trace.start' && s && integer(s.storage_record_limit) && s.storage_record_limit > 0 && s.storage_record_limit <= 262144) {
       decodeReply(JSON.stringify({ ...r, result: s.operation }), 'execution.status'); valid = true;
     }

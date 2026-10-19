@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog } from 'electron';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -38,7 +38,7 @@ app.whenReady().then(async () => {
   const mcp = peer(); await mcp.initialize();
   enter('MCP tools');
   const list = (await mcp.request('tools/list', {})).result.tools;
-  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page'].sort());
+  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log'].sort());
   assert.equal(list.find(t => t.name === 'read_memory').inputSchema.properties.length.default, 64);
   assert.equal(list.find(t => t.name === 'resume').inputSchema.properties.keep_overrides.default, false);
   assert.equal(list.find(t => t.name === 'emu_status').inputSchema.properties.verbose.default, false);
@@ -121,6 +121,18 @@ app.whenReady().then(async () => {
   assert.ok(['stale_session', 'native_host_disconnected'].includes((await revoked).error));
   await mcp.tool('emu_status');
   assert.equal((await mcp.tool('operation_status', { operation_id: exact.operation_id })).error, 'stale_session');
+  enter('N64 provenance opt-in and stopped UI');
+  const n64Image = Buffer.alloc(0x1000); n64Image.writeUInt32BE(0x80371240); n64Image.write('DMA UI FIXTURE', 0x20); n64Image[0x3e] = 0x45;
+  const n64File = path.join(temporary, 'fixture.z64'); fs.writeFileSync(n64File, n64Image);
+  const showOpenDialog = dialog.showOpenDialog;
+  dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [n64File] });
+  try { await window.webContents.executeJavaScript('window.ares.open({system: "Nintendo 64"})'); }
+  finally { dialog.showOpenDialog = showOpenDialog; }
+  await until(async () => (await sessions.request('session.status')).result.system === 'Nintendo 64');
+  await mcp.tool('emu_status'); assert.equal((await mcp.tool('pause')).paused, true);
+  assert.equal((await mcp.tool('overlay_log')).history_complete, true, 'services-enabled app records provenance from boot');
+  assert.equal((await mcp.tool('step_instructions')).executed, 1);
+  await until(() => window.webContents.executeJavaScript("document.getElementById('pause').textContent === 'Resume'"));
   enter('native shutdown');
   await stopNative();
   assert.equal((await mcp.tool('pause')).error, 'native_host_disconnected');

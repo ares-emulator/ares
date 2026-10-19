@@ -1,3 +1,4 @@
+import { registerDmaTools } from './dma-tools.js';
 import { registerTraceTools } from './trace-tools.js';
 import { registerInputTools } from './input-tools.js';
 import { registerN64Tools } from './n64-tools.js';
@@ -99,6 +100,7 @@ function createServer(): McpServer {
   registerN64Tools(server, local, status, operation);
   registerInputTools(server, local, status);
   registerTraceTools(server, local, status, rememberOperation, id => operationIdentities.get(id));
+  registerDmaTools(server, local, status);
   server.server.onclose = () => local.close();
   return server;
 }

@@ -37,6 +37,7 @@ auto locate(const string& name) -> string {
 #include "native/n64-service.hpp"
 #include "native/input-service.hpp"
 #include "native/trace-service.hpp"
+#include "native/dma-service.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
@@ -280,7 +281,8 @@ int main(int argc, char** argv) {
   std::vector<string> extraMedia;
   for(int i = 1; i < argc; i++) {
     std::string arg = argv[i];
-    if(arg == "--silent") host.sound = false;
+    if(arg == "--debug-provenance") ares::Nintendo64::dmaProvenance.enabled = true;
+    else if(arg == "--silent") host.sound = false;
     else if(arg == "--control-session" && i + 1 < argc) {
       host.service.session = argv[++i];
       if(host.service.session.empty() || host.service.session.size() > 64 || host.service.session.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_") != std::string::npos) return 2;
@@ -303,6 +305,7 @@ int main(int argc, char** argv) {
     else if(arg == "--rom" && i + 1 < argc) rom = argv[++i];
     else { std::cerr << "Usage: ares-electron-host [--rom file | --identify file | --synthetic [--1080p]] [--silent] [--save-dir directory]\n"; return 2; }
   }
+  ares::Nintendo64::dmaProvenance.reset(host.service.epoch);
   inputManager.create();
   Emulator::construct();
   program.kiosk = true; program.noFilePrompt = true;
@@ -394,10 +397,12 @@ int main(int argc, char** argv) {
   auto& execution = host.service.execution;
   N64Service n64Service; n64Service.available = n64;
   TraceService traceService; traceService.available = n64;
+  DmaService dmaService; dmaService.available = n64;
   execution.cpuSupported = n64;
   host.injectedInput.available = n64;
   host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method == "n64.dma.log") return dmaService.execute(args);
     if(method.starts_with("n64.trace.")) return traceService.execute(method, args, owner, host.service.epoch, host.service.paused, execution);
     if(method.starts_with("n64.input.")) return host.injectedInput.execute(method, args, owner, host.service.epoch, execution.frame, execution.active ? execution.active->owner : "");
     auto result = n64Service.execute(method, args, host.service.epoch, bool(execution.active));
@@ -440,9 +445,10 @@ int main(int argc, char** argv) {
     if(n64) host.injectedInput.service(host.service.epoch, execution.frame);
     bool wasControlled = bool(execution.active);
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
-      if(host.root) { host.output.clear(); host.root->power(); }
       host.injectedInput.releaseAll(); traceService.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
+      ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
+      if(host.root) { host.output.clear(); host.root->power(); }
     }, host.memory)) { host.quit = true; break; }
     if(host.takeoverRequested.exchange(false) && n64 && host.injectedInput.takeover()) {
       execution.complete("host_input", host.service.paused);

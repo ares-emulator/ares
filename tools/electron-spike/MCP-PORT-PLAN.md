@@ -234,6 +234,14 @@ break/watch/step, traces and DMA log. Bring in necessary fork profiler/capture
 dependencies selectively. Preserve interpreter switching for debug operations and
 report the reason; ordinary play/plain runs should retain the recompiler path.
 
+Task 6 provenance adaptation: recording is opt-in (enabled from boot when the app
+exposes services, or from the first log query with missing-history metadata).
+The reference counted PI write-loop ranges before chip mapping could reject a
+store. The port clips confirmed linear writes to installed RDRAM; nonidentity
+mappings retain attempted ranges with bytes_written=null and writes_confirmed=false.
+Ring overwrites and range truncation are explicit. Code candidates remain a
+heuristic, not proof of overlays or decompressed/generated-code provenance.
+
 Gate: run `live_fixture.py` and ownership/cancel/disconnect tests against the native
 Electron host, not an old fork binary. Verify exact frames, partial-frame stops,
 watch access semantics, cached writes, delay slots and immutable stop snapshots.

@@ -50,6 +50,17 @@ test('real core fixture: MIPS stops/cache semantics and VI-latched controller le
   assert.equal(page.records[0].link_value, '0xffffffff80001108');
   assert.equal(page.records[0].registers['24'], '0xffffffff80001180');
   assert.equal(page.records[0].f12, '0x0');
+  const dma = JSON.parse(output.split('\n').find(line => line.startsWith('DMA_PAGE ')).slice('DMA_PAGE '.length));
+  const decoded = decodeReply(JSON.stringify({ protocol: 1, id: 'dmafixture', ...identity, epoch: 7, ok: true, result: dma }), 'n64.dma.log').result;
+  assert.equal(decoded.entries[0].cpu_pc, '0xffffffff80001218');
+  assert.equal(decoded.entries[0].bytes_written, 8); assert.equal(decoded.entries[1].bytes_written, 6);
+  assert.equal(decoded.entries[1].ranges[0].dram_address, '0x3012');
+  const ring = JSON.parse(output.split('\n').find(line => line.startsWith('DMA_RING_PAGE ')).slice('DMA_RING_PAGE '.length));
+  const ringLog = decodeReply(JSON.stringify({ protocol: 1, id: 'dmaring', ...identity, epoch: 8, ok: true, result: ring }), 'n64.dma.log').result;
+  assert.equal(ringLog.dropped, 1); assert.equal(ringLog.history_complete, false); assert.equal(ringLog.recording_from_epoch_start, true);
+  assert.equal(ringLog.entries.length, 16); assert.equal(ringLog.more, true);
+
+
 });
 test('isolated N64 host and real MCP stdio share instruction operations, registers and definitions', { timeout: 30000 }, async () => {
   const dir = fs.mkdtempSync('/tmp/ares-n64-debug-');
@@ -99,6 +110,10 @@ test('isolated N64 host and real MCP stdio share instruction operations, registe
     await peer.tool('watch_remove', { id: watched.id });
     assert.equal((await peer.tool('read_memory_va', { addr: '0x80001000', length: 4 })).hex.length, 8);
     assert.equal((await peer.tool('write_memory_va', { addr: '0x80001000', hex_bytes: '00' })).error, 'rdram_not_initialized');
+    const provenance = await peer.tool('overlay_log');
+    assert.equal(provenance.capacity, 4096); assert.equal(provenance.history_complete, false, 'raw host enables recording at first query');
+    assert.equal(provenance.limit_effective, 128); assert.equal(provenance.code_range.start, '0x400');
+    assert.equal((await peer.tool('overlay_log', { code_start: 16, code_end: 8 })).error, 'invalid_request');
     const pcTrace = await peer.tool('trace_pc', { max_seconds: 0.01, max_records: 4, inline_limit: 2 });
     assert.equal(pcTrace.stop_reason, 'timeout'); assert.equal(pcTrace.complete, false);
     assert.ok(pcTrace.traced_instructions > 0); assert.ok(pcTrace.total_entries <= 4); assert.ok(pcTrace.entries.length <= 2);
@@ -176,6 +191,8 @@ test('isolated N64 host and real MCP stdio share instruction operations, registe
     unwrap(await native.request('session.reset'));
     assert.equal((await native.request('n64.debug.registers', stale)).error, 'stale_epoch');
     assert.deepEqual(unwrap(await native.request('n64.debug.lastStop')), { valid: false });
+    const freshDma = unwrap(await native.request('n64.dma.log', undefined, { sinceId: 0, limit: 16, codeStart: 1024, codeEnd: 2359296 }));
+    assert.equal(freshDma.epoch, native.identity.epoch); assert.equal(freshDma.history_complete, true);
     await peer.close(); peer = undefined; client.close(); await endpoint.close(); native.close(); child.stdin.end('quit\n');
     assert.equal((await closed)[0], 0, log);
   } finally {

@@ -544,3 +544,31 @@ the hook definition out-of-line. The fixture includes a real, nonempty JALR page
 with target/link/selected-register/f12 values decoded through the shared reply
 validator. Diff check and 68-row/30-registered ledger checks passed. Next slice:
 PI DMA provenance. Task 6 is still in progress.
+
+### Task 6 — bounded PI DMA provenance
+
+Added opt-in PI cart-to-RDRAM transfer provenance and `overlay_log`, bringing the
+registered MCP inventory to 31 of 68. The 4096-entry ring records initiating PC,
+epoch/frame, requested length, attempted writes and bounded destination ranges.
+Confirmed byte counts and code-candidate overlap require a linear initialized
+RDRAM map; unknown maps return null rather than claiming writes were confirmed.
+Recording is enabled before boot in service-enabled Electron sessions. Late
+activation and ring overwrite explicitly report incomplete history; reset begins
+a new epoch before power-on and revokes input and trace state first.
+
+Source: ares-64 commit `1c9b9637476a83f7b80d3db1115a0f71529820d9`.
+`system/debug-session.hpp` SHA-256:
+`a2d09f5aee1edde6caf7d8a330fe95756d1a6de6ad4ff79f7e17b8305cb44e2f`;
+`pi/dma.cpp` SHA-256:
+`231f5f5eeb1753e80d66e043630f122d51985c98204df52a2f263ab9d9820434`.
+Semantic adaptations and bounds are recorded in MCP-PORT-PLAN.md.
+
+Validation: native host and fixture builds passed; all 25 tests passed in 9.04s.
+The fixture executes actual PI DMA initiated by MIPS stores, checks destination
+bytes, misalignment and CPU-watchpoint exclusion, and stresses 4097 transfers to
+verify overwrite accounting. Native pages are decoded through the JS contract.
+Electron/MCP additionally loads an original dummy N64 image, verifies boot-time
+recording, instruction stepping and renderer Resume state without video. An
+initial integration invocation aborted under the sandbox; the authorized GUI
+invocation passed. Task 6 still needs profiler tools and controller_tap; physical
+keyboard/gamepad acceptance and updated task-6 packaging remain outstanding.
