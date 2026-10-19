@@ -35,6 +35,7 @@ auto pLineEdit::construct() -> void {
 
   setBackgroundColor(state().backgroundColor);
   setEditable(state().editable);
+  setMasked(state().masked);
   setForegroundColor(state().foregroundColor);
   setText(state().text);
 }
@@ -53,6 +54,27 @@ auto pLineEdit::setBackgroundColor(Color color) -> void {
 
 auto pLineEdit::setEditable(bool editable) -> void {
   [(CocoaLineEdit*)cocoaView setEditable:editable];
+}
+
+auto pLineEdit::setMasked(bool masked) -> void {
+  auto field = (CocoaLineEdit*)cocoaView;
+  auto current = (NSTextFieldCell*)[field cell];
+  if([current isKindOfClass:[NSSecureTextFieldCell class]] == masked) return;
+
+  auto replacement = masked ? (NSTextFieldCell*)[[NSSecureTextFieldCell alloc] init] : [[NSTextFieldCell alloc] init];
+  [replacement setStringValue:[current stringValue]];
+  [replacement setFont:[current font]];
+  [replacement setTextColor:[current textColor]];
+  [replacement setBackgroundColor:[current backgroundColor]];
+  [replacement setAlignment:[current alignment]];
+  [replacement setBordered:[current isBordered]];
+  [replacement setBezeled:[current isBezeled]];
+  [replacement setDrawsBackground:[current drawsBackground]];
+  [replacement setEditable:[current isEditable]];
+  [replacement setSelectable:[current isSelectable]];
+  [replacement setSendsActionOnEndEditing:NO];
+  [field setCell:replacement];
+  [replacement release];
 }
 
 auto pLineEdit::setForegroundColor(SystemColor color) -> void {

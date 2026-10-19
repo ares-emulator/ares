@@ -16,6 +16,7 @@ auto pLineEdit::construct() -> void {
 
   setBackgroundColor(state().backgroundColor);
   setEditable(state().editable);
+  setMasked(state().masked);
   setForegroundColor(state().foregroundColor);
   setText(state().text);
 
@@ -41,6 +42,10 @@ auto pLineEdit::setBackgroundColor(Color color) -> void {
 
 auto pLineEdit::setEditable(bool editable) -> void {
   gtk_editable_set_editable(GTK_EDITABLE(gtkWidget), editable);
+}
+
+auto pLineEdit::setMasked(bool masked) -> void {
+  gtk_entry_set_visibility(GTK_ENTRY(gtkWidget), !masked);
 }
 
 auto pLineEdit::setForegroundColor(Color color) -> void {

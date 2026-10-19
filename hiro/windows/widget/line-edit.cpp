@@ -11,6 +11,7 @@ auto pLineEdit::construct() -> void {
   pWidget::construct();
   setBackgroundColor(state().backgroundColor);
   setEditable(state().editable);
+  setMasked(state().masked);
   setText(state().text);
 }
 
@@ -32,6 +33,11 @@ auto pLineEdit::setBackgroundColor(Color color) -> void {
 
 auto pLineEdit::setEditable(bool editable) -> void {
   SendMessage(hwnd, EM_SETREADONLY, editable == false, 0);
+}
+
+auto pLineEdit::setMasked(bool masked) -> void {
+  SendMessage(hwnd, EM_SETPASSWORDCHAR, masked ? '*' : 0, 0);
+  InvalidateRect(hwnd, 0, true);
 }
 
 auto pLineEdit::setForegroundColor(Color color) -> void {

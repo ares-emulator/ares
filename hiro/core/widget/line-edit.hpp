@@ -11,6 +11,7 @@ struct mLineEdit : mWidget {
   auto onChange(const std::function<void ()>& callback = {}) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
   auto setEditable(bool editable = true) -> type&;
+  auto setMasked(bool masked = false) -> type&;
   auto setForegroundColor(SystemColor color) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
   auto setText(const string& text = "") -> type&;
@@ -20,6 +21,7 @@ struct mLineEdit : mWidget {
   struct State {
     Color backgroundColor;
     bool editable = true;
+    bool masked = false;
     Color foregroundColor;
     std::function<void ()> onActivate;
     std::function<void ()> onChange;

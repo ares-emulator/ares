@@ -37,7 +37,7 @@ auto RetroAchievementsSettings::construct() -> void {
 
   passwordLabel.setText("Password:");
   passwordLayout.setCollapsible();
-  passwordValue.setText();
+  passwordValue.setMasked(true).setText();
 
   statusLabel.setText();
   actionLayout.setCollapsible();
@@ -75,7 +75,7 @@ auto RetroAchievementsSettings::construct() -> void {
   usernameLabel.setText("Username:");
   usernameValue.setText(settings.retroAchievements.username).setEnabled(false);
   passwordLabel.setText("Password:");
-  passwordValue.setText().setEnabled(false);
+  passwordValue.setMasked(true).setText().setEnabled(false);
   statusLabel.setText("Rebuild with ARES_ENABLE_RCHEEVOS to use RetroAchievements");
   loginButton.setText("Login").setEnabled(false);
   profileLogoutButton.setText("Logout").setEnabled(false);
