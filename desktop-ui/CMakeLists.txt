@@ -74,6 +74,9 @@ if(ARES_ENABLE_RCHEEVOS)
       retroachievements/platform/adapters/nintendo.cpp
       retroachievements/platform/adapters/sega.cpp
   )
+  if(OS_WINDOWS)
+    target_sources(desktop-ui PRIVATE retroachievements/raintegration.cpp)
+  endif()
   target_compile_definitions(desktop-ui PRIVATE ARES_ENABLE_RCHEEVOS)
   target_link_libraries(desktop-ui PRIVATE rcheevos::rcheevos CURL::libcurl)
   target_enable_feature(desktop-ui "RetroAchievements support")

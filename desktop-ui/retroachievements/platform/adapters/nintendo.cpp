@@ -64,6 +64,13 @@ struct FamicomAdapter final : Adapter {
     }
     return readable;
   }
+
+  auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
+    if(!buffer || !size || address > 0x1fff || !ensureCpuRamMemory(emu)) return 0;
+    auto writable = min(size, 0x2000 - address);
+    for(u32 index : range(writable)) cache.cpuRamMemory->write((address + index) & 0x07ff, buffer[index]);
+    return writable;
+  }
 };
 
 #if defined(CORE_N64)
@@ -112,6 +119,16 @@ struct Nintendo64Adapter final : Adapter {
       buffer[index] = cache.rdramMemory->read((address + index) ^ 3);
     }
     return readable;
+  }
+
+  auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
+    if(!buffer || !size) return 0;
+    if(!refreshMemoryNodeCache(cache, &emu.root, {{"RDRAM", &cache.rdramMemory}}) || !cache.rdramMemory) return 0;
+    auto rdramSize = cache.rdramMemory->size();
+    if(address >= rdramSize) return 0;
+    auto writable = min(size, rdramSize - address);
+    for(u32 index : range(writable)) cache.rdramMemory->write((address + index) ^ 3, buffer[index]);
+    return writable;
   }
 };
 #endif

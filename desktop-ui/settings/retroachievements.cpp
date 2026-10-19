@@ -67,7 +67,7 @@ auto RetroAchievementsSettings::construct() -> void {
 
   auto logout = [&] {
     Program::Guard guard;
-    retroAchievements.logout();
+    if(!retroAchievements.logout()) return;
     settings.retroAchievements.username = "";
     settings.retroAchievements.token = "";
     usernameValue.setText();

@@ -182,6 +182,7 @@ auto Program::quit() -> void {
   }
   Program::Guard guard;
   _quitRequested = false;
+  if(!retroAchievements.confirmDevelopmentUnload()) return;
   _quitting = true;
   if(lock.owns_lock()) {
     lock.unlock();
@@ -189,7 +190,7 @@ auto Program::quit() -> void {
   _programConditionVariable.notify_all();
   worker.join();
   program._isRunning = false;
-  unload();
+  unload(false);
   Application::processEvents();
   Application::quit();
 

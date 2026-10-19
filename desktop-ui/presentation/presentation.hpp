@@ -11,9 +11,12 @@ struct Presentation : Window {
   auto showIcon(bool visible) -> void;
   auto loadShaders() -> void;
   auto refreshSystemMenu() -> void;
+  auto refreshRetroAchievementsMenu() -> void;
 
   std::vector<string> shaderDirectories;
   static inline bool shaderArgApplied = false;
+  bool retroAchievementsMenuVisible = false;
+  u64 retroAchievementsMenuVersion = 0;
 
   MenuBar menuBar{this};
     Menu loadMenu{&menuBar};
@@ -90,6 +93,7 @@ struct Presentation : Window {
       MenuItem propertiesViewerAction{&toolsMenu};
       MenuItem traceLoggerAction{&toolsMenu};
       MenuItem tapeViewerAction{&toolsMenu};
+    Menu retroAchievementsMenu{&menuBar};
     Menu helpMenu{&menuBar};
       MenuItem aboutAction{&helpMenu};
 

@@ -1,3 +1,4 @@
+#include <atomic>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -81,11 +82,21 @@ struct RetroAchievementsLeaderboardView {
 };
 
 struct RetroAchievements {
+  enum class DevelopmentEvent { MenuChanged, HardcoreChanged, Pause };
+  struct DevelopmentMenuItem {
+    u32 id = 0;
+    string label;
+    bool separator = false;
+    bool checked = false;
+    bool enabled = false;
+    bool toggle = false;
+  };
+
   ~RetroAchievements();
 
   auto initialize() -> void;
   auto login(const string& username, const string& password) -> bool;
-  auto logout() -> void;
+  auto logout() -> bool;
   auto pumpUi() -> void;
   auto requestImage(const string& url) -> void;
   auto hasUser() const -> bool;
@@ -102,6 +113,7 @@ struct RetroAchievements {
   auto imageForUrl(const string& url, u32 size) -> image;
   auto imageVersion() const -> u64;
   auto readMemory(u32 address, u8* buffer, u32 size) const -> u32;
+  auto writeMemory(u32 address, const u8* buffer, u32 size) -> u32;
   auto handleClientLoginResult(int result, const char* errorMessage, u64 generation) -> void;
   auto handleClientGameLoadResult(int result, const char* errorMessage, u64 generation) -> void;
   auto frame() -> void;
@@ -117,6 +129,13 @@ struct RetroAchievements {
   auto encoreUnlock(u32 achievementId) const -> bool;
   auto reset() -> void;
   auto resetGame() -> void;
+  auto developmentMenuSupported() const -> bool;
+  auto developmentMenuVersion() const -> u64;
+  auto developmentMenuItems() const -> std::vector<DevelopmentMenuItem>;
+  auto activateDevelopmentMenuItem(u32 id) -> bool;
+  auto confirmDevelopmentUnload() const -> bool;
+  auto handleIntegrationLoad(int result, const char* errorMessage) -> void;
+  auto handleIntegrationEvent(DevelopmentEvent event) -> void;
 
 private:
   auto ensureClient() -> bool;
@@ -125,6 +144,8 @@ private:
   auto loadGame() -> void;
   auto unloadClientGame() -> void;
   auto reloadEncoreGameIfNeeded() -> void;
+  auto stopIntegration() -> void;
+  auto syncIntegrationHardcore() -> void;
   auto setUser(const RetroAchievementsLoginResult& result) -> void;
   auto clearUser() -> void;
   auto completeLogin(u64 generation, const RetroAchievementsLoginResult& result) -> void;
@@ -158,6 +179,14 @@ private:
   std::unordered_set<std::string> _failedImages;
   u64 _imageVersion = 0;
   bool _shuttingDown = false;
+  bool _integrationStarted = false;
+  std::atomic<bool> _integrationPending{false};
+  std::atomic<bool> _integrationActive{false};
+  std::atomic<bool> _integrationResumeLogin{false};
+  rc_client_async_handle_t* _integrationLoadHandle = nullptr;
+  std::atomic<u64> _integrationMenuVersion{0};
+  std::atomic<bool> _integrationHardcoreChanged{false};
+  std::atomic<bool> _integrationPauseRequested{false};
 };
 
 extern RetroAchievements retroAchievements;

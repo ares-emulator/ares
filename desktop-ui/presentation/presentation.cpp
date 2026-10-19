@@ -428,6 +428,7 @@ Presentation::Presentation() {
   tapeViewerAction.setText("Tape").setIcon(Icon::Device::Tape).onActivate([&] {
     toolsWindow.show("Tape");
   });
+  retroAchievementsMenu.setVisible(false).setText("RetroAchievements");
 
   helpMenu.setText("Help");
   aboutAction.setText("About" ELLIPSIS).setIcon(Icon::Prompt::Question).onActivate([&] {
@@ -1000,10 +1001,40 @@ auto Presentation::refreshSystemMenu() -> void {
   MenuItem unload{&systemMenu};
   unload.setText("Unload").setIcon(Icon::Media::Eject).onActivate([&] {
     Program::Guard guard;
-    program.unload();
+    if(!program.unload()) return;
     if(settings.video.adaptiveSizing) presentation.resizeWindow();
     presentation.showIcon(true);
   });
+}
+
+auto Presentation::refreshRetroAchievementsMenu() -> void {
+  auto visible = retroAchievements.developmentMenuSupported();
+  auto version = retroAchievements.developmentMenuVersion();
+  if(retroAchievementsMenuVisible == visible && retroAchievementsMenuVersion == version) return;
+
+  retroAchievementsMenuVisible = visible;
+  retroAchievementsMenuVersion = version;
+  retroAchievementsMenu.reset();
+  retroAchievementsMenu.setVisible(visible);
+  if(!visible) return;
+
+  auto items = retroAchievements.developmentMenuItems();
+  retroAchievementsMenu.setEnabled(!items.empty());
+  for(auto& entry : items) {
+    if(entry.separator) {
+      MenuSeparator{&retroAchievementsMenu};
+    } else if(entry.toggle) {
+      MenuCheckItem item{&retroAchievementsMenu};
+      item.setText(entry.label).setChecked(entry.checked).setEnabled(entry.enabled).onToggle([id = entry.id] {
+        retroAchievements.activateDevelopmentMenuItem(id);
+      });
+    } else {
+      MenuItem item{&retroAchievementsMenu};
+      item.setText(entry.label).setEnabled(entry.enabled).onActivate([id = entry.id] {
+        retroAchievements.activateDevelopmentMenuItem(id);
+      });
+    }
+  }
 }
 
 auto Presentation::unloadEmulator(bool reloading) -> void {

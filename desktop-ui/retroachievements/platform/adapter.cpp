@@ -140,6 +140,32 @@ auto Adapter::readMemoryMap(const CompiledMap& regions, u32 address, u8* buffer,
   return 0;
 }
 
+auto Adapter::writeMemoryMap(const CompiledMap& regions, u32 address, const u8* buffer, u32 size) -> u32 {
+  if(!buffer || !size) return 0;
+  for(auto& region : regions) {
+    if(address < region.start || address > region.end || !region.memory || !*region.memory) continue;
+    auto& memory = *region.memory;
+    auto memorySize = memory->size();
+    auto span = region.span ? min(memorySize, region.span) : memorySize;
+    if(!span) return 0;
+
+    auto offset = address - region.start;
+    auto writable = min(size, region.end - address + 1);
+    if(region.mode == ReadMode::Linear || region.mode == ReadMode::LinearSwapped) {
+      if(offset >= span) return 0;
+      writable = min(writable, span - offset);
+    }
+    for(u32 index : range(writable)) {
+      auto target = offset + index;
+      if(region.mode == ReadMode::Wrapped || region.mode == ReadMode::WrappedSwapped) target %= span;
+      if(region.mode == ReadMode::LinearSwapped || region.mode == ReadMode::WrappedSwapped) target ^= 1;
+      memory->write(target, buffer[index]);
+    }
+    return writable;
+  }
+  return 0;
+}
+
 auto adapters() -> std::vector<Adapter*>& {
   static std::vector<Adapter*> list = [] {
     std::vector<Adapter*> out;

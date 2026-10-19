@@ -7,7 +7,7 @@ RetroAchievements::~RetroAchievements() = default;
 
 auto RetroAchievements::initialize() -> void {}
 auto RetroAchievements::login(const string&, const string&) -> bool { return false; }
-auto RetroAchievements::logout() -> void {}
+auto RetroAchievements::logout() -> bool { return true; }
 auto RetroAchievements::pumpUi() -> void {}
 auto RetroAchievements::requestImage(const string&) -> void {}
 auto RetroAchievements::hasUser() const -> bool { return false; }
@@ -28,6 +28,7 @@ auto RetroAchievements::handleLeaderboardResult(int, const char*, rc_client_lead
 auto RetroAchievements::imageForUrl(const string&, u32) -> image { return {}; }
 auto RetroAchievements::imageVersion() const -> u64 { return 0; }
 auto RetroAchievements::readMemory(u32, u8*, u32) const -> u32 { return 0; }
+auto RetroAchievements::writeMemory(u32, const u8*, u32) -> u32 { return 0; }
 auto RetroAchievements::handleClientLoginResult(int, const char*, u64) -> void {}
 auto RetroAchievements::handleClientGameLoadResult(int, const char*, u64) -> void {}
 auto RetroAchievements::frame() -> void {}
@@ -43,3 +44,12 @@ auto RetroAchievements::setEnabled(bool) -> void {}
 auto RetroAchievements::encoreUnlock(u32) const -> bool { return false; }
 auto RetroAchievements::reset() -> void {}
 auto RetroAchievements::resetGame() -> void {}
+auto RetroAchievements::developmentMenuSupported() const -> bool { return false; }
+auto RetroAchievements::developmentMenuVersion() const -> u64 { return 0; }
+auto RetroAchievements::developmentMenuItems() const -> std::vector<DevelopmentMenuItem> { return {}; }
+auto RetroAchievements::activateDevelopmentMenuItem(u32) -> bool { return false; }
+auto RetroAchievements::confirmDevelopmentUnload() const -> bool { return true; }
+auto RetroAchievements::handleIntegrationLoad(int, const char*) -> void {}
+auto RetroAchievements::handleIntegrationEvent(DevelopmentEvent) -> void {}
+auto RetroAchievements::stopIntegration() -> void {}
+auto RetroAchievements::syncIntegrationHardcore() -> void {}

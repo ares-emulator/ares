@@ -1,10 +1,17 @@
 #include "../desktop-ui.hpp"
 
 #include "platform/adapter.hpp"
+#include "raintegration.hpp"
+#if defined(_WIN32)
+#define boolean RA_win_boolean
+#endif
 #include <curl/curl.h>
 #include <rc_api_user.h>
 #include <rc_client.h>
 #include <rc_hash.h>
+#if defined(_WIN32)
+#undef boolean
+#endif
 #include <algorithm>
 #include <condition_variable>
 #include <deque>
@@ -97,14 +104,16 @@ auto clientReadMemory(u32 address, u8* buffer, u32 size, rc_client_t* client) ->
   return self->readMemory(address, buffer, size);
 }
 
-auto clientEvent(const rc_client_event_t* event, rc_client_t*) -> void {
+auto clientEvent(const rc_client_event_t* event, rc_client_t* client) -> void {
   if(!event) return;
   switch(event->type) {
   case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
     if(event->achievement && event->achievement->title) {
-      auto message = retroAchievements.encoreUnlock(event->achievement->id)
-        ? "[RA] Encore achievement unlocked: " : "[RA] Achievement unlocked: ";
-      program.showMessage({message, event->achievement->title});
+      const char* label = "Achievement unlocked: ";
+      if(retroAchievements.encoreUnlock(event->achievement->id)) label = "Encore achievement unlocked: ";
+      else if(event->achievement->category == RC_CLIENT_ACHIEVEMENT_CATEGORY_UNOFFICIAL) label = "Unofficial achievement unlocked: ";
+      else if(retroAchievements.developmentMenuSupported()) label = RA::Integration::achievementUnlockLabel(client, event->achievement->id);
+      program.showMessage({"[RA] ", label, event->achievement->title});
     }
     break;
   case RC_CLIENT_EVENT_GAME_COMPLETED:
@@ -581,6 +590,7 @@ RetroAchievements retroAchievements;
 RetroAchievements::~RetroAchievements() {
   _shuttingDown = true;
   unloadClientGame();
+  stopIntegration();
   imageWorker.stop();
   httpWorker.stop();
   if(_client) {
@@ -607,6 +617,15 @@ auto RetroAchievements::syncClientLogin() -> void {
   if(!_username || !_token) return;
   if(!ensureClient()) return;
 
+  if(RA::Integration::available() && !_integrationStarted) {
+    _integrationStarted = true;
+    _integrationPending = true;
+    _integrationResumeLogin = true;
+    _integrationLoadHandle = RA::Integration::start(*this, _client);
+    return;
+  }
+  if(_integrationPending) return;
+
   if(auto user = rc_client_get_user_info(_client)) {
     if(user->username && _username == user->username) return;
   }
@@ -628,6 +647,7 @@ auto RetroAchievements::loadGame() -> void {
 
   auto* adapter = RA::Platform::selectAdapter(*emulator);
   if(!adapter) return;
+  if(_integrationActive) RA::Integration::setConsoleId(_client, adapter->consoleId(*emulator));
 
   _pendingRomData.clear();
   if(!adapter->romData(*emulator, _pendingRomData) || _pendingRomData.empty()) {
@@ -714,8 +734,9 @@ auto RetroAchievements::login(const string& username, const string& password) ->
   return true;
 }
 
-auto RetroAchievements::logout() -> void {
+auto RetroAchievements::logout() -> bool {
   Program::Guard guard;
+  if(!confirmDevelopmentUnload()) return false;
   ++_loginGeneration;
   _loginPending = false;
   _startupTokenLoginPending = false;
@@ -723,6 +744,7 @@ auto RetroAchievements::logout() -> void {
   unloadClientGame();
   if(_client) rc_client_logout(_client);
   clearUser();
+  return true;
 }
 
 auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLoginResult& result) -> void {
@@ -761,6 +783,10 @@ auto RetroAchievements::completeLogin(u64 generation, const RetroAchievementsLog
 }
 
 auto RetroAchievements::pumpUi() -> void {
+  if(_integrationPending) {
+    Program::Guard guard;
+    httpWorker.pumpClient();
+  }
   for(auto& response : httpWorker.takeLoginResponses()) {
     completeLogin(response.generation, response.result);
   }
@@ -780,6 +806,18 @@ auto RetroAchievements::pumpUi() -> void {
     if(program.settingsWindowConstructed) retroAchievementsSettings.acceptAvatar(response.url, response.bytes);
   }
   startupLoginDialog.pump();
+  if(_integrationResumeLogin && !_integrationPending) {
+    _integrationResumeLogin = false;
+    syncClientLogin();
+  }
+  if(_integrationHardcoreChanged.exchange(false)) {
+    syncIntegrationHardcore();
+  }
+  if(_integrationPauseRequested.exchange(false)) {
+    Program::Guard guard;
+    program.pause(true);
+  }
+  if(!program.kiosk) presentation.refreshRetroAchievementsMenu();
 }
 
 auto RetroAchievements::requestImage(const string& url) -> void {
@@ -1020,10 +1058,20 @@ auto RetroAchievements::handleLeaderboardResult(int result, const char* errorMes
 }
 
 auto RetroAchievements::readMemory(u32 address, u8* buffer, u32 size) const -> u32 {
+  Program::Guard guard;
   if(!emulator) return 0;
   if(!settings.retroAchievements.enabled) return 0;
   if(auto* adapter = RA::Platform::selectAdapter(*emulator)) {
     return adapter->readMemory(*emulator, address, buffer, size);
+  }
+  return 0;
+}
+
+auto RetroAchievements::writeMemory(u32 address, const u8* buffer, u32 size) -> u32 {
+  Program::Guard guard;
+  if(!emulator || !settings.retroAchievements.enabled) return 0;
+  if(auto* adapter = RA::Platform::selectAdapter(*emulator)) {
+    return adapter->writeMemory(*emulator, address, buffer, size);
   }
   return 0;
 }
@@ -1096,7 +1144,7 @@ auto RetroAchievements::handleClientGameLoadResult(int result, const char* error
 }
 
 auto RetroAchievements::frame() -> void {
-  httpWorker.pumpClient();
+  if(!_integrationPending) httpWorker.pumpClient();
   reloadEncoreGameIfNeeded();
   if(!_client) return;
   if(!settings.retroAchievements.enabled) return;
@@ -1106,7 +1154,7 @@ auto RetroAchievements::frame() -> void {
 }
 
 auto RetroAchievements::idle() -> void {
-  httpWorker.pumpClient();
+  if(!_integrationPending) httpWorker.pumpClient();
   reloadEncoreGameIfNeeded();
   if(!_client) return;
   if(!settings.retroAchievements.enabled) return;
@@ -1206,6 +1254,7 @@ auto RetroAchievements::encoreUnlock(u32 achievementId) const -> bool {
 auto RetroAchievements::setEnabled(bool enabled) -> void {
   Program::Guard guard;
   if(settings.retroAchievements.enabled == enabled) return;
+  if(!enabled && !confirmDevelopmentUnload()) return;
   settings.retroAchievements.enabled = enabled;
   if(!enabled) {
     ++_loginGeneration;
@@ -1241,6 +1290,98 @@ auto RetroAchievements::resetGame() -> void {
   program.rewindReset();
   emulator->root->power(true);
   reset();
+}
+
+auto RetroAchievements::stopIntegration() -> void {
+  RA::Integration::stop(_client, _integrationLoadHandle, _integrationActive);
+  _integrationLoadHandle = nullptr;
+  _integrationActive = false;
+  _integrationPending = false;
+}
+
+auto RetroAchievements::syncIntegrationHardcore() -> void {
+  Program::Guard guard;
+  if(!_integrationActive) return;
+  auto enabled = RA::Integration::hardcoreEnabled(_client);
+  if(enabled == settings.retroAchievements.hardcore) return;
+  settings.retroAchievements.hardcore = enabled;
+  if(enabled) {
+    program.rewinding = false;
+    program.requestFrameAdvance = false;
+    program.rewindReset();
+    nall::GDB::server.close();
+    settings.developer.debugServerEnabled = false;
+    developerSettings.enabled.setChecked(false);
+    if(program.toolsWindowConstructed) toolsWindow.setVisible(false);
+  }
+  program.runAheadUpdate();
+  settings.save();
+  if(program.settingsWindowConstructed) retroAchievementsSettings.refresh();
+  program.showMessage(enabled ? "[RA] Hardcore enabled" : "[RA] Hardcore disabled");
+}
+
+auto RetroAchievements::handleIntegrationLoad(int result, const char* errorMessage) -> void {
+  if(_shuttingDown) return;
+  _integrationLoadHandle = nullptr;
+  _integrationPending = false;
+  _integrationActive = result == RC_OK;
+  if(_integrationActive) {
+    RA::Integration::finish(_client);
+    ++_integrationMenuVersion;
+    program.showMessage("[RA] RAIntegration loaded");
+  } else if(result != RC_MISSING_VALUE) {
+    program.showMessage({"[RA] RAIntegration unavailable: ", errorMessage ? errorMessage : rc_error_str(result)});
+  }
+}
+
+auto RetroAchievements::handleIntegrationEvent(DevelopmentEvent event) -> void {
+  if(_shuttingDown) return;
+  switch(event) {
+  case DevelopmentEvent::MenuChanged:
+    ++_integrationMenuVersion;
+    break;
+  case DevelopmentEvent::HardcoreChanged:
+    _integrationHardcoreChanged = true;
+    ++_integrationMenuVersion;
+    break;
+  case DevelopmentEvent::Pause:
+    _integrationPauseRequested = true;
+    break;
+  }
+}
+
+auto RetroAchievements::developmentMenuSupported() const -> bool {
+  return settings.retroAchievements.enabled && _integrationActive;
+}
+
+auto RetroAchievements::developmentMenuVersion() const -> u64 {
+  return _integrationMenuVersion.load();
+}
+
+auto RetroAchievements::developmentMenuItems() const -> std::vector<DevelopmentMenuItem> {
+  Program::Guard guard;
+  if(!developmentMenuSupported()) return {};
+  return RA::Integration::menuItems(_client);
+}
+
+auto RetroAchievements::activateDevelopmentMenuItem(u32 id) -> bool {
+  Program::Guard guard;
+  if(!developmentMenuSupported()) return false;
+  auto result = RA::Integration::activateMenuItem(_client, id);
+  if(result) ++_integrationMenuVersion;
+  return result;
+}
+
+auto RetroAchievements::confirmDevelopmentUnload() const -> bool {
+  Program::Guard guard;
+  if(!_integrationActive || !RA::Integration::hasModifications(_client)) return true;
+  if(program.kiosk) {
+    program.showMessage("[RA] Unsaved achievement changes will be lost when the game is unloaded");
+    return true;
+  }
+  return MessageDialog().setTitle("RetroAchievements").setText(
+    "There are unsaved achievement changes. Discard them and unload the game?"
+  ).setAlignment(presentation).question({"Discard Changes", "Cancel"}) == "Discard Changes";
 }
 
 auto RetroAchievements::setUser(const RetroAchievementsLoginResult& result) -> void {

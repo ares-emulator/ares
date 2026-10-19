@@ -56,7 +56,7 @@ auto Program::identify(const string& filename) -> std::shared_ptr<Emulator> {
 /// Loads an emulator and, optionally, a ROM from the given location.
 auto Program::load(std::shared_ptr<Emulator> emulator, string location) -> bool {
   Program::Guard guard;
-  unload();
+  if(!unload()) return false;
 
   ::emulator = emulator;
 
@@ -170,9 +170,10 @@ auto Program::load(string location) -> bool {
   return true;
 }
 
-auto Program::unload() -> void {
+auto Program::unload(bool confirm) -> bool {
   Program::Guard guard;
-  if(!emulator) return;
+  if(!emulator) return true;
+  if(confirm && !retroAchievements.confirmDevelopmentUnload()) return false;
 
   nall::GDB::server.close();
   nall::GDB::server.reset();
@@ -206,4 +207,5 @@ auto Program::unload() -> void {
   configuration = "";
   ruby::video.clear();
   ruby::audio.clear();
+  return true;
 }

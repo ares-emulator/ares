@@ -9,6 +9,7 @@ struct Adapter {
   virtual auto supports(const Emulator& emu) const -> bool = 0;
   virtual auto consoleId(const Emulator& emu) const -> u32 = 0;
   virtual auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 = 0;
+  virtual auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 = 0;
   virtual auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool = 0;
 
 protected:
@@ -66,6 +67,7 @@ protected:
   static auto readMappedRegion(const Region& region, u32 address, u8* buffer, u32 size) -> u32;
   // Reads through a compiled map, which should already have resolved any optional sources.
   static auto readMemoryMap(const CompiledMap& regions, u32 address, u8* buffer, u32 size) -> u32;
+  static auto writeMemoryMap(const CompiledMap& regions, u32 address, const u8* buffer, u32 size) -> u32;
 };
 
 auto registerNintendoAdapters(std::vector<Adapter*>& list) -> void;

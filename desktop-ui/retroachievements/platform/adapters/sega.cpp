@@ -65,6 +65,11 @@ struct MegaDriveAdapter final : Adapter {
     // evaluate against the expected bytes.
     return Adapter::readMemoryMap(cache.memoryMap, address, buffer, size);
   }
+
+  auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
+    refreshMemoryMap(emu);
+    return Adapter::writeMemoryMap(cache.memoryMap, address, buffer, size);
+  }
 };
 
 }
