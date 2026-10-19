@@ -347,3 +347,93 @@ continuing through subsequent roadmap tasks without stopping after each commit.
   original GB fixture with native SDL audio 56.50 fps and Famicom 60.07 fps.
   These are transport/core-cadence checks, not a listening-quality or end-to-end
   latency measurement. Each isolated fixture closed before the next one started.
+
+## Task 5 — N64 CPU debug engine and strict memory
+
+Source: read-only `ares-64` checkout at
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`. Ported only the break/watch/step,
+architectural snapshot and renderer synchronization dependencies. Tracing,
+stack unwinding, call gates and their exception hooks remain deferred.
+
+| Reference file | SHA-256 |
+| --- | --- |
+| `ares/n64/cpu/debug-control.hpp` | `b98961f629793d13ef1ec1939a645901b5a4536dd33a1a86454342393b8e7baf` |
+| `ares/n64/cpu/debug-control.cpp` | `6952c5c0d7898ff6f0dfd6d73c98e67ff34c12940ba6c2d57285d8fa637e1597` |
+| `tests/mcp/live_fixture.py` | `72a867054ee987cd10b43013c56cb5c3ed1a39d60d667a524402d3918e5b334b` |
+| `desktop-ui/program/telemetry-server.cpp` | `738abe2ed5dd789b7b9968bd0f77c45ab03ddcecdf81e9106e962d250799646b` |
+| `ares/n64/vulkan/vulkan.cpp` | `1906b8079516c483ab3116cd5b48620e1fd21d2b34c4c5f0bd87736746451745` |
+
+Implementation:
+
+- CPU interpreter gate while definitions or instruction stepping are active;
+  original recompiler setting is preserved. Breakpoints stop before fetch;
+  watchpoints latch semantic CPU data access ranges and stop after completion.
+  Partial big-endian loads narrow the aligned container to consumed bytes.
+- Owned instruction operations use the existing coordinator, deadlines, cancel,
+  disconnect cleanup and immutable completion retention. CPU stop snapshots are
+  copied into completed operation results. Clearing transient stepping restores
+  recompiler eligibility without clearing persistent definitions.
+- Side-effect-free GPR/HI/LO/PC, delay-slot, raw FPR and COP0 snapshots; Random is
+  null because reading it advances RNG. Immutable hit records include accessing
+  PC, opcode, effective/physical range and old/new or read value.
+- Separate typed `n64.debug.*` and `n64.memory.*` services, lossless hex addresses,
+  eight predicates per definition and paged definition listings (32 per reply).
+  MCP adds twelve tools, for 23 registered tools out of the 68-tool inventory.
+- Strict physical/KSEG0/KSEG1 installed-RDRAM bounds; TLB/MMIO/wrapped requests
+  reject. CPU view reads or patches resident D-cache without allocating a miss;
+  KSEG1 bypasses D-cache. Writes prevalidate all bytes, flush Vulkan, invalidate
+  JIT and report dirty-D-cache/resident-I-cache hazards. They preserve I-cache.
+  Writes reject `rdram_not_initialized` while chip mapping could drop them.
+- Main observes session status every 250 ms with at most one observation pending,
+  independently of renderer/video progress. CPU stops during ordinary play can
+  update the Pause/Resume button without requiring a frame or another UI action.
+- Local build recipe now disables IPO/LTO through the existing CMake option.
+  The first switch required recompiling all cores. The no-LTO link exposed an
+  unused nall entry-point wrapper; macOS host/fixture targets now dead-strip it.
+  Application TypeScript builds still never invoke CMake.
+
+Evidence so far: native host and dedicated ROM-free CPU fixture build passed;
+24 service tests passed before adding the main state observer regression. The
+core fixture executes actual hand-assembled MIPS code, checks delay slots,
+pre-fetch versus post-access stops, LWL/LWR ranges, aliases, frozen snapshots,
+CPU/RDRAM divergence, prevalidated memory writes and actual JIT dispatch after
+removing debug hooks. Real isolated N64/MCP tests check default one-instruction
+steps, live registers, definitions, stale epochs, memory bounds, early-init write
+rejection, busy mutations, owner disconnect and transient executor restoration.
+
+Intermediate failures were fixture setup/build issues (missing include root,
+unexported template use, unallocated hidden RDRAM metadata, unloaded debugger
+nodes, uninitialized RAM, disabled fixture recompiler), an installed-size test
+assumption, and incorrect construction of the stdio test helper. The latter left
+one adapter alive; its exact identified PID was closed before continuing. No
+active user emulator or user saves were used. Final Electron/package gates and
+updated test count will be recorded below.
+
+Known bounds: raw FPR bits rather than reference classified float views; no
+heuristic stacks/code-window enrichment; no delayed write verification yet;
+1024-byte transfers; predicates/hits are CPU-only (not DMA/fetch/debugger access).
+Uninitialized/nonidentity RDRAM writes explicitly reject. Full generated schema
+and result parity, little-endian user-mode watch behavior, audible N64 gameplay
+and cross-platform acceptance remain unverified. These are not implied by the
+fixture assertions.
+
+
+Task 5 final verification on macOS arm64 (2026-10-19):
+
+| Check | Result |
+| --- | --- |
+| Native host + ROM-free CPU fixture builds | Passed; all default 40 systems retained |
+| `npm test` | Passed, 25 tests in 7.1 seconds, including actual JIT dispatch after debug disable |
+| `npm run test:electron` | Passed: sandboxed preload, stalled renderer controls, inspector restore, paused/running reload |
+| `npm run test:mcp` | Passed: 23-tool registry, shared inspector/MCP bytes, owner/UI cancel, renderer reload, replacement and disconnect |
+| `npm run package:mac -- artifacts/task-5/Ares.app` | Passed, separate ignored task-5 artifact |
+| `npm run test:package -- artifacts/task-5/Ares.app` | Passed outside checkout, bundled Node 24.22.0/Electron 44.9.0, real stdio, normal GUI sandbox, 454 GB frames, checkout reads denied for native/MCP preflights |
+| `ARES_TEST_AUDIO=1 npm run smoke` | Passed: 40 systems, GB/NES detection, synthetic 640×480 59.88 fps, 1080p 59.72 fps, GB with SDL audio 56.49 fps, Famicom 60.08 fps |
+| `git diff --check` / ledger inventory | Passed; 68 target tools, 23 registered bounded implementations |
+| Timed incremental native host compile + link without IPO | Passed in 9.93 seconds (`/usr/bin/time -p cmake --build ... --target ares-electron-host -j 8`) |
+
+Task 5's bounded roadmap gate is complete; the explicit parity/manual limitations
+above remain. Next: **task 6, input ownership, traces and provenance**. N64 service
+and MCP checks used a dummy cartridge only to initialize the normal loader; the
+separate ROM-free MIPS fixture supplies instruction/cache assertions. No full-game
+N64 boot or listening-quality audio claim follows from these checks.

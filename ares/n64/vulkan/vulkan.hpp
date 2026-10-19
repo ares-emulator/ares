@@ -6,6 +6,7 @@ struct Vulkan {
 
   auto render() -> bool;
   auto frame() -> void;
+  auto flush() -> void;
   auto writeWord(u32 address, u32 data) -> void;
   auto scanoutAsync(bool field) -> bool;
   auto mapScanoutRead(const u8*& rgba, u32& width, u32& height) -> void;

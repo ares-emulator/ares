@@ -169,6 +169,11 @@ auto CPU::read(PhysAccess access) -> maybe<u64> {
   GDB::server.reportMemRead(access.vaddr, Size);
   u32 paddr = access.paddr;
   if(context.littleEndian()) paddr = reverseEndianPaddr<Size>(paddr);
+  if(unlikely(debugControl.watchActive)) {
+    u64 value = access.cache ? dcache.read<Size>(access.vaddr, paddr) : busRead<Size>(paddr);
+    debugControl.onRead<Size>(access, value);
+    return value;
+  }
   if(access.cache) return dcache.read<Size>(access.vaddr, paddr);
   return busRead<Size>(paddr);
 }
@@ -187,6 +192,7 @@ template<u32 Size>
 auto CPU::write(PhysAccess access, u64 data) -> bool {
   if(!access) return false;
   GDB::server.reportMemWrite(access.vaddr, Size);
+  if(unlikely(debugControl.watchActive)) debugControl.onWrite<Size>(access, data);
   u32 paddr = access.paddr;
   if(context.littleEndian()) paddr = reverseEndianPaddr<Size>(paddr);
   if(access.cache) return dcache.write<Size>(access.vaddr, paddr, data), true;

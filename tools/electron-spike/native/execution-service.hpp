@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
 #include <deque>
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -20,6 +21,11 @@ struct ExecutionService {
     Clock::time_point started, deadline;
   };
   std::optional<Operation> active;
+  uint64_t instructions = 0;
+  uint64_t instructionStart = 0, instructionCount = 0;
+  bool cpuSupported = false;
+  std::function<void()> onStart, onFinish;
+  std::function<std::string()> debugSnapshot;
   uint64_t nextId = 1;
   std::deque<std::pair<uint64_t, std::string>> finished;
   static constexpr uint64_t maxInteger = 9007199254740991ull;
@@ -40,7 +46,8 @@ struct ExecutionService {
       + ",\"start_at_frame_boundary\":" + (op.startBoundary ? "true" : "false")
       + ",\"at_frame_boundary\":" + (atBoundary ? "true" : "false")
       + ",\"executor\":\"" + executor + "\",\"slices\":" + std::to_string(op.slices)
-      + ",\"elapsed_seconds\":" + std::to_string(std::chrono::duration<double>(Clock::now() - op.started).count()) + "}";
+      + ",\"elapsed_seconds\":" + std::to_string(std::chrono::duration<double>(Clock::now() - op.started).count()) + ",\"executed\":" + std::to_string(instructions - instructionStart)
+      + (!reason.empty() && debugSnapshot ? ",\"debug_stop\":" + debugSnapshot() : "") + "}";
   }
   std::string complete(const std::string& reason, bool& paused) {
     if(!active) return "null";
@@ -48,11 +55,12 @@ struct ExecutionService {
     finished.emplace_back(active->id, result);
     if(finished.size() > 16) finished.pop_front();
     active.reset(); paused = true;
+    if(onFinish) onFinish();
     return result;
   }
   void service(bool& paused) {
     if(!active) return;
-    if(frame >= active->target) complete("frames_done", paused);
+    if(active->kind != "step_instructions" && frame >= active->target) complete("frames_done", paused);
     else if(Clock::now() >= active->deadline) complete("timeout", paused);
   }
   static bool number(const std::string& value, uint64_t& result) {
@@ -77,18 +85,22 @@ struct ExecutionService {
       for(auto& [fid, result] : finished) if(fid == id) return {"", result};
       return {"unknown_operation", ""};
     }
-    if(method != "execution.runFrames" && method != "execution.runUntilFrame") return {"unavailable", ""};
+    bool step = method == "execution.stepInstructions";
+    if(!step && method != "execution.runFrames" && method != "execution.runUntilFrame") return {"unavailable", ""};
     uint64_t amount, milliseconds;
     if(args.size() != 2 || !number(args[0], amount) || !number(args[1], milliseconds) || milliseconds < 1 || milliseconds > 600000) return {"invalid_request", ""};
-    if(!supported) return {"unavailable", ""};
+    if(!supported || (step && !cpuSupported)) return {"unavailable", ""};
     if(active) return {"busy", ""};
     bool relative = method == "execution.runFrames";
-    if((relative && (amount > 1000000 || amount > maxInteger - frame)) || (!relative && amount < frame)) return {"invalid_target", ""};
+    if(step && (amount < 1 || amount > 1000000)) return {"invalid_target", ""};
+    if((relative && (amount > 1000000 || amount > maxInteger - frame)) || (!relative && !step && amount < frame)) return {"invalid_target", ""};
     auto now = Clock::now();
-    active = Operation{nextId++, epoch, frame, relative ? frame + amount : amount, 0,
-      owner, relative ? "run_frames" : "run_until_frame", atBoundary, now, now + std::chrono::milliseconds(milliseconds)};
+    active = Operation{nextId++, epoch, frame, step ? maxInteger : relative ? frame + amount : amount, 0,
+      owner, step ? "step_instructions" : relative ? "run_frames" : "run_until_frame", atBoundary, now, now + std::chrono::milliseconds(milliseconds)};
+    instructionStart = instructions; instructionCount = step ? amount : 0;
     paused = true; // ordinary play stays stopped; the operation alone drives slices
     if(active->target == frame) return {"", complete("frames_done", paused)};
+    if(onStart) onStart();
     return {"", snapshot(*active)};
   }
 };

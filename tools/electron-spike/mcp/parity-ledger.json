@@ -78,10 +78,16 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "N64 only; named GPR/HI/LO/PC and delay slots, optional raw64 FPR/COP0 groups. Random is null. Classified floats and legacy verbose diagnostics remain pending."
     },
     {
       "name": "rsp_registers",
@@ -255,10 +261,16 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "N64 only; 1..1000000 instructions, 0.001..600-second deadline. Actual delay-slot count and interpreter restoration verified. Result includes frozen debug_stop; full legacy output enrichment remains pending."
     },
     {
       "name": "run_until_hit",
@@ -300,10 +312,16 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "Uses owned frame run with break/watch early stops. Frozen hit/register snapshot; no code windows, byte-mask enrichment or heuristic stack yet."
     },
     {
       "name": "pause",
@@ -485,10 +503,16 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "RDRAM aliases, alignment, up to 256 definitions and eight masked unsigned predicates. Native listing is paged; MCP aggregates pages. Full legacy error/result equality pending."
     },
     {
       "name": "break_remove",
@@ -506,10 +530,16 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "Explicit unknown_definition on missing ID. Mutations reject during any active execution operation."
     },
     {
       "name": "break_list",
@@ -520,10 +550,16 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "IDs, supplied/physical addresses, predicates and hit counts; native pages of 32, bounded MCP aggregation."
     },
     {
       "name": "watch_add",
@@ -559,10 +595,16 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "CPU read/write/access ranges up to 65536 bytes, max 64 definitions and eight predicates. CPU-only; no DMA/fetch/debugger hits. Overlap-summary enrichment pending."
     },
     {
       "name": "watch_remove",
@@ -580,10 +622,16 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "Explicit unknown_definition on missing ID; busy while any operation owns execution."
     },
     {
       "name": "watch_list",
@@ -594,10 +642,16 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "Definitions, conditions, kinds, ranges and hit counts; native pages of 32."
     },
     {
       "name": "last_stop",
@@ -627,10 +681,16 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "Immutable core hit snapshot and access record; raw optional register groups. No heuristic stack/code-window enrichment."
     },
     {
       "name": "stack",
@@ -747,10 +807,16 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "1..1024 bytes; strict physical/KSEG0/KSEG1 installed-RDRAM bounds, Vulkan synchronization and side-effect-free CPU cache view. No TLB/MMIO. Full legacy metadata shape pending."
     },
     {
       "name": "write_memory_va",
@@ -792,10 +858,16 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 5 CPU and N64 services",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
+          "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        }
+      ],
+      "knownLimits": "1..1024 bytes; prevalidation, CPU/physical views, JIT invalidation, preserved I-cache and cache hazards. Rejects uninitialized/nonidentity RDRAM; delayed verify_after_frames is unavailable until task 8."
     },
     {
       "name": "dump_rdram",
@@ -855,7 +927,7 @@
           "date": "2026-10-18"
         }
       ],
-      "knownLimits": "Descriptors add session-scoped IDs/access metadata; exact reference response parity remains partial. N64 DCache unavailable and mapped RDRAM read-only until task 5."
+      "knownLimits": "Opaque session-scoped region IDs/access metadata. Raw DCache remains unavailable and mapped RDRAM read-only; explicit N64 CPU/physical services are separate."
     },
     {
       "name": "read_memory",
@@ -947,7 +1019,7 @@
           "date": "2026-10-18"
         }
       ],
-      "knownLimits": "Exact name or opaque ID; addr/hex_bytes retained. 1\u20131024-byte limit; N64 mapped RDRAM writes and cache-aware mutations await task 5. No automatic retry."
+      "knownLimits": "1..1024 region-relative bytes with no retry. N64 mapped RDRAM remains read-only; use write_memory_va after initialization for explicit CPU/physical semantics."
     },
     {
       "name": "screenshot",

@@ -1,7 +1,8 @@
+import { N64_METHODS, encodeN64, validN64, type N64Method, type N64ServiceMap, type Stop, validStop } from './n64-contracts.js';
 /** Shared contract for Electron routing, the inspector and the future MCP adapter. */
 export const PROTOCOL = 1 as const;
 export const MAX_TRANSFER = 1024;
-export const METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release'] as const;
+export const METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS] as const;
 export type ServiceMethod = typeof METHODS[number];
 export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
 export interface SessionIdentity { session: string; epoch: number }
@@ -10,12 +11,13 @@ export interface ExecutionOperation {
   operation_id: number; kind: string; owner: string; state: 'running' | 'done'; stopped: boolean;
   stop_reason: string; epoch: number; start_epoch: number; start_frame: number; target_frame: number;
   frame: number; frame_kind: string; elapsed_frames: number; start_at_frame_boundary: boolean;
-  at_frame_boundary: boolean; executor: string; slices: number; elapsed_seconds: number;
+  at_frame_boundary: boolean; executor: string; slices: number; elapsed_seconds: number; executed?: number; debug_stop?: Stop;
 }
 export interface MemoryRegion { id: string; name: string; size: number; readable: boolean; writable: boolean; addressing: 'region-offset'; unavailableReason?: string }
 export interface MemoryRead { region: string; offset: number; length: number; hex: string }
 export interface MemoryWritten { region: string; offset: number; written: number }
-export interface ServiceMap {
+export interface ServiceMap extends N64ServiceMap {
+  'execution.stepInstructions': { params: { count: number; timeoutMs: number }; result: ExecutionOperation };
   'session.status': { params: undefined; result: SessionStatus };
   'session.pause': { params: undefined; result: SessionStatus };
   'session.resume': { params: undefined; result: SessionStatus };
@@ -48,7 +50,11 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
   if (!identity || typeof identity !== 'object' || !token(id) || !token(identity.session) || !integer(identity.epoch) || identity.epoch < 1 ||
       !METHODS.includes(method) || !token(owner)) throw new ServiceError('invalid_request');
   let suffix = '';
-  if (method === 'memory.read') {
+  if (method.startsWith('n64.')) {
+    const encoded = encodeN64(method as N64Method, params);
+    if (encoded === undefined) throw new ServiceError('invalid_request');
+    suffix = encoded;
+  } else if (method === 'memory.read') {
     const p = params as ServiceParams<'memory.read'>;
     if (!keys(p, ['region', 'offset', 'length']) || !token(p.region) || !integer(p.offset) || !integer(p.length) || p.length < 1 || p.length > MAX_TRANSFER) throw new ServiceError('invalid_request');
     suffix = ` ${p.region} ${p.offset} ${p.length}`;
@@ -56,9 +62,9 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
     const p = params as ServiceParams<'memory.write'>;
     if (!keys(p, ['region', 'offset', 'hex']) || !token(p.region) || !integer(p.offset) || !hex(p.hex)) throw new ServiceError('invalid_request');
     suffix = ` ${p.region} ${p.offset} ${p.hex}`;
-  } else if (method === 'execution.runFrames' || method === 'execution.runUntilFrame') {
+  } else if (method === 'execution.runFrames' || method === 'execution.runUntilFrame' || method === 'execution.stepInstructions') {
     const p = params as { count?: number; frame?: number; timeoutMs: number };
-    const field = method === 'execution.runFrames' ? 'count' : 'frame';
+    const field = method === 'execution.runUntilFrame' ? 'frame' : 'count';
     if (!keys(p, [field, 'timeoutMs']) || !integer(p[field]) || !integer(p.timeoutMs) || p.timeoutMs < 1 || p.timeoutMs > 600000 || (field === 'count' && p.count! > 1000000)) throw new ServiceError('invalid_request');
     suffix = ` ${p[field]} ${p.timeoutMs}`;
   } else if (method === 'execution.status' || method === 'execution.cancel') {
@@ -75,9 +81,10 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
   if (r.ok) {
     const s = r.result;
     let valid = false;
+    if (method.startsWith('n64.')) valid = validN64(method as N64Method, s);
     if (method.startsWith('session.')) valid = !!s && typeof s.paused === 'boolean' && typeof s.system === 'string' && typeof s.synthetic === 'boolean' && Array.isArray(s.capabilities) && s.capabilities.every((m: ServiceMethod) => METHODS.includes(m));
     if (method === 'execution.release') valid = !!s && s.released === true;
-    if (method.startsWith('execution.') && method !== 'execution.release') valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0;
+    if (method.startsWith('execution.') && method !== 'execution.release') valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0 && (s.executed === undefined || integer(s.executed)) && (s.debug_stop === undefined || validStop(s.debug_stop));
     if (method === 'memory.regions') valid = !!s && Array.isArray(s.regions) && s.regions.length <= 128 && s.regions.every((region: MemoryRegion) => region && token(region.id) && typeof region.name === 'string' && integer(region.size) && typeof region.readable === 'boolean' && typeof region.writable === 'boolean' && region.addressing === 'region-offset' && (region.unavailableReason === undefined || typeof region.unavailableReason === 'string'));
     if (method === 'memory.read') valid = !!s && token(s.region) && integer(s.offset) && hex(s.hex) && s.length === s.hex.length / 2;
     if (method === 'memory.write') valid = !!s && token(s.region) && integer(s.offset) && integer(s.written) && s.written > 0 && s.written <= MAX_TRANSFER;

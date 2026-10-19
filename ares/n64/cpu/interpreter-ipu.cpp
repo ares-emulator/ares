@@ -442,6 +442,8 @@ auto CPU::LD(r64& rt, cr64& rs, s16 imm) -> void {
 auto CPU::LDL(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   u64 vaddr = rs.u64 + imm;
+  //Report only the bytes consumed by a partial big-endian load.
+  if(unlikely(debugControl.watchActive) && context.bigEndian()) debugControl.semanticRead(vaddr, 8 - (vaddr & 7));
   u64 data = rt.u64;
 
   if(context.littleEndian()) {
@@ -480,6 +482,8 @@ auto CPU::LDL(r64& rt, cr64& rs, s16 imm) -> void {
 auto CPU::LDR(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   u64 vaddr = rs.u64 + imm;
+  //Report only the bytes consumed by a partial big-endian load.
+  if(unlikely(debugControl.watchActive) && context.bigEndian()) debugControl.semanticRead(vaddr & ~7ull, (vaddr & 7) + 1);
   u64 data = rt.u64;
 
   if(context.littleEndian()) {
@@ -554,6 +558,8 @@ auto CPU::LW(r64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::LWL(r64& rt, cr64& rs, s16 imm) -> void {
   u64 vaddr = rs.u64 + imm;
+  //Report only the bytes consumed by a partial big-endian load.
+  if(unlikely(debugControl.watchActive) && context.bigEndian()) debugControl.semanticRead(vaddr, 4 - (vaddr & 3));
   u32 data = rt.u32;
   auto mem = read<Word>(vaddr & ~3);
   if(!mem) return;
@@ -582,6 +588,8 @@ auto CPU::LWL(r64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::LWR(r64& rt, cr64& rs, s16 imm) -> void {
   u64 vaddr = rs.u64 + imm;
+  //Report only the bytes consumed by a partial big-endian load.
+  if(unlikely(debugControl.watchActive) && context.bigEndian()) debugControl.semanticRead(vaddr & ~3ull, (vaddr & 3) + 1);
   u64 upper = rt.u64 & 0xffffffff00000000ull;
   u32 data = rt.u32;
   auto mem = read<Word>(vaddr & ~3);

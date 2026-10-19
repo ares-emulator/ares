@@ -61,3 +61,22 @@ test('owner disconnects have reserved capacity and fail closed if revocation can
   assert.equal(failure.code, 'owner_revocation_failed');
   assert.ok((await Promise.all(pending)).every(code => code === 'owner_revocation_failed'));
 });
+
+test('main observes a native CPU stop without a renderer request or frame', { timeout: 2000 }, async () => {
+  const input = new PassThrough(), output = new PassThrough();
+  const client = new NativeSessionClient(input, output, identity, () => {});
+  let paused = false;
+  input.on('data', wire => {
+    const [, , id] = String(wire).trim().split(' ');
+    output.write(JSON.stringify({ ...reply(id), result: { ...reply(id).result, paused } }) + '\n');
+  });
+  let observe;
+  const observed = new Promise(resolve => { observe = resolve; });
+  const router = new SessionRouter(state => { if (state.result.paused) observe(state); });
+  router.attach(client);
+  const deadline = setTimeout(() => observe(undefined), 1000);
+  try {
+    paused = true; // Core changes state; the renderer makes no request.
+    assert.equal((await observed)?.result.paused, true);
+  } finally { clearTimeout(deadline); router.detach(); }
+});

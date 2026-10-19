@@ -34,6 +34,7 @@ auto locate(const string& name) -> string {
 }
 
 #include "native/session-service.hpp"
+#include "native/n64-service.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
@@ -371,6 +372,24 @@ int main(int argc, char** argv) {
   unsigned syntheticPhase = 0;
   bool n64 = !synthetic && host.root && host.root->name() == "Nintendo 64";
   auto& execution = host.service.execution;
+  N64Service n64Service; n64Service.available = n64;
+  execution.cpuSupported = n64;
+  host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args) {
+    auto result = n64Service.execute(method, args, host.service.epoch, bool(execution.active));
+    if(n64) execution.executor = N64Service::executor();
+    return result;
+  };
+  if(n64) {
+    auto& debug = ares::Nintendo64::cpu.debugControl;
+    host.service.onResume = [&] { debug.resume(); execution.executor = N64Service::executor(); };
+    execution.onStart = [&] {
+      debug.resume();
+      if(execution.instructionCount) debug.requestStepInstructions(execution.instructionCount);
+      execution.executor = N64Service::executor();
+    };
+    execution.onFinish = [&] { debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
+    execution.debugSnapshot = [&] { return debug.halted && execution.active && execution.active->slices ? N64Service::stop(host.service.epoch) : "{\"valid\":false}"; };
+  }
   execution.supported = synthetic || n64;
   execution.frameKind = synthetic ? "synthetic-vi" : n64 ? "vi" : "unavailable";
   execution.executor = synthetic ? "synthetic" : n64 ? (ares::Nintendo64::Accuracy::CPU::Recompiler && ares::Nintendo64::cpu.recompiler.enabled ? "recompiler" : "interpreter") : "unavailable";
@@ -383,6 +402,8 @@ int main(int argc, char** argv) {
       execution.frame = ares::Nintendo64::executionCoordinate.frame;
       execution.atBoundary = ares::Nintendo64::executionCoordinate.atBoundary;
       execution.supported = !nall::GDB::server.hasClient();
+      execution.instructions = ares::Nintendo64::cpu.debugControl.instructionsRetired;
+      execution.executor = N64Service::executor();
     }
     bool wasControlled = bool(execution.active);
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
@@ -412,6 +433,12 @@ int main(int argc, char** argv) {
     if(n64) {
       execution.frame = ares::Nintendo64::executionCoordinate.frame;
       execution.atBoundary = ares::Nintendo64::executionCoordinate.atBoundary;
+    }
+    if(n64) {
+      auto& debug = ares::Nintendo64::cpu.debugControl;
+      execution.instructions = debug.instructionsRetired;
+      execution.executor = N64Service::executor();
+      if(debug.halted) { execution.complete(N64Service::reason(debug.stop.reason), host.service.paused); host.service.paused = true; }
     }
     execution.service(host.service.paused);
     if(controlled) { deadline = Clock::now(); continue; }

@@ -1,12 +1,13 @@
-# MCP adapter (tasks 3–4.5)
+# MCP adapter (tasks 3–5)
 
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The eleven registered tools are `emu_status`, `pause`, `resume`,
-`memory_regions`, `read_memory`, `write_memory`, `run_frames`, `run_until_frame`,
-`step`, `operation_status` and `cancel_operation`. Diagnostics go to stderr;
-stdout carries MCP JSON-RPC only.
+emulator. There are 23 registered tools: the original eleven generic/session/run
+tools plus `cpu_registers`, `step_instructions`, `run_until_hit`,
+`break_add/remove/list`, `watch_add/remove/list`, `last_stop`, `read_memory_va`
+and `write_memory_va`. The CPU and VA tools are N64-specific. Diagnostics go to
+stderr; stdout carries MCP JSON-RPC only.
 
 ## Start and explicitly select an app
 
@@ -78,8 +79,9 @@ This is incremental compatibility, not full reference-result parity:
 - Transfers are limited to 1–1024 bytes per request. Oversized requests fail;
   the adapter does not silently truncate or split a mutation. `hex_bytes` must
   be even-length hex (outer whitespace accepted); its input string is bounded.
-- N64 `RDRAM` writes are unavailable and `DCache` is unavailable, as recorded by
-  task 2. Raw RDRAM reads do not add renderer flush/cache guarantees. They remain parity targets for task 5. Other read/write support follows
+- Raw N64 `RDRAM` region writes and `DCache` region access remain unavailable.
+  Explicit VA tools now provide CPU/physical views. Raw region reads do not add
+  renderer flush/cache guarantees. Other read/write support follows
   debugger-node metadata and native bounds checks.
 - `resume(keep_overrides=true)` explicitly returns `unavailable`; input override
   ownership is task 6. Ordinary resume with the default false works now.
@@ -88,7 +90,7 @@ This is incremental compatibility, not full reference-result parity:
   register values or legacy telemetry-protocol compatibility are advertised.
 
 `parity-ledger.json` still tracks all 68 tools and the remaining differences.
-The other 57 tools are not registered. No tool was removed from the target.
+The other 45 tools are not registered. No tool was removed from the target.
 
 ## Bundled runtime and distribution
 
@@ -139,3 +141,25 @@ checkout reads denied. The GUI retains Chromium's normal sandbox (nesting an
 outer Seatbelt sandbox prevents Chromium initializing its own sandbox). The
 packaged app writes/restores fixture bytes and quits normally; its connection
 metadata is removed. No old fork binary or active user emulator is a fixture.
+
+
+## N64 debugging bounds
+
+Instruction steps use the interpreter and count branch delay slots separately.
+Breakpoints stop before fetch; CPU data watchpoints stop after the accessing
+instruction. Step operations share frame-run ownership, timeout, cancellation,
+disconnect and immutable results. Removing all instrumentation restores the
+configured recompiler. Main observes stopped state independently of video.
+
+Addresses can be decimal/hex strings through 64 bits; unsafe numeric JS values
+reject. Predicates support unsigned masked PC/HI/LO/GPR/value comparisons and
+`all` groups of up to eight. CPU snapshots return named GPRs; optional FPR values
+are raw bits, and COP0 Random is null. Hit code windows, heuristic stacks and
+classified FPR views remain parity work.
+
+VA memory transfers are bounded to 1024 bytes within installed RDRAM. Physical,
+KSEG0/KSEG1 and sign-extended spellings work; TLB/MMIO/wrapped ranges reject.
+CPU view observes or patches resident D-cache without allocating misses; KSEG1
+bypasses cache. Writes synchronize Vulkan and invalidate JIT, preserve I-cache,
+and report cache hazards. They reject before RDRAM initialization completes.
+`verify_after_frames > 0` remains unavailable until task 8.

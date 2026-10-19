@@ -1290,6 +1290,9 @@ struct CPU : Thread {
     uint64_t pbase;
   } devirtualizeCache;
 
+  #include "debug-control.hpp"
+  DebugControl debugControl{*this};
+
   //emux.cpp
   union Profile {
     struct {

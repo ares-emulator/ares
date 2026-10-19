@@ -1,0 +1,163 @@
+//Adapted from ares-64 1c9b9637476a83f7b80d3db1115a0f71529820d9.
+//Trace, stack-unwind and call-gate features intentionally deferred.
+//CPU debug engine for external debuggers (the MCP/telemetry frontend).
+//Included inside struct CPU (cpu.hpp); implementation in debug-control.cpp.
+//
+//Independent of the GDB stub: GDB's hooks are gated on an attached GDB client and
+//report through GDB packets, while this engine keeps its own breakpoint/watchpoint
+//tables, execution gate and immutable stop snapshot.
+//
+//Execution model:
+//  * While `active`, CPU::instruction() runs the interpreter (never the JIT), so every
+//    instruction passes beforeInstruction()/afterInstruction() and every CPU data
+//    access passes the watch hooks in CPU::read/CPU::write.
+//  * A stop never spins inside the core: it sets `halted`, which makes CPU::main()
+//    return to the frontend at an instruction boundary. The frontend keeps the
+//    machine stopped by not calling run() again, and resumes with resume().
+//  * Breakpoints stop *before* the instruction executes (no pipeline mutation).
+//    Watchpoints latch the first matching access, let the instruction complete, then
+//    stop before the next instruction (post-access semantics).
+//  * No JSON, paths, sockets or frontend references live here: the frontend reads the
+//    plain structs below and serializes them.
+struct DebugControl {
+  CPU& self;
+  DebugControl(CPU& self) : self(self) {}
+
+  enum class StopReason : u32 { None, Breakpoint, Watchpoint, InstructionsDone, Requested, SliceBudget };
+  enum class Field : u32 { Pc, Gpr, Hi, Lo, Value };
+  enum class Op : u32 { Eq, Ne, Lt, Le, Gt, Ge };
+  enum : u32 { AccessRead = 1, AccessWrite = 2 };
+  static constexpr u32 MaxPredicates = 8;
+  static constexpr u32 MaxBreakpoints = 256;
+  static constexpr u32 MaxWatchpoints = 64;
+
+  //One `field op value` comparison, unsigned, after masking the field with `mask`.
+  struct Predicate {
+    Field field = Field::Pc;
+    u32 index = 0;  //GPR number for Field::Gpr
+    Op op = Op::Eq;
+    u64 value = 0;
+    u64 mask = ~0ull;
+  };
+  //All predicates must match (empty = unconditional).
+  struct Condition {
+    std::vector<Predicate> all;
+  };
+
+  struct Breakpoint {
+    u32 id = 0;
+    u64 address = 0;  //as supplied (normalized to 64-bit sign-extended VA when it was a VA)
+    u32 paddr = 0;    //physical RDRAM address
+    Condition condition;
+    u64 hits = 0;
+  };
+
+  struct Watchpoint {
+    u32 id = 0;
+    u64 address = 0;
+    u32 paddr = 0;
+    u32 length = 0;
+    u32 kind = AccessWrite;  //AccessRead | AccessWrite
+    Condition condition;
+    u64 hits = 0;
+  };
+
+  //A matching CPU data access (first match of the instruction).
+  struct AccessHit {
+    bool valid = false;
+    u32 watchId = 0;
+    std::vector<u32> otherIds;  //other watchpoints that also matched in this instruction
+    u32 kind = 0;               //AccessRead or AccessWrite
+    u64 vaddr = 0;              //effective virtual address of the semantic access
+    u32 paddr = 0;
+    u32 size = 0;               //bytes
+    u64 value = 0;              //read value / stored bytes (big-endian, `size` bytes)
+    u64 oldValue = 0;           //previous bytes (writes, side-effect-free CPU-view read)
+    bool hasOld = false;
+    u64 pc = 0;                 //PC of the accessing instruction
+    u32 instruction = 0;
+  };
+
+  //Immutable copy of the architectural state, taken when the stop happened.
+  struct Snapshot {
+    bool valid = false;
+    u64 gpr[32] = {};
+    u64 lo = 0, hi = 0;
+    u64 pc = 0;          //next instruction to execute
+    u64 nextPc = 0;      //instruction after that (branch target when in a delay slot)
+    bool delaySlot = false;  //`pc` is a branch delay slot
+    u64 cop0[32] = {};
+    u32 cop0Valid = 0;   //bit n set when cop0[n] could be read without side effects
+    u64 fpr[32] = {};
+    u32 fcr0 = 0, fcr31 = 0;
+  };
+
+  struct Stop {
+    StopReason reason = StopReason::None;
+    u32 breakpointId = 0;
+    std::vector<u32> otherBreakpointIds;
+    u64 breakpointPc = 0;
+    AccessHit access;
+    Snapshot snapshot;
+    u64 frame = 0;  //epoch identity belongs to the host operation
+    u64 instructions = 0;  //instructionsRetired when the stop happened
+  };
+
+  //debug-control.cpp
+  auto power() -> void;
+  auto normalizeAddress(u64 address, u32 length, u32& paddr, string& error) const -> bool;
+  auto addBreakpoint(u64 address, Condition condition, string& error) -> u32;
+  auto removeBreakpoint(u32 id) -> bool;
+  auto addWatchpoint(u64 address, u32 length, u32 kind, Condition condition, string& error) -> u32;
+  auto removeWatchpoint(u32 id) -> bool;
+  auto clearHits() -> void;
+
+  //execution gate
+  auto updateActive() -> void;
+  auto requestStepInstructions(u64 count) -> void;
+  auto requestHalt() -> void;
+  auto resume() -> void;
+  auto setSliceBudget(u64 instructions) -> void { sliceBudget = instructions; sliceCount = 0; updateActive(); }
+  auto exitMain() -> bool;
+
+  //hooks (called from cpu.cpp / memory.cpp / interpreter-ipu.cpp)
+  auto beforeInstruction(PhysAccess access) -> bool;  //true = stop before this instruction
+  auto afterInstruction(u64 pc, u32 instruction) -> void;
+  auto semanticRead(u64 vaddr, u32 length) -> void { narrowVaddr = vaddr; narrowLength = length; }
+  template<u32 Size> auto onRead(const PhysAccess& access, u64 value) -> void;
+  template<u32 Size> auto onWrite(const PhysAccess& access, u64 data) -> void;
+
+  auto evaluate(const Condition&, const AccessHit* access) const -> bool;
+  auto snapshot() const -> Snapshot;
+  auto controlRegister(u32 index, u64& value) const -> bool;
+  auto takeStop(StopReason reason) -> void;
+
+  bool active = false;   //any per-instruction hook required (gates the interpreter)
+  bool watchActive = false;
+  bool gate = false;     //CPU::main must consult exitMain() (active, halted or slice budget)
+  bool halted = false;   //stop latched; CPU::main returns until resume()
+  Stop stop;             //valid while halted (and after, until the next stop)
+  bool stopValid = false;
+
+  u64 instructionsRetired = 0;  //counted while active (debug coordinate, not serialized)
+  u64 stepRemaining = 0;
+  bool stepping = false;
+  bool haltRequested = false;
+  bool suppressBreakOnce = false;
+  u64 suppressPc = 0;
+  u64 sliceBudget = 0;   //0 = unlimited; else CPU::main yields after this many iterations
+  u64 sliceCount = 0;
+
+  std::vector<Breakpoint> breakpoints;
+  std::vector<Watchpoint> watchpoints;
+  u32 nextBreakpointId = 1;
+  u32 nextWatchpointId = 1;
+
+  //current instruction
+  u64 currentPc = 0;
+  u32 currentInstruction = 0;
+  AccessHit pendingAccess;
+  u64 narrowVaddr = 0;
+  u32 narrowLength = 0;
+
+};

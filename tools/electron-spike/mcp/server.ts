@@ -1,3 +1,4 @@
+import { registerN64Tools } from './n64-tools.js';
 import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
@@ -61,12 +62,12 @@ function createServer(): McpServer {
   }));
   const maxSeconds = z.number().min(0.001).max(600).default(60);
   const flags = { fpr: z.boolean().default(false), cop0: z.boolean().default(false), verbose: z.boolean().default(false) };
-  async function operation(method: 'execution.runFrames' | 'execution.runUntilFrame', amount: number, seconds: number): Promise<ExecutionOperation> {
+  async function operation(method: 'execution.runFrames' | 'execution.runUntilFrame' | 'execution.stepInstructions', amount: number, seconds: number): Promise<ExecutionOperation> {
     if (!local.identity) await status();
     // Keep the starting identity through every poll. A ROM/reset never silently
     // rebinds this operation to the replacement session.
     const identity = { ...local.identity! };
-    const params = method === 'execution.runFrames' ? { count: amount, timeoutMs: Math.ceil(seconds * 1000) } : { frame: amount, timeoutMs: Math.ceil(seconds * 1000) };
+    const params = method !== 'execution.runUntilFrame' ? { count: amount, timeoutMs: Math.ceil(seconds * 1000) } : { frame: amount, timeoutMs: Math.ceil(seconds * 1000) };
     let result = unwrap(await local.request(method, identity, params));
     operationIdentities.delete(result.operation_id); operationIdentities.set(result.operation_id, identity);
     if (operationIdentities.size > 32) operationIdentities.delete(operationIdentities.keys().next().value!);
@@ -91,6 +92,7 @@ function createServer(): McpServer {
     if (!local.identity) await status();
     return unwrap(await local.request('execution.cancel', operation_id === null ? undefined : operationIdentities.get(operation_id), { operationId: operation_id ?? 0 }));
   }));
+  registerN64Tools(server, local, status, operation);
   server.server.onclose = () => local.close();
   return server;
 }

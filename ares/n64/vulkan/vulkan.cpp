@@ -152,6 +152,12 @@ auto Vulkan::frame() -> void {
   implementation->processor->begin_frame_context();
 }
 
+// Debugger memory safe point, adapted from ares-64 1c9b9637476a83f7b80d3db1115a0f71529820d9.
+auto Vulkan::flush() -> void {
+  if(!implementation) return;
+  implementation->processor->wait_for_timeline(implementation->processor->signal_timeline());
+}
+
 auto Vulkan::writeWord(u32 address, u32 data) -> void {
   if(!implementation) return;
   implementation->processor->set_vi_register(::RDP::VIRegister(address), data);

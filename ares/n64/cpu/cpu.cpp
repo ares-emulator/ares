@@ -7,6 +7,7 @@ CPU cpu;
 #include "context.cpp"
 #include "dcache.cpp"
 #include "tlb.cpp"
+#include "debug-control.cpp"
 #include "memory.cpp"
 #include "exceptions.cpp"
 #include "algorithms.cpp"
@@ -37,6 +38,7 @@ auto CPU::unload() -> void {
 auto CPU::main() -> void {
   u32 remaining = executionCoordinate.sliceBudget;
   while(!vi.refreshed && GDB::server.reportPC(ipu.pc & 0xFFFFFFFF)) {
+    if(debugControl.gate && debugControl.exitMain()) break;
     if(executionCoordinate.sliceBudget && !remaining--) break;
     if(instruction()) synchronize();
   }
@@ -162,7 +164,10 @@ auto CPU::instruction() -> bool {
   auto access = devirtualize<Read, Word>(ipu.pc);
   if(!access) return true;
 
-  if(Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
+  bool debugging = unlikely(debugControl.active);
+  if(debugging && debugControl.beforeInstruction(access)) return true;
+
+  if(!debugging && Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
     if(vaddrAlignedError<Word>(access.vaddr, false)) return true;
     auto block = recompiler.block(ipu.pc, access.paddr);
     if(block) {
@@ -181,11 +186,14 @@ auto CPU::instruction() -> bool {
 
   auto data = fetch(access);
   if (!data) return true;
+  u64 executingPc = ipu.pc;
+  if(debugging) debugControl.currentInstruction = *data;
   pipeline.begin();
   instructionPrologue(ipu.pc, *data);
   decoderEXECUTE(*data);
   instructionEpilogue<0>();
   pipeline.end();
+  if(debugging) debugControl.afterInstruction(executingPc, *data);
   return true;
 }
 
@@ -209,6 +217,7 @@ auto CPU::raiseCoprocessor1Exception() -> void {
 }
 
 auto CPU::power(bool reset) -> void {
+  debugControl.power();
   Thread::reset();
 
   context.endian = Context::Endian::Big;

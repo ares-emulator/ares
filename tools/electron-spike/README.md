@@ -24,8 +24,8 @@ From the repository root:
 ```sh
 cmake -S . -B build-electron-make -G 'Unix Makefiles' \
   -UARES_CORES -DARES_BUILD_ELECTRON_SPIKE=ON \
-  -DARES_ENABLE_LIBRASHADER=OFF -DENABLE_CCACHE=OFF
-cmake --build build-electron-make --target ares-electron-host -j 8
+  -DARES_ENABLE_LIBRASHADER=OFF -DENABLE_CCACHE=OFF -DENABLE_IPO=OFF
+cmake --build build-electron-make --target ares-electron-host ares-electron-cpu-fixture -j 8
 npm ci --prefix tools/electron-spike
 npm start --prefix tools/electron-spike
 ```
@@ -34,6 +34,10 @@ npm start --prefix tools/electron-spike
 contained the initial Game Boy-only spike. Optional cores also appear automatically
 if added to `ARES_CORES`. Other generators can be used in a different directory;
 set `ARES_HOST` to the resulting native executable when running Electron.
+
+`-DENABLE_IPO=OFF` disables LTO for local iteration and avoids optimizing every
+core again at each native link. Switching an existing build requires one full
+recompile. Release builds can enable IPO independently.
 
 The app starts with a synthetic video test. Use **Open ROM** to detect the system
 automatically. The system selector lists the native registry and can override
@@ -158,16 +162,16 @@ npm run test:electron --prefix tools/electron-spike
 npm run test:mcp --prefix tools/electron-spike
 ```
 
-Tasks 1–3 results and remaining checks are recorded in [EXECUTION-LOG.md](EXECUTION-LOG.md).
+Tasks 1–5 results and remaining checks are recorded in [EXECUTION-LOG.md](EXECUTION-LOG.md).
 Memory transfers are limited to 1024 bytes. The synthetic source exposes
-deterministic fixture memory for inspector experiments. N64 `DCache` is unavailable
-and its mapped `RDRAM` view is read-only pending task 5; no CPU VA/cache semantics
-are implied by region access.
+deterministic fixture memory for inspector experiments. Raw N64 `DCache` is unavailable
+and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
+separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. Six implemented MCP tools are now exposed by
+schemas/defaults and dependencies. 23 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
-the built native host and includes sequential isolated session checks.
+the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
 reload/session identity, frame credit, native pause-button behavior, and inspector
 read/write/restore against the same paused bytes as a Node client. It writes an
@@ -272,3 +276,26 @@ bundle. The preload’s emitted CJS is an Electron sandbox constraint; its sourc
 is TypeScript. Test/packaging helper scripts retain explicit `.cjs` extensions;
 Electron integration entry points are `.mjs`. Development tests use modern Node
 with synchronous `require(ESM)` support; the distributed app supplies Node 24.
+
+### N64 CPU debugging
+
+The shared services expose N64 instruction steps, register inspection,
+breakpoints, data watchpoints and immutable stop snapshots. MCP provides
+`cpu_registers`, `step_instructions`, `run_until_hit`, `break_add/remove/list`,
+`watch_add/remove/list` and `last_stop`. Branch delay slots count separately;
+breakpoints stop before fetch and watchpoints after the accessing instruction.
+Instrumentation temporarily selects the interpreter and preserves the configured
+recompiler setting. UI state is observed by main even when no new video arrives.
+
+`read_memory_va` and `write_memory_va` accept lossless 64-bit address strings and
+strict physical/KSEG0/KSEG1 ranges within installed RDRAM. Transfers are limited
+to 1024 bytes. CPU view uses resident D-cache, with no allocation on misses;
+KSEG1 bypasses it. Writes report cache hazards, invalidate JIT and preserve resident
+I-cache. They reject before RDRAM initialization completes. Raw debugger regions
+remain a separate API. FPR inspection currently returns raw bits; stack unwinding
+and delayed write verification remain pending.
+
+Build both native targets from the recipe above before `npm test`. The
+`ares-electron-cpu-fixture` target executes original hand-assembled MIPS in an
+isolated core; it uses no game, user state or saves. `ARES_CPU_FIXTURE` can select
+a fixture executable from another build directory.

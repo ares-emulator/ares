@@ -1,4 +1,4 @@
-# Shared session and memory services (tasks 1–4.5)
+# Shared session and memory services (tasks 1–5)
 
 `contracts.ts` owns the JS schemas, validation, identity and service client
 interface. `native-client.ts` implements bounded request correlation over the
@@ -153,3 +153,17 @@ leave stale metadata; selecting it fails instead of picking another app. Windows
 returns `unsupported_platform`; Linux/macOS Unix code is shared, but only macOS
 arm64 is runtime verified. Platform-specific transport/runtime validation remains
 pending before advertising broader support.
+
+
+## N64-only services
+
+`n64-contracts.ts` adds lossless architectural hex values, register/stop DTOs,
+strict memory views and break/watch predicates. Native implementations are in
+`n64-service.hpp`; the CPU hooks remain plain structs without transport or JSON.
+`execution.stepInstructions` shares the existing owner/coordinator and retains
+its frozen result. Debug stops return architectural snapshots, not later live
+register reads. Definition lists use 32-entry pages to bound pipe replies.
+
+Main observes status every 250 ms with at most one poll pending and suppresses
+callbacks from detached hosts. This catches ordinary-play CPU stops even with a
+stalled/reloaded renderer or no new video. The observer does not drive execution.
