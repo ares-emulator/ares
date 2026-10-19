@@ -2,6 +2,7 @@
 // 1c9b9637476a83f7b80d3db1115a0f71529820d9. No ROM or live user machine.
 #include <n64/n64.hpp>
 #include "../native/n64-service.hpp"
+#include "../native/input-service.hpp"
 #include <cstdio>
 #include <cstdlib>
 using namespace ares::Nintendo64;
@@ -29,6 +30,54 @@ int main() {
   rdram.hidden.data = hidden.data();
   rdram.ram.allocate(4 * 1024 * 1024); rdram.mapIdentity = 1; rdram.ram.fill();
   auto root = std::make_shared<ares::Core::Object>("CPU fixture");
+  // Task 6 input foundation: real ares controller nodes, deterministic clocks.
+  InputService input; input.available = true;
+  const auto now = InputService::Clock::now();
+  auto set = [&](const char* port, const char* mask, const char* frames, const char* milliseconds, const char* owner) {
+    return input.execute("n64.input.set", {port, mask, "1234", "-2345", frames, milliseconds}, owner, 1, input.frame, "", now);
+  };
+  input.service(1, 10, now);
+  check(set("1", "1", "2", "0", "owner-a").error.empty(), "input port acquired");
+  check(!input.latched[0].overridden(), "new input waits for VI latch");
+  input.service(1, 10, now);
+  check(!input.latched[0].overridden(), "same VI cannot relatch pending input");
+  input.service(1, 11, now);
+  check(input.latched[0].buttons == 1 && input.latched[0].x == 1234, "next VI latches held input");
+  check(set("1", "2", "0", "0", "owner-b").error == "busy", "foreign port acquisition rejected");
+  check(set("2", "2", "0", "0", "owner-b").error.empty(), "independent port ownership");
+  input.releaseOwner("owner-a");
+  check(!input.pending[0].overridden() && !input.latched[0].overridden() && input.pending[1].owner == "owner-b", "disconnect revokes only owner ports immediately");
+  input.start(1, 11);
+  check(input.latched[1].buttons == 2 && input.operationRunning, "operation start latches pending input");
+  auto port = root->append<ares::Node::Port>("Controller Port 2");
+  auto pad = port->append<ares::Node::Peripheral>("Gamepad");
+  auto button = pad->append<ares::Node::Input::Button>("B");
+  auto axis = pad->append<ares::Node::Input::Axis>("X-Axis");
+  auto motor = pad->append<ares::Node::Input::Rumble>("Rumble");
+  check(input.apply(button, 1, 11) && button->value() == 1, "injection reaches real controller button");
+  check(input.apply(axis, 1, 11) && axis->value() == 1234, "injection reaches real controller axis");
+  check(!input.apply(motor, 1, 11), "rumble remains host output");
+  input.releaseOwner("owner-b"); button->setValue(1);
+  check(input.apply(button, 1, 11) && button->value() == 0, "unoverridden host input neutral during operation");
+  input.neutralDuringOperations = false;
+  check(!input.apply(button, 1, 11), "opt-in host mixing passes through");
+  input.finish(1, 11);
+  check(set("3", "4", "1", "0", "owner-c").error.empty(), "frame lease acquired");
+  input.service(1, 11, now, true);
+  check(input.pending[2].overridden(), "frame lease holds until native target VI");
+  input.service(1, 12, now);
+  check(!input.pending[2].overridden(), "frame lease expires against native VI coordinate");
+  check(set("4", "8", "0", "5", "owner-d").error.empty(), "wall-time lease acquired");
+  input.service(1, 12, now, true);
+  input.service(1, 12, now + std::chrono::milliseconds(6));
+  check(!input.pending[3].overridden() && !input.latched[3].overridden(), "wall lease expires while paused at same frame");
+  check(set("1", "1", "0", "0", "owner-a").error.empty(), "unbounded hold acquired");
+  input.start(1, 12);
+  check(input.takeover() && !input.hasOverrides() && !input.operationRunning && input.takeovers == 1, "human takeover revokes held and operation input");
+  check(!input.takeover(), "neutral duplicate input does not create takeover");
+  check(set("1", "1", "0", "0", "owner-a").error.empty(), "epoch fixture acquired");
+  input.service(2, 0, now);
+  check(!input.hasOverrides(), "epoch replacement revokes every hold");
   cpu.load(root);
   cpu.power(false);
   cpu.recompiler.enabled = true;

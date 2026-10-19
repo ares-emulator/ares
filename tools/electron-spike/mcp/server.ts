@@ -1,3 +1,4 @@
+import { registerInputTools } from './input-tools.js';
 import { registerN64Tools } from './n64-tools.js';
 import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/server';
@@ -38,13 +39,12 @@ function createServer(): McpServer {
   const server = new McpServer({ name: 'ares', version: '0.2.0' });
   const status = async () => { const reply = await local.request('session.status'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch }; };
   const call = (fn: () => Promise<unknown>) => fn().then(output, failure);
-  server.registerTool('emu_status', { description: 'Emulator status, native VI coordinates and current execution operation.', inputSchema: z.object({ verbose: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true } }, async ({ verbose }) => call(async () => ({ ...await status(), ...(verbose ? { limits: ['CPU register/debug snapshots and input overrides are not implemented yet; VI runs support N64 and the synthetic fixture only.'] } : {}) })));
+  server.registerTool('emu_status', { description: 'Emulator status, native VI coordinates and current execution operation.', inputSchema: z.object({ verbose: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true } }, async ({ verbose }) => call(async () => ({ ...await status(), ...(verbose ? { limits: ['Advanced captures, traces and provenance remain pending; VI runs support N64 and the synthetic fixture only.'] } : {}) })));
   server.registerTool('pause', { description: 'Pause at a native slice boundary and finish an owned operation with reason paused.', inputSchema: z.object({}).strict() }, async () => call(async () => {
     if (!local.identity) await status(); const reply = await local.request('session.pause'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch };
   }));
-  server.registerTool('resume', { description: 'Resume ordinary execution. Input override control is not implemented yet.', inputSchema: z.object({ keep_overrides: z.boolean().default(false) }).strict() }, async ({ keep_overrides }) => call(async () => {
-    if (keep_overrides) throw new ServiceError('unavailable');
-    if (!local.identity) await status(); const reply = await local.request('session.resume'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch };
+  server.registerTool('resume', { description: 'Resume ordinary execution; N64 keep_overrides preserves held controller leases.', inputSchema: z.object({ keep_overrides: z.boolean().default(false) }).strict() }, async ({ keep_overrides }) => call(async () => {
+    if (!local.identity) await status(); const reply = await local.request('session.resume', undefined, keep_overrides ? { keepOverrides: true } : undefined); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch };
   }));
   server.registerTool('memory_regions', { description: 'List debugger-region names, sizes, opaque IDs, access flags and session identity. Offsets are region-relative.', inputSchema: z.object({}).strict(), annotations: { readOnlyHint: true } }, async () => call(async () => {
     regions = await memory.regions(); return { regions: regions.map(({ identity, ...r }) => r), ...local.identity, max_transfer: MAX_TRANSFER };
@@ -93,6 +93,7 @@ function createServer(): McpServer {
     return unwrap(await local.request('execution.cancel', operation_id === null ? undefined : operationIdentities.get(operation_id), { operationId: operation_id ?? 0 }));
   }));
   registerN64Tools(server, local, status, operation);
+  registerInputTools(server, local, status);
   server.server.onclose = () => local.close();
   return server;
 }

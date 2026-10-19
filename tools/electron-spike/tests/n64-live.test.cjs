@@ -40,7 +40,7 @@ test('N64 contracts preserve 64-bit values and bound predicates and memory reque
   assert.throws(() => encodeRequest('x', identity, 'n64.memory.read', { address: '0x80000000', view: 'cpu', length: 0 }), /invalid_request/);
   assert.throws(() => decodeReply(JSON.stringify({ protocol: 1, id: 'x', ...identity, ok: true, result: { pc: 123 } }), 'n64.debug.registers'), /invalid_reply/);
 });
-test('real MIPS core fixture: delay slots, aliases, pre/post stops, semantic accesses and dirty cache', () => {
+test('real core fixture: MIPS stops/cache semantics and VI-latched controller leases', () => {
   assert.ok(fs.existsSync(fixture), 'Build the ares-electron-cpu-fixture CMake target first');
   assert.match(execFileSync(fixture, { encoding: 'utf8', timeout: 10000 }), /CPU_DEBUG_FIXTURE_PASS/);
 });
@@ -92,11 +92,57 @@ test('isolated N64 host and real MCP stdio share instruction operations, registe
     await peer.tool('watch_remove', { id: watched.id });
     assert.equal((await peer.tool('read_memory_va', { addr: '0x80001000', length: 4 })).hex.length, 8);
     assert.equal((await peer.tool('write_memory_va', { addr: '0x80001000', hex_bytes: '00' })).error, 'rdram_not_initialized');
+    // Four independent ports, connection ownership and leases while paused.
+    const setInput = { port: 1, buttons: 1, x: 1234, y: -2345, timeoutFrames: 100, timeoutMs: 0 };
+    let input = unwrap(await client.request('n64.input.set', undefined, setInput));
+    assert.equal(input.ports[0].pending.buttons, 1); assert.equal(input.ports[0].latched.overridden, false);
+    const held = await peer.tool('controller_set', { port: 2, b: true });
+    assert.equal(held.ports[1].pending.buttons, 2);
+    assert.equal((await client.request('n64.input.set', undefined, { ...setInput, port: 2 })).error, 'busy');
+    assert.equal((await peer.tool('controller_release', { port: 1 })).error, 'busy');
+    await done(native, unwrap(await native.request('execution.stepInstructions', undefined, { count: 1, timeoutMs: 1000 })));
+    input = unwrap(await native.request('n64.input.state'));
+    assert.equal(input.ports[0].latched.buttons, 1); assert.equal(input.ports[1].latched.buttons, 2);
+    await peer.tool('controller_set', { port: 3, z: true, timeout_seconds: 0.02 });
+    const pausedFrame = input.frame; await sleep(50);
+    input = unwrap(await native.request('n64.input.state'));
+    assert.equal(input.frame, pausedFrame); assert.equal(input.ports[2].pending.overridden, false, 'wall lease expires while VI is paused');
+    assert.equal((await peer.tool('resume', { keep_overrides: true })).paused, false);
+    unwrap(await native.request('session.pause'));
+    assert.equal((await peer.tool('controller_state')).ports[1].pending.overridden, true, 'explicit resume preserves overrides');
+    await peer.tool('resume'); unwrap(await native.request('session.pause'));
+    input = unwrap(await native.request('n64.input.state'));
+    assert.equal(input.ports[0].pending.overridden, true, 'foreign resume cannot revoke another owner');
+    assert.equal(input.ports[1].pending.overridden, false, 'default external resume releases its own holds');
+    await peer.tool('controller_set', { port: 2, b: true });
+    client.disconnect(); await sleep(30);
+    input = unwrap(await native.request('n64.input.state'));
+    assert.equal(input.ports[0].pending.overridden, false); assert.equal(input.ports[1].pending.overridden, true, 'disconnect leaves other owners intact');
+    await client.request('session.status');
+    await client.request('n64.input.set', undefined, setInput);
+    assert.equal((await peer.tool('controller_state')).ports[0].pending.overridden, true);
+    assert.equal((await peer.tool('controller_host_mode', { neutral_during_operations: false })).neutral_during_operations, false);
+    await peer.tool('controller_host_mode');
+    // Feed the same host keyboard pipe used by Electron. Emulated events verify
+    // handoff mechanics; physical keyboard/gamepad acceptance remains manual.
+    child.stdin.write('key A 1\n'); await sleep(30);
+    input = unwrap(await native.request('n64.input.state'));
+    assert.equal(input.human_takeovers, 1); assert.equal(input.ports.some(p => p.pending.overridden || p.latched.overridden), false);
+    assert.equal(unwrap(await native.request('session.status')).paused, false);
+    child.stdin.write('key A 0\n'); unwrap(await native.request('session.pause'));
     const op = unwrap(await client.request('execution.stepInstructions', undefined, { count: 1000000, timeoutMs: 10000 }));
     assert.equal((await native.request('n64.debug.breakAdd', undefined, { address: '0x80001000', condition: [] })).error, 'busy');
     assert.equal((await native.request('n64.memory.write', undefined, { address: '0x80001000', view: 'cpu', hex: '00' })).error, 'busy');
     client.disconnect();
     const disconnected = await done(native, op); assert.equal(disconnected.stop_reason, 'disconnected');
+    assert.equal(unwrap(await native.request('n64.input.state')).operation_running, false);
+    await client.request('session.status');
+    const handedOff = unwrap(await client.request('execution.stepInstructions', undefined, { count: 1000000, timeoutMs: 10000 }));
+    child.stdin.write('key B 1\n');
+    assert.equal((await done(native, handedOff)).stop_reason, 'host_input');
+    assert.equal(unwrap(await native.request('session.status')).paused, false);
+    child.stdin.write('key B 0\n'); unwrap(await native.request('session.pause'));
+
     assert.equal(unwrap(await native.request('session.status')).executor, initial.executor);
     const stale = { ...native.identity };
     unwrap(await native.request('session.reset'));

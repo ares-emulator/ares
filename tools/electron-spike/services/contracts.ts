@@ -1,8 +1,9 @@
+import { INPUT_METHODS, encodeInput, validInput, type InputMethod, type InputServiceMap } from './input-contracts.js';
 import { N64_METHODS, encodeN64, validN64, type N64Method, type N64ServiceMap, type Stop, validStop } from './n64-contracts.js';
 /** Shared contract for Electron routing, the inspector and the future MCP adapter. */
 export const PROTOCOL = 1 as const;
 export const MAX_TRANSFER = 1024;
-export const METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS] as const;
+export const METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS] as const;
 export type ServiceMethod = typeof METHODS[number];
 export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
 export interface SessionIdentity { session: string; epoch: number }
@@ -16,11 +17,11 @@ export interface ExecutionOperation {
 export interface MemoryRegion { id: string; name: string; size: number; readable: boolean; writable: boolean; addressing: 'region-offset'; unavailableReason?: string }
 export interface MemoryRead { region: string; offset: number; length: number; hex: string }
 export interface MemoryWritten { region: string; offset: number; written: number }
-export interface ServiceMap extends N64ServiceMap {
+export interface ServiceMap extends N64ServiceMap, InputServiceMap {
   'execution.stepInstructions': { params: { count: number; timeoutMs: number }; result: ExecutionOperation };
   'session.status': { params: undefined; result: SessionStatus };
   'session.pause': { params: undefined; result: SessionStatus };
-  'session.resume': { params: undefined; result: SessionStatus };
+  'session.resume': { params: { keepOverrides: boolean } | undefined; result: SessionStatus };
   'session.reset': { params: undefined; result: SessionStatus };
   'execution.runFrames': { params: { count: number; timeoutMs: number }; result: ExecutionOperation };
   'execution.runUntilFrame': { params: { frame: number; timeoutMs: number }; result: ExecutionOperation };
@@ -50,7 +51,15 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
   if (!identity || typeof identity !== 'object' || !token(id) || !token(identity.session) || !integer(identity.epoch) || identity.epoch < 1 ||
       !METHODS.includes(method) || !token(owner)) throw new ServiceError('invalid_request');
   let suffix = '';
-  if (method.startsWith('n64.')) {
+  if (method === 'session.resume' && params !== undefined) {
+    const p = params as { keepOverrides: boolean };
+    if (!keys(p, ['keepOverrides']) || typeof p.keepOverrides !== 'boolean') throw new ServiceError('invalid_request');
+    suffix = ` ${p.keepOverrides ? 1 : 0}`;
+  } else if (method.startsWith('n64.input.')) {
+    const encoded = encodeInput(method as InputMethod, params);
+    if (encoded === undefined) throw new ServiceError('invalid_request');
+    suffix = encoded;
+  } else if (method.startsWith('n64.')) {
     const encoded = encodeN64(method as N64Method, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
     suffix = encoded;
@@ -81,7 +90,8 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
   if (r.ok) {
     const s = r.result;
     let valid = false;
-    if (method.startsWith('n64.')) valid = validN64(method as N64Method, s);
+    if (method.startsWith('n64.') && !method.startsWith('n64.input.')) valid = validN64(method as N64Method, s);
+    if (method.startsWith('n64.input.')) valid = validInput(s);
     if (method.startsWith('session.')) valid = !!s && typeof s.paused === 'boolean' && typeof s.system === 'string' && typeof s.synthetic === 'boolean' && Array.isArray(s.capabilities) && s.capabilities.every((m: ServiceMethod) => METHODS.includes(m));
     if (method === 'execution.release') valid = !!s && s.released === true;
     if (method.startsWith('execution.') && method !== 'execution.release') valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0 && (s.executed === undefined || integer(s.executed)) && (s.debug_stop === undefined || validStop(s.debug_stop));

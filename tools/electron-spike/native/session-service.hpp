@@ -18,8 +18,9 @@ struct SessionService {
   uint64_t epoch = 1;
   bool paused = false;
   ExecutionService execution;
-  std::function<ControlResult(const std::string&, const std::vector<std::string>&)> n64Request;
-  std::function<void()> onResume;
+  std::function<ControlResult(const std::string&, const std::vector<std::string>&, const std::string&)> n64Request;
+  std::function<void(const std::string&)> onReleaseOwner;
+  std::function<void(bool, const std::string&)> onResume;
   FILE* output = nullptr;
   std::mutex lock;
   std::condition_variable ready;
@@ -72,17 +73,19 @@ struct SessionService {
       if(prefix != "control" || version != "1" || method.empty() || !validId || !token(owner)) error = "invalid_request";
       else if(identity != session) error = "stale_session";
       else if(revision != std::to_string(epoch)) error = "stale_epoch";
-      else if(method.starts_with("session.") && !arguments.empty()) error = "invalid_request";
+      else if(method.starts_with("session.") && !arguments.empty() && !(method == "session.resume" && arguments.size() == 1 && (arguments[0] == "0" || arguments[0] == "1"))) error = "invalid_request";
       else if(method != "session.status" && method != "session.pause" && method != "session.resume" && method != "session.reset" && !method.starts_with("memory.") && !method.starts_with("execution.") && !method.starts_with("n64.")) error = "unavailable";
+      if(error.empty() && method == "session.resume" && arguments == std::vector<std::string>{"1"} && !onResume) error = "unavailable";
       ControlResult memoryResult;
       if(error.empty() && execution.active && (method == "session.resume" || method == "memory.write" ||
           (method == "session.pause" && owner != "ui" && owner != execution.active->owner))) error = "busy";
       if(error.empty() && method.starts_with("execution.")) {
         memoryResult = execution.execute(method, arguments, owner, epoch, paused);
         error = memoryResult.error;
+        if(error.empty() && method == "execution.release" && onReleaseOwner) onReleaseOwner(owner);
       }
       if(error.empty() && method.starts_with("n64.")) {
-        memoryResult = n64Request ? n64Request(method, arguments) : ControlResult{"unavailable", {}};
+        memoryResult = n64Request ? n64Request(method, arguments, owner) : ControlResult{"unavailable", {}};
         error = memoryResult.error;
       }
       if(error.empty() && method.starts_with("memory.")) {
@@ -91,7 +94,7 @@ struct SessionService {
       }
       if(error.empty()) {
         if(method == "session.pause") { execution.complete("paused", paused); paused = true; }
-        if(method == "session.resume") { if(onResume) onResume(); paused = false; }
+        if(method == "session.resume") { if(onResume) onResume(!arguments.empty() && arguments[0] == "1", owner); paused = false; }
         if(method == "session.reset") { execution.complete("reset", paused); reset(); ++epoch; execution.frame = 0; execution.atBoundary = true; }
       }
       // System names originate in the compiled registry. Escape JSON defensively.
@@ -103,7 +106,7 @@ struct SessionService {
       std::string reply = "{\"protocol\":1,\"id\":\"" + id + "\",\"session\":\"" + session + "\",\"epoch\":" + std::to_string(epoch);
       if(!error.empty()) reply += ",\"ok\":false,\"error\":\"" + error + "\"}";
       else if(!memoryResult.json.empty()) reply += ",\"ok\":true,\"result\":" + memoryResult.json + "}";
-      else reply += ",\"ok\":true,\"result\":{\"paused\":" + std::string(paused ? "true" : "false") + ",\"system\":\"" + escaped + "\",\"synthetic\":" + (synthetic ? "true" : "false") + "," + execution.coordinates() + ",\"capabilities\":[\"session.status\",\"session.pause\",\"session.resume\",\"session.reset\",\"memory.regions\",\"memory.read\",\"memory.write\",\"execution.runFrames\",\"execution.runUntilFrame\",\"execution.status\",\"execution.cancel\",\"execution.release\",\"execution.stepInstructions\",\"n64.debug.registers\",\"n64.debug.lastStop\",\"n64.debug.breakAdd\",\"n64.debug.breakRemove\",\"n64.debug.breakList\",\"n64.debug.watchAdd\",\"n64.debug.watchRemove\",\"n64.debug.watchList\",\"n64.debug.clear\",\"n64.memory.read\",\"n64.memory.write\"]}}";
+      else reply += ",\"ok\":true,\"result\":{\"paused\":" + std::string(paused ? "true" : "false") + ",\"system\":\"" + escaped + "\",\"synthetic\":" + (synthetic ? "true" : "false") + "," + execution.coordinates() + ",\"capabilities\":[\"session.status\",\"session.pause\",\"session.resume\",\"session.reset\",\"memory.regions\",\"memory.read\",\"memory.write\",\"execution.runFrames\",\"execution.runUntilFrame\",\"execution.status\",\"execution.cancel\",\"execution.release\",\"execution.stepInstructions\",\"n64.debug.registers\",\"n64.debug.lastStop\",\"n64.debug.breakAdd\",\"n64.debug.breakRemove\",\"n64.debug.breakList\",\"n64.debug.watchAdd\",\"n64.debug.watchRemove\",\"n64.debug.watchList\",\"n64.debug.clear\",\"n64.memory.read\",\"n64.memory.write\",\"n64.input.set\",\"n64.input.release\",\"n64.input.state\",\"n64.input.hostMode\"]}}";
       std::lock_guard guard(lock);
       if(replies.size() >= limit) return false; // bounded even if peer stops reading
       replies.push_back(reply + "\n"); ready.notify_one();

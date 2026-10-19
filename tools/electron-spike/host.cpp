@@ -35,9 +35,12 @@ auto locate(const string& name) -> string {
 
 #include "native/session-service.hpp"
 #include "native/n64-service.hpp"
+#include "native/input-service.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
+  InputService injectedInput;
+  std::atomic<bool> takeoverRequested{false};
   ares::Node::System root;
   std::shared_ptr<HID::Joypad> joypad;
   std::shared_ptr<HID::Keyboard> keyboard;
@@ -132,7 +135,7 @@ struct Host : ares::Platform {
     }
   }
   auto input(ares::Node::Input::Input node) -> void override {
-    if(emulator) emulator->input(node);
+    if(!injectedInput.apply(node, service.epoch, ares::Nintendo64::executionCoordinate.frame) && emulator) emulator->input(node);
     appliedInput = controls.load() >> 32;
   }
   auto detach(ares::Node::Object node) -> void override {
@@ -182,6 +185,7 @@ struct Host : ares::Platform {
   }
   void readCommands() {
     std::string line;
+    std::array<int, 4> previousAxes{};
     // Bound input before allocating an arbitrarily large line.
     char ch;
     while(std::cin.get(ch)) {
@@ -200,6 +204,13 @@ struct Host : ares::Platform {
         uint32_t seq, mask;
         if(command >> seq >> mask) {
           int axes[4]{}; command >> axes[0] >> axes[1] >> axes[2] >> axes[3];
+          bool moved = (mask & ~uint32_t(controls.load())) != 0;
+          for(unsigned i = 0; i < 4; ++i) {
+            axes[i] = std::clamp(axes[i], -32767, 32767);
+            moved |= std::abs(axes[i]) > 4096 && std::abs(axes[i] - previousAxes[i]) > 4096;
+            previousAxes[i] = axes[i];
+          }
+          if(moved) takeoverRequested = true;
           std::lock_guard lock(program.inputMutex);
           if(joypad) {
             for(unsigned i = 0; i < 4; i++) joypad->axes().input(i).setValue(std::clamp(axes[i], -32767, 32767));
@@ -214,7 +225,11 @@ struct Host : ares::Platform {
           std::lock_guard lock(program.inputMutex);
           auto found = keyboard->buttons().find(key.c_str());
           if(!found && keyboard->buttons().size() < 128) { keyboard->buttons().append(key.c_str()); found = keyboard->buttons().find(key.c_str()); }
-          if(found) keyboard->buttons().input(*found).setValue(value != 0);
+          if(found) {
+            auto& button = keyboard->buttons().input(*found);
+            if(value && !button.value()) takeoverRequested = true;
+            button.setValue(value != 0);
+          }
         }
       }
       if(name == "mouse" && mouse) {
@@ -222,7 +237,11 @@ struct Host : ares::Platform {
         if(command >> x >> y >> mask) {
           std::lock_guard lock(program.inputMutex);
           mouse->motion(0).move(std::clamp(x, -32767, 32767)); mouse->motion(1).move(std::clamp(y, -32767, 32767));
-          for(unsigned i = 0; i < 4; i++) mouse->buttons().input(i).setValue((mask >> i) & 1);
+          for(unsigned i = 0; i < 4; i++) {
+            auto& button = mouse->buttons().input(i);
+            if(((mask >> i) & 1) && !button.value()) takeoverRequested = true;
+            button.setValue((mask >> i) & 1);
+          }
         }
       }
       if(name == "clear") {
@@ -374,20 +393,30 @@ int main(int argc, char** argv) {
   auto& execution = host.service.execution;
   N64Service n64Service; n64Service.available = n64;
   execution.cpuSupported = n64;
-  host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args) {
+  host.injectedInput.available = n64;
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); };
+  host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method.starts_with("n64.input.")) return host.injectedInput.execute(method, args, owner, host.service.epoch, execution.frame, execution.active ? execution.active->owner : "");
     auto result = n64Service.execute(method, args, host.service.epoch, bool(execution.active));
     if(n64) execution.executor = N64Service::executor();
     return result;
   };
   if(n64) {
     auto& debug = ares::Nintendo64::cpu.debugControl;
-    host.service.onResume = [&] { debug.resume(); execution.executor = N64Service::executor(); };
+    host.service.onResume = [&](bool keepOverrides, const std::string& owner) {
+      if(!keepOverrides) {
+        if(owner == "ui") host.injectedInput.releaseAll();
+        else host.injectedInput.releaseOwner(owner);
+      }
+      debug.resume(); execution.executor = N64Service::executor();
+    };
     execution.onStart = [&] {
+      host.injectedInput.start(host.service.epoch, execution.frame);
       debug.resume();
       if(execution.instructionCount) debug.requestStepInstructions(execution.instructionCount);
       execution.executor = N64Service::executor();
     };
-    execution.onFinish = [&] { debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
+    execution.onFinish = [&] { host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
     execution.debugSnapshot = [&] { return debug.halted && execution.active && execution.active->slices ? N64Service::stop(host.service.epoch) : "{\"valid\":false}"; };
   }
   execution.supported = synthetic || n64;
@@ -405,11 +434,18 @@ int main(int argc, char** argv) {
       execution.instructions = ares::Nintendo64::cpu.debugControl.instructionsRetired;
       execution.executor = N64Service::executor();
     }
+    if(n64) host.injectedInput.service(host.service.epoch, execution.frame);
     bool wasControlled = bool(execution.active);
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
       if(host.root) { host.output.clear(); host.root->power(); }
+      host.injectedInput.releaseAll();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
     }, host.memory)) { host.quit = true; break; }
+    if(host.takeoverRequested.exchange(false) && n64 && host.injectedInput.takeover()) {
+      execution.complete("host_input", host.service.paused);
+      ares::Nintendo64::cpu.debugControl.resume();
+      host.service.paused = false;
+    }
     if(!wasControlled && execution.active && host.sound) host.output.clear();
     if(host.service.paused && !execution.active) {
       if(host.sound && !synthetic) host.output.clear();

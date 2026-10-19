@@ -1,4 +1,4 @@
-# Shared session and memory services (tasks 1–5)
+# Shared session and memory services (tasks 1–6 input slice)
 
 `contracts.ts` owns the JS schemas, validation, identity and service client
 interface. `native-client.ts` implements bounded request correlation over the
@@ -167,3 +167,11 @@ register reads. Definition lists use 32-entry pages to bound pipe replies.
 Main observes status every 250 ms with at most one poll pending and suppresses
 callbacks from detached hosts. This catches ordinary-play CPU stops even with a
 stalled/reloaded renderer or no new video. The observer does not drive execution.
+
+
+`input-contracts.ts` adds four per-port connection owners, pending/latched states,
+frame/wall leases and neutral-host mode. `InputService` runs on the emulation
+thread, ahead of normal input mapping/focus filtering. The reader only requests
+human takeover with an atomic flag. The existing reserved owner-release request
+revokes input leases as well as owned execution. Default external resume releases
+only its own holds; UI resume can release all. N64 keepOverrides preserves holds.

@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 23 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 27 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -299,3 +299,21 @@ Build both native targets from the recipe above before `npm test`. The
 `ares-electron-cpu-fixture` target executes original hand-assembled MIPS in an
 isolated core; it uses no game, user state or saves. `ARES_CPU_FIXTURE` can select
 a fixture executable from another build directory.
+
+
+### Task 6 input ownership (partial)
+
+N64 controller tools provide four independent port owners and pending/latched
+states. Holds take effect at the next VI or controlled-operation start. Optional
+frame and wall-time leases release them; wall leases also expire while paused.
+Disconnect revokes only that connection's holds. `resume(keep_overrides=true)`
+preserves N64 holds; default external resume releases its own holds, while UI
+resume releases all holds.
+
+New keyboard presses, gamepad button presses/stick movement and mouse button
+presses request human takeover on the native thread. Takeover finishes an active
+operation with `host_input`, releases overrides and resumes ordinary play. Ports
+without overrides receive neutral input during controlled operations by default.
+The automated tests exercise real controller nodes and emulated keyboard events;
+physical keyboard/gamepad acceptance remains pending. Controller taps, traces,
+DMA provenance and profiling remain task 6 work.

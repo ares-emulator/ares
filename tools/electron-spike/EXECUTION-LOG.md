@@ -437,3 +437,63 @@ above remain. Next: **task 6, input ownership, traces and provenance**. N64 serv
 and MCP checks used a dummy cartridge only to initialize the normal loader; the
 separate ROM-free MIPS fixture supplies instruction/cache assertions. No full-game
 N64 boot or listening-quality audio claim follows from these checks.
+
+## Task 6 — input ownership slice (task remains in progress)
+
+Implemented a bounded four-port input slice after task 5 commit `ade7025a5`.
+Tracing, DMA provenance, profiling and controller taps remain unimplemented; the
+milestone 2 gate is not complete. Physical keyboard/gamepad acceptance remains
+manual and has not been claimed.
+
+Adapted `ares-64` input/latch/lease and handoff semantics at
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`, preserving attribution:
+
+| Reference | SHA-256 |
+| --- | --- |
+| `desktop-ui/program/telemetry-server.hpp` | `dd41280a2bb852e4f515e8d7313c5b1518bf761fc0c971f8abf6e1d916f987cb` |
+| `desktop-ui/program/debug-session.cpp` | `93c4061ac352f8fc887e793e2d8f5317446c17dabc4e3c7027043dd2c877f700` |
+| `desktop-ui/program/telemetry-server.cpp` | `738abe2ed5dd789b7b9968bd0f77c45ab03ddcecdf81e9106e962d250799646b` |
+
+`InputService` replaces complete held states on four independently owned ports,
+separates pending and VI-latched state, and applies overrides before normal host
+input/focus filtering. Operation start/finish latch state, with neutral input on
+unoverridden ports during controlled execution by default. Frame leases use
+native VI coordinates; steady-clock leases expire even while paused. Rumble
+continues to the host. Expiry, disconnect and epoch changes revoke holds.
+
+Connection-generation owners come from the existing private endpoint. A foreign
+caller cannot overwrite or release another connection's port. Null release and
+default external resume release only the caller's holds; UI resume can release
+all. N64 `resume(keep_overrides=true)` now preserves holds. This is an explicit
+multi-client adaptation of the reference's single-client behavior.
+
+New keyboard/button presses and gamepad stick movement request takeover through
+an atomic flag. Only the emulation thread finishes an active operation
+(`host_input`), releases injected input and resumes ordinary play. Repeated held
+buttons do not request takeover; stick changes use a 4096-unit threshold to avoid
+noise. Wall leases use 1 ms precision. Other systems keep their existing input
+path. Internal owner-release uses task 4's reserved cleanup capacity.
+
+Added typed `n64.input.*` services and MCP `controller_set`, `controller_release`,
+`controller_state`, `controller_host_mode`: 27 registered bounded tools, 41 still
+unregistered out of the preserved 68. `controller_tap` remains pending. Input
+state returns masks/owners/frame deadlines; full legacy result keys and wall-time
+lease diagnostics remain parity work.
+
+Evidence: native host and controller/core fixture builds passed. The 25-test
+service suite passed with real controller Button/Axis/Rumble nodes, pending/VI
+latches, independent owners, frame expiry, wall expiry while paused, epoch
+revocation, disconnect cleanup, explicit preserve-on-resume and generated host
+keyboard events. Real N64/MCP stdio verifies that takeover interrupts an owned
+instruction operation and returns ordinary play. These are generated events,
+not physical-device acceptance. Electron/MCP checks passed with all 27 tools;
+final ordinary-play smoke and final owner-scoped resume regression are recorded
+below when complete. The task-5 packaged artifact remains unchanged; this input
+checkpoint has not yet been repackaged.
+
+Input checkpoint final checks: 25 service tests passed in 7.6 seconds, including
+owner-scoped default resume and preserved overrides. Electron/MCP passed with 27
+tools. Audio-enabled ordinary-play smoke passed: 40-system registry and GB/NES
+detection, synthetic 640×480 59.69 fps, 1080p 59.87 fps, GB/SDL 56.50 fps,
+Famicom 60.11 fps. Diff check passed. Test instances were closed. Task 6 remains
+in progress; next implementation slice is PC/call traces, then DMA/profiling.

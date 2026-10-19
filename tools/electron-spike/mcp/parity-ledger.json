@@ -387,7 +387,7 @@
           "date": "2026-10-18"
         }
       ],
-      "knownLimits": "Default keep_overrides=false resumes ordinary execution; keep_overrides=true returns unavailable until task 6 input ownership."
+      "knownLimits": "Default external resume releases only the caller's N64 holds; UI resume can release all. keep_overrides=true preserves N64 holds and remains unavailable elsewhere. Busy during owned operations."
     },
     {
       "name": "step",
@@ -1315,10 +1315,16 @@
       "family": "Input",
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 input slice; task 6 incomplete)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded frame/millisecond leases. Full generated FastMCP/result equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 6 input slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
+          "result": "Passed in 25-test service suite: actual controller nodes, port owners, frame/wall lease expiry, stale epoch, disconnect, preserve-on-resume and emulated keyboard takeover."
+        }
+      ],
+      "knownLimits": "N64 only; four per-connection port owners, complete-state replacement, VI/operation-start latch and frame/wall leases. Wall deadline uses millisecond precision (0.001..3600 seconds). Human takeover and disconnect revoke holds."
     },
     {
       "name": "controller_release",
@@ -1336,10 +1342,16 @@
       "family": "Input",
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 input slice; task 6 incomplete)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded frame/millisecond leases. Full generated FastMCP/result equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 6 input slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
+          "result": "Passed in 25-test service suite: actual controller nodes, port owners, frame/wall lease expiry, stale epoch, disconnect, preserve-on-resume and emulated keyboard takeover."
+        }
+      ],
+      "knownLimits": "Null releases only this connection's ports; a specific foreign port returns busy. UI can revoke every port. Revocation is immediate, including while paused."
     },
     {
       "name": "controller_state",
@@ -1350,10 +1362,16 @@
       "family": "Input",
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 input slice; task 6 incomplete)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded frame/millisecond leases. Full generated FastMCP/result equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 6 input slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
+          "result": "Passed in 25-test service suite: actual controller nodes, port owners, frame/wall lease expiry, stale epoch, disconnect, preserve-on-resume and emulated keyboard takeover."
+        }
+      ],
+      "knownLimits": "Pending/latched masks, axes, owner tokens, frame lease targets, native epoch/frame, neutral mode and takeover count. Remaining wall-time/result-key parity pending."
     },
     {
       "name": "controller_host_mode",
@@ -1371,10 +1389,16 @@
       "family": "Input",
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 input slice; task 6 incomplete)",
+      "mcpSchemaParity": "Reference names/defaults retained with bounded frame/millisecond leases. Full generated FastMCP/result equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 6 input slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
+          "result": "Passed in 25-test service suite: actual controller nodes, port owners, frame/wall lease expiry, stale epoch, disconnect, preserve-on-resume and emulated keyboard takeover."
+        }
+      ],
+      "knownLimits": "Neutral host input during operations by default. Only UI or the active operation owner can change mode while running."
     },
     {
       "name": "controller_tap",

@@ -1,12 +1,12 @@
-# MCP adapter (tasks 3–5)
+# MCP adapter (tasks 3–6 input slice)
 
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. There are 23 registered tools: the original eleven generic/session/run
+emulator. There are 27 registered tools: the original eleven generic/session/run
 tools plus `cpu_registers`, `step_instructions`, `run_until_hit`,
-`break_add/remove/list`, `watch_add/remove/list`, `last_stop`, `read_memory_va`
-and `write_memory_va`. The CPU and VA tools are N64-specific. Diagnostics go to
+`break_add/remove/list`, `watch_add/remove/list`, `last_stop`, `read_memory_va`,
+`write_memory_va`, and `controller_set/release/state/host_mode`. The CPU and VA tools are N64-specific. Diagnostics go to
 stderr; stdout carries MCP JSON-RPC only.
 
 ## Start and explicitly select an app
@@ -83,14 +83,15 @@ This is incremental compatibility, not full reference-result parity:
   Explicit VA tools now provide CPU/physical views. Raw region reads do not add
   renderer flush/cache guarantees. Other read/write support follows
   debugger-node metadata and native bounds checks.
-- `resume(keep_overrides=true)` explicitly returns `unavailable`; input override
-  ownership is task 6. Ordinary resume with the default false works now.
+- `resume(keep_overrides=true)` preserves N64 input leases. Default resume
+  releases the caller's holds; UI resume releases all. keep_overrides remains
+  unavailable on other systems.
 - Error results have `isError=true` with structured JSON text containing an error
   code. Native stale/range/unavailable codes are retained. No fabricated frames,
   register values or legacy telemetry-protocol compatibility are advertised.
 
 `parity-ledger.json` still tracks all 68 tools and the remaining differences.
-The other 45 tools are not registered. No tool was removed from the target.
+The other 41 tools are not registered. No tool was removed from the target.
 
 ## Bundled runtime and distribution
 
@@ -163,3 +164,18 @@ CPU view observes or patches resident D-cache without allocating misses; KSEG1
 bypasses cache. Writes synchronize Vulkan and invalidate JIT, preserve I-cache,
 and report cache hazards. They reject before RDRAM initialization completes.
 `verify_after_frames > 0` remains unavailable until task 8.
+
+
+## Input ownership slice
+
+`controller_set` replaces the full pending state of one N64 port. Four ports can
+have separate connection owners; a foreign owner cannot overwrite or revoke a
+specific held port. Null `controller_release` releases only the caller's holds.
+Inputs latch at VI boundaries or operation start. Frame leases use native VI
+coordinates; wall leases use 1 ms precision and expire even while paused. Socket
+closure revokes the departed connection's holds without touching other owners.
+
+New host keyboard/gamepad/button events can take back ordinary play. Automated
+coverage uses real ares controller nodes and generated host keyboard events;
+physical device acceptance is still pending. `controller_tap`, trace/provenance
+and profiler tools remain unregistered until their backends are ported.
