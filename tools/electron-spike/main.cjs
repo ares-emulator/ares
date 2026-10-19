@@ -7,12 +7,16 @@ const { performance } = require('node:perf_hooks');
 const { FrameParser } = require('./protocol.cjs');
 const { randomUUID } = require('node:crypto');
 const { NativeSessionClient } = require('./dist/services/native-client.js');
+const { LocalServiceHost } = require('./dist/services/local-endpoint.js');
 const { SessionRouter } = require('./dist/services/session-router.js');
 const sessions = new SessionRouter(reply => {
   if (window && !window.isDestroyed() && !window.webContents.isDestroyed()) window.webContents.send('session-state', reply);
 });
-module.exports = { sessions };
-const hostPath = process.env.ARES_HOST || path.resolve(__dirname, '../../build-electron-make/bin/ares-electron-host');
+const serviceHost = new LocalServiceHost(sessions);
+module.exports = { sessions, serviceHost, stopNative: stop };
+const installedHost = path.join(process.resourcesPath, 'native/bin/ares-electron-host');
+const installedLayout = app.isPackaged || fs.existsSync(installedHost);
+const hostPath = process.env.ARES_HOST || (installedLayout ? installedHost : path.resolve(__dirname, '../../build-electron-make/bin/ares-electron-host'));
 let generation = 0, settingsFile = process.env.ARES_SETTINGS || '';
 const probe = args => new Promise((resolve, reject) => {
   execFile(hostPath, args, { timeout: 30000 }, (error, stdout, stderr) => {
@@ -36,7 +40,7 @@ async function stop() {
   clearTimeout(timer);
 }
 async function start(options) {
-  const saveDirectory = process.env.ARES_SAVE_DIR || path.join(__dirname, 'artifacts', 'saves');
+  const saveDirectory = process.env.ARES_SAVE_DIR || (installedLayout ? path.join(app.getPath('userData'), 'saves') : path.join(__dirname, 'artifacts', 'saves'));
   fs.mkdirSync(saveDirectory, { recursive: true });
   let system = 'Synthetic';
   // Probe before stopping the running game, so an unsupported file leaves it intact.
@@ -95,7 +99,11 @@ function enqueue(task) {
   operation = operation.then(task).catch(error => { status(error.message); console.error(error); });
   return operation;
 }
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  if (process.env.ARES_ENABLE_SERVICES === '1' || process.argv.includes('--services')) {
+    const file = await serviceHost.listen(process.env.ARES_SERVICE_DIR);
+    console.error(`ares service instance ${serviceHost.instance}: ${file}`);
+  }
   window = new BrowserWindow({ width: 1100, height: 800, minWidth: 650, minHeight: 480,
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true,
       nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
@@ -168,10 +176,10 @@ app.whenReady().then(() => {
   window.loadFile(path.join(__dirname, 'index.html'), { query: {
     autotest: process.env.ARES_AUTOTEST || '', duration: process.env.ARES_TEST_SECONDS || '12'
   } });
-});
+}).catch(error => { console.error(error); app.quit(); });
 app.on('window-all-closed', () => app.quit());
 app.on('before-quit', event => {
   if (quitting) return;
   event.preventDefault(); quitting = true;
-  enqueue(stop).finally(() => app.quit());
+  enqueue(stop).finally(async () => { await serviceHost.close(); app.quit(); });
 });

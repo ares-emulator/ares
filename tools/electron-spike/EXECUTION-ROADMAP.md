@@ -1,6 +1,7 @@
 # Execution roadmap: how to tackle the implementation plans
 
-Status: tasks 1–2 implemented; runtime evidence and pending checks are recorded in
+Status: tasks 1–3 implemented; milestone 1 integration gate passed on macOS arm64.
+Runtime evidence and pending checks are recorded in
 [EXECUTION-LOG.md](EXECUTION-LOG.md). Remaining tasks are planned. Start here when
 choosing the next task.
 
@@ -262,6 +263,6 @@ Conversely, none of those deferrals removes an existing MCP tool from the parity
 target without an explicit scope decision. A clean host-library extraction can
 follow when concrete coupling impedes a task; it is not an initial rewrite mandate.
 
-The immediate next action is **task 3** (tasks 1–2 are recorded in the execution log). Those three
-produce the first shared MCP-and-UI vertical slice; they are not three competing
-implementations of the same service.
+The immediate next action is **task 4**. Milestone 1 evidence is recorded in the
+execution log. Tasks 1–3 now provide the first shared MCP-and-UI vertical slice;
+they are not three competing implementations of the same service.

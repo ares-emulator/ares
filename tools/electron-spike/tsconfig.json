@@ -4,5 +4,5 @@
     "strict": true, "declaration": true, "outDir": "dist", "rootDir": ".",
     "types": ["node"], "skipLibCheck": true
   },
-  "include": ["services/**/*.ts"]
+  "include": ["services/**/*.ts", "mcp/**/*.ts"]
 }

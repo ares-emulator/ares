@@ -1,16 +1,15 @@
-# Shared session and memory services (tasks 1–2)
+# Shared session and memory services (tasks 1–3)
 
 `contracts.ts` owns the JS schemas, validation, identity and service client
 interface. `native-client.ts` implements bounded request correlation over the
 native process pipes. `session-router.ts` is owned by Electron main, and survives
-renderer reloads. `main.cjs` binds the router to a narrow preload IPC call. Future
-inspector and MCP clients must use these contracts and routing rather than opening
+renderer reloads. `main.cjs` binds the router to a narrow preload IPC call. Inspector and MCP clients use these contracts and routing rather than opening
 another emulator or implementing a second execution loop.
 
 Build with `npm run build:services`; generated CommonJS and declarations go into
 ignored `dist/`. `npm start`, `npm test` and `npm run smoke` build them first.
-The adapter entry point belongs in `mcp/` in task 3; no MCP server or external
-listener is exposed in task 1. Native implementations belong in `native/` and
+The adapter entry point is `mcp/server.ts`; task 3 adds the opt-in Electron-main
+local endpoint in `local-endpoint.ts`. See [MCP usage and distribution](../mcp/README.md). Native implementations belong in `native/` and
 runtime checks in `tests/`. No workspace/package restructuring is required.
 
 ## Native protocol v1
@@ -104,5 +103,51 @@ frame can be reattached to a fresh port. Old port acknowledgements are ignored.
 
 Input/ack/quit remain the small existing stdin commands. The old `pause 0|1` and
 `reset` commands are replaced by service requests. There is no legacy telemetry
-compatibility claim. Local instance selection, external connections and packaged
-Node launch remain task 3 work. Only macOS arm64 has runtime evidence.
+compatibility claim. Only macOS arm64 has runtime evidence.
+
+
+## Electron local endpoint v1 (task 3)
+
+`ARES_ENABLE_SERVICES=1` or `--services` enables a user-private Unix socket.
+Metadata is created mode 0600 in an owned mode-0700 directory and contains the
+app UUID, socket path and random token. The client requires an explicit metadata
+file and instance UUID. A hello checks both UUID and token, then assigns a fresh
+connection UUID. Every subsequent request carries that connection UUID and a
+unique request ID. Duplicate IDs and old connection UUIDs fail before dispatch.
+App identity survives renderer/native-host replacement; native session and epoch
+remain separate, independently validated identities.
+
+Frames are newline-delimited JSON. A hello is
+`{protocol:1,type:"hello",id,instance,token}`; success returns
+`{protocol:1,type:"hello",id,instance,connection,ok:true}`. Requests are
+`{protocol:1,type:"request",id,connection,method,identity?,params?}`. Replies are
+`{protocol:1,type:"reply",id,connection,ok:true,reply:<native envelope>}` or
+`{protocol:1,type:"reply",id,connection,ok:false,error:<code>}`. Methods/parameters
+reuse the shared contract. Only status and region enumeration allow identity-free
+discovery; other requests must bind a known native session/epoch. Native reset is
+reserved for UI routing in this slice. No TCP listener or arbitrary command route
+is exposed.
+
+Limits are 8 clients, 16 in-flight requests per client, 1024 unique requests per
+connection, 65536 characters per line and a bounded 65536-byte outgoing queue.
+A connection that reaches its request limit ends explicitly; a subsequent new
+call may reconnect. The native client's shared 32-request bound still applies.
+The hello has a 3-second deadline and client requests have 30-second deadlines.
+Timeout, invalid replies and disconnection reject pending requests and destroy
+the affected connection. Only a new call reconnects; no request is replayed.
+A mutation accepted before disconnect may have completed: no rollback or owned
+long-operation cancellation is claimed before task 4.
+
+`app_not_running`, `app_disconnected`, `wrong_instance`, `unauthorized`,
+`stale_connection`, `duplicate_request`, `request_timeout`, `busy` and
+`native_host_disconnected` are explicit failures. Native stale-session/epoch and
+region failures retain their native result envelope. Successful discovery updates
+the client identity; `MemoryClient` handles retain their original enumeration
+identity, so reconnect does not silently rebind an old memory write.
+
+The listener and metadata outlive renderer reload and native-host loss. Normal
+app shutdown closes clients and removes its metadata/socket. A crashed app can
+leave stale metadata; selecting it fails instead of picking another app. Windows
+returns `unsupported_platform`; Linux/macOS Unix code is shared, but only macOS
+arm64 is runtime verified. Platform-specific transport/runtime validation remains
+pending before advertising broader support.

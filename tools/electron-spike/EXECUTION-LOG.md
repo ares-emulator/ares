@@ -140,3 +140,79 @@ hotplug. The 68-tool inventory remains intact; memory tools have a native
 foundation only. MCP schema/default/result parity, instance selection, reconnect
 without mutation replay and distributed Node launch still require task 3 and its
 integration gate. No prior fork test result is counted as new-host evidence.
+
+## Task 3 — TypeScript MCP adapter and first integration gate
+
+Implemented 2026-10-18, following task 2 commit `72bdc9c3e`. **Milestone 1 passed
+on macOS arm64.** Next: **task 4, core execution coordinates and ownership**.
+No advanced CPU/RSP debugging or plugin loader was added.
+
+Implemented:
+
+- Opt-in Electron-main-owned local service endpoint (`--services` or
+  `ARES_ENABLE_SERVICES=1`) with explicit app UUID selection, private Unix socket,
+  owned 0700 directory/0600 metadata, token authentication and per-connection
+  UUID/request IDs. No TCP listener or arbitrary app selection.
+- Shared `LocalServiceClient`/`MemoryClient` and typed contracts; bounded messages,
+  clients, pending work and request histories. Stale connection/duplicate IDs
+  fail before dispatch. Timeouts/disconnections reject pending requests; only a
+  new call can reconnect and no request is replayed. Short accepted mutations
+  have no rollback guarantee; owned-operation disconnect cleanup awaits task 4.
+- Actual Node stdio MCP entry point using official SDK 2.3.1. Exactly six tools:
+  `emu_status`, `pause`, `resume`, `memory_regions`, `read_memory`, `write_memory`.
+  Names, required arguments and defaults are asserted through real `tools/list`;
+  `read_memory` also exercises the omitted-length default of 64 at runtime.
+  Adapter stdout is MCP-only; all diagnostics use stderr.
+- Native/renderer session identity remains separate from app/connection identity.
+  Explicit discovery refreshes handles; stale cached memory mutations do not
+  rebind/retry against a reset/replacement. Renderer reload leaves MCP attached.
+- A self-contained macOS development bundle and `Contents/Resources/ares-mcp`
+  launcher using Electron's verified Node 24.22.0 runtime. Production dependency
+  graph, native executable/databases, SDL3/MoltenVK and licenses are copied;
+  developer rpaths are replaced and the local bundle is ad-hoc signed. The
+  launcher uses relative bundle paths and needs no system Node or Python.
+- Installed native-host lookup uses the installed resource layout even when the
+  copied Electron development executable reports `isPackaged=false`.
+
+Validation (sequential isolated instances; no active user game/save was a fixture):
+
+| Check | Command / evidence | Result |
+| --- | --- | --- |
+| TypeScript builds and focused session/memory/local-transport suite | `npm test --prefix tools/electron-spike` | Passed, 15 tests |
+| Token authentication, explicit UUID/permissions, fragmented hello, stale connection UUID, duplicate request, timeout/disconnect/reconnect without replay | `tests/local-endpoint.test.cjs` | Passed; timed-out mutation observed once |
+| Actual MCP stdio initialize/list/call, source parameter names/required fields/defaults, six-tool inventory | `npm run test:mcp --prefix tools/electron-spike` | Passed |
+| MCP writes and inspector reads the same paused **real GB CPU WRAM**; original bytes restored; native session retained across renderer reload | Same test with generated GB ROM and isolated profile/saves | Passed, `MCP_INTEGRATION_PASS` |
+| Wrong app selection, stale reset epoch, stale session after host replacement, native-host disconnection, unsupported tools/override flag | Same real stdio test | Passed, explicit errors |
+| Existing frame-credit/WebGL/inspector/reload/stalled-renderer behavior | `npm run test:electron --prefix tools/electron-spike` | Passed, `ELECTRON_SESSION_PASS` |
+| Local distribution construction | `npm run package:mac --prefix tools/electron-spike` | Passed; native host and full production SDK graph included |
+| Copied distribution outside repository; generated GB ROM; bundled stdio runtime; read/write/restore/resume, clean app/MCP exit and metadata cleanup | `npm run test:package --prefix tools/electron-spike` | Passed, `PACKAGE_MCP_PASS`, 455 rendered GB frames, no WebGL error |
+| No checkout dependency for native loader and adapter | Same package test, denying checkout reads for native-loader preflight and MCP Node process | Passed; GUI retains its normal Chromium sandbox |
+| Runtime supplied by distribution | `artifacts/package-mcp.json` and bundled `runtime.json` | Electron 44.9.0 / Node 24.22.0, macOS arm64 |
+| Syntax, inventory and whitespace | `node --check`, 68 ledger rows, `git diff --check` | Passed |
+
+The restricted sandbox initially denied Unix-socket creation; those checks passed
+with local socket/app access. Distribution checks caught an omitted transitive SDK
+module and incorrect build-tree routing from `isPackaged=false`; both were fixed
+and the final default-path package passed. An attempted outer Seatbelt sandbox
+prevented Chromium initializing its own sandbox. The final test does **not**
+disable Chromium security: it constrains the plain Node adapter/native preflight
+separately and runs the copied GUI with its normal sandbox and disposable profile.
+Failed intermediate distribution artifacts were removed.
+
+Compatibility remains intentionally incremental. Status omits unported N64
+VI/register/executor/ownership fields, transfers are capped at 1024 bytes, mapped
+RDRAM writes/DCache remain deferred, and `keep_overrides=true` is explicitly
+unavailable until input ownership exists. Read/write result names/hex addresses
+are retained with added session/region identity metadata. Full generated FastMCP
+JSON Schema equality and full reference-result parity are **not run/complete**;
+the ledger records the differences instead of counting six registrations as full
+68-tool preservation. No tool was removed from the target.
+
+The packaging output is a local development distribution, not a notarized release.
+Windows transport is explicitly unsupported; Linux runtime/platform checks,
+release signing/entitlements, full 68-tool adapter/backend assertions, protocol
+revisions beyond the tested 2025 MCP initialization, packaged audible audio,
+queue/client-count saturation and long soak remain **not run**. Prior pending
+manual checks carry forward. Task 3 needed no new native-core rebuild; the tested
+native binary is the task 2 binary (the copied artifact gets local rpath/signature
+changes only).

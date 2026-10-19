@@ -27,17 +27,23 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 1,
-      "implementationStatus": "native service only",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
+      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
+      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
           "check": "tests/session-live.test.cjs and tests/electron-session.cjs",
           "result": "passed",
           "date": "2026-10-17"
+        },
+        {
+          "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
+          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "result": "passed",
+          "date": "2026-10-18"
         }
       ],
-      "knownLimits": "MCP adapter and reference result parity not implemented. Only generic paused/system/capabilities are reported; N64 inspection/executor fields remain deferred."
+      "knownLimits": "Generic paused/system/session/epoch/services only. Full N64 status/VI/executor/ownership fields remain deferred; verbose=true reports current limits."
     },
     {
       "name": "cpu_registers",
@@ -291,17 +297,23 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 1,
-      "implementationStatus": "native service only",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
+      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
+      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
           "check": "tests/session-live.test.cjs and tests/electron-session.cjs",
           "result": "passed",
           "date": "2026-10-17"
+        },
+        {
+          "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
+          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "result": "passed",
+          "date": "2026-10-18"
         }
       ],
-      "knownLimits": "MCP adapter and reference result parity not implemented. Bounded-operation and instruction-stop semantics remain deferred."
+      "knownLimits": "Outer-loop safe-point pause. Bounded-operation cancellation and instruction-stop semantics await task 4/5."
     },
     {
       "name": "resume",
@@ -319,17 +331,23 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 1,
-      "implementationStatus": "native service only",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
+      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
+      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
           "check": "tests/session-live.test.cjs and tests/electron-session.cjs",
           "result": "passed",
           "date": "2026-10-17"
+        },
+        {
+          "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
+          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "result": "passed",
+          "date": "2026-10-18"
         }
       ],
-      "knownLimits": "MCP adapter and reference result parity not implemented. Input override release/keep_overrides semantics await task 6."
+      "knownLimits": "Default keep_overrides=false resumes ordinary execution; keep_overrides=true returns unavailable until task 6 input ownership."
     },
     {
       "name": "step",
@@ -781,17 +799,23 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 2,
-      "implementationStatus": "native service only",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
+      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
+      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
       "testEvidence": [
         {
           "scope": "native region service and temporary inspector only; MCP not exposed",
           "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.cjs",
           "result": "passed",
           "date": "2026-10-18"
+        },
+        {
+          "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
+          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "result": "passed",
+          "date": "2026-10-18"
         }
       ],
-      "knownLimits": "MCP adapter/schema/result parity not implemented. Opaque session-scoped IDs; 1024-byte request limit. N64 DCache unavailable; mapped RDRAM writes deferred to task 5. No VA/cache coherence promise."
+      "knownLimits": "Descriptors add session-scoped IDs/access metadata; exact reference response parity remains partial. N64 DCache unavailable and mapped RDRAM read-only until task 5."
     },
     {
       "name": "read_memory",
@@ -821,17 +845,23 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 2,
-      "implementationStatus": "native service only",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
+      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
+      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
       "testEvidence": [
         {
           "scope": "native region service and temporary inspector only; MCP not exposed",
           "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.cjs",
           "result": "passed",
           "date": "2026-10-18"
+        },
+        {
+          "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
+          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "result": "passed",
+          "date": "2026-10-18"
         }
       ],
-      "knownLimits": "MCP adapter/schema/result parity not implemented. Opaque session-scoped IDs; 1024-byte request limit. N64 DCache unavailable; mapped RDRAM writes deferred to task 5. No VA/cache coherence promise."
+      "knownLimits": "Exact name or opaque ID; addr integer/hex-decimal string and length=64 retained. 1\u20131024-byte limit; no VA/cache semantics; extra identity fields. Raw mapped N64 RDRAM reads do not add renderer-flush guarantees."
     },
     {
       "name": "write_memory",
@@ -861,17 +891,23 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 2,
-      "implementationStatus": "native service only",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
+      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
+      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
       "testEvidence": [
         {
           "scope": "native region service and temporary inspector only; MCP not exposed",
           "check": "tests/memory.test.cjs, tests/memory-live.test.cjs, tests/electron-session.cjs",
           "result": "passed",
           "date": "2026-10-18"
+        },
+        {
+          "scope": "real MCP stdio over private Electron endpoint; copied distribution launcher",
+          "check": "tests/electron-mcp.cjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
+          "result": "passed",
+          "date": "2026-10-18"
         }
       ],
-      "knownLimits": "MCP adapter/schema/result parity not implemented. Opaque session-scoped IDs; 1024-byte request limit. N64 DCache unavailable; mapped RDRAM writes deferred to task 5. No VA/cache coherence promise."
+      "knownLimits": "Exact name or opaque ID; addr/hex_bytes retained. 1\u20131024-byte limit; N64 mapped RDRAM writes and cache-aware mutations await task 5. No automatic retry."
     },
     {
       "name": "screenshot",

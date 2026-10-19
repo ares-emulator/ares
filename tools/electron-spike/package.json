@@ -13,11 +13,18 @@
     "prestart": "npm run build:services",
     "test:session": "npm run build:services && node --test tests/session-live.test.cjs",
     "presmoke": "npm run build:services",
-    "test:electron": "npm run build:services && electron tests/electron-session.cjs"
+    "test:electron": "npm run build:services && electron tests/electron-session.cjs",
+    "package:mac": "npm run build:services && node scripts/package-macos.cjs",
+    "test:mcp": "npm run build:services && electron tests/electron-mcp.cjs",
+    "test:package": "node tests/package-live.cjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "electron": "44.9.0",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.3.1",
+    "zod": "^4.6.7"
   }
 }

@@ -155,16 +155,18 @@ at 59.7 fps, including the EEPROM diagnostic that previously interrupted playbac
 npm test --prefix tools/electron-spike
 npm run smoke --prefix tools/electron-spike
 npm run test:electron --prefix tools/electron-spike
+npm run test:mcp --prefix tools/electron-spike
 ```
 
-Tasks 1–2 results and remaining checks are recorded in [EXECUTION-LOG.md](EXECUTION-LOG.md).
+Tasks 1–3 results and remaining checks are recorded in [EXECUTION-LOG.md](EXECUTION-LOG.md).
 Memory transfers are limited to 1024 bytes. The synthetic source exposes
 deterministic fixture memory for inspector experiments. N64 `DCache` is unavailable
 and its mapped `RDRAM` view is read-only pending task 5; no CPU VA/cache semantics
 are implied by region access.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies; no MCP tools are exposed yet. `npm test` requires
+schemas/defaults and dependencies. Six implemented MCP tools are now exposed by
+the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
 reload/session identity, frame credit, native pause-button behavior, and inspector
