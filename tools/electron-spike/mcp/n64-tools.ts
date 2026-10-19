@@ -103,3 +103,5 @@ export function registerN64Tools(server: McpServer, client: SessionClient, statu
     return unwrap(await client.request('n64.memory.write', await status(), { address: lossless(addr), view, hex: hex_bytes.trim() }));
   }));
 }
+
+export { names as GPR_NAMES };

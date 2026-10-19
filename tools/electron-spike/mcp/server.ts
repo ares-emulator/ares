@@ -1,3 +1,4 @@
+import { registerTraceTools } from './trace-tools.js';
 import { registerInputTools } from './input-tools.js';
 import { registerN64Tools } from './n64-tools.js';
 import path from 'node:path';
@@ -62,6 +63,10 @@ function createServer(): McpServer {
   }));
   const maxSeconds = z.number().min(0.001).max(600).default(60);
   const flags = { fpr: z.boolean().default(false), cop0: z.boolean().default(false), verbose: z.boolean().default(false) };
+  function rememberOperation(id: number, identity: SessionIdentity) {
+    operationIdentities.delete(id); operationIdentities.set(id, identity);
+    if (operationIdentities.size > 32) operationIdentities.delete(operationIdentities.keys().next().value!);
+  }
   async function operation(method: 'execution.runFrames' | 'execution.runUntilFrame' | 'execution.stepInstructions', amount: number, seconds: number): Promise<ExecutionOperation> {
     if (!local.identity) await status();
     // Keep the starting identity through every poll. A ROM/reset never silently
@@ -69,8 +74,7 @@ function createServer(): McpServer {
     const identity = { ...local.identity! };
     const params = method !== 'execution.runUntilFrame' ? { count: amount, timeoutMs: Math.ceil(seconds * 1000) } : { frame: amount, timeoutMs: Math.ceil(seconds * 1000) };
     let result = unwrap(await local.request(method, identity, params));
-    operationIdentities.delete(result.operation_id); operationIdentities.set(result.operation_id, identity);
-    if (operationIdentities.size > 32) operationIdentities.delete(operationIdentities.keys().next().value!);
+    rememberOperation(result.operation_id, identity);
     while (result.state === 'running') {
       await new Promise(resolve => setTimeout(resolve, 20));
       result = unwrap(await local.request('execution.status', identity, { operationId: result.operation_id }));
@@ -94,6 +98,7 @@ function createServer(): McpServer {
   }));
   registerN64Tools(server, local, status, operation);
   registerInputTools(server, local, status);
+  registerTraceTools(server, local, status, rememberOperation, id => operationIdentities.get(id));
   server.server.onclose = () => local.close();
   return server;
 }

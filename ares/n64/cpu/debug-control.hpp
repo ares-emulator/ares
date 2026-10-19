@@ -1,5 +1,5 @@
 //Adapted from ares-64 1c9b9637476a83f7b80d3db1115a0f71529820d9.
-//Trace, stack-unwind and call-gate features intentionally deferred.
+//Stack-unwind and call-gate features intentionally deferred.
 //CPU debug engine for external debuggers (the MCP/telemetry frontend).
 //Included inside struct CPU (cpu.hpp); implementation in debug-control.cpp.
 //
@@ -103,6 +103,28 @@ struct DebugControl {
     u64 instructions = 0;  //instructionsRetired when the stop happened
   };
 
+  //call trace record (JAL/JALR/branch-and-link), decoded before execution
+  struct CallRecord {
+    u64 sequence = 0;
+    u64 frame = 0;
+    u64 pc = 0;          //call site
+    u64 target = 0;
+    u32 kind = 0;        //0=jal 1=jalr 2=branch-and-link(taken) 3=jalr rd=0 (jump, not a call)
+    u32 linkRegister = 0;
+    u64 linkValue = 0;
+    u64 sp = 0;
+    u64 registers[32] = {};
+    u64 f12 = 0;
+    bool fr = false;
+  };
+
+  //PC histogram entry
+  struct PcCount {
+    u64 pc;
+    u64 frame;
+    u64 count;
+  };
+
   //debug-control.cpp
   auto power() -> void;
   auto normalizeAddress(u64 address, u32 length, u32& paddr, string& error) const -> bool;
@@ -132,6 +154,11 @@ struct DebugControl {
   auto controlRegister(u32 index, u64& value) const -> bool;
   auto takeStop(StopReason reason) -> void;
 
+  //tracing
+  auto beginTrace(bool pcs, bool calls, u64 startFrame, u64 endFrame, u64 lowPc, u64 highPc, u64 maxRecords) -> void;
+  auto endTrace() -> void;
+  auto flushPcBucket() -> void;
+
   bool active = false;   //any per-instruction hook required (gates the interpreter)
   bool watchActive = false;
   bool gate = false;     //CPU::main must consult exitMain() (active, halted or slice budget)
@@ -160,4 +187,28 @@ struct DebugControl {
   u64 narrowVaddr = 0;
   u32 narrowLength = 0;
 
+  //tracing state
+  struct Trace {
+    bool pcs = false;
+    bool calls = false;
+    u64 startFrame = 0, endFrame = 0;  //[start, end) in VI frames of the current epoch
+    u64 lowPc = 0, highPc = ~0ull;     //half-open filter on the executing PC (64-bit VA)
+    u64 maxRecords = 0;
+    bool truncated = false;
+    u64 droppedRecords = 0;
+    u64 overflowObservations = 0;  //unrepresented non-RDRAM PCs when the map is full
+    u64 totalInstructions = 0;         //traced instructions (within the frame interval + filter)
+    u64 bucketFrame = ~0ull;
+    std::vector<u32> counters;         //indexed by physical RDRAM word address
+    std::vector<u32> touched;          //indices with nonzero counters
+    std::vector<u64> vaddrs;           //VA observed for each touched physical word
+    std::unordered_map<u64, u64> other;  //non-RDRAM PCs
+    std::vector<PcCount> pcRecords;
+    std::vector<CallRecord> callRecords;
+    u64 callSequence = 0;
+    u64 instructionsObserved = 0, callsObserved = 0, excludedCallsite = 0, excludedTarget = 0;
+    u64 targetLow = 0, targetHigh = ~0ull;
+    u32 registerMask = 0;
+    bool captureF12 = false;
+  } trace;
 };

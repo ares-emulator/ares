@@ -187,7 +187,7 @@ auto CPU::instruction() -> bool {
   auto data = fetch(access);
   if (!data) return true;
   u64 executingPc = ipu.pc;
-  if(debugging) debugControl.currentInstruction = *data;
+  if(debugging) debugTraceInstruction(executingPc, access.paddr, *data);
   pipeline.begin();
   instructionPrologue(ipu.pc, *data);
   decoderEXECUTE(*data);

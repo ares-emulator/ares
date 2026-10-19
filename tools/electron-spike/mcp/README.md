@@ -1,12 +1,12 @@
-# MCP adapter (tasks 3–6 input slice)
+# MCP adapter (tasks 3–6, partial)
 
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. There are 27 registered tools: the original eleven generic/session/run
+emulator. There are 30 registered tools: the original eleven generic/session/run
 tools plus `cpu_registers`, `step_instructions`, `run_until_hit`,
 `break_add/remove/list`, `watch_add/remove/list`, `last_stop`, `read_memory_va`,
-`write_memory_va`, and `controller_set/release/state/host_mode`. The CPU and VA tools are N64-specific. Diagnostics go to
+`write_memory_va`, and `controller_set/release/state/host_mode`, and `trace_pc/calls/page`. The CPU, VA, controller and trace tools are N64-specific. Diagnostics go to
 stderr; stdout carries MCP JSON-RPC only.
 
 ## Start and explicitly select an app
@@ -91,7 +91,7 @@ This is incremental compatibility, not full reference-result parity:
   register values or legacy telemetry-protocol compatibility are advertised.
 
 `parity-ledger.json` still tracks all 68 tools and the remaining differences.
-The other 41 tools are not registered. No tool was removed from the target.
+The other 38 tools are not registered. No tool was removed from the target.
 
 ## Bundled runtime and distribution
 
@@ -177,5 +177,23 @@ closure revokes the departed connection's holds without touching other owners.
 
 New host keyboard/gamepad/button events can take back ordinary play. Automated
 coverage uses real ares controller nodes and generated host keyboard events;
-physical device acceptance is still pending. `controller_tap`, trace/provenance
-and profiler tools remain unregistered until their backends are ported.
+physical device acceptance is still pending. `controller_tap`, DMA provenance and profiler tools remain unregistered until
+their backends are ported.
+
+
+## Bounded traces
+
+`trace_pc` and `trace_calls` use an owned interpreter run over a half-open native
+VI interval. PC entries are sorted by frame/PC. Calls record JAL/JALR/taken
+branch-link targets before execution, including JALR with the same source/link
+register. Selected GPRs and raw f12/FR are optional. Operation timeout, cancellation,
+human takeover and disconnect share the existing cleanup path.
+
+The requested record ceiling is additionally limited to 262144 PC records or
+65536 calls and returned as `record_capacity`. Truncation and overflow observations
+are explicit; observed-instruction counters remain available. Source inline/page
+defaults are accepted, with an effective MCP response ceiling of 1024 entries and
+`next_offset` for continuation. Native replies page 64 PCs or 32 calls to stay
+inside the control transport bound. Captures are immutable after completion;
+starting another trace supersedes the stored pages. A non-null file path returns
+`unavailable` until artifact exports land in task 7.

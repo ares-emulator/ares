@@ -497,3 +497,50 @@ tools. Audio-enabled ordinary-play smoke passed: 40-system registry and GB/NES
 detection, synthetic 640×480 59.69 fps, 1080p 59.87 fps, GB/SDL 56.50 fps,
 Famicom 60.11 fps. Diff check passed. Test instances were closed. Task 6 remains
 in progress; next implementation slice is PC/call traces, then DMA/profiling.
+
+### Task 6 PC/call trace slice
+
+Ported the reference `debug-control.*` trace structs, instruction hook and
+PC/call aggregation from the same audited `ares-64` commit/hash recorded in task
+5. No stack unwinder, call-gate hooks, execution-trace file writer or desktop
+profiler viewer was imported. Added typed `n64.trace.start/page` and MCP
+`trace_pc`, `trace_calls`, `trace_page`: 30 registered bounded tools, 38 still
+unregistered. Task 6 remains incomplete (DMA provenance, profiling and taps).
+
+Traces are owned operations over native VI intervals, including future-start
+preroll. They force the interpreter, honor deadlines/cancel/human takeover/owner
+disconnect, and restore executor eligibility afterward. PC records sort by
+frame/PC. Calls decode JAL/JALR/taken branch-link before execution, with optional
+GPR and raw f12/FR snapshots. Most-recent completed pages are immutable until
+superseded/reset; stale capture IDs reject.
+
+Safety/bounds adaptations: effective storage is capped at 262144 PC records or
+65536 calls and reported as record_capacity. Native pages contain at most 64 PCs
+or 32 calls; MCP accepts reference inline/page defaults but reports an effective
+1024-entry response limit and next_offset. File paths explicitly return
+unavailable until task 7. The non-RDRAM PC map is bounded before VI flush, with
+separate overflow observations. Histogram counters saturate instead of wrapping;
+truncation is explicit. Histogram vectors/maps release their allocations when
+capture finishes. Retained records remain available for paging. The trace hook
+has an out-of-line definition so fixture callers do not depend on incidental
+inline-symbol emission in no-LTO builds.
+
+Validation: native host/core fixture builds passed; 25 service tests passed in
+8.7 seconds. The ROM-free fixture executes actual branch loops and JALR rd=rs,
+checks bucket counts and half-open filters, record limits and target exclusions,
+serializes a nonempty linked-call page through the native service and decodes it
+with the shared JS contract. Direct accumulator boundary probes cover bounded
+non-RDRAM storage and counter saturation. An additional real-JIT block assertion
+passes after disabling tracing and verifies that no trace observations accrue.
+Real N64/MCP tests cover timeout, inline/page results, frozen pages, superseded
+IDs, future intervals, competing owners and disconnect cleanup. Electron/MCP
+passed with the 30-tool registry, renderer reload, UI cancel, replacement and
+shutdown. Final link/fixture verification for the out-of-line hook is recorded
+below before committing. Input's audio-enabled smoke remains the latest ordinary
+play/audio gate; no audible N64 gameplay or physical controller acceptance claim.
+
+Trace checkpoint final link and 25-test suite passed in 8.9 seconds after making
+the hook definition out-of-line. The fixture includes a real, nonempty JALR page
+with target/link/selected-register/f12 values decoded through the shared reply
+validator. Diff check and 68-row/30-registered ledger checks passed. Next slice:
+PI DMA provenance. Task 6 is still in progress.

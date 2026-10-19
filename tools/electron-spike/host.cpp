@@ -36,6 +36,7 @@ auto locate(const string& name) -> string {
 #include "native/session-service.hpp"
 #include "native/n64-service.hpp"
 #include "native/input-service.hpp"
+#include "native/trace-service.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
@@ -392,10 +393,12 @@ int main(int argc, char** argv) {
   bool n64 = !synthetic && host.root && host.root->name() == "Nintendo 64";
   auto& execution = host.service.execution;
   N64Service n64Service; n64Service.available = n64;
+  TraceService traceService; traceService.available = n64;
   execution.cpuSupported = n64;
   host.injectedInput.available = n64;
   host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method.starts_with("n64.trace.")) return traceService.execute(method, args, owner, host.service.epoch, host.service.paused, execution);
     if(method.starts_with("n64.input.")) return host.injectedInput.execute(method, args, owner, host.service.epoch, execution.frame, execution.active ? execution.active->owner : "");
     auto result = n64Service.execute(method, args, host.service.epoch, bool(execution.active));
     if(n64) execution.executor = N64Service::executor();
@@ -416,7 +419,7 @@ int main(int argc, char** argv) {
       if(execution.instructionCount) debug.requestStepInstructions(execution.instructionCount);
       execution.executor = N64Service::executor();
     };
-    execution.onFinish = [&] { host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
+    execution.onFinish = [&](const std::string& reason) { traceService.finish(reason); host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
     execution.debugSnapshot = [&] { return debug.halted && execution.active && execution.active->slices ? N64Service::stop(host.service.epoch) : "{\"valid\":false}"; };
   }
   execution.supported = synthetic || n64;
@@ -438,7 +441,7 @@ int main(int argc, char** argv) {
     bool wasControlled = bool(execution.active);
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
       if(host.root) { host.output.clear(); host.root->power(); }
-      host.injectedInput.releaseAll();
+      host.injectedInput.releaseAll(); traceService.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
     }, host.memory)) { host.quit = true; break; }
     if(host.takeoverRequested.exchange(false) && n64 && host.injectedInput.takeover()) {

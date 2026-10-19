@@ -14,6 +14,7 @@
 #include <functional>
 #include <span>
 #include <vector>
+#include <unordered_map>
 
 #if defined(ARCHITECTURE_AMD64)
 #include <nmmintrin.h>

@@ -24,7 +24,8 @@ struct ExecutionService {
   uint64_t instructions = 0;
   uint64_t instructionStart = 0, instructionCount = 0;
   bool cpuSupported = false;
-  std::function<void()> onStart, onFinish;
+  std::function<void()> onStart;
+  std::function<void(const std::string&)> onFinish;
   std::function<std::string()> debugSnapshot;
   uint64_t nextId = 1;
   std::deque<std::pair<uint64_t, std::string>> finished;
@@ -55,7 +56,7 @@ struct ExecutionService {
     finished.emplace_back(active->id, result);
     if(finished.size() > 16) finished.pop_front();
     active.reset(); paused = true;
-    if(onFinish) onFinish();
+    if(onFinish) onFinish(reason);
     return result;
   }
   void service(bool& paused) {

@@ -42,7 +42,14 @@ test('N64 contracts preserve 64-bit values and bound predicates and memory reque
 });
 test('real core fixture: MIPS stops/cache semantics and VI-latched controller leases', () => {
   assert.ok(fs.existsSync(fixture), 'Build the ares-electron-cpu-fixture CMake target first');
-  assert.match(execFileSync(fixture, { encoding: 'utf8', timeout: 10000 }), /CPU_DEBUG_FIXTURE_PASS/);
+  const output = execFileSync(fixture, { encoding: 'utf8', timeout: 10000 });
+  assert.match(output, /CPU_DEBUG_FIXTURE_PASS/);
+  const encoded = output.split('\n').find(line => line.startsWith('TRACE_CALL_PAGE ')).slice('TRACE_CALL_PAGE '.length);
+  const page = decodeReply(JSON.stringify({ protocol: 1, id: 'fixture', ...identity, ok: true, result: JSON.parse(encoded) }), 'n64.trace.page').result;
+  assert.equal(page.records[0].target, '0xffffffff80001180');
+  assert.equal(page.records[0].link_value, '0xffffffff80001108');
+  assert.equal(page.records[0].registers['24'], '0xffffffff80001180');
+  assert.equal(page.records[0].f12, '0x0');
 });
 test('isolated N64 host and real MCP stdio share instruction operations, registers and definitions', { timeout: 30000 }, async () => {
   const dir = fs.mkdtempSync('/tmp/ares-n64-debug-');
@@ -92,6 +99,27 @@ test('isolated N64 host and real MCP stdio share instruction operations, registe
     await peer.tool('watch_remove', { id: watched.id });
     assert.equal((await peer.tool('read_memory_va', { addr: '0x80001000', length: 4 })).hex.length, 8);
     assert.equal((await peer.tool('write_memory_va', { addr: '0x80001000', hex_bytes: '00' })).error, 'rdram_not_initialized');
+    const pcTrace = await peer.tool('trace_pc', { max_seconds: 0.01, max_records: 4, inline_limit: 2 });
+    assert.equal(pcTrace.stop_reason, 'timeout'); assert.equal(pcTrace.complete, false);
+    assert.ok(pcTrace.traced_instructions > 0); assert.ok(pcTrace.total_entries <= 4); assert.ok(pcTrace.entries.length <= 2);
+    assert.equal(pcTrace.record_capacity, 4);
+    const pcPage = await peer.tool('trace_page', { operation_id: pcTrace.operation_id, offset: 0, limit: 64 });
+    assert.equal(pcPage.total, pcTrace.total_entries); assert.equal(pcPage.entries.length, pcPage.total);
+    await done(native, unwrap(await native.request('execution.stepInstructions', undefined, { count: 1, timeoutMs: 1000 })));
+    assert.deepEqual(await peer.tool('trace_page', { operation_id: pcTrace.operation_id, offset: 0, limit: 64 }), pcPage, 'trace pages freeze after completion');
+    const callTrace = await peer.tool('trace_calls', { max_seconds: 0.01, max_records: 4, registers: ['t8', 'sp'], f12: true });
+    assert.equal(callTrace.stop_reason, 'timeout'); assert.equal(callTrace.capture_point, 'before call instruction; delay slot may still change arguments');
+    assert.equal((await peer.tool('trace_page', { operation_id: pcTrace.operation_id })).error, 'stale_trace');
+    const future = await peer.tool('trace_pc', { start_frame: 5, n_frames: 1, max_seconds: 0.01, max_records: 4, inline_limit: 0 });
+    assert.equal(future.traced_instructions, 0); assert.equal(future.entries.length, 0, 'future interval excludes preroll instructions');
+    const capture = unwrap(await client.request('n64.trace.start', undefined, { kind: 'pc', startFrame: 0, frames: 1, low: '0x0', high: '0xffffffffffffffff', targetLow: '0x0', targetHigh: '0xffffffffffffffff', maxRecords: 4, registerMask: 0, f12: false, timeoutMs: 10000 }));
+    assert.equal((await peer.tool('trace_pc', { max_seconds: 0.01 })).error, 'busy');
+    client.disconnect();
+    const stoppedTrace = await done(native, capture.operation); assert.equal(stoppedTrace.stop_reason, 'disconnected');
+    const capturePage = unwrap(await native.request('n64.trace.page', undefined, { operationId: capture.operation.operation_id, offset: 0, limit: 64 }));
+    assert.equal(capturePage.stop_reason, 'disconnected');
+    assert.equal(unwrap(await native.request('session.status')).executor, initial.executor);
+    await client.request('session.status');
     // Four independent ports, connection ownership and leases while paused.
     const setInput = { port: 1, buttons: 1, x: 1234, y: -2345, timeoutFrames: 100, timeoutMs: 0 };
     let input = unwrap(await client.request('n64.input.set', undefined, setInput));

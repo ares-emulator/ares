@@ -38,7 +38,7 @@ app.whenReady().then(async () => {
   const mcp = peer(); await mcp.initialize();
   enter('MCP tools');
   const list = (await mcp.request('tools/list', {})).result.tools;
-  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode'].sort());
+  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page'].sort());
   assert.equal(list.find(t => t.name === 'read_memory').inputSchema.properties.length.default, 64);
   assert.equal(list.find(t => t.name === 'resume').inputSchema.properties.keep_overrides.default, false);
   assert.equal(list.find(t => t.name === 'emu_status').inputSchema.properties.verbose.default, false);

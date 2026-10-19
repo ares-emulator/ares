@@ -1509,10 +1509,16 @@
       "family": "Traces/provenance/profiling",
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 trace slice; task 6 incomplete)",
+      "mcpSchemaParity": "Source names/defaults retained; numeric/storage/response limits bounded. File paths explicitly unavailable. Full generated FastMCP/result equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 6 trace slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
+          "result": "Passed in 25-test service suite: actual MIPS PC/call capture, JALR rd=rs, filters, caps/overflow, native call serialization, freed buffers and real JIT restoration; real MCP paging, timeout, future intervals and disconnect cleanup."
+        }
+      ],
+      "knownLimits": "Owned N64 interpreter interval with sorted per-frame PCs, filters and counters. Up to 262144 stored records; outside-RDRAM map bounded and counters saturate with explicit overflow. MCP inline/page responses cap at 1024 entries with next_offset. File export unavailable until task 7."
     },
     {
       "name": "trace_calls",
@@ -1602,10 +1608,16 @@
       "family": "Traces/provenance/profiling",
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 trace slice; task 6 incomplete)",
+      "mcpSchemaParity": "Source names/defaults retained; numeric/storage/response limits bounded. File paths explicitly unavailable. Full generated FastMCP/result equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 6 trace slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
+          "result": "Passed in 25-test service suite: actual MIPS PC/call capture, JALR rd=rs, filters, caps/overflow, native call serialization, freed buffers and real JIT restoration; real MCP paging, timeout, future intervals and disconnect cleanup."
+        }
+      ],
+      "knownLimits": "Owned N64 JAL/JALR/taken branch-link capture before execution; target/callsite filters, selected GPRs and raw f12/FR. Up to 65536 stored calls and 1024 entries per MCP response. File export unavailable until task 7."
     },
     {
       "name": "trace_page",
@@ -1635,10 +1647,16 @@
       "family": "Traces/provenance/profiling",
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 trace slice; task 6 incomplete)",
+      "mcpSchemaParity": "Source names/defaults retained; numeric/storage/response limits bounded. File paths explicitly unavailable. Full generated FastMCP/result equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 6 trace slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
+          "result": "Passed in 25-test service suite: actual MIPS PC/call capture, JALR rd=rs, filters, caps/overflow, native call serialization, freed buffers and real JIT restoration; real MCP paging, timeout, future intervals and disconnect cleanup."
+        }
+      ],
+      "knownLimits": "Most recent completed trace only, operation/session/epoch scoped. Native pages 64 PCs or 32 calls; MCP aggregates up to 1024 entries and reports effective limit/next_offset. Superseded captures return stale_trace."
     },
     {
       "name": "overlay_log",

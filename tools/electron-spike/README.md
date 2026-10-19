@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 27 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 30 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -315,5 +315,13 @@ presses request human takeover on the native thread. Takeover finishes an active
 operation with `host_input`, releases overrides and resumes ordinary play. Ports
 without overrides receive neutral input during controlled operations by default.
 The automated tests exercise real controller nodes and emulated keyboard events;
-physical keyboard/gamepad acceptance remains pending. Controller taps, traces,
-DMA provenance and profiling remain task 6 work.
+physical keyboard/gamepad acceptance remains pending. Controller taps, DMA provenance and profiling remain task 6 work.
+
+
+PC/call trace tools now run through the same owned coordinator. PC histograms are
+sorted by frame and PC; linked calls capture the target and optional arguments
+before execution. Filters and future VI intervals are supported. Captures report
+truncation, overflow, observed/counted instructions and their actual storage cap
+(262144 PC records or 65536 calls). Histogram buffers are released on completion.
+`trace_page` reads the most recent capture by operation ID. MCP responses contain
+at most 1024 entries, with an explicit next offset; file exports await task 7.

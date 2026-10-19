@@ -3,7 +3,7 @@
 Status: tasks 1–5 and the task 4.5 TypeScript/ESM detour implemented; milestone 1
 integration gate passed on macOS arm64.
 Runtime evidence and pending checks are recorded in
-[EXECUTION-LOG.md](EXECUTION-LOG.md). Task 6 is in progress: the input ownership slice is implemented; traces, DMA
+[EXECUTION-LOG.md](EXECUTION-LOG.md). Task 6 is in progress: input ownership and bounded PC/call traces are implemented; DMA
 provenance and profiling remain. Later tasks are planned. Start here when
 choosing the next task.
 

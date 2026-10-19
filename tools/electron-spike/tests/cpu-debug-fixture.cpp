@@ -3,6 +3,7 @@
 #include <n64/n64.hpp>
 #include "../native/n64-service.hpp"
 #include "../native/input-service.hpp"
+#include "../native/trace-service.hpp"
 #include <cstdio>
 #include <cstdlib>
 using namespace ares::Nintendo64;
@@ -160,6 +161,59 @@ int main() {
   cpu.icache.power(false); pc(base + 0x80);
   cpu.instruction();
   check(cpu.recompiler.sections[cpu.recompiler.sectionIndex(0x1080)] != nullptr, "ordinary dispatch actually creates a recompiler block again");
+  // PC histogram buckets count actual instructions and bound retained records.
+  executionCoordinate.frame = 10; pc(base + 0x80);
+  d.beginTrace(true, false, 10, 12, base, base + 0x200, 1);
+  steps(4); d.endTrace(); d.resume();
+  check(d.trace.pcRecords.size() == 1 && d.trace.pcRecords[0].frame == 10 && d.trace.pcRecords[0].count == 2, "PC histogram frame bucket and count");
+  check(d.trace.truncated && d.trace.droppedRecords == 1 && d.trace.totalInstructions == 4 && d.trace.instructionsObserved == 4, "trace record cap preserves counters");
+  check(d.trace.counters.capacity() == 0 && d.trace.vaddrs.capacity() == 0 && !d.active, "trace disable releases histogram storage and interpreter gate");
+  pc(base + 0x80);
+  d.beginTrace(true, false, 10, 11, base + 0x80, base + 0x84, 4);
+  steps(2); d.endTrace(); d.resume();
+  check(d.trace.pcRecords.size() == 1 && d.trace.totalInstructions == 1 && d.trace.instructionsObserved == 2, "half-open executing-PC filter");
+  d.beginTrace(true, false, 10, 11, 0, ~0ull, 1);
+  cpu.debugTraceInstruction(0xffffffffbfc00000ull, 0x1fc00000, 0);
+  cpu.debugTraceInstruction(0xffffffffbfc00004ull, 0x1fc00004, 0);
+  check(d.trace.other.size() == 1 && d.trace.overflowObservations == 1 && d.trace.truncated, "non-RDRAM histogram map is bounded before VI flush");
+  d.endTrace(); d.resume();
+  d.beginTrace(true, false, 10, 11, 0, ~0ull, 1);
+  auto index = 0x1080u >> 2;
+  d.trace.counters[index] = ~0u - 1; d.trace.touched.push_back(index); d.trace.vaddrs[index] = base + 0x80;
+  cpu.debugTraceInstruction(base + 0x80, 0x1080, 0);
+  cpu.debugTraceInstruction(base + 0x80, 0x1080, 0);
+  check(d.trace.counters[index] == ~0u && d.trace.touched.size() == 1 && d.trace.overflowObservations == 1, "histogram counters saturate with explicit overflow");
+  d.endTrace(); d.resume();
+  // JALR t8,t8 must capture the old target before t8 receives the link address.
+  word(0x100, (24u << 21) | (24u << 11) | 9); word(0x104, 0);
+  word(0x180, (24u << 21) | 8); word(0x184, 0);
+  cpu.icache.power(false); pc(base + 0x100); cpu.ipu.r[24].u64 = base + 0x180;
+  d.beginTrace(false, true, 10, 11, base + 0x100, base + 0x104, 4);
+  d.trace.registerMask = (1u << 24) | (1u << 29); d.trace.captureF12 = true;
+  d.trace.targetLow = base + 0x180; d.trace.targetHigh = base + 0x184;
+  steps(4); d.endTrace(); d.resume();
+  check(d.trace.callRecords.size() == 1 && d.trace.callsObserved == 1, "linked-call trace excludes plain JR");
+  auto call = d.trace.callRecords[0];
+  check(call.pc == base + 0x100 && call.target == base + 0x180 && call.linkRegister == 24 && call.linkValue == base + 0x108, "JALR target uses pre-instruction source");
+  check(call.registers[24] == base + 0x180 && cpu.ipu.r[24].u64 == base + 0x108, "call argument snapshot precedes link write");
+  TraceService view; view.available = true; view.calls = true; view.operationId = 99; view.epoch = 1;
+  view.startFrame = 10; view.endFrame = 11; view.maxRecords = 4; view.registerMask = (1u << 24) | (1u << 29); view.f12 = true;
+  view.finish("instructions_done");
+  auto callPage = view.page({"99", "0", "64"}, 1);
+  check(callPage.error.empty(), "real linked-call record serializes through native trace service");
+  std::printf("TRACE_CALL_PAGE %s\n", callPage.json.c_str());
+
+  pc(base + 0x100); cpu.ipu.r[24].u64 = base + 0x180;
+  d.beginTrace(false, true, 10, 11, base + 0x100, base + 0x104, 4);
+  d.trace.targetLow = base + 0x1a0; d.trace.targetHigh = base + 0x1a4;
+  steps(1); d.endTrace(); d.resume();
+  check(d.trace.callRecords.empty() && d.trace.callsObserved == 1 && d.trace.excludedTarget == 1, "target filter reports excluded calls");
+  check(!d.active, "call-trace disable restores normal executor eligibility");
+  auto observed = d.trace.instructionsObserved;
+  cpu.recompiler.reset(); pc(base + 0x80);
+  for(unsigned n = 0; n < 3; ++n) cpu.instruction();
+  auto section = cpu.recompiler.sections[cpu.recompiler.sectionIndex(0x1080)];
+  check(section && section->blocks[cpu.recompiler.blockIndex(0x1080)] && !d.active && d.trace.instructionsObserved == observed, "trace disable returns to real JIT blocks without capturing");
   rdram.ram.reset();
   std::puts("CPU_DEBUG_FIXTURE_PASS");
 }

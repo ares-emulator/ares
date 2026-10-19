@@ -2,6 +2,7 @@
 //CPU debug engine (see debug-control.hpp for the execution model).
 
 auto CPU::DebugControl::power() -> void {
+  trace = {};
   //definitions survive power/state loads; prior hits and stops do not
   halted = false;
   stopValid = false;
@@ -24,7 +25,7 @@ auto CPU::DebugControl::clearHits() -> void {
 
 auto CPU::DebugControl::updateActive() -> void {
   watchActive = !watchpoints.empty();
-  active = !breakpoints.empty() || watchActive || stepping || haltRequested;
+  active = !breakpoints.empty() || watchActive || stepping || haltRequested || trace.pcs || trace.calls;
   gate = active || halted || sliceBudget != 0;
 }
 
@@ -376,6 +377,147 @@ auto CPU::DebugControl::onWrite(const PhysAccess& access, u64 data) -> void {
     } else if(pendingAccess.watchId != w.id) {
       auto& others = pendingAccess.otherIds;
       if(std::find(others.begin(), others.end(), w.id) == others.end()) others.push_back(w.id);
+    }
+  }
+}
+
+
+//tracing ----------------------------------------------------------------------
+
+auto CPU::DebugControl::beginTrace(bool pcs, bool calls, u64 startFrame, u64 endFrame, u64 lowPc, u64 highPc, u64 maxRecords) -> void {
+  endTrace();
+  trace = {};
+  trace.pcs = pcs;
+  trace.calls = calls;
+  trace.startFrame = startFrame;
+  trace.endFrame = endFrame;
+  trace.lowPc = lowPc;
+  trace.highPc = highPc;
+  trace.maxRecords = maxRecords;
+  if(pcs) {
+    trace.counters.assign(rdram.ram.size / 4, 0);
+    trace.vaddrs.assign(rdram.ram.size / 4, 0);
+    trace.touched.reserve(65536);
+  }
+  updateActive();
+}
+
+auto CPU::DebugControl::flushPcBucket() -> void {
+  if(trace.bucketFrame == ~0ull) return;
+  auto push = [&](u64 pc, u64 count) {
+    if(trace.pcRecords.size() >= trace.maxRecords) {
+      trace.truncated = true;
+      trace.droppedRecords++;
+      return;
+    }
+    trace.pcRecords.push_back({pc, trace.bucketFrame, count});
+  };
+  for(auto index : trace.touched) {
+    push(trace.vaddrs[index], trace.counters[index]);
+    trace.counters[index] = 0;
+  }
+  trace.touched.clear();
+  for(auto& [pc, count] : trace.other) push(pc, count);
+  trace.other.clear();
+  trace.bucketFrame = ~0ull;
+}
+
+auto CPU::DebugControl::endTrace() -> void {
+  if(trace.pcs) flushPcBucket();
+  trace.pcs = false;
+  trace.calls = false;
+  decltype(trace.counters){}.swap(trace.counters);
+  decltype(trace.vaddrs){}.swap(trace.vaddrs);
+  decltype(trace.touched){}.swap(trace.touched);
+  decltype(trace.other){}.swap(trace.other);
+  updateActive();
+}
+
+//pc: executing VA; paddr: its physical address; called after fetch, before dispatch,
+//so register values are the pre-instruction values.
+auto CPU::debugTraceInstruction(u64 pc, u32 paddr, u32 instruction) -> void {
+  auto& d = debugControl;
+  auto& t = d.trace;
+  d.currentPc = pc;
+  d.currentInstruction = instruction;
+  if(!t.pcs && !t.calls) return;
+  u64 frame = executionCoordinate.frame;
+  if(frame < t.startFrame || frame >= t.endFrame) return;
+  t.instructionsObserved++;
+  bool pcMatches = pc >= t.lowPc && pc < t.highPc;
+  if(t.pcs && !pcMatches) return;
+  t.totalInstructions++;
+
+  if(t.pcs) {
+    if(frame != t.bucketFrame) {
+      d.flushPcBucket();
+      t.bucketFrame = frame;
+    }
+    u32 index = paddr >> 2;
+    if(paddr < rdram.ram.size && index < t.counters.size()) {
+      if(t.counters[index] == ~0u) {
+        t.truncated = true; t.overflowObservations++;
+      } else if(!t.counters[index]++) {
+        t.touched.push_back(index);
+        t.vaddrs[index] = pc;
+      }
+    } else {
+      auto found = t.other.find(pc);
+      if(found != t.other.end()) found->second++;
+      else if(t.other.size() < t.maxRecords) t.other.emplace(pc, 1);
+      else { t.truncated = true; t.overflowObservations++; }
+    }
+  }
+
+  if(t.calls) {
+    u32 op = instruction >> 26;
+    DebugControl::CallRecord r;
+    bool record = false;
+    if(op == 0x03) {  //JAL: target uses the delay slot's upper PC bits
+      r.kind = 0;
+      r.target = ((pc + 4) & 0xffff'ffff'f000'0000ull) | ((u64)(instruction & 0x03ff'ffff) << 2);
+      r.linkRegister = 31;
+      record = true;
+    } else if(op == 0x00 && (instruction & 0x3f) == 0x09) {  //JALR
+      u32 rs = instruction >> 21 & 31;
+      u32 rd = instruction >> 11 & 31;
+      if(rd != 0) {  //JALR with rd=0 is a computed jump, not a linked call
+        r.kind = 1;
+        r.target = rs ? ipu.r[rs].u64 : 0;  //source read before execution (rd may equal rs)
+        r.linkRegister = rd;
+        record = true;
+      }
+    } else if(op == 0x01) {  //REGIMM branch-and-link, recorded when taken
+      u32 rt = instruction >> 16 & 31;
+      if(rt >= 0x10 && rt <= 0x13) {
+        u32 rs = instruction >> 21 & 31;
+        s64 value = rs ? ipu.r[rs].s64 : 0;
+        bool taken = (rt & 1) ? value >= 0 : value < 0;
+        if(taken) {
+          r.kind = 2;
+          r.target = pc + 4 + ((s64)(s16)instruction * 4);
+          r.linkRegister = 31;
+          record = true;
+        }
+      }
+    }
+    if(record) {
+      t.callsObserved++;
+      if(!pcMatches) { t.excludedCallsite++; return; }
+      if(r.target < t.targetLow || r.target >= t.targetHigh) { t.excludedTarget++; return; }
+      if(t.callRecords.size() >= t.maxRecords) {
+        t.truncated = true;
+        t.droppedRecords++;
+      } else {
+        r.sequence = t.callSequence++;
+        r.frame = frame;
+        r.pc = pc;
+        r.linkValue = pc + 8;
+        r.sp = ipu.r[29].u64;
+        for(u32 n = 0; n < 32; n++) if(t.registerMask & (1u << n)) r.registers[n] = n ? ipu.r[n].u64 : 0;
+        if(t.captureF12) { r.f12 = fpu.r[12].u64; r.fr = scc.status.floatingPointMode; }
+        t.callRecords.push_back(r);
+      }
     }
   }
 }

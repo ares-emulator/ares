@@ -1292,6 +1292,7 @@ struct CPU : Thread {
 
   #include "debug-control.hpp"
   DebugControl debugControl{*this};
+  auto debugTraceInstruction(u64 pc, u32 paddr, u32 instruction) -> void;
 
   //emux.cpp
   union Profile {
