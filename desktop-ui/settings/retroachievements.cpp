@@ -3,6 +3,12 @@ auto RetroAchievementsSettings::construct() -> void {
   setVisible(false);
 
   accountLabel.setText("RetroAchievements").setFont(Font().setBold());
+  hardcoreLayout.setAlignment(1).setPadding(12_sx, 0);
+  hardcoreHint.setText("Earn Hardcore points without state loads, rewind, cheats, or debugging")
+    .setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  encoreLayout.setAlignment(1).setPadding(12_sx, 0);
+  encoreHint.setText("Replay earned achievements without points; applies on next game load")
+    .setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
 #if defined(ARES_ENABLE_RCHEEVOS)
   enabled.setText("Enable RetroAchievements").setChecked(settings.retroAchievements.enabled).onToggle([&] {
@@ -26,6 +32,11 @@ auto RetroAchievementsSettings::construct() -> void {
       }
     }
     if(!retroAchievements.enableHardcore(requested)) hardcore.setChecked(false);
+    refresh();
+  });
+
+  encore.setText("Enable Encore mode").setChecked(settings.retroAchievements.encore).onToggle([&] {
+    retroAchievements.enableEncore(encore.checked());
     refresh();
   });
 
@@ -72,6 +83,7 @@ auto RetroAchievementsSettings::construct() -> void {
 #else
   enabled.setText("Enable RetroAchievements").setEnabled(false);
   hardcore.setText("Enable Hardcore mode").setChecked(false).setEnabled(false);
+  encore.setText("Enable Encore mode").setChecked(false).setEnabled(false);
   usernameLabel.setText("Username:");
   usernameValue.setText(settings.retroAchievements.username).setEnabled(false);
   passwordLabel.setText("Password:");
@@ -103,6 +115,7 @@ auto RetroAchievementsSettings::refresh() -> void {
 
   enabled.setChecked(settings.retroAchievements.enabled).setEnabled(true);
   hardcore.setChecked(settings.retroAchievements.hardcore).setEnabled(enabledSetting);
+  encore.setChecked(settings.retroAchievements.encore).setEnabled(enabledSetting);
   usernameLayout.setVisible(enabledSetting && !loggedIn);
   passwordLayout.setVisible(enabledSetting && !loggedIn);
   actionLayout.setVisible(enabledSetting && !loggedIn);

@@ -136,6 +136,7 @@ struct Settings : Markup::Node {
   struct RetroAchievements {
     bool enabled = false;
     bool hardcore = false;
+    bool encore = false;
     string username;
     string token;
   } retroAchievements;
@@ -474,7 +475,11 @@ struct RetroAchievementsSettings : VerticalLayout {
   HorizontalLayout enabledLayout{this, Size{~0, 0}, 5};
     CheckLabel enabled{&enabledLayout, Size{~0, 0}};
   HorizontalLayout hardcoreLayout{this, Size{~0, 0}, 5};
-    CheckLabel hardcore{&hardcoreLayout, Size{~0, 0}};
+    CheckLabel hardcore{&hardcoreLayout, Size{0, 0}, 5};
+    Label hardcoreHint{&hardcoreLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout encoreLayout{this, Size{~0, 0}, 5};
+    CheckLabel encore{&encoreLayout, Size{0, 0}, 5};
+    Label encoreHint{&encoreLayout, Size{~0, layoutVertSize}};
   HorizontalLayout usernameLayout{this, Size{~0, 0}, 5};
     Label usernameLabel{&usernameLayout, Size{80, layoutVertSize}};
     LineEdit usernameValue{&usernameLayout, Size{~0, 0}};

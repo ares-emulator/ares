@@ -38,6 +38,8 @@ auto RetroAchievements::gameHash() const -> string { return {}; }
 auto RetroAchievements::hardcore() const -> bool { return false; }
 auto RetroAchievements::supportsGame() const -> bool { return false; }
 auto RetroAchievements::enableHardcore(bool) -> bool { return false; }
+auto RetroAchievements::enableEncore(bool) -> void {}
 auto RetroAchievements::setEnabled(bool) -> void {}
+auto RetroAchievements::encoreUnlock(u32) const -> bool { return false; }
 auto RetroAchievements::reset() -> void {}
 auto RetroAchievements::resetGame() -> void {}

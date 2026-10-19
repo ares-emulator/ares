@@ -112,7 +112,9 @@ struct RetroAchievements {
   auto hardcore() const -> bool;
   auto supportsGame() const -> bool;
   auto enableHardcore(bool enabled) -> bool;
+  auto enableEncore(bool enabled) -> void;
   auto setEnabled(bool enabled) -> void;
+  auto encoreUnlock(u32 achievementId) const -> bool;
   auto reset() -> void;
   auto resetGame() -> void;
 
@@ -122,6 +124,7 @@ private:
   auto syncClientLogin() -> void;
   auto loadGame() -> void;
   auto unloadClientGame() -> void;
+  auto reloadEncoreGameIfNeeded() -> void;
   auto setUser(const RetroAchievementsLoginResult& result) -> void;
   auto clearUser() -> void;
   auto completeLogin(u64 generation, const RetroAchievementsLoginResult& result) -> void;
@@ -133,6 +136,9 @@ private:
   bool _gameReady = false;
   bool _gameLoadPending = false;
   bool _gameUnrecognized = false;
+  bool _encoreGameActive = false;
+  bool _reloadEncoreGame = false;
+  std::unordered_set<u32> _previousUnlocks;
   string _username;
   string _token;
   string _displayName;

@@ -102,7 +102,9 @@ auto clientEvent(const rc_client_event_t* event, rc_client_t*) -> void {
   switch(event->type) {
   case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
     if(event->achievement && event->achievement->title) {
-      program.showMessage({"[RA] Achievement unlocked: ", event->achievement->title});
+      auto message = retroAchievements.encoreUnlock(event->achievement->id)
+        ? "[RA] Encore achievement unlocked: " : "[RA] Achievement unlocked: ";
+      program.showMessage({message, event->achievement->title});
     }
     break;
   case RC_CLIENT_EVENT_GAME_COMPLETED:
@@ -596,6 +598,7 @@ auto RetroAchievements::ensureClient() -> bool {
   rc_client_set_event_handler(_client, clientEvent);
   rc_client_set_allow_background_memory_reads(_client, 0);
   rc_client_set_hardcore_enabled(_client, settings.retroAchievements.hardcore ? 1 : 0);
+  rc_client_set_encore_mode_enabled(_client, settings.retroAchievements.encore ? 1 : 0);
   return true;
 }
 
@@ -621,6 +624,7 @@ auto RetroAchievements::loadGame() -> void {
   if(!emulator) return;
   if(!ensureClient()) return;
   rc_client_set_hardcore_enabled(_client, hardcore() ? 1 : 0);
+  rc_client_set_encore_mode_enabled(_client, settings.retroAchievements.encore ? 1 : 0);
 
   auto* adapter = RA::Platform::selectAdapter(*emulator);
   if(!adapter) return;
@@ -632,6 +636,7 @@ auto RetroAchievements::loadGame() -> void {
   }
 
   auto path = emulator->game ? emulator->game->location : string{};
+  _encoreGameActive = settings.retroAchievements.encore;
   _gameLoadPending = true;
   rc_client_begin_identify_and_load_game(
     _client,
@@ -654,8 +659,18 @@ auto RetroAchievements::unloadClientGame() -> void {
   _gameLoadPending = false;
   _gameLoadError = {};
   _gameUnrecognized = false;
+  _encoreGameActive = false;
+  _reloadEncoreGame = false;
+  _previousUnlocks.clear();
   if(_client) rc_client_unload_game(_client);
   _pendingRomData.clear();
+}
+
+auto RetroAchievements::reloadEncoreGameIfNeeded() -> void {
+  if(!_reloadEncoreGame) return;
+  _reloadEncoreGame = false;
+  unloadClientGame();
+  loadGame();
 }
 
 auto RetroAchievements::initialize() -> void {
@@ -1045,6 +1060,21 @@ auto RetroAchievements::handleClientGameLoadResult(int result, const char* error
     return;
   }
 
+  _previousUnlocks.clear();
+  if(_encoreGameActive) {
+    if(auto* list = rc_client_create_achievement_list(_client, RC_CLIENT_ACHIEVEMENT_CATEGORY_CORE_AND_UNOFFICIAL,
+         RC_CLIENT_ACHIEVEMENT_LIST_GROUPING_LOCK_STATE)) {
+      for(u32 bucketIndex : range(list->num_buckets)) {
+        auto& bucket = list->buckets[bucketIndex];
+        for(u32 index : range(bucket.num_achievements)) {
+          auto* achievement = bucket.achievements[index];
+          if(achievementUnlocked(achievement)) _previousUnlocks.insert(achievement->id);
+        }
+      }
+      rc_client_destroy_achievement_list(list);
+    }
+  }
+
   auto title = string{"Game loaded"};
   if(auto game = rc_client_get_game_info(_client)) {
     if(game->title) title = game->title;
@@ -1060,12 +1090,14 @@ auto RetroAchievements::handleClientGameLoadResult(int result, const char* error
   program.showMessage({
     "[RA] Game loaded: ", title,
     " (", counts.unlocked, "/", counts.total,
-    " achievements, ", subsetCount, " sets, ", hardcore() ? "Hardcore" : "Casual", ")"
+    " achievements, ", subsetCount, " sets, ", hardcore() ? "Hardcore" : "Casual",
+    _encoreGameActive ? ", Encore" : "", ")"
   });
 }
 
 auto RetroAchievements::frame() -> void {
   httpWorker.pumpClient();
+  reloadEncoreGameIfNeeded();
   if(!_client) return;
   if(!settings.retroAchievements.enabled) return;
   if(!_authenticated) return;
@@ -1075,6 +1107,7 @@ auto RetroAchievements::frame() -> void {
 
 auto RetroAchievements::idle() -> void {
   httpWorker.pumpClient();
+  reloadEncoreGameIfNeeded();
   if(!_client) return;
   if(!settings.retroAchievements.enabled) return;
   if(!_authenticated) return;
@@ -1158,6 +1191,18 @@ auto RetroAchievements::enableHardcore(bool enabled) -> bool {
   return true;
 }
 
+auto RetroAchievements::enableEncore(bool enabled) -> void {
+  Program::Guard guard;
+  if(settings.retroAchievements.encore == enabled) return;
+  settings.retroAchievements.encore = enabled;
+  settings.save();
+  program.showMessage(enabled ? "[RA] Encore enabled for the next game load" : "[RA] Encore disabled for the next game load");
+}
+
+auto RetroAchievements::encoreUnlock(u32 achievementId) const -> bool {
+  return _encoreGameActive && _previousUnlocks.contains(achievementId);
+}
+
 auto RetroAchievements::setEnabled(bool enabled) -> void {
   Program::Guard guard;
   if(settings.retroAchievements.enabled == enabled) return;
@@ -1182,7 +1227,12 @@ auto RetroAchievements::setEnabled(bool enabled) -> void {
 }
 
 auto RetroAchievements::reset() -> void {
-  if(_client && _gameReady) rc_client_reset(_client);
+  if(!_client || !_gameReady) return;
+  if(_encoreGameActive || _encoreGameActive != settings.retroAchievements.encore) {
+    _reloadEncoreGame = true;
+  } else {
+    rc_client_reset(_client);
+  }
 }
 
 auto RetroAchievements::resetGame() -> void {

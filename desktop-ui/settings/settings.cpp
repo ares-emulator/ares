@@ -143,6 +143,7 @@ auto Settings::process(bool load) -> void {
 
   bind(boolean, "RetroAchievements/Enabled", retroAchievements.enabled);
   bind(boolean, "RetroAchievements/Hardcore", retroAchievements.hardcore);
+  bind(boolean, "RetroAchievements/Encore", retroAchievements.encore);
   bind(string,  "RetroAchievements/Username", retroAchievements.username);
   bind(string,  "RetroAchievements/Token", retroAchievements.token);
 
