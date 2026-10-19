@@ -244,6 +244,7 @@ auto InputManager::pollHotkeys() -> void {
 
   static std::unordered_map<PhysicalKey, bool, PhysicalKeyHash> previousDown;
   static std::vector<bool> previousBindingActive;
+  static std::vector<bool> engagedBindings;
 
   auto stateIndex = [&](u32 hotkeyIndex, u32 bindingIndex) -> u32 {
     return hotkeyIndex * BindingLimit + bindingIndex;
@@ -302,6 +303,7 @@ auto InputManager::pollHotkeys() -> void {
   const u32 bindingCount = hotkeys.size() * BindingLimit;
   if(previousBindingActive.size() != bindingCount) {
     previousBindingActive.assign(bindingCount, false);
+    engagedBindings.assign(bindingCount, false);
   }
 
   std::vector<std::vector<KeyBinding>> parsedBindings(bindingCount);
@@ -425,25 +427,21 @@ auto InputManager::pollHotkeys() -> void {
     auto& hotkey = hotkeys[hotkeyIndex];
     bool wasActive = hotkey.state != 0;
     bool isActive = false;
-    bool activated = false;
 
     for(u32 bindingIndex : range(BindingLimit)) {
       auto index = stateIndex(hotkeyIndex, bindingIndex);
       auto& keys = parsedBindings[index];
-      if(keys.empty()) continue;
-      isActive |= bindingDown[index];
+      if(!bindingDown[index]) engagedBindings[index] = false;
 
       if(bindingActivated[index]) {
-        if(keys.size() == 1) {
-          if(claimedSuffixPress.find(physicalKeyOf(keys[0])) != claimedSuffixPress.end()) {
-            continue;
-          }
-        }
-        activated = true;
+        bool claimedSuffix = keys.size() == 1
+          && claimedSuffixPress.find(physicalKeyOf(keys[0])) != claimedSuffixPress.end();
+        if(!claimedSuffix) engagedBindings[index] = true;
       }
+      isActive |= engagedBindings[index];
     }
 
-    if(!wasActive && activated && hotkey.press) hotkey.press();
+    if(!wasActive && isActive && hotkey.press) hotkey.press();
     if(wasActive && !isActive && hotkey.release) hotkey.release();
     hotkey.state = isActive ? 1 : 0;
   }
