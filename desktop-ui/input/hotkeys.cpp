@@ -372,7 +372,7 @@ auto InputManager::pollHotkeys() -> void {
         candidate.deviceID = deviceID;
         candidate.groupID = HID::Keyboard::GroupID::Button;
         candidate.inputID = inputID;
-        if(!isKeyboardModifier(candidate) || !edgeOf(candidate).down) continue;
+        if(!isKeyboardModifier(candidate) || !readDown(candidate)) continue;
 
         bool expected = false;
         for(auto& modifier : modifiers) {
