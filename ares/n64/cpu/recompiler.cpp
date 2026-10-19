@@ -683,6 +683,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
   for(size_t idx = 0; idx < plan.instructions.size(); idx++) {
     auto& ii = plan.instructions[idx];
     bool firstInstruction = (idx == 0);
+    bool lastInstruction = (idx + 1 == plan.instructions.size());
     bool delaySlot = prevBranched;
     bool isInternalEntry = findInternalLabel(ii.vaddr) != nullptr;
     bool sectionBoundary = sectionIndex(ii.address + 4) != startSection;
@@ -752,9 +753,12 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
     // EndBlock must be observed at entry, delay-slot completion, likely-branch flows and helpers.
     bool needEndBlockCheck = firstInstruction || delaySlot || info.likelyBranch() || emitCallfEmitted;
     // Commit architectural pipeline state only where correctness requires it.
+    // The block exit after the last instruction needs a commit too: a window
+    // that ends before a breakpoint can end on straight-line code.
     bool needPipelineCommit = needEndBlockCheck || info.branch() || sectionBoundary
                             || info.jitStateKeyMayChange()
-                            || info.countCompareWrite();
+                            || info.countCompareWrite()
+                            || lastInstruction;
     if(needPipelineCommit) setupPipeline();
     if(needEndBlockCheck) {
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
