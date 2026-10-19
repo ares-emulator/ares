@@ -173,6 +173,7 @@ auto adapters() -> std::vector<Adapter*>& {
     registerNintendoAdapters(out);
     registerSegaAdapters(out);
     registerNecAdapters(out);
+    registerSonyAdapters(out);
     return out;
   }();
   return list;

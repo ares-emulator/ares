@@ -74,6 +74,7 @@ protected:
 auto registerNintendoAdapters(std::vector<Adapter*>& list) -> void;
 auto registerSegaAdapters(std::vector<Adapter*>& list) -> void;
 auto registerNecAdapters(std::vector<Adapter*>& list) -> void;
+auto registerSonyAdapters(std::vector<Adapter*>& list) -> void;
 auto adapters() -> std::vector<Adapter*>&;
 auto selectAdapter(const Emulator& emu) -> Adapter*;
 

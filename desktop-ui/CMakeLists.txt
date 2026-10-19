@@ -74,6 +74,7 @@ if(ARES_ENABLE_RCHEEVOS)
       retroachievements/platform/adapters/nintendo.cpp
       retroachievements/platform/adapters/sega.cpp
       retroachievements/platform/adapters/nec.cpp
+      retroachievements/platform/adapters/sony.cpp
       retroachievements/platform/hash_chd.cpp
   )
   if(OS_WINDOWS)
