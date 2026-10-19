@@ -74,7 +74,6 @@ auto pLineEdit::setMasked(bool masked) -> void {
   [replacement setSelectable:[current isSelectable]];
   [replacement setSendsActionOnEndEditing:NO];
   [field setCell:replacement];
-  [replacement release];
 }
 
 auto pLineEdit::setForegroundColor(SystemColor color) -> void {
