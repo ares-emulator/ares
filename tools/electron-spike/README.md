@@ -79,6 +79,10 @@ backpressure while native audio/emulation continue.
 
 ## Architecture and boundaries
 
+- `services/` defines the shared TypeScript session contract, native client and
+  Electron main router. [Protocol and module details](services/README.md).
+- `native/session-service.hpp` queues versioned control requests and dispatches
+  status/pause/resume/reset on the emulation thread, including while paused.
 - `host.cpp` supplies an `ares::Platform` adapter, native SDL audio, virtual HID
   input, and the emulator loop. System loading, firmware, peripherals, and saves
   are delegated to the existing `Emulator` implementations.
@@ -120,12 +124,13 @@ Each frame has a 48-byte little-endian header followed by tightly packed RGBA8:
 | 32 | float64 | Native capture-to-writer queue time in milliseconds |
 | 40 | float64 | Intended display aspect ratio |
 
-Commands are newline-delimited: `ack`, `pause 0|1`, `reset`,
+Input/presentation commands remain newline-delimited on stdin: `ack`,
 `input sequence mask x y rx ry`, `key name 0|1`, `mouse dx dy mask`, `clear`, `quit`.
-The button bit layout follows the virtual pad in `renderer.js`. EOF requests a
-clean shutdown. Electron closes stdin on shutdown and kills an unresponsive host
-after a timeout. Reloading the renderer restarts the host, with generation-tagged
-acknowledgements preventing stale frames from affecting the new session.
+Status/pause/resume/reset use the versioned [session protocol](services/README.md),
+with replies on a separate fd 3. EOF requests clean shutdown. Electron closes stdin
+on shutdown and kills an unresponsive host after a timeout. Renderer reload keeps
+the native host and session; frame-port acknowledgements from an old renderer are
+ignored. `ARES_SAVE_DIR` can select an isolated save directory for automated runs.
 
 ## Validation
 
@@ -146,7 +151,15 @@ at 59.7 fps, including the EEPROM diagnostic that previously interrupted playbac
 ```sh
 npm test --prefix tools/electron-spike
 npm run smoke --prefix tools/electron-spike
+npm run test:electron --prefix tools/electron-spike
 ```
+
+Task 1 results and remaining checks are recorded in [EXECUTION-LOG.md](EXECUTION-LOG.md).
+The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
+schemas/defaults and dependencies; no MCP tools are exposed yet. `npm test` requires
+the built native host and includes sequential isolated session checks.
+`test:electron` uses a disposable profile and verifies stalled-renderer controls,
+reload/session identity, frame credit, and native pause-button behavior.
 
 Parser tests cover fragmented/coalesced frames and malformed lengths/aspect ratios.
 Native smoke tests cover synthetic 640×480 and 1080p frames (with padded source

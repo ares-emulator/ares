@@ -4,6 +4,8 @@ const { once } = require('node:events');
 const fs = require('node:fs');
 const path = require('node:path');
 const { FrameParser } = require('./protocol.cjs');
+const { NativeSessionClient } = require('./dist/services/native-client.js');
+const { randomUUID } = require('node:crypto');
 const { makeFixture, makeNesFixture } = require('./fixture.cjs');
 const host = process.env.ARES_HOST || path.resolve(__dirname, '../../build-electron-make/bin/ares-electron-host');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -11,11 +13,13 @@ const nesFixture = path.join(__dirname, 'artifacts/spike.nes');
 const fixture = path.join(__dirname, 'artifacts/spike.gb');
 fs.mkdirSync(path.dirname(fixture), { recursive: true }); fs.writeFileSync(fixture, makeFixture()); fs.writeFileSync(nesFixture, makeNesFixture());
 async function run(args, label) {
-  const child = spawn(host, [...args, '--save-dir', path.join(__dirname, 'artifacts/smoke-saves')]);
+  const identity = { session: randomUUID(), epoch: 1 };
+  const child = spawn(host, [...args, '--save-dir', path.join(__dirname, 'artifacts/smoke-saves'), '--control-session', identity.session], { stdio: ['pipe', 'pipe', 'pipe', 'pipe'] });
   const closed = once(child, 'close');
   let errorLog = '', waiter, received = 0;
   child.stderr.on('data', b => errorLog += b);
   child.stdin.on('error', () => {});
+  const client = new NativeSessionClient(child.stdin, child.stdio[3], identity, error => { errorLog += error.message; });
   const parser = new FrameParser(frame => {
     received++;
     if (!waiter) throw new Error(`${label}: unsolicited frame`);
@@ -46,11 +50,11 @@ async function run(args, label) {
     for (let i = 0; i < 90; i++) { echo = await next(); if (echo.inputSequence === 42) break; }
     if (!args.includes(nesFixture)) assert.equal(echo.inputSequence, 42, 'Input reaches the native core');
     child.stdin.write('input 43 0\n');
-    child.stdin.write('pause 1\n');
+    assert.equal((await client.request('session.pause')).result.paused, true);
     await sleep(100);
     const count = received;
     await sleep(150); assert.equal(received, count);
-    child.stdin.write('pause 0\n');
+    assert.equal((await client.request('session.resume')).result.paused, false);
     const start = await next();
     let end = start, changes = 0, previous = start.pixels;
     const finish = Date.now() + (label.includes('GBA') ? 12000 : args.includes('--rom') ? 4000 : 1500);
@@ -60,11 +64,12 @@ async function run(args, label) {
     assert.ok(changes > 10, 'Video changes over time');
     const fps = (end.sequence - start.sequence) * 1000 / (end.nativeMs - start.nativeMs);
     assert.ok(fps > 50 && fps < 70, `Unexpected native speed ${fps}`);
+    client.close();
     child.stdin.end('quit\n');
     const [code, signal] = await closed;
     assert.equal(code, 0, `${signal}: ${errorLog}`);
     return { label, width: end.width, height: end.height, fps, received, changes, status: errorLog.trim() };
-  } finally { if (child.exitCode === null) child.kill('SIGKILL'); }
+  } finally { client.close(); if (child.exitCode === null) child.kill('SIGKILL'); }
 }
 (async () => {
   const systems = execFileSync(host, ['--systems'], { encoding: 'utf8' }).trim().split('\n');

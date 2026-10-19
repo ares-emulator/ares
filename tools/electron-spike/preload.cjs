@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('ares', {
+  session: (method, identity) => ipcRenderer.invoke('session', method, identity),
   ready: () => ipcRenderer.send('ready'),
   open: options => ipcRenderer.invoke('open', options),
   systems: () => ipcRenderer.invoke('systems'),

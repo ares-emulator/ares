@@ -30,6 +30,8 @@ auto locate(const string& name) -> string {
   return {Path::userData(), "ares/", name};
 }
 
+#include "native/session-service.hpp"
+
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
   ares::Node::System root;
@@ -40,7 +42,8 @@ struct Host : ares::Platform {
   std::atomic<double> refreshRate{59.7275};
   ruby::Audio output;
   std::vector<ares::Node::Audio::Stream> streams;
-  std::atomic<bool> quit{false}, paused{false}, reset{false};
+  SessionService service;
+  std::atomic<bool> quit{false};
   std::atomic<uint64_t> controls{0}; // sequence << 32 | button mask
   std::atomic<uint32_t> appliedInput{0};
   bool sound = true;
@@ -174,12 +177,20 @@ struct Host : ares::Platform {
   }
   void readCommands() {
     std::string line;
-    while(std::getline(std::cin, line)) {
+    // Bound input before allocating an arbitrarily large line.
+    char ch;
+    while(std::cin.get(ch)) {
+      if(ch != '\n') {
+        if(line.size() >= 4096) break;
+        line += ch; continue;
+      }
       std::istringstream command(line);
       std::string name; command >> name;
+      if(name != "ack" && name != "input" && name != "key" && name != "mouse" && name != "clear" && name != "quit") {
+        if(!service.output || !service.enqueue(line)) break;
+        line.clear(); continue;
+      }
       if(name == "ack") { std::lock_guard lock(mutex); credit = true; wake.notify_one(); }
-      if(name == "pause") { unsigned value; if(command >> value) paused = value != 0; }
-      if(name == "reset") reset = true;
       if(name == "input") {
         uint32_t seq, mask;
         if(command >> seq >> mask) {
@@ -215,6 +226,7 @@ struct Host : ares::Platform {
         if(mouse) for(auto& button : mouse->buttons()) button.setValue(0);
       }
       if(name == "quit") break;
+      line.clear();
     }
     quit = true; wake.notify_all();
   }
@@ -244,6 +256,16 @@ int main(int argc, char** argv) {
   for(int i = 1; i < argc; i++) {
     std::string arg = argv[i];
     if(arg == "--silent") host.sound = false;
+    else if(arg == "--control-session" && i + 1 < argc) {
+      host.service.session = argv[++i];
+      if(host.service.session.empty() || host.service.session.size() > 64 || host.service.session.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_") != std::string::npos) return 2;
+#ifdef _WIN32
+      host.service.output = _fdopen(3, "wb");
+#else
+      host.service.output = fdopen(3, "wb");
+#endif
+      if(!host.service.output) return 2;
+    }
     else if(arg == "--synthetic") synthetic = true;
     else if(arg == "--1080p") { width = 1920; height = 1080; }
     else if(arg == "--systems") listSystems = true;
@@ -318,13 +340,17 @@ int main(int argc, char** argv) {
             << "; audio=" << (!synthetic && host.sound ? "native SDL" : "off") << "\n";
   std::thread reader([&] { host.readCommands(); });
   std::thread writer([&] { host.writeFrames(); });
+  std::thread replies;
+  if(host.service.output) replies = std::thread([&] { host.service.writeReplies(); });
   // Padded synthetic rows exercise pitch handling, not just tightly packed data.
   std::vector<u32> pixels(synthetic ? (width + 8) * height : 0);
   auto deadline = Clock::now();
   uint32_t tick = 0;
   while(!host.quit) {
-    if(host.reset.exchange(false) && host.root) { host.output.clear(); host.root->power(); }
-    if(host.paused) {
+    if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
+      if(host.root) { host.output.clear(); host.root->power(); }
+    })) { host.quit = true; break; }
+    if(host.service.paused) {
       if(host.sound && !synthetic) host.output.clear();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
       deadline = Clock::now(); continue;
@@ -343,7 +369,9 @@ int main(int argc, char** argv) {
     }
   }
   host.quit = true; host.wake.notify_all();
+  host.service.close();
   writer.join(); reader.join();
+  if(replies.joinable()) replies.join();
   if(host.root) {
     emulator->unload(); host.streams.clear(); host.root.reset(); emulator.reset();
   }

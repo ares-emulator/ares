@@ -6,11 +6,18 @@
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
-    "test": "node --test protocol.test.cjs",
+    "test": "npm run build:services && node --test --test-concurrency=1 protocol.test.cjs tests/*.test.cjs",
     "fixture": "node fixture.cjs artifacts/spike.gb",
-    "smoke": "node smoke.cjs"
+    "smoke": "node smoke.cjs",
+    "build:services": "tsc -p tsconfig.json",
+    "prestart": "npm run build:services",
+    "test:session": "npm run build:services && node --test tests/session-live.test.cjs",
+    "presmoke": "npm run build:services",
+    "test:electron": "npm run build:services && electron tests/electron-session.cjs"
   },
   "devDependencies": {
-    "electron": "44.9.0"
+    "@types/node": "^26.6.5",
+    "electron": "44.9.0",
+    "typescript": "^7.0.2"
   }
 }

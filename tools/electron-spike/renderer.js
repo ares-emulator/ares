@@ -80,7 +80,7 @@ window.addEventListener('message', event => {
         : 'Arrows · D-pad / Z X C V · Face buttons / Q E · Shoulders / Shift · Select / Enter · Start / WASD & IJKL · Analog sticks. Keyboard and mouse are forwarded while the canvas is focused.';
       pending = null; frames = skipped = last = firstNative = lastNative = firstSequence = receivedFrames = maxPending = 0;
       bridge = []; upload = []; inputAges = []; inputTimes.clear(); started = performance.now();
-      lastMask = -1; paused = false; $('pause').textContent = 'Pause'; return;
+      lastMask = -1; syncSession(); return;
     }
     receivedFrames++;
     if (pending) throw new Error('Frame credit invariant violated');
@@ -168,8 +168,29 @@ $('settings').onclick = () => window.ares.settings();
 window.ares.systems().then(systems => {
   for (const name of systems) { const option = document.createElement('option'); option.value = option.textContent = name; $('system').append(option); }
 }).catch(error => { $('status').textContent = error.message; });
-$('pause').onclick = () => { paused = !paused; $('pause').textContent = paused ? 'Resume' : 'Pause'; window.ares.command({ type: 'pause', value: paused }); };
-$('reset').onclick = () => window.ares.command({ type: 'reset' });
+let sessionIdentity;
+async function sessionRequest(method) {
+  const reply = await window.ares.session(method, sessionIdentity);
+  sessionIdentity = { session: reply.session, epoch: reply.epoch };
+  if (!reply.ok) throw new Error(reply.error);
+  paused = reply.result.paused;
+  $('pause').textContent = paused ? 'Resume' : 'Pause';
+  return reply;
+}
+async function syncSession() {
+  sessionIdentity = undefined;
+  try { await sessionRequest('session.status'); } catch (error) { $('status').textContent = error.message; }
+}
+$('pause').onclick = async () => {
+  $('pause').disabled = true;
+  try { await sessionRequest(paused ? 'session.resume' : 'session.pause'); }
+  catch (error) { $('status').textContent = error.message; await syncSession(); }
+  finally { $('pause').disabled = false; }
+};
+$('reset').onclick = async () => {
+  try { await sessionRequest('session.reset'); }
+  catch (error) { $('status').textContent = error.message; await syncSession(); }
+};
 $('synthetic').onclick = () => window.ares.command({ type: 'synthetic' });
 $('hd').onclick = () => window.ares.command({ type: 'synthetic', hd: true });
 function stress() { const until = performance.now() + 250; while (performance.now() < until) {} }

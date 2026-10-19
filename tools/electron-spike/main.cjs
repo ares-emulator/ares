@@ -5,6 +5,11 @@ const path = require('node:path');
 const fs = require('node:fs');
 const { performance } = require('node:perf_hooks');
 const { FrameParser } = require('./protocol.cjs');
+const { randomUUID } = require('node:crypto');
+const { NativeSessionClient } = require('./dist/services/native-client.js');
+const { SessionRouter } = require('./dist/services/session-router.js');
+const sessions = new SessionRouter();
+module.exports = { sessions };
 const hostPath = process.env.ARES_HOST || path.resolve(__dirname, '../../build-electron-make/bin/ares-electron-host');
 let generation = 0, settingsFile = process.env.ARES_SETTINGS || '';
 const probe = args => new Promise((resolve, reject) => {
@@ -21,6 +26,7 @@ async function stop() {
   const old = active;
   if (!old) return;
   active = null;
+  sessions.detach();
   // EOF also releases the native command reader. Escalate only for a stuck host.
   old.child.stdin.end('quit\n');
   const timer = setTimeout(() => old.child.kill('SIGKILL'), 2000);
@@ -28,7 +34,7 @@ async function stop() {
   clearTimeout(timer);
 }
 async function start(options) {
-  const saveDirectory = path.join(__dirname, 'artifacts', 'saves');
+  const saveDirectory = process.env.ARES_SAVE_DIR || path.join(__dirname, 'artifacts', 'saves');
   fs.mkdirSync(saveDirectory, { recursive: true });
   let system = 'Synthetic';
   // Probe before stopping the running game, so an unsupported file leaves it intact.
@@ -53,22 +59,29 @@ async function start(options) {
   if (options.hd) args.push('--1080p');
   if (options.silent || process.env.ARES_SILENT === '1') args.push('--silent');
   args.push('--save-dir', saveDirectory);
-  const child = spawn(hostPath, args, { stdio: ['pipe', 'pipe', 'pipe'] });
-  const session = { child, generation: ++generation, outstanding: false, lastSequence: 0, diagnostic: '' };
+  const identity = { session: randomUUID(), epoch: 1 };
+  args.push('--control-session', identity.session);
+  const child = spawn(hostPath, args, { stdio: ['pipe', 'pipe', 'pipe', 'pipe'] });
+  const session = { child, system, generation: ++generation, outstanding: false, lastSequence: 0, diagnostic: '' };
   session.closed = new Promise(resolve => child.once('close', (code, signal) => {
-    if (active === session) { active = null; status(session.failure || ((code !== 0 || signal) ? `Host stopped (${signal || code}). ${session.diagnostic}` : 'Host stopped. Open a ROM or restart a test.')); }
+    if (active === session) { active = null; sessions.detach(); status(session.failure || ((code !== 0 || signal) ? `Host stopped (${signal || code}). ${session.diagnostic}` : 'Host stopped. Open a ROM or restart a test.')); }
     resolve();
   }));
   active = session;
+  const client = new NativeSessionClient(child.stdin, child.stdio[3], identity, error => {
+    if (active === session) { session.failure = error.message; status(error.message); child.kill(); }
+  });
+  sessions.attach(client);
   child.on('error', error => status(`Cannot start native host: ${error.message}`));
   child.stdin.on('error', () => {}); // exit races are reported by close/error
   child.stderr.on('data', data => { process.stderr.write(data); session.diagnostic = data.toString().trim(); if (active === session) status(session.diagnostic); });
   const parser = new FrameParser(frame => {
-    if (active !== session || !port) return;
+    if (active !== session) return;
     session.outstanding = true;
     session.lastSequence = frame.sequence;
+    session.lastFrame = frame;
     // This is intentionally a copied baseline. MessagePortMain does not transfer ArrayBuffers.
-    port.postMessage({ ...frame, generation: session.generation, receivedMs: performance.timeOrigin + performance.now() });
+    port?.postMessage({ ...frame, generation: session.generation, receivedMs: performance.timeOrigin + performance.now() });
   });
   child.stdout.on('data', data => {
     try { parser.push(data); } catch (error) { session.failure = error.message; status(error.message); child.kill(); }
@@ -86,21 +99,30 @@ app.whenReady().then(() => {
       nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
-  window.webContents.on('render-process-gone', () => enqueue(stop));
-  window.webContents.on('did-start-loading', () => { port?.close(); port = null; enqueue(stop); });
+  window.webContents.on('render-process-gone', () => { port?.close(); port = null; });
+  window.webContents.on('did-start-loading', () => { port?.close(); port = null; });
   ipcMain.on('ready', event => {
     if (event.sender !== window.webContents) return;
     port?.close();
     const channel = new MessageChannelMain();
     port = channel.port1;
     port.on('message', ({ data }) => {
+      if (port !== channel.port1) return;
       if (active && data?.generation === active.generation && data?.ack === active.lastSequence && active.outstanding) {
         active.outstanding = false; command('ack');
       }
     });
     port.start();
     window.webContents.postMessage('frames', null, [channel.port2]);
-    enqueue(() => start(process.env.ARES_ROM ? { rom: process.env.ARES_ROM, system: process.env.ARES_SYSTEM } : { hd: process.env.ARES_HD === '1' }));
+    if (active) {
+      port.postMessage({ reset: true, system: active.system });
+      if (active.outstanding && active.lastFrame) port.postMessage({ ...active.lastFrame, generation: active.generation, receivedMs: performance.timeOrigin + performance.now() });
+    } else enqueue(() => start(process.env.ARES_ROM ? { rom: process.env.ARES_ROM, system: process.env.ARES_SYSTEM } : { hd: process.env.ARES_HD === '1' }));
+  });
+  ipcMain.handle('session', async (event, method, identity) => {
+    if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('invalid_sender');
+    if (method !== 'session.status' && !identity) throw new Error('invalid_request');
+    return sessions.request(method, identity);
   });
   ipcMain.handle('systems', async event => {
     if (event.sender !== window.webContents) return [];
@@ -122,8 +144,7 @@ app.whenReady().then(() => {
   ipcMain.on('command', (event, data) => {
     if (event.sender !== window.webContents || !data) return;
     if (data.type === 'synthetic') enqueue(() => start({ hd: data.hd === true }));
-    if (data.type === 'pause') command(`pause ${data.value ? 1 : 0}`);
-    if (data.type === 'reset') command('reset');
+
     if (data.type === 'input' && Number.isInteger(data.sequence) && Number.isInteger(data.mask)) {
       const axis = value => Number.isFinite(value) ? Math.max(-32767, Math.min(32767, Math.round(value))) : 0;
       command(`input ${data.sequence >>> 0} ${data.mask >>> 0} ${axis(data.x)} ${axis(data.y)} ${axis(data.rx)} ${axis(data.ry)}`);

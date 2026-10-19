@@ -1,7 +1,8 @@
 # Execution roadmap: how to tackle the implementation plans
 
-Status: proposed task sequence. This document schedules work; it does not mark
-any planned functionality implemented. Start here when choosing the next task.
+Status: task 1 implemented; runtime evidence and pending checks are recorded in
+[EXECUTION-LOG.md](EXECUTION-LOG.md). Remaining tasks are planned. Start here when
+choosing the next task.
 
 ## Which plan owns what
 
@@ -258,6 +259,6 @@ Conversely, none of those deferrals removes an existing MCP tool from the parity
 target without an explicit scope decision. A clean host-library extraction can
 follow when concrete coupling impedes a task; it is not an initial rewrite mandate.
 
-The immediate next action is **task 1**, then task 2, then task 3. Those three
+The immediate next action is **task 2**, then task 3 (task 1 is recorded in the execution log). Those three
 produce the first shared MCP-and-UI vertical slice; they are not three competing
 implementations of the same service.
