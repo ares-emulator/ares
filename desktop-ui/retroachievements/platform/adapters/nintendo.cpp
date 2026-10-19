@@ -305,7 +305,16 @@ struct SuperFamicomAdapter final : Adapter {
     out.clear();
     if(!emu.game) return false;
 
-    // Sufami Turbo games reside in the attached slots, not in the base cart.
+    // Hash the original cartridge image: mia can split its ROM and append
+    // coprocessor firmware while preparing the pak for the core.
+    if(file::exists(emu.game->location)) {
+      out = emu.game->read(emu.game->location, {"*.sfc", "*.smc", "*.swc", "*.fig", "*.st"});
+      if(!out.empty()) return true;
+    }
+    if(readSfcRomFromManifest(emu.game->pak, out)) return true;
+
+    // An attached Sufami Turbo cartridge is a fallback when the base cart
+    // does not provide a ROM to hash.
     if(emu.root) {
       std::vector<u8> slotA, slotB;
       for(auto node : ares::Node::enumerate<ares::Node::Peripheral>(emu.root)) {
@@ -322,15 +331,7 @@ struct SuperFamicomAdapter final : Adapter {
         return true;
       }
     }
-
-    // Hash the original cartridge image: mia can split its ROM and append
-    // coprocessor firmware while preparing the pak for the core.
-    if(file::exists(emu.game->location)) {
-      mia::Cartridge cartridge;
-      out = cartridge.read(emu.game->location, {"*.sfc", "*.smc", "*.swc", "*.fig"});
-      if(!out.empty()) return true;
-    }
-    return readSfcRomFromManifest(emu.game->pak, out);
+    return false;
   }
 
   auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 override {
