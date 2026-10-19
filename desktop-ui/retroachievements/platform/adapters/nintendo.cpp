@@ -3,6 +3,10 @@
 
 #include <rc_consoles.h>
 
+#if defined(CORE_GB)
+#include <gb/gb.hpp>
+#endif
+
 namespace {
 
 using namespace RA::Platform;
@@ -16,6 +20,124 @@ auto appendPakFile(const std::shared_ptr<vfs::directory>& pak, const string& nam
   for(u32 index : range(fp->size())) out[offset + index] = fp->read();
   return true;
 }
+
+#if defined(CORE_GB)
+struct GameBoyAdapter final : Adapter {
+  struct Cache : NodeCache {
+    ares::Node::Debugger::Memory vram;
+    ares::Node::Debugger::Memory wram;
+    ares::Node::Debugger::Memory oam;
+    ares::Node::Debugger::Memory hram;
+    bool ready = false;
+  };
+
+  mutable Cache cache;
+
+  auto refreshMemory(const Emulator& emu) const -> bool {
+    ares::Node::Object root = emu.root;
+    if(cache.rootNode != root) cache = {};
+    if(cache.ready) return true;
+    if(!refreshMemoryNodeCache(cache, &emu.root, {
+      {"PPU VRAM", &cache.vram},
+      {"CPU WRAM", &cache.wram},
+      {"PPU OAM", &cache.oam},
+      {"CPU HRAM", &cache.hram},
+    })) return false;
+    return cache.ready = cache.vram && cache.wram && cache.oam && cache.hram;
+  }
+
+  auto mappedMemory(u32 address, u32& offset) const -> ares::Node::Debugger::Memory {
+    // Keep the base RAM banks stable; rcheevos exposes the remaining banks
+    // above the Game Boy address space rather than following mapper selection.
+    if(address >= 0x008000 && address <= 0x009fff) { offset = address - 0x008000; return cache.vram; }
+    if(address >= 0x00c000 && address <= 0x00dfff) { offset = address - 0x00c000; return cache.wram; }
+    if(address >= 0x00e000 && address <= 0x00fdff) { offset = address - 0x00e000; return cache.wram; }
+    if(address >= 0x00fe00 && address <= 0x00fe9f) { offset = address - 0x00fe00; return cache.oam; }
+    if(address >= 0x00ff80 && address <= 0x00fffe) {
+      offset = address - 0x00ff80;
+      return cache.hram;
+    }
+    if(address >= 0x010000 && address <= 0x015fff) {
+      offset = 0x2000 + address - 0x010000;
+      return cache.wram;
+    }
+    return {};
+  }
+
+  static auto cartridgeRam(u32 address, u32& offset) -> ares::Memory::Writable<n8>* {
+    if(address >= 0x00a000 && address <= 0x00bfff) offset = address - 0x00a000;
+    else if(address >= 0x016000 && address <= 0x033fff) offset = 0x2000 + address - 0x016000;
+    else return nullptr;
+    auto& cartridge = ares::GameBoy::cartridge;
+    return cartridge.board ? cartridge.board->saveRAM : nullptr;
+  }
+
+  auto supports(const Emulator& emu) const -> bool override {
+    return supportsAnyName(emu, {"Game Boy", "Game Boy Color"});
+  }
+
+  auto consoleId(const Emulator& emu) const -> u32 override {
+    return emu.name == "Game Boy Color" ? RC_CONSOLE_GAMEBOY_COLOR : RC_CONSOLE_GAMEBOY;
+  }
+
+  auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool override {
+    out.clear();
+    return emu.game && appendPakFile(emu.game->pak, "program.rom", out);
+  }
+
+  auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 override {
+    if(!buffer || !size || !refreshMemory(emu)) return 0;
+    u32 read = 0;
+    for(; read < size; read++) {
+      auto current = address + read;
+      if(current <= 0x007fff) {
+        auto& cartridge = ares::GameBoy::cartridge;
+        if(!cartridge.board) break;
+        buffer[read] = cartridge.board->read((n16)current, 0xff);
+        continue;
+      }
+      u32 offset = 0;
+      if(auto ram = cartridgeRam(current, offset)) {
+        if(offset >= ram->size()) break;
+        buffer[read] = ram->read(offset);
+        continue;
+      }
+      if(current >= 0x00ff00 && current <= 0x00ff7f) {
+        buffer[read] = ares::GameBoy::cpu.readDebugger((n16)current);
+        continue;
+      }
+      if(current == 0x00ffff) {
+        buffer[read] = ares::GameBoy::cpu.status.interruptEnable;
+        continue;
+      }
+      auto memory = mappedMemory(current, offset);
+      if(!memory || offset >= memory->size()) break;
+      buffer[read] = memory->read(offset);
+    }
+    return read;
+  }
+
+  auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
+    if(!buffer || !size || !refreshMemory(emu)) return 0;
+    u32 written = 0;
+    for(; written < size; written++) {
+      auto current = address + written;
+      if(current <= 0x007fff || (current >= 0x00ff00 && current <= 0x00ff7f) || current == 0x00ffff) break;
+      u32 offset = 0;
+      if(auto ram = cartridgeRam(current, offset)) {
+        if(offset >= ram->size()) break;
+        ram->write(offset, buffer[written]);
+        continue;
+      }
+      auto memory = mappedMemory(current, offset);
+      if(!memory || offset >= memory->size()) break;
+      memory->write(offset, buffer[written]);
+    }
+    return written;
+  }
+};
+#endif
+
 
 struct FamicomAdapter final : Adapter {
   struct Cache : NodeCache {
@@ -138,6 +260,10 @@ struct Nintendo64Adapter final : Adapter {
 namespace RA::Platform {
 
 auto registerNintendoAdapters(std::vector<Adapter*>& list) -> void {
+#if defined(CORE_GB)
+  static GameBoyAdapter gameBoy;
+  list.push_back(&gameBoy);
+#endif
 #if defined(CORE_FC)
   static FamicomAdapter famicom;
   list.push_back(&famicom);

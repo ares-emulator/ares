@@ -74,5 +74,13 @@ auto CPU::writeDMA(n13 address, n8 data) -> void {
 }
 
 auto CPU::readDebugger(n16 address) -> n8 {
+  if(address == 0xff00) {
+    // Polling controls here could raise a joypad interrupt.
+    n8 data = 0xff;
+    data.bit(0,3) = status.joyp;
+    data.bit(4) = status.p14;
+    data.bit(5) = status.p15;
+    return data;
+  }
   return bus.read(address, 0xff);
 }
