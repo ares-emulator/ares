@@ -5,7 +5,7 @@ integration gate passed on macOS arm64.
 Runtime evidence and pending checks are recorded in
 [EXECUTION-LOG.md](EXECUTION-LOG.md). Task 6 is in progress: input ownership, bounded PC/call traces and PI DMA provenance are implemented;
 profiling and controller taps are implemented; automated and package checks passed.
-Milestone 2 physical keyboard/gamepad acceptance remains pending. Task 7 is in progress: atomic artifact publishing, trace-file export and native screenshots are implemented.
+Milestone 2 physical keyboard/gamepad acceptance remains pending. Task 7 is in progress: atomic artifact publishing, trace-file export, native screenshots and run_frames screenshot_after are implemented.
 Audio/recording and later tasks remain planned. Start here when
 choosing the next task.
 
@@ -280,6 +280,6 @@ Conversely, none of those deferrals removes an existing MCP tool from the parity
 target without an explicit scope decision. A clean host-library extraction can
 follow when concrete coupling impedes a task; it is not an initial rewrite mandate.
 
-The immediate next action is **task 5**. Task 4 owns bounded native execution;
-task 4.5 supplies typed ESM application entry points and a sandbox-compatible
-preload. Runtime evidence and remaining manual checks are in the execution log.
+The immediate next action is **task 7 audio and recording**. Tasks 1–5 and 4.5
+are implemented, and task 6 backend checks pass with physical input acceptance
+still pending. Runtime evidence and remaining manual checks are in the execution log.

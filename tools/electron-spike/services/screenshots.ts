@@ -44,7 +44,7 @@ export class Screenshots {
     const unwrap = <T>(reply: SessionReply<T>): T => { if (!reply.ok || !reply.result) throw new ServiceError(reply.error || 'invalid_reply'); return reply.result; };
     let snapshotId: number | undefined;
     try {
-      guard(); const snapshot = unwrap(await client.request('video.begin', identity, { source: p.source }, owner)); snapshotId = snapshot.snapshot_id;
+      guard(); const snapshot = unwrap(await client.request('video.begin', identity, { source: p.source, ...(p.expectedFrame === undefined ? {} : { expectedFrame: p.expectedFrame }) }, owner)); snapshotId = snapshot.snapshot_id;
       guard(); const pixels = Buffer.alloc(snapshot.bytes);
       for (let offset = 0; offset < pixels.length;) {
         guard();

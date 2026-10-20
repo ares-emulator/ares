@@ -57,6 +57,17 @@ test('real native screenshot and MCP image content do not depend on canvas credi
     assert.equal(saved.frame, 2); assert.equal(fs.statSync(destination).size, saved.bytes);
     assert.equal((await peer.tool('screenshot', { source: 'presented', path: destination })).error, 'file_exists');
     assert.equal((await peer.tool('screenshot', { source: 'presented', region: [639, 479, 2, 2] })).error, 'invalid_region');
+    const runPath = path.join(dir, 'after run.png');
+    const advanced = await peer.tool('run_frames', { n: 2, screenshot_after: { source: 'presented', path: runPath, region: [0, 0, 2, 2] } });
+    assert.equal(advanced.stop_reason, 'frames_done'); assert.equal(advanced.frame, 4);
+    assert.equal(advanced.screenshot.current_frame, 4); assert.equal(advanced.screenshot.frame, 4);
+    assert.equal(fs.statSync(runPath).size, advanced.screenshot.bytes);
+    const failedCapture = await peer.tool('run_frames', { n: 1, screenshot_after: { source: 'presented', path: runPath } });
+    assert.equal(failedCapture.frame, 5); assert.equal(failedCapture.stop_reason, 'frames_done');
+    assert.equal(failedCapture.screenshot_error, 'file_exists'); assert.equal(failedCapture.emulation_already_advanced, true);
+    const invalid = await peer.request('tools/call', { name: 'run_frames', arguments: { n: 1, screenshot_after: { inline: true } } });
+    assert.equal(invalid.result.isError, true); assert.equal(unwrap(await native.request('session.status')).frame, 5);
+    assert.equal((await client.request('artifact.screenshot', undefined, { ...captureParams, expectedFrame: 4 })).error, 'capture_frame_changed');
     const oldIdentity = { ...native.identity }; unwrap(await native.request('session.reset'));
     assert.equal((await client.request('artifact.screenshot', oldIdentity, captureParams)).error, 'stale_epoch');
     unwrap(await client.request('session.status'));

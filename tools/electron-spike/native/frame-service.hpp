@@ -83,10 +83,15 @@ struct FrameService {
     }
     result = std::move(image); return {};
   }
-  ControlResult execute(const std::string& method, const std::vector<std::string>& args, const std::string& owner, uint64_t e, uint64_t f, bool n64, const std::string& frameKind = "unavailable") {
+  ControlResult execute(const std::string& method, const std::vector<std::string>& args, const std::string& owner, uint64_t e, uint64_t f, bool n64, const std::string& frameKind = "unavailable", bool paused = true) {
     std::shared_ptr<const Image> image;
     if(method == "video.begin") {
-      if(args.size() != 1 || (args[0] != "presented" && args[0] != "framebuffer")) return {"invalid_request", {}};
+      if((args.size() != 1 && args.size() != 2) || (args[0] != "presented" && args[0] != "framebuffer")) return {"invalid_request", {}};
+      if(args.size() == 2) {
+        uint64_t expected;
+        if(!ExecutionService::number(args[1], expected)) return {"invalid_request", {}};
+        if(!paused || f != expected) return {"capture_frame_changed", {}};
+      }
       enabled = true;
       if(args[0] == "framebuffer") {
         if(!n64) return {"unavailable", {}};

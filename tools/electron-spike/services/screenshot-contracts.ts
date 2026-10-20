@@ -1,6 +1,6 @@
 import { validFrame, type FrameSource, type FrameSnapshot } from './frame-contracts.js';
 export const SCREENSHOT_METHODS = ['artifact.screenshot', 'artifact.imageRead', 'artifact.imageRelease'] as const;
-export interface ScreenshotParams { path: string | null; source: FrameSource; region: number[] | null; scale: number; inline: boolean; overwrite: boolean }
+export interface ScreenshotParams { path: string | null; source: FrameSource; region: number[] | null; scale: number; inline: boolean; overwrite: boolean; expectedFrame?: number }
 export interface ScreenshotResult extends Omit<FrameSnapshot, 'snapshot_id' | 'bytes' | 'width' | 'height' | 'format'> { source_width: number; source_height: number; width: number; height: number; region: number[]; scale: number; bytes: number; sha256: string; path?: string; image_id?: string; format: 'png' }
 export interface ScreenshotServiceMap {
   'artifact.screenshot': { params: ScreenshotParams; result: ScreenshotResult };
@@ -13,7 +13,7 @@ const keys = (p: any, names: string) => p && typeof p === 'object' && Object.key
 export function validScreenshotRequest(method: string, p: any): boolean {
   if (method === 'artifact.imageRelease') return keys(p, 'imageId') && token(p.imageId);
   if (method === 'artifact.imageRead') return keys(p, 'imageId,length,offset') && token(p.imageId) && integer(p.offset, 8388608) && integer(p.length, 16384) && p.length > 0;
-  return keys(p, 'inline,overwrite,path,region,scale,source') && (p.path === null || typeof p.path === 'string' && p.path.length > 0 && p.path.length <= 4096 && !p.path.includes('\0')) && ['presented', 'framebuffer'].includes(p.source) && (p.region === null || Array.isArray(p.region) && p.region.length === 4 && p.region.every((v: unknown) => integer(v)) && p.region[2] > 0 && p.region[3] > 0) && typeof p.scale === 'number' && Number.isFinite(p.scale) && p.scale >= 0.125 && p.scale <= 8 && typeof p.inline === 'boolean' && typeof p.overwrite === 'boolean';
+  return (keys(p, 'inline,overwrite,path,region,scale,source') || keys(p, 'expectedFrame,inline,overwrite,path,region,scale,source') && integer(p.expectedFrame)) && (p.path === null || typeof p.path === 'string' && p.path.length > 0 && p.path.length <= 4096 && !p.path.includes('\0')) && ['presented', 'framebuffer'].includes(p.source) && (p.region === null || Array.isArray(p.region) && p.region.length === 4 && p.region.every((v: unknown) => integer(v)) && p.region[2] > 0 && p.region[3] > 0) && typeof p.scale === 'number' && Number.isFinite(p.scale) && p.scale >= 0.125 && p.scale <= 8 && typeof p.inline === 'boolean' && typeof p.overwrite === 'boolean';
 }
 export function validScreenshotResult(method: string, s: any): boolean {
   if (!s) return false;

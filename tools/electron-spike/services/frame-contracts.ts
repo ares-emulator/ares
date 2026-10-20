@@ -2,14 +2,14 @@ export const FRAME_METHODS = ['video.begin', 'video.read', 'video.release'] as c
 export type FrameSource = 'presented' | 'framebuffer';
 export interface FrameSnapshot { snapshot_id: number; width: number; height: number; bytes: number; epoch: number; frame: number; current_frame: number; frame_kind: 'vi' | 'synthetic-vi' | 'unavailable'; sequence: number; source: FrameSource; origin: string | null; color_depth: number; nonblack_pixels: number | null; format: 'rgba8' }
 export interface FrameServiceMap {
-  'video.begin': { params: { source: FrameSource }; result: FrameSnapshot };
+  'video.begin': { params: { source: FrameSource; expectedFrame?: number }; result: FrameSnapshot };
   'video.read': { params: { snapshotId: number; offset: number; length: number }; result: { snapshot_id: number; offset: number; length: number; hex: string } };
   'video.release': { params: { snapshotId: number }; result: { released: true } };
 }
 const integer = (v: unknown, max = Number.MAX_SAFE_INTEGER): v is number => Number.isSafeInteger(v) && (v as number) >= 0 && (v as number) <= max;
 const keys = (p: any, names: string) => p && typeof p === 'object' && Object.keys(p).sort().join(',') === names;
 export function encodeFrame(method: string, p: any): string | undefined {
-  if (method === 'video.begin') return keys(p, 'source') && ['presented', 'framebuffer'].includes(p.source) ? ` ${p.source}` : undefined;
+  if (method === 'video.begin') return (keys(p, 'source') || keys(p, 'expectedFrame,source') && integer(p.expectedFrame)) && ['presented', 'framebuffer'].includes(p.source) ? ` ${p.source}${p.expectedFrame === undefined ? '' : ` ${p.expectedFrame}`}` : undefined;
   if (method === 'video.release') return keys(p, 'snapshotId') && integer(p.snapshotId) && p.snapshotId ? ` ${p.snapshotId}` : undefined;
   if (keys(p, 'length,offset,snapshotId') && integer(p.snapshotId) && p.snapshotId && integer(p.offset, 16777216) && integer(p.length, 16384) && p.length) return ` ${p.snapshotId} ${p.offset} ${p.length}`;
 }

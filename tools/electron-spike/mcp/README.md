@@ -245,3 +245,9 @@ the same bytes atomically. Default non-inline output uses a unique host temporar
 path. No fresh post-reset frame returns no_frame, not a stale image. The tool
 does not advance emulation. Screenshot-after-run, audio and recording remain
 pending.
+
+`run_frames` also accepts `screenshot_after` with the screenshot file options
+(`inline: true` is rejected before running). Capture failure returns
+`screenshot_error` alongside the completed run and `emulation_already_advanced`.
+A competing resume/frame advance or epoch change causes an explicit capture
+failure. Presented captures report their actual native submitted-frame coordinate.

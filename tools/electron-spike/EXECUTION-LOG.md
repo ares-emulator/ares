@@ -768,3 +768,28 @@ Electron 44.9.0; repository reads denied for native loader and MCP adapter. Fina
 source suite: 31/31 passed. Next task-7 slices are audio capture, recording and
 screenshots attached to run operations; milestone-2 physical-device gate is still
 pending. All verification emulator instances were isolated and closed.
+
+### Task 7 — screenshots after bounded runs
+
+Implemented `run_frames(screenshot_after={...})` using the existing bounded PNG
+pipeline. Like the reference (`desktop-ui/program/debug-session.cpp` finish path
+and `telemetry-server.cpp` run validation, reference commit
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`), this accepts host-file output and
+rejects inline output before starting the run. Crop/scale/path options validate
+before emulation. Every stop reason retains its execution result; failed capture
+adds `screenshot_error` and `emulation_already_advanced` without rollback.
+
+Adaptation: file work stays in Electron main, and the native pixel pin is requested
+after operation polling completes. The original operation identity is retained;
+a native paused/current-frame predicate rejects intervening advancement with
+`capture_frame_changed`. Presented output retains its actual submitted-frame tag
+and can lag the current VI. Pixel pinning is immutable, so later execution cannot
+change a successful capture's bytes. This is not a reservation across the run and
+capture requests; intervening clients can cause a reported capture failure.
+
+Validation: rebuilt native host and CPU fixture; TypeScript build and all **32**
+sequential tests passed (12.78 s). Real stdio tests cover run+decodable PNG output,
+file-exists failure after advancing, inline rejection before advancing, and native
+frame-race rejection. Unit coverage verifies old-epoch identity and preservation
+of breakpoint results on capture failure. MCP inventory stays **36** tools.
+Audio/recording and physical input acceptance remain pending.

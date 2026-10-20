@@ -87,3 +87,14 @@ test('MCP screenshot preserves published file metadata when subsequent inline tr
   assert.equal(metadata.error, 'stale_epoch'); assert.equal(metadata.path, published.path); assert.equal(metadata.epoch, 1);
   assert.equal(metadata.image_id, undefined);
 });
+test('post-run capture keeps the operation identity and reports failures without losing completed work', async () => {
+  const { runFramesWithScreenshot } = require('../dist/mcp/run-screenshot.js');
+  const operation = { operation_id: 9, frame: 12, elapsed_frames: 2, state: 'done', stop_reason: 'breakpoint' };
+  let seen;
+  const client = { request: async (method, epoch, p) => { seen = { method, epoch, p }; return { ok: false, error: 'stale_epoch' }; } };
+  const result = await runFramesWithScreenshot(client, async () => operation, { ...params, inline: false }, () => identity);
+  assert.deepEqual(seen.epoch, identity); assert.equal(seen.p.expectedFrame, 12);
+  assert.equal(result.screenshot_error, 'stale_epoch'); assert.equal(result.emulation_already_advanced, true);
+  assert.equal(result.stop_reason, 'breakpoint'); assert.equal(result.operation_id, 9);
+  assert.equal(await runFramesWithScreenshot(client, async () => operation, null, () => identity), operation);
+});

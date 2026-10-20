@@ -414,7 +414,7 @@ int main(int argc, char** argv) {
     host.captures.submitted(screen, host.service.epoch, n64 ? ares::Nintendo64::executionCoordinate.frame : execution.frame);
   };
   host.service.videoRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
-    return host.captures.execute(method, args, owner, host.service.epoch, execution.frame, n64, execution.frameKind);
+    return host.captures.execute(method, args, owner, host.service.epoch, execution.frame, n64, execution.frameKind, host.service.paused);
   };
   host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {

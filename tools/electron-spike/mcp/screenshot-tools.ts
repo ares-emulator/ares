@@ -2,10 +2,11 @@ import { createHash } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { ServiceError, type SessionClient, type SessionIdentity, type SessionReply } from '../services/contracts.js';
+export const screenshotSchema = z.object({ path: z.string().max(4096).nullable().default(null), source: z.enum(['framebuffer', 'presented']).default('framebuffer'), region: z.array(z.number().int().min(0).max(Number.MAX_SAFE_INTEGER)).length(4).nullable().default(null), scale: z.number().min(0.125).max(8).default(1), inline: z.boolean().default(false), overwrite: z.boolean().default(false) }).strict();
 export function registerScreenshotTools(server: McpServer, client: SessionClient, status: () => Promise<SessionIdentity>) {
   const unwrap = <T>(reply: SessionReply<T>): T => { if (!reply.ok || !reply.result) throw new ServiceError(reply.error || 'invalid_reply'); return reply.result; };
   const text = (value: unknown) => ({ type: 'text' as const, text: JSON.stringify(value) });
-  server.registerTool('screenshot', { description: 'Native PNG screenshot: N64 framebuffer is pre-VI RDRAM; presented is the latest epoch-tagged native post-VI output, independent of canvas/video credits. Crop in source pixels then nearest-neighbor scale. Up to 4194304 pixels and 8 MiB PNG; file publication is atomic.', inputSchema: z.object({ path: z.string().max(4096).nullable().default(null), source: z.enum(['framebuffer', 'presented']).default('framebuffer'), region: z.array(z.number().int().min(0).max(Number.MAX_SAFE_INTEGER)).length(4).nullable().default(null), scale: z.number().min(0.125).max(8).default(1), inline: z.boolean().default(false), overwrite: z.boolean().default(false) }).strict() }, async p => {
+  server.registerTool('screenshot', { description: 'Native PNG screenshot: N64 framebuffer is pre-VI RDRAM; presented is the latest epoch-tagged native post-VI output, independent of canvas/video credits. Crop in source pixels then nearest-neighbor scale. Up to 4194304 pixels and 8 MiB PNG; file publication is atomic.', inputSchema: screenshotSchema }, async p => {
     let captureMetadata: Record<string, unknown> | undefined;
     let imageId: string | undefined; let identity: SessionIdentity | undefined;
     try {

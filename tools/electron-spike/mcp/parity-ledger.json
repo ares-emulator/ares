@@ -186,7 +186,7 @@
           "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
         }
       ],
-      "knownLimits": "N64/synthetic VI boundaries only; relative limit 1000000, deadline 0.001\u2013600 seconds. screenshot_after/fpr/cop0 requests return unavailable; verbose adds no register groups. CPU hits/captures/input neutralization remain tasks 5\u20137."
+      "knownLimits": "N64/synthetic VI boundaries only; relative limit 1000000, deadline 0.001\u2013600 seconds. screenshot_after supports bounded host-file PNG output after every stop reason; capture failure preserves the run result. A native paused/frame check rejects competing advancement; epoch is anchored to the operation. fpr/cop0 remain unavailable; verbose adds no register groups."
     },
     {
       "name": "run_until_frame",
@@ -1076,7 +1076,7 @@
           "result": "Passed: real RDRAM pixel formats and immutable pins, delayed old refresh rejection, worker PNG decoded by sips/Electron, crop/scale pixels, real MCP image content without video credits, reset/owner revocation and file overwrite failure. Copied package passed native capture, bundled worker PNG encoding, inline MCP image and identical atomic PNG output with repository reads denied for loader/adapter."
         }
       ],
-      "knownLimits": "N64 pre-VI RGBA5551/RGBA8888 RDRAM framebuffer, or native presented output (post-VI on N64) across cores. Crop then nearest-neighbor scale 0.125..8, up to 4194304 source/output pixels and 8 MiB PNG. Two connection-owned native snapshots and two inline images; 30-second leases, 25-second job deadline. Reset clears old frames (no_frame); first raw-host query only enables future presented capture. No canvas readback. run_frames screenshot_after remains pending."
+      "knownLimits": "N64 pre-VI RGBA5551/RGBA8888 RDRAM framebuffer, or native presented output (post-VI on N64) across cores. Crop then nearest-neighbor scale 0.125..8, up to 4194304 source/output pixels and 8 MiB PNG. Two connection-owned native snapshots and two inline images; 30-second leases, 25-second job deadline. Reset clears old frames (no_frame); first raw-host query only enables future presented capture. No canvas readback. run_frames screenshot_after supports host-file output with operation-epoch and native stopped-frame checks."
     },
     {
       "name": "rdp_capture",

@@ -1,4 +1,5 @@
-import { registerScreenshotTools } from './screenshot-tools.js';
+import { screenshotSchema, registerScreenshotTools } from './screenshot-tools.js';
+import { runFramesWithScreenshot } from './run-screenshot.js';
 import { registerProfilerTools } from './profiler-tools.js';
 import { registerDmaTools } from './dma-tools.js';
 import { registerTraceTools } from './trace-tools.js';
@@ -85,8 +86,10 @@ function createServer(): McpServer {
     return result;
   }
   server.registerTool('run_frames', { description: 'Run exactly n active VI boundaries and stop; zero advances nothing. A partial starting frame counts toward the next boundary. N64 only (plus synthetic fixture).', inputSchema: z.object({ n: z.number().int().min(0).max(1000000), max_seconds: maxSeconds, screenshot_after: z.record(z.string(), z.unknown()).nullable().default(null), ...flags }).strict() }, async ({ n, max_seconds, screenshot_after, fpr, cop0 }) => call(async () => {
-    if (screenshot_after !== null || fpr || cop0) throw new ServiceError('unavailable');
-    return operation('execution.runFrames', n, max_seconds);
+    if (fpr || cop0) throw new ServiceError('unavailable');
+    const capture = screenshot_after === null ? null : screenshotSchema.parse(screenshot_after);
+    if (capture?.inline) throw new ServiceError('invalid_request');
+    return runFramesWithScreenshot(local, () => operation('execution.runFrames', n, max_seconds), capture, id => operationIdentities.get(id)!);
   }));
   server.registerTool('run_until_frame', { description: 'Run to absolute VI frame k in this epoch; past targets reject.', inputSchema: z.object({ k: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER), max_seconds: maxSeconds }).strict() }, async ({ k, max_seconds }) => call(() => operation('execution.runUntilFrame', k, max_seconds)));
   server.registerTool('step', { description: 'Alias for run_frames(1), advancing to the next VI boundary.', inputSchema: z.object({}).strict() }, async () => call(() => operation('execution.runFrames', 1, 60)));
