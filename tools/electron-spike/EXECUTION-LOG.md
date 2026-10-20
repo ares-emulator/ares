@@ -572,3 +572,61 @@ recording, instruction stepping and renderer Resume state without video. An
 initial integration invocation aborted under the sandbox; the authorized GUI
 invocation passed. Task 6 still needs profiler tools and controller_tap; physical
 keyboard/gamepad acceptance and updated task-6 packaging remain outstanding.
+
+### Task 6 — CPU cost profiling and bounded controller taps
+
+Added `profiler_control`, `profiler_clear`, `cpu_profiler_top` and
+`controller_tap`: 35 registered MCP tools out of the preserved 68-tool target.
+Capture is disabled by default, emulation-thread owned and connection scoped.
+It records real JAL/standard JALR calls, return arrival and synthetic exception
+frames, with COUNT-safe 187.5 MHz master ticks and exclusive/inclusive RDRAM bus
+bytes. Continuous totals retain the reference 1000 observed VI-origin-swap limit;
+last-frame data remains fresh. Maps cap at 65536 functions, depth at 1024 and
+parked stacks at 16; dropped updates and frozen accumulation are explicit. Top
+responses cap at 64. Symbol loading, name-based wait classification and UI event
+rings remain deferred, explicitly reported instead of fabricated.
+
+Source: ares-64 `1c9b9637476a83f7b80d3db1115a0f71529820d9`.
+`ares/n64/cpu/profiler.cpp` SHA-256:
+`03fd5a87186305a82f958507d0b5a6a369dc9c1535cd683c5f931f5ac7ca7993`;
+`ares/n64/cpu/cpu.hpp` SHA-256:
+`f68e26b03b73a5fe681f1e10a749a67e5a2330cfb1c6f41b463ed3d915be7fbc`.
+Tap policy derives from the already journaled telemetry-server/debug-session
+sources. Per-connection adaptations are recorded in MCP-PORT-PLAN.md.
+
+Profiling retains the configured recompiler. The profiler and debugger tracer
+share one prologue gate and only invalidate compiled blocks when that gate
+changes. A real fixture caught two JIT attribution defects: internal entry labels
+skipped return-arrival hooks, and callsite instruction-cache refills were charged
+to the newly opened callee. The hook now follows entry labels and cache refill;
+profiling uses the counted C++ refill path rather than the inline JIT copy.
+Initial validation also exposed capability ordering and the fixture's missing
+standalone JIT budget. Those failures were corrected before the final passing
+run. No active user emulator, ROM or saves were used.
+
+Taps are one native owned VI operation, not a pair of RPCs separated by sleep.
+The button latches at start, the tapped port stays stable, and every stop shares
+cleanup. Results freeze held_frames, released and ownership. keep_override
+retains a neutral port on ordinary stops; disconnect/reset/shutdown/human takeover
+revoke it without reacquiring ownership.
+
+Validation so far: native host/core fixture builds passed. All 25 tests passed in
+9.66s, including actual MIPS call cost (106 master ticks and 32 RDRAM bytes),
+COUNT flush, syscall/ERET nesting, JIT call-return into a loop, shared tracer gate,
+map cap, exact two-VI tap scheduling and all nine cleanup reasons. Live N64/MCP
+checks cover profiler ownership/clear/disconnect, tap timeout/cancel/disconnect,
+neutral retention, stable port and immutable results. Electron/MCP passed with
+35 tools and actual N64 profiler/tap calls; renderer stopped-state/reload tests
+also passed. Ordinary audio-enabled smoke passed: 40-system registry, GB/NES
+loading, synthetic 59.87/59.90 fps, GB SDL audio 56.50 fps and NES 60.07 fps.
+Task-6 package validation is recorded below. Physical keyboard/gamepad acceptance
+and audible N64 gameplay remain not run; milestone 2 is not declared passed.
+
+Task-6 package gate passed: `npm run package:mac --prefix tools/electron-spike --
+artifacts/task-6/Ares.app`, then `npm run test:package --prefix tools/electron-spike
+-- artifacts/task-6/Ares.app`. The copied app outside the checkout passed native
+loader and bundled MCP preflights with repository reads denied, the 35-tool
+inventory, GB memory write/read/restore/resume and clean shutdown. Electron
+44.9.0 / bundled Node 24.22.0; 455 rendered GB frames. This remains an ad-hoc-signed
+development app, not a distribution-signing/notarization claim. Next work: task 7
+artifact publishing and trace exports; carry the milestone-2 physical-device gate.

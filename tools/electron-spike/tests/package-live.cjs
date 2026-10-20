@@ -40,6 +40,9 @@ async function run() {
     const [mcpCommand, mcpArgs] = confined(path.join(resources, 'ares-mcp'), ['--connection', file, '--instance', info.instance]);
     peer = new StdioPeer(mcpCommand, mcpArgs, { cwd: temporary, env });
     await peer.initialize();
+    const inventory = (await peer.request('tools/list', {})).result.tools.map(t => t.name);
+    assert.equal(inventory.length, 35);
+    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap']) assert.ok(inventory.includes(name));
     let status;
     for (let i = 0; i < 200; ++i) { status = await peer.tool('emu_status'); if (status.system === 'Game Boy') break; await new Promise(r => setTimeout(r, 20)); }
     assert.equal(status.system, 'Game Boy', diagnostics);

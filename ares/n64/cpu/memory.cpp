@@ -128,21 +128,25 @@ auto CPU::devirtualizeDebug(u64 vaddr) -> u64 {
 
 template<u32 Size>
 inline auto CPU::busWrite(u32 address, u64 data) -> void {
+  if(profiler.enabled && address < rdram.ram.size) profiler.onBusAccess(true, Size);
   bus.write<Size>(address, data, *this, RBusDevice::VR4300_UNCACHED);
 }
 
 template<u32 Size>
 inline auto CPU::busWriteBurst(u32 address, u32 *data) -> bool {
+  if(profiler.enabled && address < rdram.ram.size) profiler.onBusAccess(true, Size);
   return bus.writeBurst<Size>(address, data, *this);
 }
 
 template<u32 Size>
 inline auto CPU::busRead(u32 address) -> u64 {
+  if(profiler.enabled && address < rdram.ram.size) profiler.onBusAccess(false, Size);
   return bus.read<Size>(address, *this, RBusDevice::VR4300_UNCACHED);
 }
 
 template<u32 Size>
 inline auto CPU::busReadBurst(u32 address, u32 *data) -> bool {
+  if(profiler.enabled && address < rdram.ram.size) profiler.onBusAccess(false, Size);
   return bus.readBurst<Size>(address, data, *this);
 }
 

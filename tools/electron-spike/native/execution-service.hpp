@@ -19,6 +19,8 @@ struct ExecutionService {
     std::string owner, kind;
     bool startBoundary;
     Clock::time_point started, deadline;
+    uint32_t tapPort = 0, tapButton = 0;
+    bool tapKeep = false;
   };
   std::optional<Operation> active;
   uint64_t instructions = 0;
@@ -37,6 +39,14 @@ struct ExecutionService {
       + ",\"executor\":\"" + executor + "\",\"operation_id\":" + (active ? std::to_string(active->id) : "null");
   }
   std::string snapshot(const Operation& op, const std::string& reason = "") const {
+    std::string tap;
+    if(op.tapPort) {
+      static constexpr const char* names[] = {"a", "b", "z", "start", "up", "down", "left", "right", "c_up", "c_down", "c_left", "c_right", "l", "r"};
+      bool retained = op.tapKeep && reason != "disconnected" && reason != "host_input" && reason != "shutdown" && reason != "reset";
+      tap = ",\"port\":" + std::to_string(op.tapPort) + ",\"button\":" + (std::string("\"") + names[op.tapButton] + "\"")
+        + ",\"held_frames\":" + std::to_string(frame - op.start) + ",\"released\":" + (reason.empty() ? "false" : "true")
+        + ",\"ownership\":" + std::string(reason.empty() || retained ? "\"injected\"" : "\"host\"");
+    }
     return "{\"operation_id\":" + std::to_string(op.id) + ",\"kind\":\"" + op.kind
       + "\",\"owner\":\"" + op.owner + "\",\"state\":\"" + (reason.empty() ? "running" : "done")
       + "\",\"stopped\":" + (reason.empty() ? "false" : "true") + ",\"stop_reason\":\"" + reason
@@ -48,7 +58,7 @@ struct ExecutionService {
       + ",\"at_frame_boundary\":" + (atBoundary ? "true" : "false")
       + ",\"executor\":\"" + executor + "\",\"slices\":" + std::to_string(op.slices)
       + ",\"elapsed_seconds\":" + std::to_string(std::chrono::duration<double>(Clock::now() - op.started).count()) + ",\"executed\":" + std::to_string(instructions - instructionStart)
-      + (!reason.empty() && debugSnapshot ? ",\"debug_stop\":" + debugSnapshot() : "") + "}";
+      + (!reason.empty() && debugSnapshot ? ",\"debug_stop\":" + debugSnapshot() : "") + tap + "}";
   }
   std::string complete(const std::string& reason, bool& paused) {
     if(!active) return "null";

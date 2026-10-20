@@ -3,6 +3,8 @@
 struct CPU : Thread {
   Node::Object node;
 
+  #include "profiler.hpp"
+
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
@@ -49,6 +51,7 @@ struct CPU : Thread {
   auto queueInsert(u32 event, u32 clocks) -> void;
 
   auto instruction() -> bool;
+  auto updatePrologueHook() -> void;
   auto instructionPrologue(u64 address, u32 instruction) -> void;
   template<bool Recompiled> auto instructionEpilogue() -> void;
   auto raiseCoprocessor1Exception() -> void;

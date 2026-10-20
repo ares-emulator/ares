@@ -3,7 +3,7 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. There are 31 registered tools: the original eleven generic/session/run
+emulator. There are 35 registered tools: the original eleven generic/session/run
 tools plus `cpu_registers`, `step_instructions`, `run_until_hit`,
 `break_add/remove/list`, `watch_add/remove/list`, `last_stop`, `read_memory_va`,
 `write_memory_va`, and `controller_set/release/state/host_mode`, and `trace_pc/calls/page`, plus `overlay_log`. The CPU, VA, controller and trace tools are N64-specific. Diagnostics go to
@@ -177,8 +177,7 @@ closure revokes the departed connection's holds without touching other owners.
 
 New host keyboard/gamepad/button events can take back ordinary play. Automated
 coverage uses real ares controller nodes and generated host keyboard events;
-physical device acceptance is still pending. `controller_tap` and profiler tools remain unregistered until
-their backends are ported.
+physical device acceptance is still pending. `controller_tap` and the three profiler tools are implemented as bounded native services.
 
 
 ## Bounded traces
@@ -216,3 +215,15 @@ overlapping the requested physical code range, not proof of overlays or generate
 code. Native replies page 16 records; the MCP effective limit is 128 with
 next_since_id/more for continuation. No GPU, decompression or general DMA source
 is inferred from PI history.
+
+CPU profiling adds `profiler_control(enable=true)`, `profiler_clear()` and
+`cpu_profiler_top(window="continuous", limit=32)`. Effective top limit is 64,
+reported in the result. Cycle fields use 187.5 MHz master ticks. Frame windows
+are observed VI-origin swaps. Addresses and synthetic exception labels are
+available; symbol names and wait classification are explicitly unavailable.
+Capture ownership, bounded storage and disconnect/reset cleanup apply.
+
+`controller_tap(button, port=1, frames=2, max_seconds=60, keep_override=false)`
+is an owned native VI operation. Button names accept case/whitespace/hyphen
+normalization. Timeout/cancel/hits also release the button; keep_override retains
+neutral isolation, while disconnect/reset/shutdown/human takeover revoke it.

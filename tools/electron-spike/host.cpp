@@ -38,6 +38,8 @@ auto locate(const string& name) -> string {
 #include "native/input-service.hpp"
 #include "native/trace-service.hpp"
 #include "native/dma-service.hpp"
+#include "native/profiler-service.hpp"
+#include "native/tap-service.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
@@ -397,11 +399,18 @@ int main(int argc, char** argv) {
   auto& execution = host.service.execution;
   N64Service n64Service; n64Service.available = n64;
   TraceService traceService; traceService.available = n64;
+  TapService tapService;
+  ProfilerService profilerService; profilerService.available = n64;
   DmaService dmaService; dmaService.available = n64;
   execution.cpuSupported = n64;
   host.injectedInput.available = n64;
-  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); };
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method == "n64.input.tap") return tapService.execute(args, owner, host.service.epoch, host.service.paused, host.injectedInput, execution);
+    // Keep the tapped port stable for its entire owned interval.
+    if(tapService.active() && (method == "n64.input.set" || method == "n64.input.release") && !args.empty() &&
+       (args[0] == "0" || args[0] == std::to_string(tapService.port))) return ControlResult{"busy", {}};
+    if(method.starts_with("n64.profiler.")) return profilerService.execute(method, args, owner, bool(execution.active));
     if(method == "n64.dma.log") return dmaService.execute(args);
     if(method.starts_with("n64.trace.")) return traceService.execute(method, args, owner, host.service.epoch, host.service.paused, execution);
     if(method.starts_with("n64.input.")) return host.injectedInput.execute(method, args, owner, host.service.epoch, execution.frame, execution.active ? execution.active->owner : "");
@@ -424,7 +433,7 @@ int main(int argc, char** argv) {
       if(execution.instructionCount) debug.requestStepInstructions(execution.instructionCount);
       execution.executor = N64Service::executor();
     };
-    execution.onFinish = [&](const std::string& reason) { traceService.finish(reason); host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
+    execution.onFinish = [&](const std::string& reason) { traceService.finish(reason); tapService.finish(reason, host.injectedInput, host.service.epoch, execution.frame); host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
     execution.debugSnapshot = [&] { return debug.halted && execution.active && execution.active->slices ? N64Service::stop(host.service.epoch) : "{\"valid\":false}"; };
   }
   execution.supported = synthetic || n64;
@@ -445,7 +454,7 @@ int main(int argc, char** argv) {
     if(n64) host.injectedInput.service(host.service.epoch, execution.frame);
     bool wasControlled = bool(execution.active);
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
-      host.injectedInput.releaseAll(); traceService.reset();
+      host.injectedInput.releaseAll(); traceService.reset(); profilerService.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
       ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
       if(host.root) { host.output.clear(); host.root->power(); }
@@ -473,7 +482,7 @@ int main(int argc, char** argv) {
         pixels[y * (width + 8) + x] = 0xff000000u | ((x + tick) % 256 << 16) | ((y + tick) % 256 << 8) | (tick % 256);
       }
       host.video({}, pixels.data(), (width + 8) * 4, width, height); ++tick;
-    } else host.root->run();
+    } else { host.root->run(); profilerService.afterRun(); }
     if(execution.active) ++execution.active->slices;
     if(n64) {
       execution.frame = ares::Nintendo64::executionCoordinate.frame;

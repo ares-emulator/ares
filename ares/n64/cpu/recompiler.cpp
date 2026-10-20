@@ -696,12 +696,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
     emitCallfSetupDone = false;
     emitCallfEmitted = false;
 
-    if(callInstructionPrologue) {
-      // Optional debugger/profiler instruction hook.
-      flushDeferredCycles();
-      callf(&CPU::instructionPrologue, imm64(ii.vaddr), imm(instruction));
-    }
-
     if(isInternalEntry) {
       // Resolve this internal entry and patch all pending forward jumps.
       flushDeferredCycles();
@@ -733,6 +727,13 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
         add64(ProfileIcacheHitsMem, ProfileIcacheHitsMem, imm(1));
       }
       deferSlowPathCacheMiss(icacheMiss, ii.address);
+    }
+
+    if(callInstructionPrologue) {
+      // Run after entry labels and instruction-cache refill: alias/back-edge arrivals
+      // are observed, and fetching a call instruction stays charged to its caller.
+      flushDeferredCycles();
+      callf(&CPU::instructionPrologue, imm64(ii.vaddr), imm(instruction));
     }
 
     auto slowPathStart = slowPaths.size();
@@ -812,7 +813,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
       const u32 burst = (slow.icachePaddr & ~0xfffu) | ((lineIndex << 5) & 0xfe0u);
       const u32 tagKey = (slow.icachePaddr & ~0xfffu) | 1u;
       const bool sdram = Model::Aleck64() && burst > 0xbfff'ffffu;
-      if(!emitStateKey.rdramMapIdentity() || (!sdram && burst + 0x1f >= rdram.ram.size)) {
+      if(self.profiler.enabled || !emitStateKey.rdramMapIdentity() || (!sdram && burst + 0x1f >= rdram.ram.size)) {
         callf(&CPU::icacheFillLine, imm64(slow.vaddr), imm(slow.icachePaddr));
       } else {
         const sljit_sw ramDataField = sdram ? (sljit_sw)(uintptr_t)&aleck64.sdram.data

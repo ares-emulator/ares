@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 31 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 35 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -315,7 +315,7 @@ presses request human takeover on the native thread. Takeover finishes an active
 operation with `host_input`, releases overrides and resumes ordinary play. Ports
 without overrides receive neutral input during controlled operations by default.
 The automated tests exercise real controller nodes and emulated keyboard events;
-physical keyboard/gamepad acceptance remains pending. Controller taps and profiling remain task 6 work.
+physical keyboard/gamepad acceptance remains pending. Controller taps and profiling are implemented; milestone 2 still awaits physical-device acceptance.
 
 
 PC/call trace tools now run through the same owned coordinator. PC histograms are
@@ -334,3 +334,23 @@ clipped to installed RAM; unknown chip mapping reports attempted ranges and null
 bytes_written. The log reports overwrites and range truncation. Code candidates
 are hints, not proof of overlays. Ordinary apps leave recording disabled unless
 requested. MCP pages return at most 128 records with a continuation ID.
+
+### Task 6 CPU cost profiling and controller taps
+
+`profiler_control`, `profiler_clear` and `cpu_profiler_top` share emulation-thread
+state. Profiling is off by default and retains JIT execution. Capture is owned by
+the connection: disconnect disables it while retaining results; epoch reset
+revokes it and clears data. Top results use the reference call/return and synthetic
+exception accounting, with explicit master-clock units (187.5 MHz). Frame means
+last observed VI-origin swap, not every VI tick. Open calls commit on return,
+swap or disable. Function maps, call stacks and parked thread stacks are bounded;
+continuous totals freeze at 1000 swaps, with explicit drop/freeze metadata.
+Symbol loading, name-based wait classification and UI timeline/cache rings are
+pending. Function names therefore use addresses (or synthetic exception labels).
+
+`controller_tap` uses one owned native operation for 1..100000 VI boundaries,
+with the same deadline/cancel/stop coordinator. It holds one button from operation
+start; all finish paths release it. `keep_override` keeps a neutral port except
+when ownership is revoked by disconnect, reset, shutdown or human takeover.
+The tapped port cannot be overwritten/released during the operation. Its result
+freezes `held_frames`, release status and resulting ownership.

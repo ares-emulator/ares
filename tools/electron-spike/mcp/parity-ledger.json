@@ -1440,10 +1440,16 @@
       "family": "Input",
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 6 slice; manual acceptance pending)",
+      "mcpSchemaParity": "Source names/defaults retained; bounded ranges/effective limits and semantic adaptations documented. Full generated-schema/result equality pending.",
+      "testEvidence": [
+        {
+          "scope": "task 6 profiler/tap slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: original MIPS call/exception/JIT accounting and bounded maps, exact VI tap target and every cleanup path, native reply decoding, real N64/MCP ownership, Electron tool calls and copied package 35-tool registry. Physical keyboard/gamepad acceptance pending."
+        }
+      ],
+      "knownLimits": "N64 single native owned VI run, 1..100000 frames, deadline 0.001..600s; partial starting frame counts toward next boundary. Tapped port is stable while running. Every stop releases the button; keep_override retains neutral isolation except disconnect/reset/shutdown/human takeover revoke ownership. Physical-device gate pending."
     },
     {
       "name": "trace_pc",
@@ -1725,10 +1731,16 @@
       "family": "Traces/provenance/profiling",
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 6 slice; manual acceptance pending)",
+      "mcpSchemaParity": "Source names/defaults retained; bounded ranges/effective limits and semantic adaptations documented. Full generated-schema/result equality pending.",
+      "testEvidence": [
+        {
+          "scope": "task 6 profiler/tap slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: original MIPS call/exception/JIT accounting and bounded maps, exact VI tap target and every cleanup path, native reply decoding, real N64/MCP ownership, Electron tool calls and copied package 35-tool registry. Physical keyboard/gamepad acceptance pending."
+        }
+      ],
+      "knownLimits": "N64 raw-address top costs, up to 64 entries; master ticks at 187.5 MHz. Frame means last observed VI-origin swap. Open calls commit on return/swap/disable; continuous accumulation freezes at 1000 swaps. Maps cap at 65536 functions, stack depth 1024 and parked stacks 16, with drop counters. ELF names/wait classification and UI cache/timeline rings are deferred."
     },
     {
       "name": "profiler_control",
@@ -1746,10 +1758,16 @@
       "family": "Traces/provenance/profiling",
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 6 slice; manual acceptance pending)",
+      "mcpSchemaParity": "Source names/defaults retained; bounded ranges/effective limits and semantic adaptations documented. Full generated-schema/result equality pending.",
+      "testEvidence": [
+        {
+          "scope": "task 6 profiler/tap slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: original MIPS call/exception/JIT accounting and bounded maps, exact VI tap target and every cleanup path, native reply decoding, real N64/MCP ownership, Electron tool calls and copied package 35-tool registry. Physical keyboard/gamepad acceptance pending."
+        }
+      ],
+      "knownLimits": "Disabled by default; connection-owned capture runs with interpreter or recompiler. Foreign toggles/clear and mutations during operations return busy. Disconnect disables capture retaining statistics; reset disables and clears. Debug tracer and profiler share the JIT prologue gate."
     },
     {
       "name": "profiler_clear",
@@ -1760,10 +1778,16 @@
       "family": "Traces/provenance/profiling",
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 6 slice; manual acceptance pending)",
+      "mcpSchemaParity": "Source names/defaults retained; bounded ranges/effective limits and semantic adaptations documented. Full generated-schema/result equality pending.",
+      "testEvidence": [
+        {
+          "scope": "task 6 profiler/tap slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: original MIPS call/exception/JIT accounting and bounded maps, exact VI tap target and every cleanup path, native reply decoding, real N64/MCP ownership, Electron tool calls and copied package 35-tool registry. Physical keyboard/gamepad acceptance pending."
+        }
+      ],
+      "knownLimits": "Owner-only while capture enabled; rebases open and parked calls and clears maps, frame count and drop counters. Symbolication/wait classification remain unavailable."
     },
     {
       "name": "audio_capture",

@@ -242,6 +242,21 @@ mappings retain attempted ranges with bytes_written=null and writes_confirmed=fa
 Ring overwrites and range truncation are explicit. Code candidates remain a
 heuristic, not proof of overlays or decompressed/generated-code provenance.
 
+Task 6 profiler adaptation: retain reference call/return, exception nesting,
+COUNT-safe master ticks and VI-origin-swap windows, including the 1000-swap
+continuous limit. Bound function maps (65536), live depth (1024) and parked stacks
+(16), reporting drops. Capture is connection-owned; disconnect disables it and
+reset revokes/clears it. Symbol discovery, wait-name classification and large UI
+cache/timeline rings are deferred; their absence is explicit. JIT entry labels
+must precede the profiling hook so return arrival into an internal target is
+observed. Run the hook after instruction-cache refill to charge a callsite fetch
+to its caller, matching interpreter attribution.
+
+Task 6 tap adaptation: per-connection port ownership supersedes the single-client
+reference. The tapped port is stable for the owned interval. keep_override may
+retain neutral input on ordinary completion/cancel/timeout/hits, but generation,
+epoch and human takeover revocation never reacquire a neutral lease.
+
 Gate: run `live_fixture.py` and ownership/cancel/disconnect tests against the native
 Electron host, not an old fork binary. Verify exact frames, partial-frame stops,
 watch access semantics, cached writes, delay slots and immutable stop snapshots.

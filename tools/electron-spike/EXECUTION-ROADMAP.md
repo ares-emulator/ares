@@ -4,7 +4,8 @@ Status: tasks 1–5 and the task 4.5 TypeScript/ESM detour implemented; mileston
 integration gate passed on macOS arm64.
 Runtime evidence and pending checks are recorded in
 [EXECUTION-LOG.md](EXECUTION-LOG.md). Task 6 is in progress: input ownership, bounded PC/call traces and PI DMA provenance are implemented;
-profiling and controller taps remain. Later tasks are planned. Start here when
+profiling and controller taps are implemented; automated and package checks passed.
+Milestone 2 physical keyboard/gamepad acceptance remains pending. Later tasks are planned. Start here when
 choosing the next task.
 
 ## Which plan owns what

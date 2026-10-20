@@ -1,3 +1,4 @@
+import { registerProfilerTools } from './profiler-tools.js';
 import { registerDmaTools } from './dma-tools.js';
 import { registerTraceTools } from './trace-tools.js';
 import { registerInputTools } from './input-tools.js';
@@ -41,7 +42,7 @@ function createServer(): McpServer {
   const server = new McpServer({ name: 'ares', version: '0.2.0' });
   const status = async () => { const reply = await local.request('session.status'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch }; };
   const call = (fn: () => Promise<unknown>) => fn().then(output, failure);
-  server.registerTool('emu_status', { description: 'Emulator status, native VI coordinates and current execution operation.', inputSchema: z.object({ verbose: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true } }, async ({ verbose }) => call(async () => ({ ...await status(), ...(verbose ? { limits: ['Advanced captures, traces and provenance remain pending; VI runs support N64 and the synthetic fixture only.'] } : {}) })));
+  server.registerTool('emu_status', { description: 'Emulator status, native VI coordinates and current execution operation.', inputSchema: z.object({ verbose: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true } }, async ({ verbose }) => call(async () => ({ ...await status(), ...(verbose ? { limits: ['Advanced captures and symbolication remain pending; VI runs support N64 and the synthetic fixture only.'] } : {}) })));
   server.registerTool('pause', { description: 'Pause at a native slice boundary and finish an owned operation with reason paused.', inputSchema: z.object({}).strict() }, async () => call(async () => {
     if (!local.identity) await status(); const reply = await local.request('session.pause'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch };
   }));
@@ -98,9 +99,10 @@ function createServer(): McpServer {
     return unwrap(await local.request('execution.cancel', operation_id === null ? undefined : operationIdentities.get(operation_id), { operationId: operation_id ?? 0 }));
   }));
   registerN64Tools(server, local, status, operation);
-  registerInputTools(server, local, status);
+  registerInputTools(server, local, status, rememberOperation);
   registerTraceTools(server, local, status, rememberOperation, id => operationIdentities.get(id));
   registerDmaTools(server, local, status);
+  registerProfilerTools(server, local, status);
   server.server.onclose = () => local.close();
   return server;
 }

@@ -1,4 +1,5 @@
 auto CPU::Exception::trigger(u32 code, u32 coprocessor, bool tlbMiss) -> void {
+  if(self.profiler.enabled && !self.scc.status.exceptionLevel) self.profiler.onException(code);
   self.debugger.exception(code);
   if (code != 0) {  //ignore interrupt exceptions
     reportGDBException(code, self.ipu.pc); 

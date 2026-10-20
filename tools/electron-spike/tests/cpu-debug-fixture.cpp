@@ -5,6 +5,8 @@
 #include "../native/input-service.hpp"
 #include "../native/trace-service.hpp"
 #include "../native/dma-service.hpp"
+#include "../native/profiler-service.hpp"
+#include "../native/tap-service.hpp"
 #include <cstdio>
 #include <cstdlib>
 using namespace ares::Nintendo64;
@@ -257,6 +259,75 @@ int main() {
   bounded.begin(0x10000000, 0, 8, base, 16, 4 * 1024 * 1024, false); bounded.wrote(0, 8);
   check(!bounded.current->writesConfirmed && bounded.current->bytesAttempted == 8, "nonidentity RDRAM writes remain unconfirmed");
   bounded.reset(2); check(bounded.records.empty() && bounded.current == nullptr && bounded.epoch == 2, "epoch reset revokes old provenance");
+  // Profiler: original MIPS call/return and exception bodies, not a commercial ROM.
+  auto& prof = cpu.profiler;
+  word(0x300, 0x0c0004d0); word(0x304, 0);  // jal 80001340; delay
+  word(0x308, 0x1000ffff); word(0x30c, 0);  // returned caller loops
+  word(0x340, 0x24020001); word(0x344, 0x03e00008); word(0x348, 0);
+  cpu.ipu.r[29].u64 = 0xffffffff80003000ull;
+  cpu.icache.power(false); pc(base + 0x300); prof.setEnabled(true); steps(6);
+  check(prof.stats.size() == 1 && prof.stats.at(0x80001340).callCount == 1, "profiler accounts one real call on return");
+  auto functionCost = prof.stats.at(0x80001340);
+  check(functionCost.inclCycles == 106 && functionCost.exclCycles == 106 && functionCost.exclBytesIn == 32, "profiler exact master ticks and RDRAM line bytes");
+  auto timeBeforeCount = prof.now(); cpu.flushCount();
+  check(prof.now() == timeBeforeCount, "profiler COUNT flush does not double count pending time");
+  ProfilerService profView; profView.available = true; profView.owner = "fixture";
+  auto top = profView.execute("n64.profiler.top", {"continuous", "32"}, "observer", false);
+  check(top.error.empty(), "profiler top safe-point serialization"); std::printf("PROFILER_TOP %s\n", top.json.c_str());
+  check(profView.execute("n64.profiler.control", {"0"}, "foreign", false).error == "busy", "profiler capture owner blocks foreign toggles");
+  prof.onFrame(); check(prof.frameStats.at(0x80001340).callCount == 1 && prof.frameCount == 1, "profiler swap window commits completed calls");
+  prof.onFrame(); check(prof.frameStats.empty() && prof.frameCount == 2, "profiler frame window does not reuse earlier data");
+  prof.clearStats(); check(prof.stats.empty() && prof.frameCount == 0, "profiler clear rebases statistics");
+  // Synchronous syscall cost nests beneath the interrupted function, ERET unwinds it.
+  word(0x340, 0x0000000c);
+  rdram.ram.write<Word>(0x180, 0x401a7000, RBusDevice::ARES_DEBUGGER); // mfc0 k0,EPC
+  rdram.ram.write<Word>(0x184, 0x275a0004, RBusDevice::ARES_DEBUGGER);
+  rdram.ram.write<Word>(0x188, 0x409a7000, RBusDevice::ARES_DEBUGGER); // mtc0 k0,EPC
+  rdram.ram.write<Word>(0x18c, 0x42000018, RBusDevice::ARES_DEBUGGER); // eret
+  cpu.scc.status.vectorLocation = 0; cpu.scc.status.exceptionLevel = 0; cpu.scc.status.errorLevel = 0; cpu.context.setMode();
+  cpu.icache.power(false); pc(base + 0x300); steps(10);
+  check(prof.stats.count(0xe0000048) && prof.excActive == 0 && prof.callStack.empty(), "profiler syscall and ERET balance synthetic exception frame");
+  auto handler = prof.stats.at(0xe0000048); auto interrupted = prof.stats.at(0x80001340);
+  check(handler.inclCycles > 0 && interrupted.inclCycles == interrupted.exclCycles + handler.inclCycles, "exception time excluded from interrupted function exclusive cost");
+  check(interrupted.exclBytesIn == 32 && handler.exclBytesIn == 32, "exception bus bytes attributed separately");
+  // Profiling JIT blocks uses the prologue hook, without debug interpreter forcing.
+  prof.setEnabled(false); prof.clearStats(); word(0x340, 0x24020001);
+  d.resume(); d.updateActive(); cpu.icache.power(false); pc(base + 0x300);
+  prof.setEnabled(true); check(cpu.recompiler.callInstructionPrologue && !d.active, "profiler enables JIT prologue without forcing interpreter");
+  cpu.jitClockTarget = cpu.clock + 100000; // This fixture drives instruction(), without the host scheduler.
+  for(unsigned n = 0; n < 10 && prof.stats.empty(); ++n) cpu.instruction();
+  check(prof.stats.count(0x80001340) && prof.stats.at(0x80001340).callCount == 1 && prof.stats.at(0x80001340).exclBytesIn == 32, "real JIT calls and inline icache miss bytes are profiled");
+  cpu.debugger.tracer.instruction->setEnabled(true);
+  profView.releaseOwner("old-generation"); check(prof.enabled, "stale profiler owner cannot disable new capture");
+  profView.releaseOwner("fixture"); check(!prof.enabled && cpu.recompiler.callInstructionPrologue, "disconnect disables profiler while preserving debugger prologue");
+  cpu.debugger.tracer.instruction->setEnabled(false); check(!cpu.recompiler.callInstructionPrologue, "both disabled restores JIT without prologues");
+  prof.clearStats();
+  CPU::Profiler::Frame boundedFrame; boundedFrame.funcAddr = 0x80001000;
+  for(unsigned n = 0; n < CPU::Profiler::maxFunctions; ++n) prof.stats.emplace(n, CPU::Profiler::FuncStat{});
+  prof.commitFrame(boundedFrame, nullptr, prof.now());
+  check(prof.stats.size() == CPU::Profiler::maxFunctions && prof.droppedFunctionUpdates == 1, "profiler function-map cap reports dropped updates");
+  prof.power();
+  // Tap scheduling uses the coordinator's exact VI target and one cleanup path.
+  TapService tap; InputService tapInput; tapInput.available = true;
+  ExecutionService tapExecution; tapExecution.supported = true; tapExecution.frameKind = "vi";
+  tapExecution.frame = 10; bool tapPaused = true;
+  tapExecution.onStart = [&] { tapInput.start(1, tapExecution.frame); };
+  tapExecution.onFinish = [&](const std::string& reason) { tap.finish(reason, tapInput, 1, tapExecution.frame); tapInput.finish(1, tapExecution.frame); };
+  auto tapStart = tap.execute({"1", "0", "2", "1000", "0"}, "tap-owner", 1, tapPaused, tapInput, tapExecution);
+  check(tapStart.error.empty() && tapInput.latched[0].buttons == 1 && tapExecution.active->target == 12, "tap button latched before first slice with exact target");
+  tapExecution.frame = 11; tapExecution.service(tapPaused);
+  check(tap.active() && tapInput.latched[0].buttons == 1, "tap remains held before target VI");
+  tapExecution.frame = 12; tapExecution.service(tapPaused);
+  check(!tap.active() && !tapInput.hasOverrides() && tapExecution.finished.back().second.find("\"held_frames\":2") != std::string::npos, "tap finishes exact interval and freezes held count");
+  for(const char* reason : {"cancelled", "timeout", "breakpoint", "watchpoint", "paused", "disconnected", "host_input", "reset", "shutdown"}) {
+    check(tap.execute({"1", "1", "2", "1000", "1"}, "tap-owner", 1, tapPaused, tapInput, tapExecution).error.empty(), "tap cleanup case starts");
+    auto final = tapExecution.complete(reason, tapPaused);
+    bool retain = TapService::retains(reason);
+    check(!tap.active() && tapInput.pending[0].overridden() == retain && tapInput.latched[0].buttons == 0 && tapInput.pending[0].buttons == 0, "every tap exit releases button and revocation does not reacquire override");
+    check(final.find(retain ? "\"ownership\":\"injected\"" : "\"ownership\":\"host\"") != std::string::npos, "tap immutable result matches cleanup ownership");
+    tapInput.releaseAll();
+  }
+  check(tap.execute({"1", "14", "2", "1000", "0"}, "tap-owner", 1, tapPaused, tapInput, tapExecution).error == "invalid_request" && !tapInput.hasOverrides(), "invalid tap makes no input mutation");
   pi.detach(cartridge.romDevice); cartridge.rom.reset();
   rdram.ram.reset();
   std::puts("CPU_DEBUG_FIXTURE_PASS");

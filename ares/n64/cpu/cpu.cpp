@@ -8,6 +8,7 @@ CPU cpu;
 #include "dcache.cpp"
 #include "tlb.cpp"
 #include "debug-control.cpp"
+#include "profiler.cpp"
 #include "memory.cpp"
 #include "exceptions.cpp"
 #include "algorithms.cpp"
@@ -197,8 +198,16 @@ auto CPU::instruction() -> bool {
   return true;
 }
 
+auto CPU::updatePrologueHook() -> void {
+  if constexpr(Accuracy::CPU::Recompiler) {
+    bool want = profiler.enabled || (debugger.tracer.instruction && debugger.tracer.instruction->enabled());
+    if(want != recompiler.callInstructionPrologue) { recompiler.reset(); recompiler.callInstructionPrologue = want; }
+  }
+}
+
 auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
   debugger.instruction(address, instruction);
+  if(profiler.enabled) profiler.onInstruction(address, instruction);
 }
 
 auto CPU::icacheFillLine(u64 vaddr, u32 paddr) -> void {
@@ -218,6 +227,7 @@ auto CPU::raiseCoprocessor1Exception() -> void {
 
 auto CPU::power(bool reset) -> void {
   debugControl.power();
+  profiler.power();
   Thread::reset();
 
   context.endian = Context::Endian::Big;

@@ -292,6 +292,7 @@ auto CPU::ERET() -> void {
   if(!context.kernelMode()) {
     if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
   }
+  if(profiler.enabled) profiler.onEret();
   if(scc.status.errorLevel) {
     pipeline.setPc(scc.epcError);
     scc.status.errorLevel = 0;

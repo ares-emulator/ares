@@ -23,6 +23,12 @@ struct MI : Memory::RCP<MI> {
   auto raise(IRQ) -> void;
   auto lower(IRQ) -> void;
   auto poll() -> void;
+  // Side-effect-free interrupt source snapshot for CPU exception attribution.
+  auto activeIRQs() const -> u32 {
+    return ((irq.sp.line & irq.sp.mask) ? 1u : 0u) | ((irq.si.line & irq.si.mask) ? 2u : 0u)
+      | ((irq.ai.line & irq.ai.mask) ? 4u : 0u) | ((irq.vi.line & irq.vi.mask) ? 8u : 0u)
+      | ((irq.pi.line & irq.pi.mask) ? 16u : 0u) | ((irq.dp.line & irq.dp.mask) ? 32u : 0u);
+  }
 
   auto power(bool reset) -> void;
 
