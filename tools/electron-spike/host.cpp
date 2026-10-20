@@ -45,6 +45,7 @@ auto locate(const string& name) -> string {
 #include "native/audio-service.hpp"
 #include "native/recording-service.hpp"
 #include "native/state-snapshot.hpp"
+#include "native/state-loader.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
@@ -53,6 +54,7 @@ struct Host : ares::Platform {
   AudioService audioCapture;
   RecordingService recording;
   StateSnapshot stateSnapshot;
+  StateLoader stateLoader;
   std::atomic<bool> takeoverRequested{false};
   ares::Node::System root;
   std::shared_ptr<HID::Joypad> joypad;
@@ -432,8 +434,57 @@ int main(int argc, char** argv) {
   host.service.audioRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     return host.audioCapture.execute(method, args, owner, !host.streams.empty());
   };
-  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); host.stateSnapshot.releaseOwner(owner); };
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); host.stateSnapshot.releaseOwner(owner); host.stateLoader.releaseOwner(owner); };
+  host.service.beforeRequest = [&](const std::string& method, const std::string& owner) -> std::string {
+    auto& load = host.stateLoader;
+    if(load.upload && Clock::now() >= load.upload->deadline) load.reset();
+    if(load.upload && (method == "session.pause" || method == "session.resume") && owner != "ui" && owner != load.upload->owner) return "busy";
+    if(!load.upload || method.starts_with("n64.state.load")) return {};
+    static const std::vector<std::string> allowed = {
+      "session.status", "session.pause", "session.resume", "session.reset", "execution.status", "execution.cancel", "execution.release",
+      "memory.regions", "memory.read", "n64.memory.read", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
+      "n64.input.state", "n64.profiler.top", "n64.dma.log", "n64.trace.page", "n64.state.format", "n64.state.layout", "n64.state.read", "n64.state.release",
+      "video.begin", "video.read", "video.release", "video.record.status", "video.record.read", "video.record.release", "audio.status", "audio.read", "audio.release"
+    };
+    return std::find(allowed.begin(), allowed.end(), method) != allowed.end() ? std::string{} : "busy";
+  };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method.starts_with("n64.state.load")) {
+      if(method == "n64.state.loadCommit" && host.stateLoader.upload && host.takeoverRequested.load()) {
+        host.stateLoader.reset(); if(!host.injectedInput.takeover()) ++host.injectedInput.takeovers;
+        ares::Nintendo64::cpu.debugControl.resume(); host.service.paused = false;
+        return ControlResult{"state_load_cancelled", {}};
+      }
+      auto savedInput = host.injectedInput.pending; auto oldFrame = execution.frame;
+      auto result = host.stateLoader.execute(method, args, owner, n64, bool(execution.active), host.service.paused, host.stateSnapshot);
+      if(host.stateLoader.touched) {
+        ++host.service.epoch;
+        host.injectedInput.releaseAll(); host.injectedInput.operationRunning = false;
+        traceService.reset(); profilerService.reset(); host.captures.reset(host.service.epoch);
+        host.audioCapture.reset(); host.recording.reset(); host.stateSnapshot.reset();
+        ares::Nintendo64::executionCoordinate.reset();
+        ares::Nintendo64::executionCoordinate.atBoundary = false; // restored VI phase is not an observed boundary
+        ares::Nintendo64::dmaProvenance.reset(host.service.epoch);
+        ares::Nintendo64::cpu.debugControl.power();
+        execution.frame = 0; execution.atBoundary = false; execution.finished.clear();
+        host.output.clear();
+        bool keep = result.error.empty() && args[2] == "1";
+        if(keep) for(unsigned port = 0; port < 4; ++port) if(savedInput[port].owner == owner) {
+          auto neutral = savedInput[port]; neutral.buttons = 0; neutral.x = neutral.y = 0; neutral.epoch = host.service.epoch;
+          if(neutral.expiresFrame != UINT64_MAX) neutral.expiresFrame = neutral.expiresFrame > oldFrame ? neutral.expiresFrame - oldFrame : 0;
+          host.injectedInput.pending[port] = neutral;
+        }
+        host.injectedInput.epoch = host.service.epoch;
+        host.injectedInput.service(host.service.epoch, 0, InputService::Clock::now(), true);
+        host.service.paused = !result.error.empty() || args[1] != "1";
+        if(result.error.empty()) {
+          result.json.pop_back();
+          result.json += ",\"version\":" + controlQuote(ares::Nintendo64::system.stateVersion().data()) + ",\"epoch\":" + std::to_string(host.service.epoch) + ",\"frame\":0,\"at_frame_boundary\":false,\"pc\":" + controlQuote(N64Service::hex(ares::Nintendo64::cpu.pipeline.pc))
+            + ",\"stopped\":" + (host.service.paused ? "true" : "false") + ",\"paused\":" + (host.service.paused ? "true" : "false") + ",\"running\":" + (host.service.paused ? "false" : "true") + ",\"input\":" + host.injectedInput.state() + "}";
+        }
+      }
+      return result;
+    }
     if(method == "n64.state.begin" || method == "n64.state.read" || method == "n64.state.release") return host.stateSnapshot.execute(method, args, owner, host.service.epoch, execution.frame, n64, bool(execution.active), host.service.paused);
     if(method == "n64.state.format" || method == "n64.state.layout") {
       if(!args.empty()) return ControlResult{"invalid_request", {}};
@@ -472,7 +523,9 @@ int main(int argc, char** argv) {
   };
   if(n64) {
     auto& debug = ares::Nintendo64::cpu.debugControl;
+    host.service.onPause = [&] { host.stateLoader.reset(); };
     host.service.onResume = [&](bool keepOverrides, const std::string& owner) {
+      host.stateLoader.reset();
       if(!keepOverrides) {
         if(owner == "ui") host.injectedInput.releaseAll();
         else host.injectedInput.releaseOwner(owner);
@@ -511,11 +564,17 @@ int main(int argc, char** argv) {
       host.audioCapture.reset();
       host.recording.reset();
       host.stateSnapshot.reset();
+      host.stateLoader.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
       ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
       if(host.root) { host.output.clear(); host.root->power(); }
     }, host.memory)) { host.quit = true; break; }
-    if(host.takeoverRequested.exchange(false) && n64 && host.injectedInput.takeover()) {
+    bool takeover = host.takeoverRequested.exchange(false);
+    bool loadTakeover = takeover && n64 && host.stateLoader.upload.has_value();
+    if(loadTakeover) host.stateLoader.reset();
+    bool inputTakeover = takeover && n64 && host.injectedInput.takeover();
+    if(loadTakeover && !inputTakeover) ++host.injectedInput.takeovers;
+    if(loadTakeover || inputTakeover) {
       execution.complete("host_input", host.service.paused);
       ares::Nintendo64::cpu.debugControl.resume();
       host.service.paused = false;
@@ -523,7 +582,7 @@ int main(int argc, char** argv) {
     if(!wasControlled && execution.active && host.sound) host.output.clear();
     if(host.service.paused && !execution.active) {
       if(host.sound && !synthetic) host.output.clear();
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      host.service.waitForRequest(std::chrono::milliseconds(10));
       deadline = Clock::now(); continue;
     }
     bool controlled = bool(execution.active);

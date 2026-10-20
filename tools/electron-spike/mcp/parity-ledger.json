@@ -746,7 +746,7 @@
       "testEvidence": [
         "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
       ],
-      "knownLimits": "N64 only. Pauses at a native safe point; active execution/GDB or an existing native state pin returns busy. Up to 64 MiB; one connection-owned immutable snapshot with 30-second lease, main streaming export deadline 25 seconds. Atomic state file and separately atomic hash/ROM/layout sidecar (metadata=true); sidecar failure returns metadata_error alongside the saved file. No-overwrite by default. Native state field order/version unchanged (v153); load/cross-build compatibility acceptance remains pending."
+      "knownLimits": "N64 only. Pauses at a native safe point; active execution/GDB or an existing native state pin returns busy. Up to 64 MiB; one connection-owned immutable snapshot with 30-second lease, main streaming export deadline 25 seconds. Atomic state file and separately atomic hash/ROM/layout sidecar (metadata=true); sidecar failure returns metadata_error alongside the saved file. No-overwrite by default. Native state field order/version unchanged (v153); Separate load preflight and a cross-binary default-configuration round trip now pass; full experiments remain pending."
     },
     {
       "name": "state_load",
@@ -776,10 +776,12 @@
       "family": "States",
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 8 restore slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit upload, sidecar and ownership adaptations documented; full generated schema comparison not run",
+      "testEvidence": [
+        "Native/MCP save/load: exact restored CPU registers, epochs, pause/resume, neutral leases, rejection and cancellation; reference binary round trip in both directions and 4 MiB incompatibility gate"
+      ],
+      "knownLimits": "N64 only. Reserves native mutation dispatch during a connection-owned upload; normal UI pause/resume/reset and human takeover cancel it. 64 MiB files, 1800-byte upload chunks/four in flight, 30-second native lease and 25-second main deadline. Preflights signature/version, exact current serializer size, and present hash/ROM/layout metadata; stale sidecars reject. Legacy states without sidecars still require native version/size checks. Success starts a new epoch at frame 0, paused by default, clearing old captures/history. keep_overrides retains only this owner's neutral input leases. Restored VI phase is conservatively not an observed frame boundary. Cross-binary v153 round trip passed for default 8 MiB N64; actual 4 MiB machine rejected that state without guest mutation. Restore rollback/failure branch is implemented but not fault-injected; no claim for every peripheral configuration."
     },
     {
       "name": "read_memory_va",

@@ -18,7 +18,8 @@
     "test:mcp": "npm run build && electron tests/electron-mcp.mjs",
     "test:package": "node tests/package-live.cjs",
     "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig.browser.json && tsc -p tsconfig.preload.json",
-    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "test:state-reference": "npm run build && node tests/state-reference.cjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

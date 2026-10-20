@@ -1,4 +1,4 @@
-import { NATIVE_STATE_METHODS, STATE_METHODS, validStateRequest, validStateResult, type StateServiceMap } from './state-contracts.js';
+import { NATIVE_STATE_METHODS, STATE_METHODS, encodeState, validStateResult, type StateServiceMap } from './state-contracts.js';
 import { RECORDING_METHODS, encodeRecording, validRecording, type RecordingServiceMap } from './recording-contracts.js';
 import { AUDIO_METHODS, encodeAudio, validAudio, type AudioServiceMap } from './audio-contracts.js';
 import { FRAME_METHODS, encodeFrame, validFrame, type FrameServiceMap } from './frame-contracts.js';
@@ -64,9 +64,9 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
   let suffix = '';
   // Main-only methods use this validator but never enter the native wire.
   if (method.startsWith('state.') || method.startsWith('n64.state.')) {
-    if (!validStateRequest(method, params)) throw new ServiceError('invalid_request');
-    if (method === 'n64.state.read') { const p = params as { snapshotId: number; offset: number; length: number }; suffix = ` ${p.snapshotId} ${p.offset} ${p.length}`; }
-    if (method === 'n64.state.release') suffix = ` ${(params as { snapshotId: number }).snapshotId}`;
+    const encoded = encodeState(method, params);
+    if (encoded === undefined) throw new ServiceError('invalid_request');
+    suffix = encoded;
   } else if (method.startsWith('video.record.') || method === 'artifact.videoStop') {
     const encoded = encodeRecording(method, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
@@ -134,7 +134,7 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
   if (r.ok) {
     const s = r.result;
     let valid = false;
-    if (method.startsWith('state.') || method.startsWith('n64.state.')) valid = validStateResult(method, s);
+    if (method.startsWith('state.') || method.startsWith('n64.state.')) valid = validStateResult(method, s) && (!['state.load', 'n64.state.loadCommit'].includes(method) || s.epoch === r.epoch);
     if (method.startsWith('audio.') || method === 'artifact.audioSave') valid = validAudio(method, s) && (method !== 'artifact.audioSave' || s.epoch === r.epoch);
     if (method.startsWith('video.record.') || method === 'artifact.videoStop') valid = validRecording(method, s);
     else if (method.startsWith('video.')) valid = validFrame(method, s) && (method !== 'video.begin' || s.epoch === r.epoch);

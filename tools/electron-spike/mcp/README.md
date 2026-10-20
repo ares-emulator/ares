@@ -3,9 +3,9 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 46 tools: eleven generic/session/run tools,
+emulator. The verified registry has 47 tools: eleven generic/session/run tools,
 twelve N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and four state save/inspection tools. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
@@ -310,7 +310,7 @@ ROM hash, serializer version, capture epoch/frame and the saved RDRAM layout.
 These are two publications: `metadata_error` preserves a successfully saved state
 when the sidecar cannot be published. Native pins have 30-second leases; exports
 have a 25-second deadline. Reset/disconnect revoke them. Saved-state field order
-and version remain `v153`; save support alone does not establish load compatibility.
+and version remain `v153`; save support alone does not establish compatibility for every hardware configuration.
 
 `state_info(path)` reads only the 533-byte header of a bounded regular file. Its
 `header_supported_configuration_unverified` result deliberately does not approve
@@ -332,4 +332,42 @@ pause or load the live emulator. File inputs are bounded to 64 MiB; nonregular
 inputs reject. Inspections allow two global jobs/one per owner and a 25-second
 deadline, with reset/disconnect revocation.
 
-Safe loading, delayed write verification and batch experiments remain pending.
+Safe loading is implemented; delayed write verification and batch experiments remain pending.
+
+`state_load(path, resume=false, keep_overrides=false)` starts an owned, bounded
+upload while the emulator is paused. Native dispatch reserves mutations for that
+transfer; read-only tools remain usable. UI pause/resume/reset, disconnect and
+keyboard/gamepad takeover revoke it. Chunks are 1800 bytes, four in flight, within
+the existing native line/write budgets. Paused dispatch wakes on requests rather
+than adding a polling sleep to each batch. File work has a 25-second deadline and
+the native upload lease is 30 seconds.
+
+Before changing guest state, native commit checks signature/version and exact
+serialized size for current hardware; available sidecar layout and ROM identity
+must also match. A present but stale/invalid sidecar rejects instead of falling
+back to unchecked legacy loading. Files with no sidecar still receive native
+header/version/size checks. Preflight failure leaves guest registers/RAM and epoch
+unchanged and stays paused. A successful restore starts a new epoch at frame 0,
+clears old captures/operation history, and is paused unless `resume` is true.
+`keep_overrides` retains only this connection's neutral input leases; other holds
+are released. The restored VI phase is not assumed to be an observed boundary:
+`at_frame_boundary` is false until an actual VI boundary is reached.
+
+A restore failure after core mutation attempts backup restoration, invalidates the
+epoch and remains paused; its error distinguishes successful backup restoration
+from failed recovery. This recovery branch has not been fault-injected. Mutations
+are never automatically replayed after a lost reply.
+
+The optional cross-binary gate uses an isolated reference process with writes
+sandboxed to its disposable directory and verifies ownership of its private debug
+port before connecting:
+
+```sh
+ARES_REFERENCE_HOST=/absolute/reference/ares npm run test:state-reference
+```
+
+Both directions pass for the tested default 8 MiB N64 configuration and `v153`;
+a real 4 MiB configuration rejects that state without guest mutation. This does
+not claim every peripheral configuration or cross-platform state compatibility.
+The reference executable's hash and measurements are written to
+`artifacts/state-reference.json`.

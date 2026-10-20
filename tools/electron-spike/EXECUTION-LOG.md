@@ -941,3 +941,66 @@ Remaining task 8 work: preflighted safe load/new-epoch behavior, cross-binary
 restore compatibility, multiwrite/delayed verification and bounded batch sweeps.
 No existing fork state was loaded or accepted solely from its version/header.
 Milestone 2 physical keyboard/gamepad/audible N64 acceptance remains not run.
+
+### Task 8 — reserved state restore and cross-binary compatibility
+
+Implemented `state_load(path, resume=false, keep_overrides=false)` and five
+internal bounded native transfer methods. MCP inventory is now **47 of 68**.
+Reference path-state preflight/backup semantics come from the previously hashed
+states.cpp at `1c9b9637476a83f7b80d3db1115a0f71529820d9`; no legacy file I/O or
+TCP bridge ships in the new host.
+
+Main pauses through a native upload reservation, reads a regular file (64 MiB
+max), and transfers four 1800-byte chunks at a time within the existing 4 KiB
+request/16 KiB writable-buffer bounds. Native mutation dispatch is reserved for
+the upload owner. Other connections cannot pause/resume its reservation; UI or
+own-connection pause/resume, reset, owner disconnect and human takeover revoke
+it. Raw keyboard takeover also resumes ordinary play. Native upload leases are
+30 seconds and main jobs have a 25-second deadline. The paused emulation loop now
+wakes on request enqueue rather than adding a 10 ms polling delay per batch;
+queue and revocation-capacity limits remain unchanged.
+
+Native commit preflights signature, synchronization byte, version, current
+configuration-dependent serializer size, and available layout/ROM metadata
+before restore. Main additionally rejects a present stale/invalid hash sidecar;
+legacy files without sidecars still receive native header/version/size checks.
+Preflight failures keep guest registers/RAM and epoch unchanged and remain
+paused. Success starts a new epoch at frame 0, revokes old captures/history and
+releases input, or preserves only the requesting owner's neutral input leases.
+The restored VI phase is conservatively not an observed boundary until a real
+VI event occurs. An error after core mutation attempts backup restoration and
+invalidates the epoch even after recovery; recovery failure stays paused and is
+reported distinctly. That post-mutation recovery branch was not fault-injected.
+
+Runtime compatibility gate passed using an isolated reference executable:
+`/Users/bschlenk/Developer/ares-64/build_macos/desktop-ui/RelWithDebInfo/ares.app/Contents/MacOS/ares`
+SHA-256 `b1ea7d41e2b4d2cea7c53e91076358b454f5b50ab7bb4848146ac1772390abac`.
+The optional `test:state-reference` script confines reference app writes to a
+disposable directory, overrides settings/saves and verifies the debug listening
+port belongs to that child before connecting. It never borrows an existing user
+session. A generated original N64 fixture passed both directions: Electron's
+native state loaded in the reference app, and its newly saved state loaded in a
+fresh Electron host with exact GPR/PC/HI/LO agreement. Both files were 8513150
+bytes, `v153`, with the default 8 MiB configuration. A real 4 MiB configuration
+rejected that state without changing CPU registers or epoch. This is not a claim
+for every peripheral configuration or cross-platform compatibility.
+
+Validation passed:
+- Native rebuild and strict TypeScript build; **44/44** sequential regression tests
+  (19.04 s final run). New coverage includes restore/register equality, new/stale
+  epochs, pause/resume and neutral holds, checksum/version/size/ROM rejection,
+  incomplete/invalid native uploads, read-only availability during reservation,
+  foreign mutation/pause/resume rejection, disconnect and simulated keyboard
+  takeover cleanup. Preflight failure tests prove guest registers remain unchanged.
+- Real Electron MCP integration: exact **47-tool** registry and native N64
+  save/peek/load round trip with new epoch and stopped UI, plus prior checks.
+- Optional cross-binary test above, including the actual 4 MiB rejection case;
+  measurements recorded in ignored `artifacts/state-reference.json`.
+- Final package `artifacts/task-8-state-load-final/Ares.app` copied outside the
+  checkout; loader/MCP denied checkout reads. 47-tool inventory, offline-state
+  paths, non-N64 load/save rejection and prior PNG/WAV/AVI/memory checks pass;
+  GB displayed 457 frames and shut down.
+
+Task 8 remains in progress: multiwrite prevalidation, delayed verification and
+bounded baseline/load/write/run/crop experiments are next. Physical keyboard/
+gamepad and audible N64 acceptance still remain not run.

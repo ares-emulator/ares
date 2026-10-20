@@ -1,3 +1,4 @@
+import { StateLoading } from './state-loading.js';
 import { StateArtifacts } from './state-artifacts.js';
 import { StateInspection } from './state-inspection.js';
 import { STATE_METHODS } from './state-contracts.js';
@@ -17,6 +18,7 @@ function mainCapabilities(reply: SessionReply<any>): void {
 
 /** Electron main owns this router, independently of renderer/plugin lifetimes. */
 export class SessionRouter {
+  private stateLoading = new StateLoading();
   private stateArtifacts = new StateArtifacts();
   private states = new StateInspection();
   private recording = new RecordingArtifacts();
@@ -46,13 +48,13 @@ export class SessionRouter {
     this.stateTimer.unref();
   }
   detach(): void {
-    this.artifacts.close(); this.screenshots.close(); this.audio.close(); this.recording.close(); this.states.close(); this.stateArtifacts.close();
+    this.artifacts.close(); this.screenshots.close(); this.audio.close(); this.recording.close(); this.states.close(); this.stateArtifacts.close(); this.stateLoading.close();
     clearInterval(this.stateTimer); this.stateTimer = undefined;
     this.client?.close(); this.client = undefined;
   }
   async request<M extends ServiceMethod>(method: M, identity?: SessionIdentity, params?: ServiceParams<M>, owner = 'ui'): Promise<SessionReply<ServiceResult<M>>> {
     if (!METHODS.includes(method)) throw new ServiceError('invalid_request');
-    if (method === 'execution.release') { this.artifacts.release(owner); this.screenshots.release(owner); this.audio.release(owner); this.recording.release(owner); this.states.release(owner); this.stateArtifacts.release(owner); }
+    if (method === 'execution.release') { this.artifacts.release(owner); this.screenshots.release(owner); this.audio.release(owner); this.recording.release(owner); this.states.release(owner); this.stateArtifacts.release(owner); this.stateLoading.release(owner); }
     if (!this.client) throw new ServiceError('native_host_disconnected');
     const client = this.client;
     if (method.startsWith('artifact.') || method.startsWith('state.')) {
@@ -61,7 +63,8 @@ export class SessionRouter {
       const envelope = { protocol: PROTOCOL, id: `artifact${++this.nextArtifactId}`, ...startingIdentity };
       try {
         let result;
-        if (method === 'state.save') result = await this.stateArtifacts.save(client, startingIdentity, params as { path: string; overwrite: boolean; metadata: boolean }, owner, () => this.client === client);
+        if (method === 'state.load') result = await this.stateLoading.load(client, startingIdentity, params as { path: string; resume: boolean; keepOverrides: boolean }, owner, () => this.client === client);
+        else if (method === 'state.save') result = await this.stateArtifacts.save(client, startingIdentity, params as { path: string; overwrite: boolean; metadata: boolean }, owner, () => this.client === client);
         else if (method === 'state.info' || method === 'state.list' || method === 'state.peek') result = await this.states.inspect(client, startingIdentity, method, params, owner, () => this.client === client);
         else if (method === 'artifact.traceExport') result = await this.artifacts.export(client, startingIdentity, params as TraceExportParams, owner, () => this.client === client);
         else if (method === 'artifact.videoStop') { const p = params as { path: string; overwrite: boolean }; result = await this.recording.stop(client, startingIdentity, p.path, p.overwrite, owner, () => this.client === client); }
@@ -72,7 +75,7 @@ export class SessionRouter {
           const p = params as { imageId: string; offset: number; length: number };
           result = method === 'artifact.imageRead' ? this.screenshots.read(p.imageId, p.offset, p.length, owner, startingIdentity) : this.screenshots.releaseImage(p.imageId, owner);
         }
-        return { ...envelope, ok: true, result } as SessionReply<ServiceResult<M>>;
+        return { ...envelope, ...(method === 'state.load' ? { epoch: (result as { epoch: number }).epoch } : {}), ok: true, result } as SessionReply<ServiceResult<M>>;
       } catch (error) { return { ...envelope, ...client.identity, ok: false, error: error instanceof ServiceError ? error.code : 'write_failed' }; }
     }
     const reply = await client.request(method, identity, params, owner);

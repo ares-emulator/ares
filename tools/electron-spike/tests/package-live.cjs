@@ -42,14 +42,15 @@ async function run() {
     peer = new StdioPeer(mcpCommand, mcpArgs, { cwd: temporary, env });
     await peer.initialize();
     const inventory = (await peer.request('tools/list', {})).result.tools.map(t => t.name);
-    assert.equal(inventory.length, 46);
-    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save']) assert.ok(inventory.includes(name));
+    assert.equal(inventory.length, 47);
+    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save', 'state_load']) assert.ok(inventory.includes(name));
     let status;
     for (let i = 0; i < 200; ++i) { status = await peer.tool('emu_status'); if (status.system === 'Game Boy') break; await new Promise(r => setTimeout(r, 20)); }
     assert.equal(status.system, 'Game Boy', diagnostics);
     assert.ok(status.capabilities.includes('artifact.traceExport'), 'packaged main advertises artifact service');
     const offlineFile = path.join(temporary, 'offline fixture.bs'); writeStateFixture(offlineFile);
     assert.equal((await peer.tool('state_save', { path: path.join(temporary, 'unsupported.gb.bs') })).error, 'unavailable');
+    assert.equal((await peer.tool('state_load', { path: offlineFile })).error, 'unavailable');
     const pausedBeforeInspection = (await peer.tool('emu_status')).paused;
     assert.equal((await peer.tool('state_info', { path: offlineFile })).compatibility, 'header_supported_configuration_unverified');
     assert.equal((await peer.tool('state_peek', { path: offlineFile, addr: '0x80000001', length: 7 })).hex, '41424344454647');

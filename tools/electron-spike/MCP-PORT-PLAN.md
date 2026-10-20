@@ -392,5 +392,18 @@ never serializes the active CPU; legacy offline reads require explicit current-
 configuration assumption. Keep the reference's 64 MiB state bound, 4096-entry scan
 and metadata-hash budget; bound control replies to 48 KiB inventory pages and
 1024-byte offline reads. Direct file reads follow regular-file symlinks; directory
-inventory excludes symlink entries. Loading/experiments remain pending and must
-not be enabled merely because header/version and static field order agree.
+inventory excludes symlink entries. Load acceptance additionally requires native full-file preflight and runtime
+compatibility evidence; header/version and static field order alone are insufficient.
+
+Task 8 restore now passes a default-configuration bidirectional runtime test with
+the audited reference executable (SHA-256
+`b1ea7d41e2b4d2cea7c53e91076358b454f5b50ab7bb4848146ac1772390abac`),
+including exact GPR/PC restoration and actual 4 MiB hardware rejection of the
+8 MiB state. Preserve header/version/full-configuration-size preflight and backup
+recovery; additionally validate a present file-hash/ROM/layout sidecar. Missing
+legacy sidecars do not skip native size/version checks. The native upload owns
+mutation dispatch while main reads/transfers the bounded file; normal user
+controls and physical takeover cancel it. Reset the epoch only at restore (or
+post-mutation recovery), never during offline inspection or failed preflight.
+Conservatively mark restored VI phase as not an observed boundary. Loading is now
+implemented; multiwrite/delayed verification and experiments remain task 8 work.

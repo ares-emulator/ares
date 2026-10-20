@@ -217,3 +217,11 @@ computed without the legacy locate helper's directory-creation side effect.
 `state.save` uses one native immutable snapshot pin and main-owned streaming
 publication plus a separately published metadata sidecar. The new native layout
 observer refactors serializer header/prefix code without changing field order.
+
+`state.load` reserves native mutation dispatch for a connection-owned upload,
+then commits at one native safe point after full-file preflight. The transfer
+stays within the 4 KiB request/16 KiB writable-buffer budgets using four 1800-byte
+chunks at a time; the paused loop wakes from a request condition variable. UI or own-connection pause/resume, reset, disconnect or human input revoke pending upload, so late file I/O
+cannot override a newer user action. Native commit alone advances the epoch and
+resets capture/coordinate ownership. Main returns the commit's new identity and
+never applies an old-epoch guard after successful mutation.
