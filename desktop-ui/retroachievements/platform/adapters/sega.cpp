@@ -105,15 +105,33 @@ struct MegaDriveAdapter final : Adapter {
   struct Cache : NodeCache {
     ares::Node::Debugger::Memory cpuRamMemory;
     ares::Node::Debugger::Memory m32xSdramMemory;
+    ares::Node::Debugger::Memory cdPramMemory;
+    ares::Node::Debugger::Memory cdWramMemory;
     ares::Node::Debugger::Memory cartridgeRamMemory;
     CompiledMap memoryMap;
     CompiledMap m32xMemoryMap;
+    CompiledMap megaCdMemoryMap;
   };
 
   mutable Cache cache;
 
   auto refreshMemoryMap(const Emulator& emu) const -> void {
     bool changed = false;
+    if(emu.name == "Mega CD") {
+      refreshMemoryNodeCache(cache, &emu.root, {
+        {"CPU RAM", &cache.cpuRamMemory},
+        {"CD PRAM", &cache.cdPramMemory},
+        {"CD WRAM", &cache.cdWramMemory},
+      }, &changed);
+      if(!changed && !cache.megaCdMemoryMap.empty()) return;
+      cache.megaCdMemoryMap = compileMemoryMap({
+        {0x000000, 0x00ffff, ReadMode::LinearSwapped, 0x10000, &cache.cpuRamMemory},
+        {0x010000, 0x08ffff, ReadMode::LinearSwapped, 0x80000, &cache.cdPramMemory},
+        {0x090000, 0x0affff, ReadMode::LinearSwapped, 0x20000, &cache.cdWramMemory},
+      });
+      return;
+    }
+
     if(emu.name == "Mega 32X") {
       refreshMemoryNodeCache(cache, &emu.root, {
         {"CPU RAM", &cache.cpuRamMemory},
@@ -141,30 +159,42 @@ struct MegaDriveAdapter final : Adapter {
   }
 
   auto supports(const Emulator& emu) const -> bool override {
-    return supportsAnyName(emu, {"Mega Drive", "Mega 32X"});
+    return supportsAnyName(emu, {"Mega Drive", "Mega 32X", "Mega CD"});
   }
 
   auto consoleId(const Emulator& emu) const -> u32 override {
-    return emu.name == "Mega 32X" ? RC_CONSOLE_SEGA_32X : RC_CONSOLE_MEGA_DRIVE;
+    if(emu.name == "Mega 32X") return RC_CONSOLE_SEGA_32X;
+    if(emu.name == "Mega CD") return RC_CONSOLE_SEGA_CD;
+    return RC_CONSOLE_MEGA_DRIVE;
   }
 
   auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool override {
     out.clear();
+    if(emu.name == "Mega CD") return false;
     if(!emu.game || !emu.game->pak) return false;
     return appendPakFile(emu.game->pak, "program.rom", out);
   }
 
+  auto filePath(const Emulator& emu) const -> string override {
+    if(emu.name != "Mega CD") return {};
+    return emu.game ? emu.game->location : string{};
+  }
+
+  auto selectedMemoryMap(const Emulator& emu) const -> const CompiledMap& {
+    if(emu.name == "Mega CD") return cache.megaCdMemoryMap;
+    if(emu.name == "Mega 32X") return cache.m32xMemoryMap;
+    return cache.memoryMap;
+  }
+
   auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 override {
     refreshMemoryMap(emu);
-    // rcheevos uses the 68K byte lane view (addr^1 on little-endian hosts).
-    auto& memoryMap = emu.name == "Mega 32X" ? cache.m32xMemoryMap : cache.memoryMap;
-    return Adapter::readMemoryMap(memoryMap, address, buffer, size);
+    // Preserve the byte lane order expected by existing Mega Drive, 32X, and CD sets.
+    return Adapter::readMemoryMap(selectedMemoryMap(emu), address, buffer, size);
   }
 
   auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
     refreshMemoryMap(emu);
-    auto& memoryMap = emu.name == "Mega 32X" ? cache.m32xMemoryMap : cache.memoryMap;
-    return Adapter::writeMemoryMap(memoryMap, address, buffer, size);
+    return Adapter::writeMemoryMap(selectedMemoryMap(emu), address, buffer, size);
   }
 };
 
