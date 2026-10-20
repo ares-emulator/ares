@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 64 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 66 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -369,7 +369,7 @@ Exports stream four bounded native pages per batch, cap output at 64 MiB and
 connection; disconnect, host replacement and stale epochs abort work. Relative
 paths resolve against the app process working directory. `file_error` reports
 export failure after capture; completed emulation is retained. Native screenshots are implemented below; audio taps and recording remain task 7 work.
-The MCP registry now exposes 64 tools.
+The MCP registry now exposes 66 tools.
 
 ### Native screenshots (task 7, partial)
 
@@ -452,3 +452,11 @@ bytes at one native safe point and stream them to the atomic main-process writer
 with SHA-256 and capture coordinates. They preserve pause state and never execute
 guest code. Full dumps cover installed RAM up to 8 MiB; ranges cap at 1 MiB.
 See [inspection and dumps](mcp/README.md#inspection-and-memory-dumps).
+
+
+`call_function` and `call_recover` now provide experimental bounded CPU calls with
+a private before-fetch return gate. Successful calls restore the documented CPU
+caller context and return v0/v1; interruptions preserve the actual stop until
+explicit recovery/discard. Memory, device, other COP0 and time effects remain.
+See [bounded calls](mcp/README.md#experimental-bounded-calls) for preconditions,
+limits and recovery ownership. Viewer command capture/control remains pending.

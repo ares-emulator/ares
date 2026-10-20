@@ -2515,10 +2515,16 @@
       "family": "Composites/calls",
       "requiredBackend": "Validated mutation, owned sequential operations, experimental bounded calls and retained recovery context.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 experimental calls)",
+      "mcpSchemaParity": "Reference parameter names/defaults retained; instruction bound reduced from 10M to 1M and wall limit from 3600 to 600 seconds. Existing native operation handles/polling replace legacy session pump. Full generated schema/result equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/calls.test.cjs, tests/call-live.test.cjs; Electron/package in execution log",
+          "result": "Passed: valid/exact-limit return, all GPR/FPR restoration across FR toggle, memory/time retained, wrong-SP/direct sentinel jumps, breakpoint/return-delay watchpoint, syscall/interrupt/NMI, all limit/cleanup paths and reconnect recovery; full suite 61/61.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Experimental native private before-fetch return gate, no instruction patch. Paused operation-free aligned RDRAM stack, no delay/EXL/ERL context; physical/KSEG entry, at most four lossless raw integer args, t9=entry. Bounds reduced to 1M instructions/10000 VI/600s; defaults 100000/60/5s retained. Valid JR or JALR rd=0 return must complete delay slot at original SP; return-delay watchpoints retain interruption. Success restores GPR/HI/LO/PC, Status then raw FPR/FCR31 and clears LLbit; memory/devices/time/other COP0 remain. Exceptions/interrupt/NMI, limits, cancel/pause/disconnect retain actual stop and one caller snapshot for explicit recovery. Native start is an owned operation; MCP polls it. Full schema/result equality and game acceptance pending."
     },
     {
       "name": "call_recover",
@@ -2536,10 +2542,16 @@
       "family": "Composites/calls",
       "requiredBackend": "Validated mutation, owned sequential operations, experimental bounded calls and retained recovery context.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 experimental calls)",
+      "mcpSchemaParity": "Reference parameter names/defaults retained; instruction bound reduced from 10M to 1M and wall limit from 3600 to 600 seconds. Existing native operation handles/polling replace legacy session pump. Full generated schema/result equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/calls.test.cjs, tests/call-live.test.cjs; Electron/package in execution log",
+          "result": "Passed: valid/exact-limit return, all GPR/FPR restoration across FR toggle, memory/time retained, wrong-SP/direct sentinel jumps, breakpoint/return-delay watchpoint, syscall/interrupt/NMI, all limit/cleanup paths and reconnect recovery; full suite 61/61.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Paused operation-free same-epoch restore/discard of one retained caller context. Connected owner/UI only; disconnect relinquishes the recovery claim to a new authenticated connection. Restore reinstates GPR/HI/LO/PC, Status then raw FPR/FCR31, clears LLbit and stale stop/JIT state; retains memory/device/time/other COP0 including Cause/EPC. Discard leaves actual callee stop unchanged. New calls reject recovery_pending; reset/state load invalidate context. Completed operation payloads remain immutable after recovery. Full generated schema/result equality and game/fault acceptance pending."
     }
   ]
 }

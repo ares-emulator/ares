@@ -1415,3 +1415,73 @@ Four tools remain unregistered: rsp_capture, capture_control, call_function and
 call_recover. Exact rdp_capture's legacy viewer mode remains unavailable. Task 9
 still needs these native hooks/recovery semantics and remaining physical/game/
 fault-injection acceptance; all 68 preservation targets remain in scope.
+
+## Task 9 bounded CPU calls and recovery (2026-10-20)
+
+Adds call_function/call_recover: **66 of 68** MCP tools registered. Viewer command
+capture/control still remains; task 9 is not complete.
+
+Audited `ares-64` at `1c9b9637476a83f7b80d3db1115a0f71529820d9`:
+
+| Source | SHA-256 |
+| --- | --- |
+| `desktop-ui/program/debug-session.cpp` | `93c4061ac352f8fc887e793e2d8f5317446c17dabc4e3c7027043dd2c877f700` |
+| `ares/n64/cpu/debug-control.hpp` | `b98961f629793d13ef1ec1939a645901b5a4536dd33a1a86454342393b8e7baf` |
+| `ares/n64/cpu/debug-control.cpp` | `6952c5c0d7898ff6f0dfd6d73c98e67ff34c12940ba6c2d57285d8fa637e1597` |
+| `ares/n64/cpu/exceptions.cpp` | `36844f06d62e7f4eca0562e373fba5d15ed5c54e1002dd8530d37e5d1cfbc15e` |
+
+Native calls use the existing operation coordinator and interpreter hook. The
+private return address is the final installed RDRAM word, never patched; the
+before-fetch gate validates JR/JALR rd=0, completed delay slot and original SP.
+Direct jumps/wrong SP are invalid returns. Interrupt/exception/NMI request a stop
+before the handler executes. No nested transport pump or alternate scheduler.
+Core call state is host-only and reset at power; serialization/version unchanged.
+
+Preconditions: paused, operation-free, aligned RDRAM entry/stack, no delay slot or
+EXL/ERL context, up to four lossless integer arguments; t9=entry. Defaults remain
+100000 instructions/60 VI/5 seconds. Bounds reduce reference 10M instructions to
+1M and 3600 seconds to 600; VI bound remains 10000. Call ownership is native.
+The MCP method polls the acknowledged native operation. Operation results include
+frozen call completion PC/stop, return values, restoration/recovery flags and an
+interrupted caller snapshot, and remain immutable across later recovery.
+
+Success restores GPR/HI/LO/PC, Status first (including FR), then raw FPR bank and
+FCR31, clears LLbit/stale stop/suppression and resets JIT translations. Memory,
+devices, interrupt/time and other COP0 effects remain. Interruptions preserve the
+actual callee state plus one caller context until explicit restore/discard;
+a return-delay watchpoint takes precedence over success. Recovery requires a
+paused operation-free same-epoch machine, connected owner/UI, or a new
+authenticated connection after owner disconnect relinquishes its claim. New
+calls return recovery_pending until restore/discard. Reset/state load invalidate
+recovery. No silent CPU rollback occurs on timeout/cancel/pause/disconnect.
+
+Validation on the actual new binary:
+
+- Native host/real-core fixture and strict TS builds passed. Full sequential suite
+  **61/61** passed in 46.02s. After tightening progress-phase DTO validation,
+  affected native/real MCP call tests passed **2/2**.
+- Real CPU fixture covers return exactly at instruction limit, executed delay
+  slot/v1, all GPR and raw FPR restoration across a callee FR toggle, Status/HI/LO,
+  LLbit clear, retained dirty memory/elapsed CPU clock, wrong-SP/direct sentinel
+  jumps without executing the sentinel word, entry breakpoint, return-delay
+  watchpoint, syscall/interrupt/NMI before handler fetch, instruction/frame/time/
+  cancel/pause/disconnect exits, explicit recovery, pending-context exclusion,
+  owner/reconnect recovery and retained Cause/EPC. Preconditions reject invalid
+  entry/stack and delay-slot context before mutation.
+- Disposable initialized N64 and real MCP stdio cover full-width integer args,
+  private returns, retained memory, exact-limit return, register restoration,
+  immutable results after recovery, syscall, wrong SP, discard, timeout, owner
+  exclusion and disconnect transfer to a new authenticated connection. The fixture
+  restores its own baseline between variants, preserving I-cache semantics. No
+  user ROM, active emulator or saves were used.
+- Actual Electron integration passed exact **66-tool** registry, call/recovery
+  native preconditions and prior RSP/RDP/inspection/state/input/artifact gates.
+  This does not replace N64 game/function acceptance.
+- Fresh `artifacts/task-9-calls/Ares.app` copied outside checkout passed with
+  native loader/MCP checkout reads denied, **66-tool** registry, explicit
+  call/recovery unavailability on GB and prior artifact regressions. Electron
+  44.9.0 / Node 24.22.0; packaged N64 game/function acceptance remains not run.
+
+Only rsp_capture and capture_control remain unregistered; exact rdp_capture's
+legacy viewer mode is still unavailable. Physical input/audio, real-game and
+broader fault-injection acceptance gates remain pending. All 68 remain in scope.

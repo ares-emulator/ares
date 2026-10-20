@@ -2,6 +2,7 @@
 //CPU debug engine (see debug-control.hpp for the execution model).
 
 auto CPU::DebugControl::power() -> void {
+  callGate = {};
   trace = {};
   //definitions survive power/state loads; prior hits and stops do not
   halted = false;
@@ -25,7 +26,7 @@ auto CPU::DebugControl::clearHits() -> void {
 
 auto CPU::DebugControl::updateActive() -> void {
   watchActive = !watchpoints.empty();
-  active = !breakpoints.empty() || watchActive || stepping || haltRequested || trace.pcs || trace.calls;
+  active = !breakpoints.empty() || watchActive || stepping || haltRequested || trace.pcs || trace.calls || callGate.active;
   gate = active || halted || sliceBudget != 0;
 }
 
@@ -253,6 +254,12 @@ auto CPU::DebugControl::beforeInstruction(PhysAccess access) -> bool {
     return true;
   }
 
+  if(callGate.active && currentPc == callGate.pc) {
+    callGate.returned = callGate.armed && !self.pipeline.inDelaySlot() && self.ipu.r[29].u64 == callGate.sp;
+    callGate.invalidReturn = !callGate.returned;
+    stop = {}; takeStop(StopReason::Requested); return true;
+  }
+
   bool suppressed = suppressBreakOnce && suppressPc == currentPc;
   suppressBreakOnce = false;
   if(!breakpoints.empty() && !suppressed) {
@@ -278,6 +285,9 @@ auto CPU::DebugControl::beforeInstruction(PhysAccess access) -> bool {
 }
 
 auto CPU::DebugControl::afterInstruction(u64 pc, u32 instruction) -> void {
+  if(callGate.active && callGate.returnPending && pc == callGate.delayPc) {
+    callGate.armed = self.ipu.pc == callGate.pc && !self.pipeline.inDelaySlot(); callGate.returnPending = false;
+  }
   instructionsRetired++;
   narrowLength = 0;
   if(stepping && stepRemaining) stepRemaining--;
@@ -440,6 +450,13 @@ auto CPU::debugTraceInstruction(u64 pc, u32 paddr, u32 instruction) -> void {
   auto& t = d.trace;
   d.currentPc = pc;
   d.currentInstruction = instruction;
+  if(d.callGate.active && (instruction >> 26) == 0 &&
+      ((instruction & 63) == 8 || ((instruction & 63) == 9 && (instruction >> 11 & 31) == 0))) {
+    u32 source = instruction >> 21 & 31;
+    if((source ? ipu.r[source].u64 : 0) == d.callGate.pc) {
+      d.callGate.returnPending = true; d.callGate.delayPc = pc + 4;
+    }
+  }
   if(!t.pcs && !t.calls) return;
   u64 frame = executionCoordinate.frame;
   if(frame < t.startFrame || frame >= t.endFrame) return;

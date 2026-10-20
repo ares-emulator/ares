@@ -30,6 +30,11 @@ auto CPU::Exception::trigger(u32 code, u32 coprocessor, bool tlbMiss) -> void {
   self.pipeline.setPc(vectorBase + vectorOffset);
   self.pipeline.exception();  //todo: only call this between instruction prologue/epilogue
   self.context.setMode();
+  if(self.debugControl.callGate.active) {
+    self.debugControl.callGate.exception = true;
+    self.debugControl.callGate.exceptionCode = code;
+    self.debugControl.requestHalt();
+  }
 }
 
 auto CPU::Exception::interrupt()               -> void { trigger( 0); }
@@ -63,6 +68,11 @@ auto CPU::Exception::nmi() -> void {
   self.scc.status.errorLevel = 1;
   self.scc.epcError = self.ipu.pc;
   self.pipeline.setPc(0xffff'ffff'bfc0'0000);
+  if(self.debugControl.callGate.active) {
+    self.debugControl.callGate.exception = true;
+    self.debugControl.callGate.exceptionCode = 0x100;
+    self.debugControl.requestHalt();
+  }
 }
 
 auto CPU::Exception::reportGDBException(int code, u64 pc) -> void {

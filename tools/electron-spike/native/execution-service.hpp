@@ -23,6 +23,8 @@ struct ExecutionService {
     bool tapKeep = false;
     std::function<std::string()> memoryVerification;
     std::function<std::string(const std::string&)> rspProgress;
+    std::function<void(const std::string&)> beforeComplete;
+    std::function<std::string()> callProgress;
   };
   std::optional<Operation> active;
   struct Reservation { uint64_t id; std::string owner; Clock::time_point deadline; };
@@ -79,12 +81,14 @@ struct ExecutionService {
       + ",\"at_frame_boundary\":" + (atBoundary ? "true" : "false")
       + ",\"executor\":\"" + executor + "\",\"slices\":" + std::to_string(op.slices)
       + ",\"elapsed_seconds\":" + std::to_string(std::chrono::duration<double>(Clock::now() - op.started).count()) + ",\"executed\":" + std::to_string(instructions - instructionStart)
+      + (op.callProgress ? ",\"call\":" + op.callProgress() : "")
       + (op.rspProgress ? ",\"rsp\":" + op.rspProgress(reason) : "")
       + (!reason.empty() && op.memoryVerification ? ",\"memory_verification\":" + op.memoryVerification() : "")
       + (!reason.empty() && debugSnapshot ? ",\"debug_stop\":" + debugSnapshot() : "") + tap + "}";
   }
   std::string complete(const std::string& reason, bool& paused) {
     if(!active) return "null";
+    if(active->beforeComplete) active->beforeComplete(reason);
     auto result = snapshot(*active, reason);
     finished.emplace_back(active->id, result);
     if(finished.size() > 16) finished.pop_front();
@@ -98,7 +102,7 @@ struct ExecutionService {
       reservation.reset(); paused = true;
     }
     if(!active) return;
-    if(active->kind != "step_instructions" && frame >= active->target) complete("frames_done", paused);
+    if(active->kind != "step_instructions" && frame >= active->target) complete(active->kind == "call_function" ? "frame_limit" : "frames_done", paused);
     else if(Clock::now() >= active->deadline) complete("timeout", paused);
   }
   static bool number(const std::string& value, uint64_t& result) {

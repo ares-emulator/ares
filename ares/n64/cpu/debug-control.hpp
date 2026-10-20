@@ -1,5 +1,5 @@
 //Adapted from ares-64 1c9b9637476a83f7b80d3db1115a0f71529820d9.
-//Stack-unwind and call-gate features intentionally deferred.
+//Bounded stack inspection is host-side; the private call gate is host-only state.
 //CPU debug engine for external debuggers (the MCP/telemetry frontend).
 //Included inside struct CPU (cpu.hpp); implementation in debug-control.cpp.
 //
@@ -159,6 +159,12 @@ struct DebugControl {
   auto endTrace() -> void;
   auto flushPcBucket() -> void;
 
+  struct CallGate {
+    bool active = false, returned = false, invalidReturn = false, exception = false;
+    bool returnPending = false, armed = false;
+    u64 pc = 0, sp = 0, delayPc = 0;
+    u32 exceptionCode = 0;
+  } callGate;
   bool active = false;   //any per-instruction hook required (gates the interpreter)
   bool watchActive = false;
   bool gate = false;     //CPU::main must consult exitMain() (active, halted or slice budget)

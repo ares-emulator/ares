@@ -4,6 +4,7 @@
 #include "../native/n64-service.hpp"
 #include "../native/machine-service.hpp"
 #include "../native/stack-service.hpp"
+#include "../native/call-service.hpp"
 #include "../native/inspection-service.hpp"
 #include "../native/rsp-debug-service.hpp"
 #include "../native/memory-experiment.hpp"
@@ -653,6 +654,106 @@ int main() {
     check(probe2.json.find("\"originChanged\":true") != std::string::npos && probe2.json.find("\"dpcAdvanced\":true") != std::string::npos && probe2.json.find("\"frameAdvanced\":true") != std::string::npos, "probe compares observed coordinates");
     check(request("n64.render.probe", {}, "foreign").json.find("\"originChanged\":null") != std::string::npos, "probe baselines isolated by owner");
     std::printf("INSPECTION_STACK %s\nINSPECTION_DUMP %s\nINSPECTION_PROBE %s\n", stackJson.json.c_str(), dump.json.c_str(), probe2.json.c_str());
+  }
+  {
+    CallService calls; ExecutionService exec; bool paused = true;
+    auto& d = cpu.debugControl;
+    d.breakpoints.clear(); d.watchpoints.clear(); d.trace = {}; d.resume();
+    exec.supported = exec.cpuSupported = true; exec.frameKind = "vi";
+    exec.onStart = [&] { d.resume(); };
+    exec.onFinish = [&](const std::string&) { d.stepping = false; d.stepRemaining = 0; d.updateActive(); };
+    auto request = [&](const char* method, std::vector<std::string> args, const char* owner = "call-owner") { exec.instructions = d.instructionsRetired; return calls.execute(method, args, owner, 9, true, exec, paused); };
+    auto drive = [&] {
+      for(unsigned i = 0; i < 2000 && exec.active; ++i) {
+        cpu.instruction(); exec.instructions = d.instructionsRetired; calls.service(exec, paused);
+        if(exec.active && d.halted) exec.complete(N64Service::reason(d.stop.reason), paused);
+      }
+      check(!exec.active, "bounded call fixture finishes"); return exec.finished.back().second;
+    };
+    auto resetCaller = [&] {
+      cpu.setControlRegister(12, 0x34000000); cpu.pipeline.setPc(0xffffffff80032000ull);
+      cpu.ipu.r[29].u64 = 0xffffffff80034000ull; cpu.ipu.r[9].u64 = 0x444;
+      cpu.ipu.hi.u64 = 0x123; cpu.ipu.lo.u64 = 0x456; cpu.scc.llbit = 1;
+      for(unsigned i = 0; i < 32; ++i) cpu.fpu.r[i].u64 = 0xdeadbeef00000000ull | i;
+      cpu.setControlRegisterFPU(31, 0); d.resume(); paused = true;
+      cpu.icache.power(false); cpu.dcache.power(false);
+    };
+    resetCaller();
+    auto writeCode = [&](std::initializer_list<uint32_t> words) { unsigned at = 0x33000; for(auto w : words) { rdram.ram.write<Word>(at, w, RBusDevice::ARES_DEBUGGER); at += 4; } cpu.icache.power(false); };
+    writeCode({0x0085102d, 0xfcc20000, 0x44870000, 0x00800011, 0x00a00013, 0x3c083000, 0x40886000, 0x03e00008, 0x24030055});
+    auto before = d.snapshot(); auto clock = cpu.clock;
+    auto start = request("n64.cpu.call", {"0x33000", "9", "60", "1000", "0x1234567890000000", "0x7", "0xffffffff80035000", "0x12345678"});
+    check(start.error.empty() && d.callGate.active && cpu.ipu.r[25].u64 == 0xffffffff80033000ull, "call sets t9 entry and private gate");
+    auto success = drive();
+    check(success.find("function_return") != std::string::npos && success.find("0x1234567890000007") != std::string::npos && success.find("\"v1\":\"0x55\"") != std::string::npos, "call return at exact instruction limit includes completed delay slot");
+    check(cpu.ipu.pc == before.pc && cpu.ipu.hi.u64 == before.hi && cpu.ipu.lo.u64 == before.lo && !cpu.scc.llbit, "call restores PC HI LO and clears reservation");
+    for(unsigned i = 1; i < 32; ++i) check(cpu.ipu.r[i].u64 == before.gpr[i], "call restores every caller GPR");
+    for(unsigned i = 0; i < 32; ++i) check(cpu.fpu.r[i].u64 == before.fpr[i], "call restores FPR bank after FR toggle");
+    check((uint32_t)cpu.getControlRegister(12) == before.cop0[12] && !calls.savedValid && !d.callGate.active, "call restores Status and clears successful context");
+    check(cpu.dcache.readDebug<Word>(0xffffffff80035000ull, 0x35000) == 0x12345678 && cpu.clock > clock, "call retains dirty memory and elapsed CPU time");
+    std::printf("CALL_SUCCESS %s\n", success.c_str());
+    resetCaller(); writeCode({0x27bdfff8, 0x03e00008, 0});
+    rdram.ram.write<Word>(rdram.ram.size - 4, 0x24090077, RBusDevice::ARES_DEBUGGER);
+    check(request("n64.cpu.call", {"0x33000", "100", "60", "1000"}).error.empty(), "invalid SP call starts");
+    auto invalid = drive();
+    check(invalid.find("invalid_return") != std::string::npos && calls.savedValid && cpu.ipu.r[9].u64 == 0x444, "private return gate rejects wrong SP without fetching sentinel instruction");
+    auto stopped = d.stop.snapshot.pc;
+    check(request("n64.cpu.callRecover", {"1"}, "foreign").error == "busy", "live owner protects caller recovery");
+    check(request("n64.cpu.call", {"0x33000", "100", "60", "1000"}).error == "recovery_pending", "new call cannot overwrite recovery");
+    auto recovered = request("n64.cpu.callRecover", {"1"});
+    check(recovered.error.empty() && cpu.ipu.pc == before.pc && !d.stopValid && !calls.savedValid, "explicit recovery restores caller and clears stale stop");
+    check(invalid.find(N64Service::hex(stopped)) != std::string::npos, "interrupted result retains completion PC after recovery");
+    std::printf("CALL_INTERRUPTED %s\nCALL_RECOVERED %s\n", invalid.c_str(), recovered.json.c_str());
+    resetCaller(); writeCode({0x080fffff, 0}); // J to 8 MiB gate is patched below for installed RAM
+    rdram.ram.write<Word>(0x33000, 0x08000000 | ((rdram.ram.size - 4) >> 2), RBusDevice::ARES_DEBUGGER);
+    check(request("n64.cpu.call", {"0x33000", "100", "60", "1000"}).error.empty(), "direct gate jump starts");
+    check(drive().find("invalid_return") != std::string::npos, "jump to sentinel without JR is not a function return");
+    request("n64.cpu.callRecover", {"1"});
+    resetCaller(); writeCode({0x0000000c});
+    check(request("n64.cpu.call", {"0x33000", "100", "60", "1000"}).error.empty(), "exception call starts");
+    auto exception = drive();
+    check(exception.find("\"stop_reason\":\"exception\"") != std::string::npos && exception.find("\"exception_code\":8") != std::string::npos && cpu.scc.status.exceptionLevel, "syscall stops before exception handler and retains actual EXL");
+    auto cause = cpu.getControlRegister(13), epc = cpu.getControlRegister(14);
+    calls.releaseOwner("call-owner");
+    check(request("n64.cpu.callRecover", {"1"}, "new-owner").error.empty() && !cpu.scc.status.exceptionLevel && cpu.getControlRegister(13) == cause && cpu.getControlRegister(14) == epc, "reconnect recovery restores Status but retains Cause");
+    resetCaller(); writeCode({0x1000ffff, 0});
+    for(const char* reason : {"instruction_limit", "timeout", "cancelled", "paused", "disconnected", "frame_limit"}) {
+      check(request("n64.cpu.call", {"0x33000", "2", "1", "1000"}).error.empty(), "bounded interruption call starts");
+      std::string result;
+      if(std::string(reason) == "instruction_limit") result = drive();
+      else if(std::string(reason) == "frame_limit") { ++exec.frame; exec.service(paused); result = exec.finished.back().second; }
+      else result = exec.complete(reason, paused);
+      check(result.find(std::string("\"stop_reason\":\"") + reason + "\"") != std::string::npos && calls.savedValid && !d.callGate.active, "every interruption preserves caller context and releases gate");
+      check(request("n64.cpu.callRecover", {"1"}).error.empty(), "each interruption is explicitly recoverable");
+    }
+    resetCaller(); writeCode({0, 0x03e00008, 0});
+    nall::string callError;
+    auto breakId = d.addBreakpoint(0xffffffff80033000ull, {}, callError);
+    check(breakId && request("n64.cpu.call", {"0x33000", "100", "60", "1000"}).error.empty(), "call accepts existing breakpoint definitions");
+    check(drive().find("\"stop_reason\":\"breakpoint\"") != std::string::npos && calls.savedValid, "entry breakpoint retains interrupted caller");
+    d.removeBreakpoint(breakId); request("n64.cpu.callRecover", {"1"});
+    resetCaller(); writeCode({0x03e00008, 0xfc800000}); // sd zero,0(a0) in return delay slot
+    auto watchId = d.addWatchpoint(0xffffffff80035000ull, 8, Debug::AccessWrite, {}, callError);
+    check(watchId && request("n64.cpu.call", {"0x33000", "2", "60", "1000", "0xffffffff80035000"}).error.empty(), "call accepts existing watchpoint definitions");
+    auto watchStop = drive();
+    check(watchStop.find("\"stop_reason\":\"watchpoint\"") != std::string::npos && calls.savedValid, "return delay-slot watchpoint wins over valid return and instruction limit");
+    d.removeWatchpoint(watchId); request("n64.cpu.callRecover", {"1"});
+    for(bool nmi : {false, true}) {
+      resetCaller(); writeCode({0x1000ffff, 0});
+      check(request("n64.cpu.call", {"0x33000", "100", "60", "1000"}).error.empty(), "interruptible call starts");
+      if(nmi) cpu.exception.nmi(); else cpu.exception.interrupt();
+      auto interrupted = drive();
+      check(interrupted.find("\"stop_reason\":\"exception\"") != std::string::npos && interrupted.find(nmi ? "\"exception_code\":256" : "\"exception_code\":0") != std::string::npos, "interrupt and NMI stop before handler fetch");
+      request("n64.cpu.callRecover", {"1"});
+    }
+    resetCaller();
+    check(request("n64.cpu.call", {"0x33001", "100", "60", "1000"}).error == "unaligned_address" && !calls.savedValid, "entry validation precedes context mutation");
+    cpu.ipu.r[29].u64 = 0;
+    check(request("n64.cpu.call", {"0x33000", "100", "60", "1000"}).error == "invalid_stack", "call rejects non-RDRAM stack");
+    resetCaller(); writeCode({0x1000ffff, 0});
+    resetCaller(); cpu.pipeline.setPc(0xffffffff80033000ull); d.requestStepInstructions(1); cpu.instruction();
+    check(cpu.pipeline.inDelaySlot() && request("n64.cpu.call", {"0x33000", "1", "1", "1000"}).error == "unsafe_context", "call rejects delay slot without mutation");
+    calls.reset(); d.resume();
   }
   pi.detach(cartridge.romDevice); cartridge.rom.reset();
   rdram.ram.reset();

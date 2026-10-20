@@ -3,9 +3,9 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 64 tools: eleven generic/session/run tools,
+emulator. The verified registry has 66 tools: eleven generic/session/run tools,
 thirteen N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch and five task 9 machine/disassembly/mutation tools, five RSP debugger tools and exact rdp_capture, plus stack/render_probe/dump_rdram/dump_range. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch and five task 9 machine/disassembly/mutation tools, five RSP debugger tools and exact rdp_capture, plus stack/render_probe/dump_rdram/dump_range and call_function/call_recover. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
@@ -565,3 +565,29 @@ address, view and snapshot epoch/frame. Reset/state load/disconnect revoke pins
 and jobs. Every success/failure releases the pin; failed publication preserves an
 existing destination. Native snapshot bytes remain immutable if play resumes or
 RAM changes while the file is written.
+
+
+### Experimental bounded calls
+
+`call_function(addr,args=null,max_instructions=100000,max_frames=60,max_seconds=5)`
+requires a paused, operation-free CPU with no delay/EXL/ERL context and an aligned
+RDRAM-backed stack. Entry accepts physical/KSEG aliases; up to four raw integer
+arguments go in a0..a3 and t9 is set to entry. Bounds are 1M instructions, 10000
+VI and 600 seconds. This executes guest code with memory/device side effects.
+
+The native coordinator owns execution. A private return address at the last
+installed RDRAM word uses no code patch and stops before fetch. Only a JR or
+JALR rd=0 to that address, with completed delay slot and original SP, is accepted.
+Success returns v0/v1 and restores caller GPR/HI/LO/PC, Status, raw FPR bank and
+FCR31, then clears LLbit. Memory/device/time and other COP0 effects remain.
+
+Exceptions (including interrupt/NMI), limits, breakpoint/watchpoint, pause/cancel
+and disconnect keep the actual callee stop and one caller snapshot. A watchpoint
+in the return delay slot wins over automatic return. `call_recover(restore=true)`
+explicitly restores that CPU subset; false discards the context and leaves the
+callee state intact. Recovery requires pause/no operation/same epoch. The live
+owner or UI may recover; after disconnect a new authenticated connection may
+claim it. New calls reject `recovery_pending` until restore/discard. Reset/state
+load invalidate the context. Recovery never rolls back memory, device, interrupt
+or time effects; completed operation snapshots remain immutable. These tools are
+experimental and real-game/fault acceptance remains pending.
