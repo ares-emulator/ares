@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 36 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 39 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -369,7 +369,7 @@ Exports stream four bounded native pages per batch, cap output at 64 MiB and
 connection; disconnect, host replacement and stale epochs abort work. Relative
 paths resolve against the app process working directory. `file_error` reports
 export failure after capture; completed emulation is retained. Native screenshots are implemented below; audio taps and recording remain task 7 work.
-The MCP registry now exposes 36 tools.
+The MCP registry now exposes 39 tools.
 
 ### Native screenshots (task 7, partial)
 
@@ -392,5 +392,12 @@ shared atomic publisher; inline requests return actual MCP image content plus
 metadata. File and inline output can be requested together. With neither inline
 nor path, a unique PNG is saved under the host temporary directory. Generic core
 frame coordinates are explicitly unavailable; N64 and synthetic VI kinds are
-reported separately. Audio/recording and run_frames screenshot_after remain
+reported separately. Video recording remains
 pending. Physical keyboard/gamepad acceptance is still not run.
+
+Audio tools (`audio_capture`, `audio_status`, `audio_save`) use a connection-owned
+48000 Hz stereo tap before host muting, bounded to four seconds. The capture
+freezes at its cap; reset and disconnect revoke it. WAV exports run in main,
+atomically replace existing destinations (matching the reference audio API), and
+consume capture only after successful publication. Partial and empty exports
+work; failed exports retain samples for retry. See [MCP audio details](mcp/README.md#audio-capture).

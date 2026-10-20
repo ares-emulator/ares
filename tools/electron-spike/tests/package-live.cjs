@@ -41,8 +41,8 @@ async function run() {
     peer = new StdioPeer(mcpCommand, mcpArgs, { cwd: temporary, env });
     await peer.initialize();
     const inventory = (await peer.request('tools/list', {})).result.tools.map(t => t.name);
-    assert.equal(inventory.length, 36);
-    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot']) assert.ok(inventory.includes(name));
+    assert.equal(inventory.length, 39);
+    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save']) assert.ok(inventory.includes(name));
     let status;
     for (let i = 0; i < 200; ++i) { status = await peer.tool('emu_status'); if (status.system === 'Game Boy') break; await new Promise(r => setTimeout(r, 20)); }
     assert.equal(status.system, 'Game Boy', diagnostics);
@@ -65,6 +65,12 @@ async function run() {
     const png = Buffer.from(image.data, 'base64');
     assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
     assert.deepEqual(fs.readFileSync(pngFile), png, 'packaged worker and file publisher agree with inline image');
+    const wavFile = path.join(temporary, 'packaged audio.wav');
+    assert.equal((await peer.tool('audio_capture', { seconds: 0 })).cap, 0);
+    const wav = await peer.tool('audio_save', { path: wavFile });
+    assert.equal(wav.bytes, 44); assert.equal(wav.frames, 0);
+    assert.equal(fs.readFileSync(wavFile).toString('ascii', 0, 12), 'RIFF$\0\0\0WAVE');
+    assert.equal((await peer.tool('audio_status')).active, false);
     assert.equal((await peer.tool('resume')).paused, false);
     assert.equal((await closed)[0], 0, diagnostics);
     assert.ok(['app_not_running', 'app_disconnected'].includes((await peer.tool('emu_status')).error));

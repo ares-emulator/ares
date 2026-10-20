@@ -192,3 +192,12 @@ transfer to MCP; the adapter assembles at most 8 MiB and verifies SHA-256 before
 returning ImageContent. The frame observer is installed before execution and
 removed after unload. Submission tagging avoids reading emulator epoch/frame
 state on the screen worker thread and rejects delayed pre-reset output.
+
+Audio capture is an emulation-thread service over the host's 48000 Hz post-mix
+samples, before output muting. `audio.capture/status/begin/read/release` use bounded
+PCM buffers and connection ownership. Electron main owns `artifact.audioSave`:
+it downloads an immutable PCM pin, creates the bounded WAV header, and publishes
+with the shared atomic writer. Consumption follows file commit; failed exports
+release only the pin, and disconnect/reset revoke native capture. A published file
+remains reported if subsequent native cleanup fails. Audio is independent of the
+renderer and disabled until requested.

@@ -1821,10 +1821,12 @@
       "family": "Audio/video artifacts",
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 7 audio slice)",
+      "mcpSchemaParity": "Names/defaults retained; bounded runtime adaptation documented; full generated reference schema comparison not run",
+      "testEvidence": [
+        "Native PCM clamp/endian/cap/owner/pin fixture; atomic WAV unit tests; real GB muted host + MCP file/status/retry/reset/disconnect; Electron 39-tool integration passed"
+      ],
+      "knownLimits": "Post-mix stereo PCM at fixed host rate 48000 Hz, clamped to 192000 sample frames (four seconds). Disabled until capture; freezes at cap instead of reference ring wrapping. Per-connection owner; reset/disconnect revoke. Status is read-only across owners. Partial/zero-frame saves supported. Main publishes 16-bit WAV atomically and replaces existing paths (reference audio_save behavior); failed saves retain capture. One immutable native save pin, 30-second lease and 25-second main job deadline; at most 768044 WAV bytes. GB nonzero audio with host output muted verified; audible N64/gamepad acceptance remains not run."
     },
     {
       "name": "audio_status",
@@ -1835,10 +1837,12 @@
       "family": "Audio/video artifacts",
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 7 audio slice)",
+      "mcpSchemaParity": "Names/defaults retained; bounded runtime adaptation documented; full generated reference schema comparison not run",
+      "testEvidence": [
+        "Native PCM clamp/endian/cap/owner/pin fixture; atomic WAV unit tests; real GB muted host + MCP file/status/retry/reset/disconnect; Electron 39-tool integration passed"
+      ],
+      "knownLimits": "Post-mix stereo PCM at fixed host rate 48000 Hz, clamped to 192000 sample frames (four seconds). Disabled until capture; freezes at cap instead of reference ring wrapping. Per-connection owner; reset/disconnect revoke. Status is read-only across owners. Partial/zero-frame saves supported. Main publishes 16-bit WAV atomically and replaces existing paths (reference audio_save behavior); failed saves retain capture. One immutable native save pin, 30-second lease and 25-second main job deadline; at most 768044 WAV bytes. GB nonzero audio with host output muted verified; audible N64/gamepad acceptance remains not run."
     },
     {
       "name": "audio_save",
@@ -1856,10 +1860,12 @@
       "family": "Audio/video artifacts",
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 7 audio slice)",
+      "mcpSchemaParity": "Names/defaults retained; bounded runtime adaptation documented; full generated reference schema comparison not run",
+      "testEvidence": [
+        "Native PCM clamp/endian/cap/owner/pin fixture; atomic WAV unit tests; real GB muted host + MCP file/status/retry/reset/disconnect; Electron 39-tool integration passed"
+      ],
+      "knownLimits": "Post-mix stereo PCM at fixed host rate 48000 Hz, clamped to 192000 sample frames (four seconds). Disabled until capture; freezes at cap instead of reference ring wrapping. Per-connection owner; reset/disconnect revoke. Status is read-only across owners. Partial/zero-frame saves supported. Main publishes 16-bit WAV atomically and replaces existing paths (reference audio_save behavior); failed saves retain capture. One immutable native save pin, 30-second lease and 25-second main job deadline; at most 768044 WAV bytes. GB nonzero audio with host output muted verified; audible N64/gamepad acceptance remains not run."
     },
     {
       "name": "rsp_debug",

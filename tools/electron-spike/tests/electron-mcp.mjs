@@ -38,7 +38,7 @@ app.whenReady().then(async () => {
   const mcp = peer(); await mcp.initialize();
   enter('MCP tools');
   const list = (await mcp.request('tools/list', {})).result.tools;
-  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot'].sort());
+  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save'].sort());
   assert.equal(list.find(t => t.name === 'read_memory').inputSchema.properties.length.default, 64);
   assert.equal(list.find(t => t.name === 'resume').inputSchema.properties.keep_overrides.default, false);
   assert.equal(list.find(t => t.name === 'emu_status').inputSchema.properties.verbose.default, false);
@@ -79,6 +79,15 @@ app.whenReady().then(async () => {
   const imageMetadata = JSON.parse(imageReply.result.content.find(c => c.type === 'text').text);
   assert.equal(imageContent.mimeType, 'image/png'); assert.equal(imageMetadata.epoch, initial.epoch);
   assert.deepEqual(nativeImage.createFromBuffer(Buffer.from(imageContent.data, 'base64')).getSize(), { width: 8, height: 8 });
+  enter('native audio WAV');
+  assert.equal((await mcp.tool('audio_capture', { seconds: 0.02 })).cap, 960);
+  await mcp.tool('resume');
+  await until(async () => (await mcp.tool('audio_status')).done);
+  await mcp.tool('pause');
+  const wavPath = path.join(temporary, 'electron capture.wav');
+  const wavResult = await mcp.tool('audio_save', { path: wavPath });
+  assert.equal(wavResult.frames, 960); assert.equal(wavResult.bytes, 3884);
+  assert.equal(fs.readFileSync(wavPath).toString('ascii', 0, 4), 'RIFF');
   enter('paused reload');
   const loaded = once(window.webContents, 'did-finish-load'); window.webContents.reload(); await loaded;
   assert.equal((await mcp.tool('emu_status')).session, initial.session);
@@ -101,6 +110,8 @@ app.whenReady().then(async () => {
   assert.equal((await mcp.tool('write_memory', { region: ram.id, addr: 240, hex_bytes: '00' })).error, 'stale_session');
   const fresh = await mcp.tool('memory_regions');
   assert.equal((await mcp.tool('read_memory', { region: fresh.regions[0].id, addr: 240, length: 1 })).hex, 'f0');
+  assert.equal((await mcp.tool('audio_status')).available, false);
+  assert.equal((await mcp.tool('audio_capture')).error, 'unavailable');
   enter('owned execution and UI pause');
   await mcp.tool('pause');
   enter('owned run_frames');

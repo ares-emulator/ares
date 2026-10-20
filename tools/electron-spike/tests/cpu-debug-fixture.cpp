@@ -8,6 +8,7 @@
 #include "../native/profiler-service.hpp"
 #include "../native/tap-service.hpp"
 #include "../native/frame-service.hpp"
+#include "../native/audio-service.hpp"
 #include <cstdio>
 #include <cstdlib>
 using namespace ares::Nintendo64;
@@ -31,6 +32,33 @@ static void steps(unsigned count) {
   check(d.halted, "bounded instruction stop");
 }
 int main() {
+  {
+    AudioService audio;
+    check(audio.execute("audio.capture", {"2"}, "one", false).error == "unavailable", "audio unavailable without streams");
+    check(audio.execute("audio.capture", {"2"}, "one", true).error.empty(), "audio capture start");
+    audio.push(2, -2);
+    check(audio.samples == std::vector<uint8_t>({0xff, 0x7f, 0x01, 0x80}), "audio stereo PCM clamp/endian");
+    auto pin = audio.execute("audio.begin", {}, "one", true);
+    check(pin.error.empty() && audio.pin->bytes.size() == 4, "partial audio pin");
+    auto id = std::to_string(audio.pin->id);
+    audio.push(0.5, -0.5); audio.push(1, 1);
+    check(audio.samples.size() == 8 && audio.pin->bytes.size() == 4, "audio cap freezes and pin immutable");
+    check(audio.execute("audio.capture", {"0"}, "one", true).error == "busy", "audio pin prevents capture replacement");
+    check(audio.execute("audio.read", {id, "0", "4"}, "two", true).error == "busy", "audio foreign read rejected");
+    check(audio.execute("audio.capture", {"0"}, "two", true).error == "busy", "audio owner retained");
+    check(audio.execute("audio.release", {id, "0"}, "one", true).error.empty() && audio.active, "failed save retains capture");
+    audio.execute("audio.begin", {}, "one", true); id = std::to_string(audio.pin->id);
+    check(audio.execute("audio.read", {id, "7", "2"}, "one", true).error == "out_of_bounds", "audio read bounds");
+    audio.execute("audio.release", {id, "1"}, "one", true);
+    check(!audio.active && audio.samples.empty(), "saved capture consumed");
+    audio.execute("audio.capture", {"0"}, "one", true); audio.push(1, 1);
+    check(audio.samples.empty() && audio.active, "zero audio cap is empty completed capture");
+    audio.releaseOwner("two"); check(audio.active, "foreign disconnect preserves audio");
+    audio.releaseOwner("one"); check(!audio.active && audio.cap == 0, "owner disconnect revokes audio");
+    audio.execute("audio.capture", {"192001"}, "one", true);
+    check(!audio.active, "oversized audio capture rejected");
+  }
+
   std::vector<uint8_t> hidden(2 * 1024 * 1024);
   rdram.hidden.data = hidden.data();
   rdram.ram.allocate(4 * 1024 * 1024); rdram.mapIdentity = 1; rdram.ram.fill();

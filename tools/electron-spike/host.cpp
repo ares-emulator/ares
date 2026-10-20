@@ -42,11 +42,13 @@ auto locate(const string& name) -> string {
 #include "native/profiler-service.hpp"
 #include "native/tap-service.hpp"
 #include "native/frame-service.hpp"
+#include "native/audio-service.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
   InputService injectedInput;
   FrameService captures;
+  AudioService audioCapture;
   std::atomic<bool> takeoverRequested{false};
   ares::Node::System root;
   std::shared_ptr<HID::Joypad> joypad;
@@ -138,6 +140,7 @@ struct Host : ares::Platform {
         mixed[1] += samples[channels == 1 ? 0 : 1];
       }
       for(auto& sample : mixed) sample = std::clamp(sample, -1.0, 1.0) * 0.4;
+      audioCapture.push(mixed[0], mixed[1]);
       if(sound && !service.execution.active) output.output(mixed);
     }
   }
@@ -416,7 +419,10 @@ int main(int argc, char** argv) {
   host.service.videoRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     return host.captures.execute(method, args, owner, host.service.epoch, execution.frame, n64, execution.frameKind, host.service.paused);
   };
-  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); };
+  host.service.audioRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    return host.audioCapture.execute(method, args, owner, !host.streams.empty());
+  };
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     if(method == "n64.input.tap") return tapService.execute(args, owner, host.service.epoch, host.service.paused, host.injectedInput, execution);
     // Keep the tapped port stable for its entire owned interval.
@@ -468,6 +474,7 @@ int main(int argc, char** argv) {
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
       host.injectedInput.releaseAll(); traceService.reset(); profilerService.reset();
       host.captures.reset(host.service.epoch + 1);
+      host.audioCapture.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
       ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
       if(host.root) { host.output.clear(); host.root->power(); }

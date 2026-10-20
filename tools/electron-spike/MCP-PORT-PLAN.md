@@ -360,3 +360,14 @@ do not carry continuous debug overhead into ordinary play by accident.
   earlier fork-specific debugging and scripting capabilities.
 - Fork `MCP-DEBUGGING-IMPLEMENTATION-PLAN.md`, `docs/mcp-paper-cuts-plan.md`,
   `docs/ares-setup.md`: design intent, refinements and qualified verification history.
+
+Task 7 audio adaptation: selectively port post-mix capture and PCM conversion
+from `desktop-ui/program/telemetry-server.cpp` and `platform.cpp` at the audited
+reference commit. The new host resamples its streams to 48000 Hz already, so the
+capture reports that fixed host rate. Preserve the 192000-frame source bound and
+capture/status/save defaults; freeze the requested prefix rather than allowing
+ring wrap to overwrite it. Add connection ownership, reset/disconnect revocation,
+immutable partial-save pins and atomic main-owned WAV publication. `audio_save`
+replaces destinations because its reference contract has no overwrite flag. Keep
+post-commit file metadata visible when late cleanup fails. No audio viewer or
+always-on history buffer is ported.

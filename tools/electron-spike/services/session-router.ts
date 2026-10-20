@@ -1,3 +1,4 @@
+import { AudioArtifacts } from './audio-artifacts.js';
 import { Screenshots } from './screenshots.js';
 import { SCREENSHOT_METHODS } from './screenshot-contracts.js';
 import type { ScreenshotParams } from './screenshot-contracts.js';
@@ -7,11 +8,12 @@ import { METHODS, PROTOCOL, encodeRequest, ServiceError, type SessionIdentity, t
 import type { NativeSessionClient } from './native-client.js';
 
 function mainCapabilities(reply: SessionReply<any>): void {
-  if (reply.ok && Array.isArray(reply.result?.capabilities)) for (const method of ['artifact.traceExport', ...SCREENSHOT_METHODS]) if (!reply.result.capabilities.includes(method)) reply.result.capabilities.push(method);
+  if (reply.ok && Array.isArray(reply.result?.capabilities)) for (const method of ['artifact.traceExport', ...SCREENSHOT_METHODS, 'artifact.audioSave']) if (!reply.result.capabilities.includes(method)) reply.result.capabilities.push(method);
 }
 
 /** Electron main owns this router, independently of renderer/plugin lifetimes. */
 export class SessionRouter {
+  private audio = new AudioArtifacts();
   private screenshots = new Screenshots();
   private artifacts = new TraceArtifacts();
   private nextArtifactId = 0;
@@ -37,13 +39,13 @@ export class SessionRouter {
     this.stateTimer.unref();
   }
   detach(): void {
-    this.artifacts.close(); this.screenshots.close();
+    this.artifacts.close(); this.screenshots.close(); this.audio.close();
     clearInterval(this.stateTimer); this.stateTimer = undefined;
     this.client?.close(); this.client = undefined;
   }
   async request<M extends ServiceMethod>(method: M, identity?: SessionIdentity, params?: ServiceParams<M>, owner = 'ui'): Promise<SessionReply<ServiceResult<M>>> {
     if (!METHODS.includes(method)) throw new ServiceError('invalid_request');
-    if (method === 'execution.release') { this.artifacts.release(owner); this.screenshots.release(owner); }
+    if (method === 'execution.release') { this.artifacts.release(owner); this.screenshots.release(owner); this.audio.release(owner); }
     if (!this.client) throw new ServiceError('native_host_disconnected');
     const client = this.client;
     if (method.startsWith('artifact.')) {
@@ -53,6 +55,7 @@ export class SessionRouter {
       try {
         let result;
         if (method === 'artifact.traceExport') result = await this.artifacts.export(client, startingIdentity, params as TraceExportParams, owner, () => this.client === client);
+        else if (method === 'artifact.audioSave') result = await this.audio.save(client, startingIdentity, (params as { path: string }).path, owner, () => this.client === client);
         else if (method === 'artifact.screenshot') result = await this.screenshots.capture(client, startingIdentity, params as ScreenshotParams, owner, () => this.client === client);
         else {
           if (startingIdentity.session !== client.identity.session || startingIdentity.epoch !== client.identity.epoch) throw new ServiceError('stale_epoch');

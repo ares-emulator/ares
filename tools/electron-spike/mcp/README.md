@@ -3,11 +3,11 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 36 tools: eleven generic/session/run tools,
+emulator. The verified registry has 39 tools: eleven generic/session/run tools,
 twelve N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools and screenshot. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot and three audio tools. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
-support other cores. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
+support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
 ## Start and explicitly select an app
 
@@ -233,7 +233,7 @@ result contains path and artifact byte count/SHA-256, or file_error if export
 fails after capture. Relative paths use the app working directory. Output caps
 at 64 MiB / 25 seconds; owner disconnect, stale epochs or replacement cancel
 unfinished publication. Existing output survives failures. This does not add a
-new MCP tool; images/audio/recording remain pending.
+new MCP tool; video recording remains pending.
 
 `screenshot(path=null, source="framebuffer", region=null, scale=1, inline=false,
 overwrite=false)` now returns native PNG output. Framebuffer reads are N64-only;
@@ -251,3 +251,26 @@ pending.
 `screenshot_error` alongside the completed run and `emulation_already_advanced`.
 A competing resume/frame advance or epoch change causes an explicit capture
 failure. Presented captures report their actual native submitted-frame coordinate.
+
+### Audio capture
+
+`audio_capture(seconds=3)` starts a connection-owned post-mix stereo capture at
+48000 Hz. Requests accept 0..3600 seconds and use at most four seconds (192000
+sample frames). Effective `cap`, `seconds` and `rate` are returned. The tap precedes
+host-output muting, including controlled-run muting. Cores without attached audio
+streams return `unavailable`; `audio_status` reports `available: false`.
+
+`audio_status()` reports `active`, `count`, `cap`, `rate`, `done` and `available`.
+`done` does not consume the capture: samples freeze at the limit until saved or
+replaced by the same owner. Other connections may read status but cannot replace
+or save it. Disconnect and reset revoke capture and pinned data.
+
+`audio_save(path)` atomically **replaces** an existing file, matching the reference
+API (which has no overwrite flag). It exports the current samples, including a
+partial or empty capture, as 16-bit little-endian stereo PCM WAV. Success consumes
+capture; failure retains it for retry. The returned path, frame count, duration,
+epoch, bytes and SHA-256 describe the saved snapshot. A late cleanup failure is
+reported as `cleanup_error` alongside the successful file metadata. Maximum WAV
+size is 768044 bytes, with one native immutable save pin (30-second lease) and a
+25-second main export deadline. The bounded buffer freezes instead of wrapping;
+this deliberately avoids losing the beginning of a late-saved capture.

@@ -793,3 +793,45 @@ file-exists failure after advancing, inline rejection before advancing, and nati
 frame-race rejection. Unit coverage verifies old-epoch identity and preservation
 of breakpoint results on capture failure. MCP inventory stays **36** tools.
 Audio/recording and physical input acceptance remain pending.
+
+### Task 7 — bounded native audio capture and atomic WAV export
+
+Selective port of `audio.capture/status/save` semantics from reference commit
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`:
+`desktop-ui/program/telemetry-server.cpp` SHA-256
+`738abe2ed5dd789b7b9968bd0f77c45ab03ddcecdf81e9106e962d250799646b`,
+`desktop-ui/program/platform.cpp` SHA-256
+`0c1f8ec210b4d82727278f6efd28b2d8e51b2fc8950680597a4ea04e94a0bb8e`.
+No legacy transport, viewer or continuously running ring was imported.
+
+Implemented native post-mix stereo capture before sound/controlled-run output
+muting, at the host resampler's 48000 Hz rate. Maximum 192000 frames; buffers
+freeze at cap instead of overwriting their prefix on late save. Capture is opt-in
+and connection-owned. Reset/disconnect revoke it; foreign mutations fail busy.
+Status is read-only and reports unavailable streams without fabricated samples.
+Partial/zero-frame saves work. One native immutable PCM pin has a 30-second lease;
+main's export has a 25-second deadline and bounded 768044-byte WAV output.
+
+Electron main builds 16-bit little-endian stereo WAV and uses the shared atomic
+publisher. Reference `audio_save` replaces paths without an overwrite flag;
+preserve that behavior with atomic replacement. Failed publication retains the
+capture for retry. Successful publication consumes only its pinned capture; late
+cleanup failure preserves file metadata and reports `cleanup_error`.
+
+Validation passed:
+- Native host/CPU fixture rebuild, strict TypeScript build, **35/35** sequential
+  tests (18.57 s), including PCM clamp/endian, cap freeze, immutable partial pin,
+  owner/range checks, atomic WAV headers/samples, failed save/retry, cancellation
+  and publication lifetime behavior.
+- Real GB tone through native host with host output muted, local endpoint and
+  actual MCP stdio: full four-second nonzero PCM, WAV/hash/size, duration clamp,
+  destination replacement, zero-frame WAV, reset and disconnect revocation.
+- Real Electron MCP integration: exact **39-tool** registry, 960-frame native GB
+  WAV, existing UI/memory/reload/execution/N64 checks, and synthetic unavailable
+  audio behavior.
+- `artifacts/task-7-audio/Ares.app` packaged and copied outside the checkout;
+  native loader/MCP adapter denied checkout reads. All 39 tools, PNG worker/file
+  output and WAV header/file/consumption verified; GB ran 444 displayed frames.
+
+Task 7 video recording remains next. Milestone 2 physical keyboard/gamepad and
+audible N64 gameplay acceptance remain **not run**. No full 68-tool parity claim.
