@@ -25,20 +25,20 @@ struct Sega8BitAdapter final : Adapter {
   struct Cache : NodeCache {
     ares::Node::Debugger::Memory cpuRamMemory;
     ares::Node::Debugger::Memory cartridgeRamMemory;
-    CompiledMap masterSystemMap;
+    CompiledMap memoryMap;
   };
 
   mutable Cache cache;
 
-  auto refreshMasterSystemMap(const Emulator& emu) const -> void {
+  auto refreshMemoryMap(const Emulator& emu) const -> void {
     bool changed = false;
     refreshMemoryNodeCache(cache, &emu.root, {
       {"CPU RAM", &cache.cpuRamMemory},
       {"Cartridge RAM", &cache.cartridgeRamMemory},
     }, &changed);
-    if(!changed && !cache.masterSystemMap.empty()) return;
+    if(!changed && !cache.memoryMap.empty()) return;
 
-    cache.masterSystemMap = compileMemoryMap({
+    cache.memoryMap = compileMemoryMap({
       {0x0000, 0x1fff, ReadMode::Linear, 0x2000, &cache.cpuRamMemory},
       {0x2000, 0x9fff, ReadMode::Linear, 0x8000, &cache.cartridgeRamMemory},
     });
@@ -51,11 +51,13 @@ struct Sega8BitAdapter final : Adapter {
   }
 
   auto supports(const Emulator& emu) const -> bool override {
-    return supportsAnyName(emu, {"SG-1000", "Master System"});
+    return supportsAnyName(emu, {"SG-1000", "Master System", "Game Gear"});
   }
 
   auto consoleId(const Emulator& emu) const -> u32 override {
-    return emu.name == "SG-1000" ? RC_CONSOLE_SG1000 : RC_CONSOLE_MASTER_SYSTEM;
+    if(emu.name == "SG-1000") return RC_CONSOLE_SG1000;
+    if(emu.name == "Game Gear") return RC_CONSOLE_GAME_GEAR;
+    return RC_CONSOLE_MASTER_SYSTEM;
   }
 
   auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool override {
@@ -78,8 +80,8 @@ struct Sega8BitAdapter final : Adapter {
 #endif
     }
 
-    refreshMasterSystemMap(emu);
-    return Adapter::readMemoryMap(cache.masterSystemMap, address, buffer, size);
+    refreshMemoryMap(emu);
+    return Adapter::readMemoryMap(cache.memoryMap, address, buffer, size);
   }
 
   auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
@@ -94,8 +96,8 @@ struct Sega8BitAdapter final : Adapter {
 #endif
     }
 
-    refreshMasterSystemMap(emu);
-    return Adapter::writeMemoryMap(cache.masterSystemMap, address, buffer, size);
+    refreshMemoryMap(emu);
+    return Adapter::writeMemoryMap(cache.memoryMap, address, buffer, size);
   }
 };
 
