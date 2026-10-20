@@ -1485,3 +1485,81 @@ Validation on the actual new binary:
 Only rsp_capture and capture_control remain unregistered; exact rdp_capture's
 legacy viewer mode is still unavailable. Physical input/audio, real-game and
 broader fault-injection acceptance gates remain pending. All 68 remain in scope.
+
+## Task 9 bounded F3DEX2 and RDP command viewers (2026-10-20)
+
+Adds rsp_capture/capture_control and enables legacy rdp_capture(next_frame=false).
+**All 68 MCP tool names are now registered.** This is registration coverage, not
+full preservation parity or completion of task 9. RSPQ/ELF/config/custom display-
+list descriptors, semantic argument decoding and the documented manual/schema/
+result gates remain required work; no scope removal has been accepted.
+
+Audited `ares-64` at `1c9b9637476a83f7b80d3db1115a0f71529820d9`:
+
+| Source | SHA-256 |
+| --- | --- |
+| `ares/n64/rsp/rsp-commands.cpp` | `3abfb3ca71448d67948faf2c92201db20be784246ac1afa379d820eab6796476` |
+| `desktop-ui/ui/rsp-overlays/f3dex2.json` | `e55793c96632cdc2dd2797e8655e45a2bb4303e7095c739f3796daca5a30fc2e` |
+| `ares/n64/vulkan/vulkan.cpp` | `1906b8079516c483ab3116cd5b48620e1fd21d2b34c4c5f0bd87736746451745` |
+| `desktop-ui/program/program.cpp` | `e9af3109fea007b7d912f04a68a92c60734275f90ecb7170469308277eded40a` |
+
+Native viewer state is disabled by default and never serialized. Validated
+F3DEX2 signature/layout hooks copy command words from live RSP dispatcher
+registers before handler reuse, then close command/dispatch-loop segments at the
+next boundary or halt. Segment timing uses the reference 32-bit wrap-safe clock
+delta; open-segment DMA rows contribute byte counts. Shared sequence numbers
+reserve order at segment start. Interpreter and RSP traced-JIT contexts invoke
+the actual hook without changing configured JIT flags. HALT-clear re-detects
+microcode and hook points revalidate the signature, so unknown/audio code cannot
+emit fabricated F3D commands. Names come from the audited F3DEX2 descriptor;
+args remain explicitly raw words. RSPQ/config is reported unsupported.
+
+Software and Vulkan command decoders record legacy RDP word0/word-count rows.
+Vulkan records only complete buffered commands; exact submission/full-word
+capture remains independent. Host afterRun bookkeeping commits on changed
+nonzero VI origin, matching the reference's origin-swap concept, not an exact VI
+interval or proof of a presented canvas image. Double buffers fix reuse of live
+storage underneath the committed frame. Each channel retains 4096 rows with
+explicit observed/drop counts, 64-row native pages and 1024-row MCP inline cap.
+Generation/epoch checks reject changed committed frames during pagination.
+
+capture_control has independent channel ownership and prevalidates both requested
+changes atomically. Null queries are read-only; changes require idle execution
+and no upload/batch/GDB conflict. Disconnect disables owned capture; reset/state
+load clear buffers/ownership. No frontend/transport pumping in the core, no paths
+or JSON parsing there. Existing source/post-run data is never reconstructed from
+reused command buffers.
+
+Validation on the actual new binary:
+
+- Native host/real-core fixture and strict TypeScript builds passed. Full
+  sequential suite **64/64** passed in 46.56s. The subsequent actual DMA-row
+  attribution extension rebuilt the fixture and affected viewer tests passed
+  **2/2** under both RSP interpreter and traced JIT.
+- Core fixture executes an original F3DEX2-shaped dispatch/handler program under
+  real JIT and interpreter, validates signature-derived PCs, live word capture
+  before DMEM overwrite, nonzero duration, actual eight-byte SP DMA attribution,
+  configured-JIT preservation, software RDP decoder rows, immutable origin-swap
+  commits, stale generations, capacity/drop counts, clock wrap, unknown-microcode
+  rejection, atomic owner changes and owner release.
+- Disposable original CPU/RSP programs and real MCP stdio launch the RSP and
+  submit two DMEM no-ops to Vulkan, then change VI origin. Assertions cover raw
+  command words/names/timing before handler overwrite, Vulkan legacy word0 rows,
+  origin-swap metadata, zero-limit reads, preserved committed records on disable,
+  owner exclusion and disconnect cleanup. No user emulator/ROM/saves were used.
+- Shared DTO tests decode actual native records, bound rows/cycles/words and
+  reject malformed pages. MCP aggregation checks inline bounds and fails a
+  generation change rather than mixing frames.
+- Actual Electron integration passed the exact **68-tool** registry, viewer
+  enable/query/disable, RSP snapshot and legacy RDP snapshot alongside the
+  existing call/RSP-debug/exact-capture/state/artifact regressions.
+- Fresh `artifacts/task-9-viewers/Ares.app` copied outside checkout passed:
+  **68-tool** registry, explicit viewer unavailability on GB, prior memory/state/
+  image/audio/video checks, loader/MCP checkout reads denied, 452 GB frames,
+  Electron 44.9.0 / Node 24.22.0. This is package isolation evidence, not real-game
+  F3DEX2/RSPQ acceptance or proof of full parity.
+
+Next task 9 work is RSPQ ELF/config/custom descriptor and semantic capture parity,
+then the remaining generated-schema/result/bridge/game/fault/physical acceptance
+gates. All 68 rows retain explicit evidence/limits. Task 9 stays in progress and
+task 10 has not started.

@@ -3,6 +3,7 @@
 namespace ares::Nintendo64 {
 
 RSP rsp;
+#include "command-capture.cpp"
 #include "decoder.cpp"
 #include "dma.cpp"
 #include "io.cpp"
@@ -86,9 +87,11 @@ auto RSP::instruction() -> void {
   profile.cycles += pipeline.clocks;
   pipeline.clocksTotal += pipeline.clocks;
   debugControl.after(ipu.pc, status.halted);
+  if(commandCapture.rspEnabled && status.halted) commandCapture.rspFlush();
 }
 
 auto RSP::instructionPrologue(u32 instruction) -> void {
+  commandCapture.rspInstruction(ipu.pc);
   pipeline.address = ipu.pc;
   pipeline.instruction = instruction;
   debugger.instruction();
@@ -123,6 +126,7 @@ auto RSP::instructionEpilogue(u32 clocks) -> s32 {
 
 auto RSP::power(bool reset) -> void {
   debugControl = {};
+  commandCapture.reset();
   Thread::reset();
   dmem.fill();
   imem.fill();

@@ -300,7 +300,7 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
     dirty = 0;
   }
 
-  bool traceMode = self.debugger.tracer.instruction->enabled();
+  bool traceMode = self.debugger.tracer.instruction->enabled() || commandCapture.rspEnabled;
   bool callInstructionPrologue = traceMode;
   u32 index = contextIndex(address, callInstructionPrologue);
   if(auto block = context[index]) return block;

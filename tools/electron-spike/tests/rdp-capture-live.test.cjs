@@ -58,7 +58,7 @@ test('real N64 exact RDP capture: Vulkan submissions, task snapshots, bounded pa
     assert.equal((await peer.tool('rdp_capture', { path: output, max_commands: 2, max_seconds: 2 })).file_error, 'file_exists');
     assert.deepEqual(JSON.parse(fs.readFileSync(output, 'utf8')), file, 'failed overwrite leaves artifact intact');
     assert.equal((await native.request('n64.rdp.capturePage', undefined, { operationId: oldId, kind: 'words', offset: 0, limit: 64 })).error, 'stale_capture');
-    assert.equal((await peer.tool('rdp_capture', { next_frame: false })).error, 'legacy_capture_unavailable');
+    assert.equal((await peer.tool('rdp_capture', { next_frame: false })).kind, 'rdp');
     // A CPU step leaves the VI boundary; exact capture rejects without running.
     await peer.tool('step_instructions');
     assert.equal((await peer.tool('rdp_capture', { max_seconds: 0.01 })).error, 'not_at_frame_boundary');

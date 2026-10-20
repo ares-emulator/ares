@@ -1,12 +1,13 @@
+import { readViewerCapture } from './viewer-tools.js';
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { ServiceError, type SessionClient, type SessionIdentity, type SessionReply } from '../services/contracts.js';
 export function registerRdpCaptureTools(server: McpServer, client: SessionClient, status: () => Promise<SessionIdentity>, remember: (id: number, identity: SessionIdentity) => void) {
   const output = (value: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(value) }] });
   const unwrap = <T>(r: SessionReply<T>): T => { if (!r.ok || !r.result) throw new ServiceError(r.error || 'invalid_reply'); return r.result; };
-  server.registerTool('rdp_capture', { description: 'N64 exact next-VI-interval capture at RDP submission before backend dispatch, with full 64-bit words, DPC batches and RSP task snapshots at HALT-clear. Requires a frame boundary. Storage caps: 65536 words, 512 batches, 64 tasks; explicit truncation/drop counts. Optional atomic JSON export contains all retained words/batches/tasks. Inline words cap at 1024; legacy next_frame=false viewer capture is not yet available.', inputSchema: z.object({ path: z.string().nullable().default(null), next_frame: z.boolean().default(true), max_seconds: z.number().min(0.001).max(600).default(60), max_commands: z.number().int().min(1).max(1000000).default(1000000), dmem_snapshots: z.boolean().default(false), limit: z.number().int().min(0).max(4096).default(4096), overwrite: z.boolean().default(false) }).strict() }, async p => {
+  server.registerTool('rdp_capture', { description: 'N64 exact next-VI-interval capture at RDP submission before backend dispatch, with full 64-bit words, DPC batches and RSP task snapshots at HALT-clear. Requires a frame boundary. Storage caps: 65536 words, 512 batches, 64 tasks; explicit truncation/drop counts. Optional atomic JSON export contains all retained words/batches/tasks. Inline words cap at 1024; next_frame=false reads the last immutable VI-origin-swap viewer buffer (word0 snapshot, separate from exact capture).', inputSchema: z.object({ path: z.string().nullable().default(null), next_frame: z.boolean().default(true), max_seconds: z.number().min(0.001).max(600).default(60), max_commands: z.number().int().min(1).max(1000000).default(1000000), dmem_snapshots: z.boolean().default(false), limit: z.number().int().min(0).max(4096).default(4096), overwrite: z.boolean().default(false) }).strict() }, async p => {
     try {
-      if (!p.next_frame) throw new ServiceError('legacy_capture_unavailable');
+      if (!p.next_frame) return output(await readViewerCapture(client, await status(), 'rdp', p.limit));
       const identity = await status();
       let operation = unwrap(await client.request('n64.rdp.captureStart', identity, { maxWords: Math.min(p.max_commands, 65536), dmem: p.dmem_snapshots, timeoutMs: Math.ceil(p.max_seconds * 1000) }));
       remember(operation.operation_id, identity);

@@ -30,6 +30,7 @@ auto RSP::dmaTransferStart(Thread& thread) -> void {
 
 auto RSP::dmaTransferStep() -> void {
   if(dma.busy.read) {
+    commandCapture.rspDma(dma.current.length + 8, false);
     if constexpr(Accuracy::RSP::Recompiler) {
       if(dma.current.pbusRegion) {
         recompiler.invalidate(dma.current.pbusAddress, dma.current.length + 8);
@@ -53,6 +54,7 @@ auto RSP::dmaTransferStep() -> void {
     }
   }
   if(dma.busy.write) {
+    commandCapture.rspDma(dma.current.length + 8, true);
     for(u32 i = 0; i <= dma.current.length; i += 8) {
       if(dma.current.pbusRegion) {
         u64 data = imem.read<Dual>(dma.current.pbusAddress);

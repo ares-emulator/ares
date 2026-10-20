@@ -5,6 +5,7 @@
 #include "../native/machine-service.hpp"
 #include "../native/stack-service.hpp"
 #include "../native/call-service.hpp"
+#include "../native/viewer-service.hpp"
 #include "../native/inspection-service.hpp"
 #include "../native/rsp-debug-service.hpp"
 #include "../native/memory-experiment.hpp"
@@ -754,6 +755,60 @@ int main() {
     resetCaller(); cpu.pipeline.setPc(0xffffffff80033000ull); d.requestStepInstructions(1); cpu.instruction();
     check(cpu.pipeline.inDelaySlot() && request("n64.cpu.call", {"0x33000", "1", "1", "1000"}).error == "unsafe_context", "call rejects delay slot without mutation");
     calls.reset(); d.resume();
+  }
+  {
+    for(bool jit : {true, false}) {
+      rsp.load(root); rsp.power(false); rdp.load(root); rdp.power(false);
+      rsp.recompiler.enabled = jit;
+      auto imem = [&](uint32_t address, uint32_t value) { rsp.imem.write<Word>(address, value); };
+      imem(0x14, 0x8c190000); imem(0x18, 0x8c180004); imem(0x1c, 0);
+      imem(0x20, 0x00196603); imem(0x24, 0x000c5840); imem(0x28, 0x24080060);
+      imem(0x2c, 0); imem(0x30, 0); imem(0x34, 0x01000008); imem(0x38, 0);
+      imem(0x60, 0x24100001); imem(0x64, 0xac100004);
+      imem(0x68, 0x24090100); imem(0x6c, 0x40890000); // DMA DMEM destination
+      imem(0x70, 0x24093800); imem(0x74, 0x40890800); // RDRAM source
+      imem(0x78, 0x24090000); imem(0x7c, 0x40891000); // eight-byte read
+      imem(0x80, 0x10000001); imem(0x84, 0); imem(0x88, 0x0000000d);
+      rsp.dmem.write<Word>(0, 0x05010203); rsp.dmem.write<Word>(4, 0x12345678);
+      rsp.ipu.pc = 0x14; rsp.branch.setPc(0x14);
+      ViewerService viewer;
+      auto request = [&](const char* method, std::vector<std::string> args, const char* actor = "viewer") { return viewer.execute(method, args, actor, 9, true, false); };
+      check(request("n64.capture.control", {"1", "1"}).error.empty(), "viewer capture channels enable");
+      auto& c = commandCapture;
+      check(c.sigPc == 0x20 && c.loopPc == 0x14 && c.dispatchPc == 0x34, "F3DEX2 signature resolves bounded live hook PCs");
+      check(request("n64.capture.control", {"0", "0"}, "foreign").error == "busy" && c.rspEnabled && c.rdpEnabled, "viewer channel ownership updates are atomic");
+      check(viewer.execute("n64.capture.control", {"1", "0"}, "viewer", 9, true, true).error == "busy", "active operation excludes viewer flag mutations");
+      rsp.writeWord(0x04040010, 1, cpu);
+      for(unsigned i = 0; i < 100 && !rsp.status.halted; ++i) { rsp.instruction(); rsp.dmaStep(128); }
+      check(rsp.status.halted && c.rspLive.size() == 2, "actual RSP JIT/interpreter emits dispatch and completed command segments");
+      auto command = std::find_if(c.rspLive.begin(), c.rspLive.end(), [](auto& r) { return !r.overhead; });
+      check(command != c.rspLive.end() && command->word0 == 0x05010203 && command->word1 == 0x12345678 && command->cycle > 0 && command->bytesIn == 8 && rsp.dmem.read<Word>(4) == 1, "live dispatch preserves command words before handler reuses DMEM");
+      check(rsp.recompiler.enabled == jit, "viewer preserves configured RSP JIT flag");
+      rdram.ram.write<Dual>(0x3800, 0x0011223344556677ull, RBusDevice::ARES_DEBUGGER);
+      rdram.ram.write<Dual>(0x3808, 0x0077665544332211ull, RBusDevice::ARES_DEBUGGER);
+      rdp.command.start = rdp.command.current = 0x3800; rdp.command.end = 0x3810; rdp.render();
+      check(c.rdpLive.size() == 2 && c.rdpLive[0].word0 == 0x0011223344556677ull, "software RDP decoder records actual viewer commands");
+      vi.io.dramAddress = 0x8000; c.afterRun();
+      check(c.presentedFrame == 1 && c.rspLatest.size() == 2 && c.rdpLatest.size() == 2 && c.rspLive.empty(), "nonzero origin change commits immutable double buffers");
+      auto rspPage = request("n64.capture.rsp", {"0", "0", "64"});
+      auto rdpPage = request("n64.capture.rdp", {"0", "0", "64"});
+      check(rspPage.error.empty() && rdpPage.error.empty(), "native viewer pages expose committed records");
+      if(jit) std::printf("VIEWER_RSP %s\nVIEWER_RDP %s\nVIEWER_CONTROL %s\n", rspPage.json.c_str(), rdpPage.json.c_str(), request("n64.capture.control", {"-1", "-1"}).json.c_str());
+      auto generation = c.generation;
+      c.rdpCommand(0, 0x99, 0, 1);
+      check(c.rdpLatest[0].word0 == 0x0011223344556677ull, "next live frame cannot overwrite committed commands");
+      vi.io.dramAddress = 0x9000; c.afterRun();
+      check(request("n64.capture.rdp", {std::to_string(generation), "0", "64"}).error == "stale_capture", "viewer pagination rejects newer committed generation");
+      for(unsigned i = 0; i < CommandCapture::Capacity + 3; ++i) c.rdpCommand(0, i, 0, 1);
+      vi.io.dramAddress = 0xa000; c.afterRun();
+      check(c.rdpLatest.size() == c.Capacity && c.rdpCommitted == c.Capacity + 3, "viewer storage bounds and drop counts");
+      c.segment = {}; c.segmentOpen = true; c.segmentStart = 0xfffffff0; rsp.pipeline.clocksTotal = 0x10; c.rspFlush();
+      check(c.rspLive.back().cycle == 32, "RSP segment timing handles 32-bit clock wrap");
+      imem(0x20, 0); c.detectRsp();
+      check(c.sigPc == -1 && !c.segmentOpen, "unknown microcode never retains a stale F3D dispatch hook");
+      viewer.releaseOwner("viewer"); check(!c.rspEnabled && !c.rdpEnabled, "disconnect disables owned viewer channels");
+      viewer.reset(); rsp.unload(); rdp.unload();
+    }
   }
   pi.detach(cartridge.romDevice); cartridge.rom.reset();
   rdram.ram.reset();

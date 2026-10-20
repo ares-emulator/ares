@@ -129,6 +129,8 @@ auto Vulkan::render() -> bool {
       return true;
     }
 
+    commandCapture.rdpCommand(code, (uint64_t(buffer[queueOffset * 2]) << 32) | buffer[queueOffset * 2 + 1], 0, length);
+
     if(code >= 8) {
       implementation->processor->enqueue_command(length * 2, buffer + queueOffset * 2);
     }

@@ -3,9 +3,9 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 66 tools: eleven generic/session/run tools,
+emulator. The verified registry has 68 tools: eleven generic/session/run tools,
 thirteen N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch and five task 9 machine/disassembly/mutation tools, five RSP debugger tools and exact rdp_capture, plus stack/render_probe/dump_rdram/dump_range and call_function/call_recover. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch and five task 9 machine/disassembly/mutation tools, five RSP debugger tools and exact rdp_capture, plus stack/render_probe/dump_rdram/dump_range and call_function/call_recover, rsp_capture/capture_control. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
@@ -530,8 +530,8 @@ use `path` for all retained words, batches and task bytes in atomic
 `ares-rdp-capture-v1` JSON. File failures preserve an existing destination and
 return `file_error` alongside the completed capture. Export is bounded to 64 MiB,
 25 seconds, two jobs globally and one per owner. Reset/disconnect revoke jobs;
-newer captures invalidate old pages instead of mixing them. Legacy
-`next_frame=false` returns `legacy_capture_unavailable` until viewer buffers land.
+newer captures invalidate old pages instead of mixing them. Legacy `next_frame=false` reads the last origin-swap viewer buffer; its snapshot
+is separate from exact capture and preserves word0 only.
 
 
 ### Inspection and memory dumps
@@ -591,3 +591,33 @@ claim it. New calls reject `recovery_pending` until restore/discard. Reset/state
 load invalidate the context. Recovery never rolls back memory, device, interrupt
 or time effects; completed operation snapshots remain immutable. These tools are
 experimental and real-game/fault acceptance remains pending.
+
+
+### Bounded command viewers (partial parity)
+
+`capture_control(rsp=null,rdp=null)` queries or controls two native viewer channels,
+both off by default. Changes require idle execution and channel ownership (or UI);
+both requested owners validate before either flag changes. Disconnect disables
+owned channels; reset/state load clear data. No guest instruction runs and no
+configured JIT flag changes.
+
+`rsp_capture(limit=4096)` reads completed F3DEX2 command/dispatch segments from the
+last nonzero VI-origin-swap buffer. A validated signature locates the live loop
+and dispatch PCs. Words are copied from the dispatcher registers before handler
+reuse, with cycle deltas, shared ordering and open-segment DMA byte counts. Both
+interpreter and traced JIT use the actual hooks; unknown microcode cannot emit
+fabricated command rows. `configured` reports detection; `rspq_supported:false`
+explicitly reports the remaining RSPQ ELF/config/custom descriptor port. Command
+names come from the reference F3DEX2 descriptor; args are raw words, not semantic
+argument decoding. Those gaps remain preservation work, not accepted removals.
+
+`rdp_capture(next_frame=false)` reads legacy word0 snapshots from the software or
+Vulkan command decoder, including complete buffered commands. It does not run
+or write a file; `next_frame=true` remains the separate exact-VI/full-word export.
+Viewer buffers commit on changed nonzero VI origin, matching the reference's
+origin-swap bookkeeping; this is not proof of a presented canvas image or one VI.
+Double buffers preserve immutable committed records while new commands arrive.
+Each channel stores at most 4096 rows per frame; native pages cap at 64 and MCP
+inline output at 1024. Drops/truncation are explicit. A newer committed generation
+returns stale_capture during pagination, never mixed-frame output. Long RSP
+segments are emitted on the next dispatch/halt, as in the reference.

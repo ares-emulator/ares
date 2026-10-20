@@ -120,7 +120,7 @@ auto RSP::ioWrite(u32 address, u32 data_, Thread& thread) -> void {
   if(address == 4) {
     //SP_STATUS
     if(data.bit( 0) && !data.bit( 1)) {
-      if(status.halted) rdp.debugCapture.onRspStart(cpu.ipu.pc);
+      if(status.halted) { rdp.debugCapture.onRspStart(cpu.ipu.pc); commandCapture.detectRsp(); }
       status.halted = 0;
     }
     if(data.bit( 1) && !data.bit( 0)) status.halted = 1;

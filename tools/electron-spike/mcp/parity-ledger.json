@@ -1173,8 +1173,8 @@
       "family": "Images/render captures",
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 9,
-      "implementationStatus": "MCP implemented (bounded task 9 exact capture; legacy viewer pending)",
-      "mcpSchemaParity": "Reference parameter names/defaults retained; max_commands request clamped to 65536 stored words, inline limit to 1024. Legacy next_frame=false returns legacy_capture_unavailable. Full generated schema/result equality not run.",
+      "implementationStatus": "MCP implemented (bounded exact and viewer captures; full parity pending)",
+      "mcpSchemaParity": "Reference parameter names/defaults retained; max_commands request clamped to 65536 stored words, inline limit to 1024. Legacy next_frame=false reads immutable origin-swap viewer snapshots (1024 inline cap). Full generated schema/result equality not run.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/rdp-capture-live.test.cjs, tests/rdp-artifacts.test.cjs; Electron/package gates in execution log",
@@ -1182,7 +1182,7 @@
           "date": "2026-10-20"
         }
       ],
-      "knownLimits": "Exact next-VI interval requires an observed frame boundary and uses existing owned run/cancel/deadline semantics (0.001..600 seconds). Submission hook runs before software/Vulkan dispatch; HALT-clear snapshots task header/XXH64 hashes and optional 4 KiB DMEM. Full 64-bit words, DPC batch/source/task associations; 65536 words, 512 batches, 64 tasks, explicit truncation/drop counts and unknown task after overflow. Inline words cap at 1024; optional atomic JSON export contains all retained words/batches/tasks (25-second job deadline). Native pages are operation/epoch scoped and reject superseded capture. next_frame=false legacy viewer buffer remains unavailable; decoded command grouping and full reference result/schema equality remain pending. XBUS range follows reference clamp to DMEM 4 KiB."
+      "knownLimits": "Exact next-VI interval requires an observed frame boundary and uses existing owned run/cancel/deadline semantics (0.001..600 seconds). Submission hook runs before software/Vulkan dispatch; HALT-clear snapshots task header/XXH64 hashes and optional 4 KiB DMEM. Full 64-bit words, DPC batch/source/task associations; 65536 words, 512 batches, 64 tasks, explicit truncation/drop counts and unknown task after overflow. Inline words cap at 1024; optional atomic JSON export contains all retained words/batches/tasks (25-second job deadline). Native pages are operation/epoch scoped and reject superseded capture. next_frame=false reads the last immutable nonzero VI-origin-swap decoder buffer (4096 stored/1024 inline); decoded command grouping and full reference result/schema equality remain pending. XBUS range follows reference clamp to DMEM 4 KiB."
     },
     {
       "name": "rsp_capture",
@@ -1200,10 +1200,16 @@
       "family": "Images/render captures",
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded F3DEX2/viewer slice; RSPQ parity pending)",
+      "mcpSchemaParity": "Reference tool names/defaults retained; explicit 4096 stored/1024 inline rows and generation checks. RSPQ/config/semantic argument parity not implemented; full generated schema/result equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/viewer.test.cjs, tests/viewer-live.test.cjs; Electron/package in execution log",
+          "result": "Passed: real RSP JIT/interpreter dispatch/handler overwrite, software/Vulkan decoder records, immutable origin-swap commits, bounded drops/clock wrap, owner/atomic controls, stale pages and disconnect; full suite 64/64.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Bounded live F3DEX2 dispatch capture only: signature-validated RSP hooks preserve two raw command words before handler reuse; command/loop timing, shared sequence and open-segment DMA bytes. Actual interpreter and traced JIT supported without changing configured flags. Nonzero VI-origin changes commit immutable double buffers; 4096 rows/frame, 64/native page and 1024/MCP inline, explicit drops/limit truncation. Generation/epoch checks prevent mixed frames. Unsupported microcode produces no fabricated commands; rspq_supported:false. RSPQ ELF/config/custom descriptor/overlay-name and semantic argument decoding are still required parity work; no scope removal accepted."
     },
     {
       "name": "capture_control",
@@ -1227,10 +1233,16 @@
       "family": "Images/render captures",
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded F3DEX2/viewer slice; RSPQ parity pending)",
+      "mcpSchemaParity": "Reference tool names/defaults retained; explicit 4096 stored/1024 inline rows and generation checks. RSPQ/config/semantic argument parity not implemented; full generated schema/result equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/viewer.test.cjs, tests/viewer-live.test.cjs; Electron/package in execution log",
+          "result": "Passed: real RSP JIT/interpreter dispatch/handler overwrite, software/Vulkan decoder records, immutable origin-swap commits, bounded drops/clock wrap, owner/atomic controls, stale pages and disconnect; full suite 64/64.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Both viewer channels disabled by default. Per-channel connection ownership; both requested owner changes prevalidated atomically. Null queries read-only; mutations require idle execution/no batch/upload/GDB. RSP interpreter/traced-JIT F3DEX2 hooks; RDP software/Vulkan decoder hooks including buffered complete commands. Nonzero VI-origin changes commit double buffers (not exact VI intervals/pixel proof). Disconnect disables owned channels, reset/state load clears. RSPQ configuration/ELF and semantic viewer parity remain pending."
     },
     {
       "name": "render_probe",
