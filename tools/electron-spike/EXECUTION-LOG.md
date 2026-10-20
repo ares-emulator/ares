@@ -1129,3 +1129,82 @@ N64 acceptance remain separate gates. The default-configuration bidirectional st
 compatibility gate passed in the earlier restore slice; this batch slice changes
 no serializer bytes/version. Next implementation task: 9, RSP/RDP and advanced
 CPU mutation.
+
+
+## Task 9 first slice — register mutation and machine observations (2026-10-20)
+
+Added cpu_set_registers, disassemble, rsp_registers, rdp_state and
+peripheral_registers: **54 of 68** MCP tools now registered. This is the first
+bounded task 9 slice, not completion of the RSP/RDP/call milestone.
+
+Reference semantics audited in `ares-64` commit
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`: telemetry-server.cpp's cpu.write_regs,
+cpu.disassemble and jRsp/jRdp/jPeripherals helpers plus tools/mcp/ares_mcp.py.
+The native service has no legacy transport/UI dependency. The core-only change
+explicitly instantiates the existing non-filling D-cache Word debug read for
+external service linkage; serializers, instruction scheduling and cache algorithms
+are unchanged.
+
+- Atomic register mutation prevalidates all fields/aliases/values before any
+  architectural write, requires pause/no owned operation, and honors GDB/upload/
+  batch exclusion. GPR zero is read-only. Values are lossless through 64 bits;
+  LLbit is 0/1 and Status32 uses setControlRegister. Duplicate aliases reject
+  rather than silently picking a winner. Changed fields normalize ABI names.
+- Aligned PC edits canonicalize 32-bit KSEG spellings, reset pipeline/next PC/
+  pending delay slot and stale stop/suppression state, while main remains paused.
+  Non-PC edits preserve immutable stops. All valid sets drop JIT translations;
+  host executor reporting updates immediately after a PC edit can release a gate.
+- Disassembly validates full installed-RDRAM ranges and aligned physical/KSEG
+  aliases. CPU view observes D-cache without allocation/counter changes; physical
+  view/KSEG1 bypass it. It does not claim instruction-cache fetch coherence.
+  Local disassembler hints/colors are off. Direct/conditional targets are
+  lossless, and indirect targets label current register context explicitly.
+  Bound: 128 instructions (reference 1024), fitting the native reply budget.
+- Direct RSP observations include scalar32/vector32x8, raw 16-bit accumulator
+  portions, hardware status/signals, DMA and current instruction. DMA clock is a
+  signed decimal string, origin PC stays full64 (reference helper truncates it).
+  RSP instruction-debug metadata explicitly reports unavailable. RDP copies DPC
+  registers/flags/source; VI/AI/PI/SI/RI groups use reference names. Reads do not
+  invoke MMIO, consume a semaphore, promote DMA or execute guest instructions.
+
+Validation:
+
+- Both native host and real CPU fixture rebuilt successfully.
+- Full strict TypeScript/service/native/MCP suite: **51/51**, 27.54 seconds.
+  Final affected task 9 checks after executor reporting/max-response verification:
+  **2/2**, 0.84 seconds.
+- Native fixture exercises a real pending delay-slot stop, invalid later PC/
+  Status with no earlier GPR write, readonly zero/duplicate rejection, pause/busy
+  gates, full64 GPR/HI/LO, architectural Status/LLbit, PC pipeline reset, preserved
+  old stop snapshots and invalidation of an actual compiled JIT section. Dirty
+  cached code and KSEG1 disassembly differ as expected, with unchanged cache
+  counters/CPU PC and correctly attributed branch/register targets. Direct
+  RSP vector/accumulator/DMA and RDP/peripheral observations preserve state.
+  Native fixture payloads independently pass the TypeScript DTO decoder; malformed
+  lane widths/flags/groups/words/zero-register mutations reject.
+- Disposable N64 and real MCP stdio verify all five tools, unchanged CPU/RSP
+  state after observations, full 128-instruction reply, atomic failure, normalized
+  fp alias/full64 values, immutable completed operation and current-stop context.
+  An original 3-instruction fixture is explicitly installed in RSP DMEM (IPL1
+  has not copied IPL3 after two CPU steps), then PC redirection executes addiu
+  v0,zero,7. Active run/upload/batch mutation exclusions pass. No user ROM,
+  emulator state or saves were used.
+- Actual Electron MCP integration passes exact **54-tool** inventory, N64 GPR
+  edit/restore, RSP/RDP/peripheral/disassembly queries, prior state/batch/GB and
+  renderer/disconnect checks.
+- Fresh `artifacts/task-9-machine/Ares.app` copied-package smoke passes with
+  native loader/MCP checkout reads denied, **54-tool** registry and explicit
+  unavailability of the five N64 tools on GB. Electron 44.9.0 / Node 24.22.0,
+  455 GB frames and existing memory/offline-state/image/audio/video checks pass.
+  This is package isolation evidence, not packaged N64 game acceptance.
+
+Next task 9 dependencies remain unimplemented: RSP debugger cooperative progress
+and DMA handling; RSP command/task and RDP submission hooks; exact RDP VI-interval
+capture; bounded function calls/recovery. The reference hooks were audited:
+RDP::render observes submissions before dispatching to any backend; SP_STATUS
+halt-clear snapshots task memory before reuse. Future capture must preserve those
+actual hook points rather than reconstructing reused buffers after a run. RSP's
+legacy blocking pump must be reconciled with native safe-point ownership and
+DMA progress. Stack/dump/probe parity rows also remain in the 14-tool remainder.
+All 68 remain preservation targets. Physical input/audible N64, real-game and
+fault-injection milestone gates are still separately pending.

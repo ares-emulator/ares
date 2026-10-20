@@ -262,3 +262,22 @@ issue native release. See MCP docs for schema/default reductions and cancellatio
 semantics. Tests cover native idle reservations/expiry, real active-VI N64 PNG
 sweeps, partial failures, own-load epochs, external reset, parent cancellation,
 disconnect and commit-versus-cancel reporting.
+
+### Task 9 machine services
+
+`MachineService` runs on the native emulation thread. Its five typed methods are
+appended to native capabilities: n64.cpu.setRegisters, n64.cpu.disassemble,
+n64.rsp.registers, n64.rdp.state and n64.peripheral.registers. The mutation accepts
+at most 31 distinct indexed GPRs plus optional PC/HI/LO/LLbit/Status and validates
+all fields before writing. Session pause, active execution, GDB, upload and batch
+ownership rules still apply. Host executor reporting updates after PC edits can
+release the CPU debug gate. Disassembly is at most 128 aligned instructions and
+uses the existing non-filling D-cache Word debug read, now explicitly instantiated
+for external native services. Serializer bytes and core run scheduling are unchanged.
+
+Read-only observations are explicitly allowed during uploads/batch reservations.
+Snapshots use direct core fields and a local disassembler, including the RSP
+semaphore and DMA engine, with no MMIO reads. Machine contracts validate vector
+sizes/lane widths, lossless addresses/registers, signed decimal DMA clock and
+structured peripheral groups. RSP debug metadata remains unavailable until the
+core gate is ported. See MCP docs for bounded/schema differences and evidence.

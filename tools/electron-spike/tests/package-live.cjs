@@ -42,11 +42,12 @@ async function run() {
     peer = new StdioPeer(mcpCommand, mcpArgs, { cwd: temporary, env });
     await peer.initialize();
     const inventory = (await peer.request('tools/list', {})).result.tools.map(t => t.name);
-    assert.equal(inventory.length, 49);
-    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save', 'state_load', 'batch']) assert.ok(inventory.includes(name));
+    assert.equal(inventory.length, 54);
+    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save', 'state_load', 'batch', 'cpu_set_registers', 'rsp_registers', 'rdp_state', 'peripheral_registers', 'disassemble']) assert.ok(inventory.includes(name));
     let status;
     for (let i = 0; i < 200; ++i) { status = await peer.tool('emu_status'); if (status.system === 'Game Boy') break; await new Promise(r => setTimeout(r, 20)); }
     assert.equal(status.system, 'Game Boy', diagnostics);
+    for (const [tool, args] of [['cpu_set_registers', { gpr: { t0: 1 } }], ['rsp_registers', {}], ['rdp_state', {}], ['peripheral_registers', {}], ['disassemble', { addr: 0, count: 1 }]]) assert.equal((await peer.tool(tool, args)).error, 'unavailable');
     assert.equal((await peer.tool('batch', { steps: [{ kind: 'run', n: 0 }] })).error, 'unavailable');
     assert.ok(status.capabilities.includes('artifact.traceExport'), 'packaged main advertises artifact service');
     const offlineFile = path.join(temporary, 'offline fixture.bs'); writeStateFixture(offlineFile);

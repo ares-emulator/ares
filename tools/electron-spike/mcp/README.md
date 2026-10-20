@@ -3,9 +3,9 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 49 tools: eleven generic/session/run tools,
+emulator. The verified registry has 54 tools: eleven generic/session/run tools,
 thirteen N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch and five task 9 machine/disassembly/mutation tools. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
@@ -439,3 +439,50 @@ native memory ranges and file compatibility validate at each step. No nesting or
 parallel execution. Result-space exhaustion stops before another step; an
 unexpected oversized step result is explicitly summarized with `result_omitted`,
 preserving a committed path/operation handle, and the batch stops with result_limit.
+
+### Machine services (task 9, in progress)
+
+`cpu_set_registers(gpr=null, pc=null, hi=null, lo=null, llbit=null, status=null)`
+validates the whole request at one native safe point before any architectural
+change. It requires paused, operation-free N64 execution and excludes GDB,
+state uploads and another owner's batch reservation. GPR keys accept exact ABI
+names, `fp` or numeric strings 0..31; zero is read-only, and duplicate aliases
+reject rather than choosing an ordering. Architectural values are lossless
+unsigned 64-bit strings or safe JS integers. LLbit is 0/1; Status is unsigned
+32-bit and uses the CPU's architectural setter, preserving its context effects.
+
+An aligned PC accepts full 64-bit spellings and canonicalizes 32-bit KSEG
+spellings. Changing PC resets the pipeline/next PC/delay slot, releases a halted
+CPU debug gate and clears stale stop/suppression context; the frontend remains
+paused. Non-PC edits preserve the previous immutable stop snapshot. Every valid
+set drops old-state JIT translations. `changed` reports normalized ABI names and
+hex values, plus PC/epoch/frame and `jit_invalidated`. Empty sets are permitted
+but still require a pause and invalidate translations. No CPU instruction runs
+inside the mutation. Completed execution results remain immutable.
+
+`disassemble(addr, count=32, view="cpu")` accepts 1..128 instructions (reference:
+up to 1024). It validates the entire aligned installed-RDRAM range, rejects
+TLB/MMIO/wraps, and accepts physical/KSEG aliases. Physical input uses a canonical
+KSEG0 display PC. CPU view reads resident D-cache without filling misses or
+changing cache counters; KSEG1 and `view="rdram"` bypass it. This deliberately
+observes data-cache code bytes, not resident instruction-cache fetch state.
+Rows contain addr/word/mnemonic/operands and branch targets. Indirect targets
+explicitly identify current_register_context and the source register. Colors
+and value hints are disabled on a local disassembler instance.
+
+`rsp_registers`, `rdp_state` and `peripheral_registers` copy direct fields at a
+native safe point. They do not read MMIO, advance emulation, consume a semaphore,
+promote DMA or change DPC counters. RSP includes 32 scalar registers, 32x8 raw
+16-bit vectors, three 8-lane accumulator portions, hardware status/signals, DMA
+state/origin and the instruction at PC with text. DMA clock is a signed decimal
+string to preserve 64-bit precision (reference uses a JSON number). DMA origin PC
+also preserves all 64 bits rather than truncating to 32. The debug
+object currently says `available:false`; it does not invent stopped/stepping
+state before the RSP debugger is ported. RDP reports DPC registers/flags/source;
+peripherals expose the reference VI/AI/PI/SI/RI fields. These observations remain
+available during other owned operations/uploads. They are not command captures.
+
+All five tools are N64-only; other cores return unavailable. Task 9 still needs
+cooperative RSP debugger progress, command/task/submission hooks, exact RDP
+interval capture and experimental bounded calls/recovery. The 68-tool milestone
+and physical/game acceptance gates are not complete.

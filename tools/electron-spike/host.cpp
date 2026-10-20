@@ -36,6 +36,7 @@ auto locate(const string& name) -> string {
 
 #include "native/session-service.hpp"
 #include "native/n64-service.hpp"
+#include "native/machine-service.hpp"
 #include "native/memory-experiment.hpp"
 #include "native/input-service.hpp"
 #include "native/trace-service.hpp"
@@ -443,6 +444,7 @@ int main(int argc, char** argv) {
     if(!load.upload || method.starts_with("n64.state.load")) return {};
     static const std::vector<std::string> allowed = {
       "session.status", "session.pause", "session.resume", "session.reset", "execution.status", "execution.cancel", "execution.release", "execution.batchCheck",
+      "n64.cpu.disassemble", "n64.rsp.registers", "n64.rdp.state", "n64.peripheral.registers",
       "memory.regions", "memory.read", "n64.memory.read", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
       "n64.input.state", "n64.profiler.top", "n64.dma.log", "n64.trace.page", "n64.state.format", "n64.state.layout", "n64.state.read", "n64.state.release",
       "video.begin", "video.read", "video.release", "video.record.status", "video.record.read", "video.record.release", "audio.status", "audio.read", "audio.release"
@@ -450,6 +452,11 @@ int main(int argc, char** argv) {
     return std::find(allowed.begin(), allowed.end(), method) != allowed.end() ? std::string{} : "busy";
   };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method == "n64.cpu.setRegisters" || method == "n64.cpu.disassemble" || method == "n64.rsp.registers" || method == "n64.rdp.state" || method == "n64.peripheral.registers") {
+      auto result = MachineService::execute(method, args, host.service.epoch, execution.frame, n64, bool(execution.active), host.service.paused);
+      if(n64) execution.executor = N64Service::executor();
+      return result;
+    }
     if(method == "n64.memory.writeMany") return MemoryExperiment::execute(args, owner, host.service.epoch, n64, execution, host.service.paused);
     if(method.starts_with("n64.state.load")) {
       if(method == "n64.state.loadCommit" && host.stateLoader.upload && host.takeoverRequested.load()) {

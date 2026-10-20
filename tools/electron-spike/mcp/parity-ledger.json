@@ -98,10 +98,17 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
+      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 9 machine foundations",
+          "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
+          "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Direct safe-point scalar32/vector32x8/accumulator/status/DMA and current instruction snapshots. No semaphore/MMIO side effects. DMA clock is signed decimal string for precision; debug.available:false until RSP gate is ported. No command capture claim. DMA origin PC retains full64 rather than reference helper truncation."
     },
     {
       "name": "rdp_state",
@@ -112,10 +119,17 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
+      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 9 machine foundations",
+          "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
+          "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Direct safe-point DPC register/flag/source fields. No MMIO read side effects; no command capture reconstruction. Exact interval capture remains pending."
     },
     {
       "name": "peripheral_registers",
@@ -126,10 +140,17 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
+      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 9 machine foundations",
+          "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
+          "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Direct safe-point VI/AI/PI/SI/RI fields using reference names. No MMIO reads, guest execution, semaphore/DMA/counter side effects."
     },
     {
       "name": "run_frames",
@@ -2002,10 +2023,17 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
+      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 9 machine foundations",
+          "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
+          "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "1..128 instructions versus reference 1024; aligned installed-RDRAM physical/KSEG ranges only. CPU view reads non-filling D-cache (not I-cache fetch state), KSEG1/physical view bypass. Explicit branch targets and current-register provenance for indirect jumps. No MMIO/TLB or cache-counter changes."
     },
     {
       "name": "dump_range",
@@ -2190,10 +2218,17 @@
       "family": "Composites/calls",
       "requiredBackend": "Validated mutation, owned sequential operations, experimental bounded calls and retained recovery context.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
+      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 9 machine foundations",
+          "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
+          "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Paused, operation-free N64 only; all keys/values prevalidated. GPR 1..31 aliases, full64 values, aligned canonical PC, HI/LO, LLbit0/1 and architectural Status32. PC resets pipeline/stops; all valid sets drop JIT translations. Duplicate aliases reject; changed fields use normalized ABI names. Existing upload/batch/GDB exclusion and immutable completed results retained."
     },
     {
       "name": "state_info",

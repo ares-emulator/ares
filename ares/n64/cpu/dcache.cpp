@@ -118,3 +118,6 @@ auto CPU::DataCache::power(bool reset) -> void {
 template auto CPU::DataCache::Line::write<Byte>(u32 paddr, u64 data) -> void;
 template auto CPU::DataCache::writeDebug<Byte>(u64 vaddr, u32 paddr, u64 data) -> void;
 template auto CPU::DataCache::readDebug<Byte>(u64 vaddr, u32 paddr) -> u64;
+
+// Side-effect-free aligned instruction observations from external native services.
+template auto CPU::DataCache::readDebug<Word>(u64 vaddr, u32 paddr) -> u64;

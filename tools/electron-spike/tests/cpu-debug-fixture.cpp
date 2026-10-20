@@ -2,6 +2,7 @@
 // 1c9b9637476a83f7b80d3db1115a0f71529820d9. No ROM or live user machine.
 #include <n64/n64.hpp>
 #include "../native/n64-service.hpp"
+#include "../native/machine-service.hpp"
 #include "../native/memory-experiment.hpp"
 #include "../native/input-service.hpp"
 #include "../native/trace-service.hpp"
@@ -453,6 +454,56 @@ int main() {
   check(images.execute("video.begin", {"presented"}, "image-owner", 2, 0, true).error.empty(), "new-epoch presented snapshot accepted");
   images.pins[0].expires = FrameService::Clock::now() - std::chrono::seconds(1);
   check(images.execute("video.read", {std::to_string(images.pins[0].id), "0", "4"}, "image-owner", 2, 0, true).error == "stale_snapshot", "expired native image pin revoked");
+  {
+    auto mutation = [&](std::vector<std::string> args, bool busy = false, bool paused = true) { return MachineService::mutate(args, 7, 12, busy, paused); };
+    auto before = d.snapshot();
+    check(mutation({"gpr:8:0x99", "pc:0x80001801"}).error == "unaligned_pc", "register set validates later PC before any GPR mutation");
+    check(cpu.ipu.r[8].u64 == before.gpr[8] && cpu.ipu.pc == before.pc, "invalid register set is atomic");
+    check(mutation({"gpr:8:0x99", "status:0x100000000"}).error == "invalid_request", "status bounded before mutation");
+    check(mutation({"gpr:0:0x0"}).error == "invalid_register", "zero register read-only even writing zero");
+    check(mutation({"gpr:8:0x99", "gpr:8:0x100"}).error == "invalid_request", "duplicate register rejected");
+    check(mutation({"lo:0x1"}, true).error == "busy" && mutation({"lo:0x1"}, false, false).error == "not_stopped", "register mutation requires operation-free pause");
+    d.breakpoints.clear(); d.watchpoints.clear(); d.resume();
+    word(0x800, 0x10000002); word(0x804, 0x240d0001); word(0x808, 0); word(0x80c, 0);
+    cpu.icache.power(false); pc(base + 0x800); steps(1);
+    check(d.stopValid && d.halted && cpu.pipeline.inDelaySlot(), "register fixture stops in a real pending delay slot");
+    auto stopped = d.stop; d.suppressBreakOnce = true;
+    auto changed = mutation({"gpr:8:0xfedcba9876543210", "gpr:31:0xffffffffffffffff", "pc:0x8000180c", "hi:0x123456789abcdef0", "lo:0xdeadbeef", "llbit:0x1", "status:0x34000000"});
+    check(changed.error.empty() && cpu.ipu.r[8].u64 == 0xfedcba9876543210ull && cpu.ipu.r[31].u64 == ~0ull, "lossless 64-bit GPR mutation");
+    check(cpu.ipu.pc == 0xffffffff8000180cull && cpu.pipeline.nextpc == 0xffffffff80001810ull && !cpu.pipeline.inDelaySlot(), "PC canonicalizes and resets branch pipeline");
+    check(!d.stopValid && !d.halted && !d.suppressBreakOnce, "PC edit clears stale stop/suppression without executing instructions");
+    check(cpu.ipu.hi.u64 == 0x123456789abcdef0ull && cpu.ipu.lo.u64 == 0xdeadbeef && cpu.scc.llbit && (uint32_t)cpu.getControlRegister(12) == 0x34000000, "HI LO LLbit and architectural Status setter");
+    steps(1); auto retained = d.stop;
+    check(mutation({"hi:0x2"}).error.empty() && d.stopValid && d.halted && d.stop.snapshot.hi == retained.snapshot.hi, "non-PC changes preserve immutable stop snapshot");
+    check(stopped.snapshot.delaySlot && stopped.snapshot.pc == base + 0x804, "previous delay stop stays immutable");
+    d.resume(); cpu.icache.power(false); pc(base + 0x80); cpu.jitClockTarget = cpu.clock + 100000;
+    cpu.instruction(); auto sectionIndex = cpu.recompiler.sectionIndex(0x1080);
+    check(cpu.recompiler.sections[sectionIndex], "register fixture has an actual JIT translation");
+    check(mutation({"lo:0x3"}).error.empty() && !cpu.recompiler.sections[sectionIndex], "register changes drop old-state JIT translations");
+    // Disassembly uses resident D-cache rather than allocating or silently using I-cache.
+    cpu.dcache.power(false); word(0x900, 0x24020001); word(0x904, 0x1000ffff); word(0x908, 0x01000008);
+    auto& codeLine = cpu.dcache.line(base + 0x900); codeLine.fill(0x1900);
+    cpu.dcache.writeDebug<Byte>(base + 0x903, 0x1903, 2);
+    auto hits = cpu.profile.dcacheHits, misses = cpu.profile.dcacheMisses; auto cpuBeforeRead = d.snapshot();
+    auto decoded = MachineService::disassemble({"0x1900", "3", "cpu"}, 7, 12);
+    check(decoded.error.empty() && decoded.json.find("\"word\":\"0x24020002\"") != std::string::npos, "disassembly reads dirty cached instruction bytes");
+    check(decoded.json.find("\"target\":\"0xffffffff80001904\"") != std::string::npos && decoded.json.find("current_register_context") != std::string::npos, "branch and indirect target provenance");
+    auto raw = MachineService::disassemble({"0xa0001900", "1", "cpu"}, 7, 12);
+    check(raw.error.empty() && raw.json.find("\"word\":\"0x24020001\"") != std::string::npos, "disassembly KSEG1 bypasses dirty cache");
+    check(cpu.profile.dcacheHits == hits && cpu.profile.dcacheMisses == misses && cpu.ipu.pc == cpuBeforeRead.pc, "disassembly preserves CPU/cache counters");
+    check(MachineService::disassemble({"0x3ffffc", "2", "rdram"}, 7, 12).error == "out_of_bounds" && MachineService::disassemble({"0x1901", "1", "cpu"}, 7, 12).error == "unaligned_address", "disassembly validates complete aligned range");
+    rsp.imem.allocate(4096); rsp.imem.fill(); rsp.ipu.r[3].u32 = 0xdeadbeef; rsp.ipu.pc = 0x100;
+    rsp.vpu.r[4].element(7) = 0xabcd; rsp.vpu.acch.element(0) = 0xffff; rsp.status.semaphore = 0;
+    rsp.dma.clock = -123; rsp.dma.current.originPc = 0xfedcba9876543210ull;
+    auto rspState = MachineService::rspRegisters();
+    check(rsp.status.semaphore == 0 && rspState.find("0xdeadbeef") != std::string::npos && rspState.find("43981") != std::string::npos && rspState.find("\"clock\":\"-123\"") != std::string::npos, "RSP snapshot observes scalar/vector/accumulator and signed DMA clock without semaphore side effects");
+    rdp.command.start = 0x123456; rdp.command.source = 1; rdp.command.freeze = 1;
+    check(MachineService::rdpState().find("\"source\":\"DMEM\"") != std::string::npos && rdp.command.start == 0x123456 && rdp.command.freeze, "RDP observation leaves command/status intact");
+    auto viCounter = vi.io.vcounter; auto dmaBusy = pi.io.dmaBusy;
+    check(MachineService::peripherals().find("VI_ORIGIN") != std::string::npos && vi.io.vcounter == viCounter && pi.io.dmaBusy == dmaBusy, "peripheral observations do not invoke MMIO side effects");
+    std::printf("MACHINE_RSP %s\nMACHINE_RDP %s\nMACHINE_PERIPHERALS %s\nMACHINE_DISASSEMBLY %s\nMACHINE_MUTATION %s\n", rspState.c_str(), MachineService::rdpState().c_str(), MachineService::peripherals().c_str(), decoded.json.c_str(), changed.json.c_str());
+    rsp.imem.reset();
+  }
   {
     // Reference state header/prefix field order, independently assembled here.
     auto before = cpu.debugControl.snapshot(); auto retired = cpu.debugControl.instructionsRetired;

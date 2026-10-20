@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 49 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 54 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -369,7 +369,7 @@ Exports stream four bounded native pages per batch, cap output at 64 MiB and
 connection; disconnect, host replacement and stale epochs abort work. Relative
 paths resolve against the app process working directory. `file_error` reports
 export failure after capture; completed emulation is retained. Native screenshots are implemented below; audio taps and recording remain task 7 work.
-The MCP registry now exposes 49 tools.
+The MCP registry now exposes 54 tools.
 
 ### Native screenshots (task 7, partial)
 
@@ -415,3 +415,13 @@ cancellation, human takeover, deadline and disconnect interrupt subsequent work.
 Bounds: 32 steps, 1M frames, 16 KiB memory, 8 file screenshots, 20 seconds and
 48 KiB results. These are explicit reductions from reference limits; no rollback,
 nesting or parallel steps. See [batch details](mcp/README.md#bounded-batch-experiments).
+
+Task 9's first slice adds `cpu_set_registers`, `disassemble`, `rsp_registers`,
+`rdp_state` and `peripheral_registers`. Register sets validate completely before
+mutation and require an operation-free pause. PC edits canonicalize 32-bit KSEG
+addresses, reset delay-slot/pipeline and stale stop state, and drop JIT translations.
+Non-PC edits preserve immutable stops. Read-only snapshots copy direct fields
+without invoking MMIO side effects. Disassembly observes CPU D-cache or physical
+RDRAM (1–128 instructions); it does not claim I-cache fetch coherence. RSP debugger
+control and exact command/task capture are still pending. See
+[task 9 machine services](mcp/README.md#machine-services-task-9-in-progress).

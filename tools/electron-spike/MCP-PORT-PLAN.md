@@ -407,3 +407,9 @@ controls and physical takeover cancel it. Reset the epoch only at restore (or
 post-mutation recovery), never during offline inspection or failed preflight.
 Conservatively mark restored VI phase as not an observed boundary. Loading is now
 implemented; multiwrite/delayed verification are implemented with bounded native operations. Native-reserved bounded batch experiments now pass the baseline-load/write/active-VI-run/crop sweep; task 8 is implemented within documented bounds.
+
+Task 9 is in progress. The first machine-service slice implements paused atomic
+CPU register mutation, 1–128 instruction disassembly and direct RSP/RDP/peripheral
+observations. The RSP gate, command/task/submission hooks, exact interval RDP
+capture and bounded calls/recovery are still dependencies; observation tools do
+not stand in for those hooks. All 68 tools remain preservation targets.
