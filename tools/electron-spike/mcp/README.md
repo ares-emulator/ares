@@ -3,9 +3,9 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 48 tools: eleven generic/session/run tools,
+emulator. The verified registry has 49 tools: eleven generic/session/run tools,
 thirteen N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
@@ -314,7 +314,7 @@ a 25-second deadline and stream bounded pages without assembling the entire AVI
 in memory. Maximum artifact size is 270000000 bytes including headers/index.
 Late cleanup errors retain successful file metadata as `cleanup_error`.
 
-### Native states (task 8, in progress)
+### Native states (task 8)
 
 `state_save(path, overwrite=false, metadata=true)` pauses and snapshots a loaded
 N64 at a native safe point. An active execution operation/GDB session or existing
@@ -346,7 +346,7 @@ pause or load the live emulator. File inputs are bounded to 64 MiB; nonregular
 inputs reject. Inspections allow two global jobs/one per owner and a 25-second
 deadline, with reset/disconnect revocation.
 
-Safe loading, multiwrite prevalidation and delayed verification are implemented; bounded batch experiments remain pending.
+Safe loading, multiwrite prevalidation, delayed verification and bounded batch experiments are implemented. The original disposable N64 fixture passes a baseline-load/write/active-VI-run/crop sweep through real MCP stdio.
 
 `state_load(path, resume=false, keep_overrides=false)` starts an owned, bounded
 upload while the emulator is paused. Native dispatch reserves mutations for that
@@ -385,3 +385,57 @@ a real 4 MiB configuration rejects that state without guest mutation. This does
 not claim every peripheral configuration or cross-platform state compatibility.
 The reference executable's hash and measurements are written to
 `artifacts/state-reference.json`.
+
+### Bounded batch experiments
+
+`batch(steps, max_seconds=20, stop_on_error=true)` accepts ordered strict steps:
+
+```json
+{
+  "steps": [
+    {"kind":"state_load", "path":"/tmp/baseline.bs"},
+    {"kind":"write", "addr":"0x80002000", "hex":"f801f801", "view":"rdram"},
+    {"kind":"run", "n":2},
+    {"kind":"screenshot", "path":"/tmp/candidate.png", "region":[1,0,2,2], "scale":2},
+    {"kind":"read", "addr":"0x2000", "length":4}
+  ]
+}
+```
+
+State loads always stay paused and clear overrides. Write uses `hex` and defaults
+to CPU view; read defaults to 64 bytes and RDRAM view. Screenshots use the normal
+source/crop/scale/overwrite parameters, require a file path and forbid inline
+output. The address, geometry and installed configuration must suit the baseline.
+Reload a baseline explicitly for every sweep candidate.
+
+A native reservation spans all steps, including file reads and PNG work; existing
+native run operations drive emulation. Status exposes `batch_id` separately from
+a running child's `operation_id`. Competing mutations return busy; observations
+remain available. The authenticated parent can pause its batch or cancel an
+active child with the existing tools. UI pause/reset, UI resume during an idle gap, simulated human
+input, native/main deadline or disconnect revoke the reservation. Late child
+mutations stay rejected even after reservation removal. Human takeover resumes
+ordinary play; subsequent batch steps do not run. Physical input acceptance is
+still a separate task 6 gate.
+
+The call returns a final `state:done`, `stopped:true`, `stop_reason`, start/last known
+batch epoch and last completed-step frame, per-step results and separate
+`steps_attempted`/`steps_completed` counts. A run's data includes its actual native
+stop reason and elapsed frames, even on early interruption. `stop_on_error=false`
+continues ordinary step errors, but execution interruptions stop the sequence.
+An explicit successful load updates only this batch's internal identity; external
+reset/ROM changes interrupt it. Committed files/loads are reported if cancellation
+arrives just after their commit. Earlier effects are retained:
+`side_effects_rolled_back:false`. A transport loss can prevent delivery of the
+final report; mutations are never replayed. The reservation ID is not a retained
+parent execution-operation handle; child runs retain the normal native results.
+
+Bounds are 1–32 steps, 1M total requested VI frames, 16 KiB read/write bytes,
+8 screenshots, 20 seconds and 48 KiB final result (48,000-byte request parameters).
+The smaller deadline/default keeps the call within the 30-second local transport
+deadline; reference defaults/limits are 60 seconds, 256 steps, 16 MiB and 64
+artifacts. Syntax/aggregate bounds validate before acquiring the reservation;
+native memory ranges and file compatibility validate at each step. No nesting or
+parallel execution. Result-space exhaustion stops before another step; an
+unexpected oversized step result is explicitly summarized with `result_omitted`,
+preserving a committed path/operation handle, and the batch stops with result_limit.

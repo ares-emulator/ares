@@ -238,3 +238,27 @@ ownership; the last 16 remain immutable. UI pause, debug hits, deadlines and
 owner disconnect use existing operation stop semantics. Native state uploads
 exclude this mutation. Restore/power's deferred video initialization is prepared
 without guest CPU execution before writing hidden RDRAM; absent backing rejects.
+
+### Native-reserved batches
+
+`experiment.batch` is main-only, with a normalized strict discriminated step
+union. `Batches` allocates a private child owner for the authenticated parent.
+`execution.batchBegin(timeoutMs)` acquires the native exclusive reservation;
+`execution.batchCheck(batchId)` fences every next step. They are internal methods
+and unavailable directly over the public local endpoint. Ownership and a maximum
+20-second deadline stay native; main merely sequences existing services.
+`execution.release` revokes child operations and resources. UI controls and human
+takeover remove the reservation even without a child run. The batch-owner prefix
+rejects late mutations after revocation. State upload is allowed for the child and
+still excludes other owners. An owned successful restore updates the internal
+epoch; external changes never rebind subsequent steps.
+
+One batch at a time, 32 steps, 1M requested frames, 16 KiB memory, 8 artifacts,
+48,000-byte request parameters and 48 KiB result. The result records attempted
+and successful step counts, actual run snapshots and committed artifacts. No
+rollback. Parent pause/cancel is forwarded only to that parent's child generation;
+foreign owners cannot cancel it. Disconnect/timer/detach abort file workers and
+issue native release. See MCP docs for schema/default reductions and cancellation
+semantics. Tests cover native idle reservations/expiry, real active-VI N64 PNG
+sweeps, partial failures, own-load epochs, external reset, parent cancellation,
+disconnect and commit-versus-cancel reporting.

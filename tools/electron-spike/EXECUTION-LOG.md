@@ -1056,3 +1056,76 @@ Task 8 remains in progress: bounded batch ownership/orchestration and the full
 baseline-load/write/run/crop sweep are still pending. Physical gamepad/audible
 N64 acceptance remains separately unrun. Cross-binary state format compatibility
 was verified in the previous slice; no serialization change was introduced here.
+
+
+## Task 8 completion — native-reserved batch experiments (2026-10-20)
+
+Implemented `batch` (49 registered tools of 68), selectively adapting semantics
+from `ares-64` commit `1c9b9637476a83f7b80d3db1115a0f71529820d9`:
+telemetry-server.cpp `ctrl.batch` validation, debug-session.cpp's batch step/finish
+logic, and tools/mcp/ares_mcp.py's signature/docstring. No legacy worker, transport
+or UI coupling was copied.
+
+Main sequences the existing state loader, memory service, native frame operation
+and screenshot publisher. A native reservation spans all steps, including idle
+file-I/O gaps. It excludes competing mutations and expires independently of main.
+A private child generation distinguishes internal steps from concurrent requests
+on the same authenticated parent connection. Late child mutations remain rejected
+after revocation. Parent pause/cancel forwards only to its own child; cancelling
+an immutable old operation does not revoke a newer batch. Native status exposes
+batch_id separately from the active child's operation_id.
+
+State loads stay paused, clear overrides and update only the batch's internal
+identity after a successful commit. External reset/ROM changes interrupt future
+steps. UI pause/reset, UI resume in an idle gap, simulated human takeover,
+deadline and disconnect revoke ownership. Runs return their actual immutable
+native stop/progress. stop_on_error=false permits ordinary step failures but not
+execution interruptions. Committed files/loads survive cancellation and remain
+reported; side_effects_rolled_back is always false. Native child runs keep their
+normal result retention; a batch reservation is not a retained parent operation.
+
+Explicit port bounds: 1–32 steps; 1M total requested VI frames; 16 KiB aggregate
+read/write bytes; 8 file-only screenshots; 20-second maximum/default; 48,000-byte
+UTF-8 request parameters and 48 KiB result. The deadline keeps a synchronous batch
+inside the existing 30-second local transport timeout. Reference bounds/defaults
+are 256 steps, 16 MiB, 64 artifacts and 60 seconds. Syntax and aggregate limits
+validate before reservation; file/configuration compatibility and memory ranges
+validate at each step. Results distinguish attempted/successful steps. Result
+space is reserved before another effect; oversized individual output is explicitly
+summarized while retaining committed path/operation information. No nesting,
+parallel execution, automatic retry or rollback.
+
+Validation:
+
+- Host and CPU fixture rebuilt. Full strict-TypeScript/service/native/MCP suite:
+  **49/49**, 23.52 seconds. Subsequent affected batch cases rechecked after final
+  cancellation hardening: **5/5**, 6.23 seconds.
+- New original hand-assembled IPL3 fixture configures a 4x2 RGBA5551 VI and loops.
+  Its disposable state fixture initializes serialized RDRAM identity mapping;
+  no commercial ROM, user emulator, state or save is used. Real stdio batches
+  reload the same baseline for red and green candidates, write backing RDRAM,
+  advance **two actual VI boundaries**, crop/scale and decode PNG pixels, then
+  verify memory. Both candidates pass with exact expected 4x4 RGB output.
+- Incompatible-state preflight leaves the epoch unchanged. Offline baseline
+  reads leave live CPU registers/epoch unchanged. Partial failure retains an
+  earlier write, skips later mutations and reports the failing step; continue-
+  on-error returns the following read. Deadline, UI pause, parent cancellation
+  across an owned-load epoch, simulated human takeover and parent disconnect
+  prevent subsequent writes. Native idle-gap exclusion, lease expiry and late
+  child rejection pass. Old immutable-operation cancellation leaves a new run
+  active. Commit-versus-disconnect and result-limit cases preserve actual effects.
+- Actual Electron MCP integration: exact **49-tool** inventory and N64 batch read,
+  state workflow, stopped UI, renderer reload and prior GB/capture checks pass.
+
+- Fresh `artifacts/task-8-batch/Ares.app`: copied package smoke passes with
+  checkout reads denied to both native loader and MCP adapter, exact 49-tool
+  registry, explicit batch unavailability on GB, 455 GB frames and prior
+  offline-state/memory/image/audio/video checks. Electron 44.9.0, Node 24.22.0.
+  This is a package isolation gate, not packaged N64 game acceptance.
+
+Task 8's bounded acceptance workflow now passes. All 68 tools remain preservation
+targets; generated FastMCP/full result parity and physical keyboard/gamepad/audible
+N64 acceptance remain separate gates. The default-configuration bidirectional state
+compatibility gate passed in the earlier restore slice; this batch slice changes
+no serializer bytes/version. Next implementation task: 9, RSP/RDP and advanced
+CPU mutation.

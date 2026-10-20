@@ -24,6 +24,23 @@ struct ExecutionService {
     std::function<std::string()> memoryVerification;
   };
   std::optional<Operation> active;
+  struct Reservation { uint64_t id; std::string owner; Clock::time_point deadline; };
+  std::optional<Reservation> reservation;
+  // The batch driver lives in main, but exclusivity/deadline live here.
+  bool permitted(const std::string& method, const std::string& owner) const {
+    if(reservation && owner == reservation->owner) return true;
+    if(!reservation && (owner.rfind("batch-", 0) != 0 || method == "execution.batchBegin" || method == "execution.batchCheck" || method == "n64.state.loadAbort")) return true;
+    if(owner == "ui" && (method == "session.pause" || method == "session.resume" || method == "session.reset" || method == "execution.cancel")) return true;
+    static const std::vector<std::string> reads = {
+      "session.status", "memory.regions", "memory.read", "execution.status", "execution.release",
+      "n64.memory.read", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
+      "n64.input.state", "n64.profiler.top", "n64.dma.log", "n64.trace.page", "n64.state.format", "n64.state.layout",
+      "n64.state.read", "n64.state.release", "video.begin", "video.read", "video.release", "video.record.status",
+      "video.record.read", "video.record.release", "audio.status", "audio.read", "audio.release"
+    };
+    for(auto& read : reads) if(method == read) return true;
+    return false;
+  }
   uint64_t instructions = 0;
   uint64_t instructionStart = 0, instructionCount = 0;
   bool cpuSupported = false;
@@ -37,7 +54,8 @@ struct ExecutionService {
   std::string coordinates() const {
     return "\"frame\":" + std::to_string(frame) + ",\"frame_kind\":\"" + frameKind
       + "\",\"at_frame_boundary\":" + (atBoundary ? "true" : "false")
-      + ",\"executor\":\"" + executor + "\",\"operation_id\":" + (active ? std::to_string(active->id) : "null");
+      + ",\"executor\":\"" + executor + "\",\"operation_id\":" + (active ? std::to_string(active->id) : "null")
+      + ",\"batch_id\":" + (reservation ? std::to_string(reservation->id) : "null");
   }
   std::string snapshot(const Operation& op, const std::string& reason = "") const {
     std::string tap;
@@ -72,6 +90,10 @@ struct ExecutionService {
     return result;
   }
   void service(bool& paused) {
+    if(reservation && Clock::now() >= reservation->deadline) {
+      if(active && active->owner == reservation->owner) complete("timeout", paused);
+      reservation.reset(); paused = true;
+    }
     if(!active) return;
     if(active->kind != "step_instructions" && frame >= active->target) complete("frames_done", paused);
     else if(Clock::now() >= active->deadline) complete("timeout", paused);
@@ -82,9 +104,27 @@ struct ExecutionService {
   }
   ControlResult execute(const std::string& method, const std::vector<std::string>& args,
                         const std::string& owner, uint64_t epoch, bool& paused) {
+    if(method == "execution.batchBegin") {
+      uint64_t ms;
+      if(args.size() != 1 || !number(args[0], ms) || ms < 1 || ms > 20000) return {"invalid_request", {}};
+      if(!supported) return {"unavailable", {}};
+      if(active || reservation) return {"busy", {}};
+      reservation = Reservation{nextId++, owner, Clock::now() + std::chrono::milliseconds(ms)};
+      paused = true;
+      return {{}, "{\"batch_id\":" + std::to_string(reservation->id) + "}"};
+    }
+    if(method == "execution.batchCheck") {
+      uint64_t id;
+      if(args.size() != 1 || !number(args[0], id)) return {"invalid_request", {}};
+      if(!reservation || reservation->id != id) return {"batch_interrupted", {}};
+      if(reservation->owner != owner) return {"busy", {}};
+      return {{}, "{\"active\":true}"};
+    }
+    if(!permitted(method, owner)) return {"busy", {}};
     if(method == "execution.release") {
       if(!args.empty()) return {"invalid_request", ""};
       if(active && active->owner == owner) complete("disconnected", paused);
+      if(reservation && reservation->owner == owner) reservation.reset();
       return {"", "{\"released\":true}"};
     }
     if(method == "execution.status" || method == "execution.cancel") {

@@ -406,4 +406,4 @@ mutation dispatch while main reads/transfers the bounded file; normal user
 controls and physical takeover cancel it. Reset the epoch only at restore (or
 post-mutation recovery), never during offline inspection or failed preflight.
 Conservatively mark restored VI phase as not an observed boundary. Loading is now
-implemented; multiwrite/delayed verification are implemented with bounded native operations. Batch experiments remain task 8 work.
+implemented; multiwrite/delayed verification are implemented with bounded native operations. Native-reserved bounded batch experiments now pass the baseline-load/write/active-VI-run/crop sweep; task 8 is implemented within documented bounds.

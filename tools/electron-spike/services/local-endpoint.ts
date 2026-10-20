@@ -124,7 +124,7 @@ export class LocalServiceHost {
       if (inFlight >= 16) { error('busy'); return; }
       // Reset and owner-release stay main-owned actions. Owners come from this
       // authenticated connection generation, never from untrusted request data.
-      if (['session.reset', 'execution.release'].includes(message.method)) { error('unavailable'); return; }
+      if (['session.reset', 'execution.release', 'execution.batchBegin', 'execution.batchCheck'].includes(message.method)) { error('unavailable'); return; }
       if (!['session.status', 'memory.regions'].includes(message.method) && !message.identity) { error('session_required'); return; }
       try { encodeRequest('validation', message.identity ?? { session: 'discovery', epoch: 1 }, message.method, message.params); }
       catch { error('invalid_request'); return; }

@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 48 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 49 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -369,7 +369,7 @@ Exports stream four bounded native pages per batch, cap output at 64 MiB and
 connection; disconnect, host replacement and stale epochs abort work. Relative
 paths resolve against the app process working directory. `file_error` reports
 export failure after capture; completed emulation is retained. Native screenshots are implemented below; audio taps and recording remain task 7 work.
-The MCP registry now exposes 48 tools.
+The MCP registry now exposes 49 tools.
 
 ### Native screenshots (task 7, partial)
 
@@ -405,4 +405,13 @@ Task 8 now includes N64 `state_save` and offline `state_info`, `state_list` and
 `state_peek`. Native state files and metadata use bounded atomic publishing;
 offline inspection never loads/restores the active machine. Header support is
 reported separately from configuration compatibility. See the
-[MCP state contract](mcp/README.md#native-states-task-8-in-progress). Safe loading now passes the default-configuration cross-binary gate; multiwrite/delayed verification are implemented; bounded batch experiments remain in progress.
+[MCP state contract](mcp/README.md#native-states-task-8). Safe loading now passes the default-configuration cross-binary gate; multiwrite/delayed verification are implemented; bounded batch experiments pass the disposable baseline-load/write/active-VI-run/crop sweep.
+
+Task 8 `batch` sequences state_load/write/run/screenshot/read under a native
+reservation that survives file-I/O gaps. It follows epochs only for its own
+successful loads, excludes competing mutations and reports actual run stops,
+attempted/successful steps and retained effects. UI/parent pause, active-child
+cancellation, human takeover, deadline and disconnect interrupt subsequent work.
+Bounds: 32 steps, 1M frames, 16 KiB memory, 8 file screenshots, 20 seconds and
+48 KiB results. These are explicit reductions from reference limits; no rollback,
+nesting or parallel steps. See [batch details](mcp/README.md#bounded-batch-experiments).

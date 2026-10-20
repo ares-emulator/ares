@@ -39,7 +39,7 @@ app.whenReady().then(async () => {
   const mcp = peer(); await mcp.initialize();
   enter('MCP tools');
   const list = (await mcp.request('tools/list', {})).result.tools;
-  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'write_memory_many', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save', 'state_load'].sort());
+  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'write_memory_many', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save', 'state_load', 'batch'].sort());
   assert.equal(list.find(t => t.name === 'read_memory').inputSchema.properties.length.default, 64);
   assert.equal(list.find(t => t.name === 'resume').inputSchema.properties.keep_overrides.default, false);
   assert.equal(list.find(t => t.name === 'emu_status').inputSchema.properties.verbose.default, false);
@@ -159,6 +159,8 @@ app.whenReady().then(async () => {
   finally { dialog.showOpenDialog = showOpenDialog; }
   await until(async () => (await sessions.request('session.status')).result.system === 'Nintendo 64');
   await mcp.tool('emu_status'); assert.equal((await mcp.tool('pause')).paused, true);
+  const batchRead = await mcp.tool('batch', { steps: [{ kind: 'read', addr: '0x2000', length: 1 }] });
+  assert.equal(batchRead.stop_reason, 'batch_done'); assert.equal(batchRead.results[0].data.hex, '00');
   assert.equal((await mcp.tool('overlay_log')).history_complete, true, 'services-enabled app records provenance from boot');
   assert.equal((await mcp.tool('profiler_control')).enabled, true);
   assert.equal((await mcp.tool('step_instructions')).executed, 1);

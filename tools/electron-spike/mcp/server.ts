@@ -1,3 +1,4 @@
+import { registerBatchTools } from './batch-tools.js';
 import { registerStateTools } from './state-tools.js';
 import { registerRecordingTools } from './recording-tools.js';
 import { registerAudioTools } from './audio-tools.js';
@@ -102,9 +103,10 @@ function createServer(): McpServer {
     return unwrap(await local.request('execution.status', operationIdentities.get(operation_id), { operationId: operation_id }));
   }));
   server.registerTool('cancel_operation', { description: 'Cancel this connection’s current operation, or a specific ID. UI pause can interrupt any owner.', inputSchema: z.object({ operation_id: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).nullable().default(null) }).strict() }, async ({ operation_id }) => call(async () => {
-    if (!local.identity) await status();
+    if (operation_id === null || !local.identity) await status();
     return unwrap(await local.request('execution.cancel', operation_id === null ? undefined : operationIdentities.get(operation_id), { operationId: operation_id ?? 0 }));
   }));
+  registerBatchTools(server, local, status);
   registerN64Tools(server, local, status, operation, rememberOperation);
   registerInputTools(server, local, status, rememberOperation);
   registerTraceTools(server, local, status, rememberOperation, id => operationIdentities.get(id));

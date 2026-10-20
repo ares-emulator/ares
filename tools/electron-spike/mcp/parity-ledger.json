@@ -746,7 +746,7 @@
       "testEvidence": [
         "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
       ],
-      "knownLimits": "N64 only. Pauses at a native safe point; active execution/GDB or an existing native state pin returns busy. Up to 64 MiB; one connection-owned immutable snapshot with 30-second lease, main streaming export deadline 25 seconds. Atomic state file and separately atomic hash/ROM/layout sidecar (metadata=true); sidecar failure returns metadata_error alongside the saved file. No-overwrite by default. Native state field order/version unchanged (v153); Separate load preflight and a cross-binary default-configuration round trip now pass; full experiments remain pending."
+      "knownLimits": "N64 only. Pauses at a native safe point; active execution/GDB or an existing native state pin returns busy. Up to 64 MiB; one connection-owned immutable snapshot with 30-second lease, main streaming export deadline 25 seconds. Atomic state file and separately atomic hash/ROM/layout sidecar (metadata=true); sidecar failure returns metadata_error alongside the saved file. No-overwrite by default. Native state field order/version unchanged (v153); Separate load preflight and a cross-binary default-configuration round trip now pass; bounded baseline/load/write/active-VI-run/crop experiments now pass."
     },
     {
       "name": "state_load",
@@ -2368,10 +2368,17 @@
       "family": "Composites/calls",
       "requiredBackend": "Validated mutation, owned sequential operations, experimental bounded calls and retained recovery context.",
       "plannedTask": 8,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded native-reserved batch slice; full reference parity pending)",
+      "mcpSchemaParity": "Source name/step kinds/stop_on_error default retained. Reduced to 32 steps, 16 KiB memory, 8 artifacts, 20-second maximum/default, 48 KiB result to fit existing transport. No async parent execution handle.",
+      "testEvidence": [
+        {
+          "scope": "task 8 native-reserved experiments",
+          "check": "tests/batch-live.test.cjs, tests/batches.test.cjs, tests/execution-fixture.cpp, tests/electron-mcp.mjs, tests/package-live.cjs",
+          "result": "Passed: 49-suite tests; final affected batch tests 5/5; actual baseline/load/write/two-VI/crop/read red-green sweep, ownership/expiry/cancel/partial effects; 49-tool Electron and checkout-denied copied package. Physical input acceptance remains separate.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Main sequences existing services under a native 20-second reservation; own state loads update epochs. Competing writes excluded, UI/parent pause, active child cancel, human takeover and disconnect revoke. Actual child run progress and committed files retained; no rollback. Syntax/aggregate prevalidation; ranges/files checked per step. Result limits stop further effects. Physical input acceptance remains separate."
     },
     {
       "name": "call_function",

@@ -442,7 +442,7 @@ int main(int argc, char** argv) {
     if(load.upload && (method == "session.pause" || method == "session.resume") && owner != "ui" && owner != load.upload->owner) return "busy";
     if(!load.upload || method.starts_with("n64.state.load")) return {};
     static const std::vector<std::string> allowed = {
-      "session.status", "session.pause", "session.resume", "session.reset", "execution.status", "execution.cancel", "execution.release",
+      "session.status", "session.pause", "session.resume", "session.reset", "execution.status", "execution.cancel", "execution.release", "execution.batchCheck",
       "memory.regions", "memory.read", "n64.memory.read", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
       "n64.input.state", "n64.profiler.top", "n64.dma.log", "n64.trace.page", "n64.state.format", "n64.state.layout", "n64.state.read", "n64.state.release",
       "video.begin", "video.read", "video.release", "video.record.status", "video.record.read", "video.record.release", "audio.status", "audio.read", "audio.release"
@@ -572,11 +572,13 @@ int main(int argc, char** argv) {
       if(host.root) { host.output.clear(); host.root->power(); }
     }, host.memory)) { host.quit = true; break; }
     bool takeover = host.takeoverRequested.exchange(false);
+    bool batchTakeover = takeover && n64 && execution.reservation.has_value();
+    if(batchTakeover) execution.reservation.reset();
     bool loadTakeover = takeover && n64 && host.stateLoader.upload.has_value();
     if(loadTakeover) host.stateLoader.reset();
     bool inputTakeover = takeover && n64 && host.injectedInput.takeover();
-    if(loadTakeover && !inputTakeover) ++host.injectedInput.takeovers;
-    if(loadTakeover || inputTakeover) {
+    if((loadTakeover || batchTakeover) && !inputTakeover) ++host.injectedInput.takeovers;
+    if(loadTakeover || inputTakeover || batchTakeover) {
       execution.complete("host_input", host.service.paused);
       ares::Nintendo64::cpu.debugControl.resume();
       host.service.paused = false;

@@ -1,3 +1,4 @@
+import { NATIVE_BATCH_METHODS, encodeBatch, validBatchResult, type BatchServiceMap } from './batch-contracts.js';
 import { NATIVE_STATE_METHODS, STATE_METHODS, encodeState, validStateResult, type StateServiceMap } from './state-contracts.js';
 import { RECORDING_METHODS, encodeRecording, validRecording, type RecordingServiceMap } from './recording-contracts.js';
 import { AUDIO_METHODS, encodeAudio, validAudio, type AudioServiceMap } from './audio-contracts.js';
@@ -12,12 +13,12 @@ import { validMemoryVerification, type MemoryVerification, N64_METHODS, encodeN6
 /** Shared contract for Electron routing, the inspector and the future MCP adapter. */
 export const PROTOCOL = 1 as const;
 export const MAX_TRANSFER = 1024;
-export const NATIVE_METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS.filter(m => m !== 'n64.input.tap'), ...TRACE_METHODS, 'n64.dma.log', ...PROFILER_METHODS, 'n64.input.tap', ...FRAME_METHODS, ...AUDIO_METHODS, ...RECORDING_METHODS, ...NATIVE_STATE_METHODS] as const;
-export const METHODS = [...NATIVE_METHODS, ...ARTIFACT_METHODS, ...SCREENSHOT_METHODS, 'artifact.audioSave', 'artifact.videoStop', ...STATE_METHODS] as const;
+export const NATIVE_METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS.filter(m => m !== 'n64.input.tap'), ...TRACE_METHODS, 'n64.dma.log', ...PROFILER_METHODS, 'n64.input.tap', ...FRAME_METHODS, ...AUDIO_METHODS, ...RECORDING_METHODS, ...NATIVE_STATE_METHODS, ...NATIVE_BATCH_METHODS] as const;
+export const METHODS = [...NATIVE_METHODS, ...ARTIFACT_METHODS, ...SCREENSHOT_METHODS, 'artifact.audioSave', 'artifact.videoStop', ...STATE_METHODS, 'experiment.batch'] as const;
 export type ServiceMethod = typeof METHODS[number];
 export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
 export interface SessionIdentity { session: string; epoch: number }
-export interface SessionStatus { paused: boolean; system: string; synthetic: boolean; capabilities: ServiceMethod[]; frame?: number; frame_kind?: string; at_frame_boundary?: boolean; executor?: string; operation_id?: number | null }
+export interface SessionStatus { paused: boolean; system: string; synthetic: boolean; capabilities: ServiceMethod[]; frame?: number; frame_kind?: string; at_frame_boundary?: boolean; executor?: string; operation_id?: number | null; batch_id?: number | null }
 export interface ExecutionOperation {
   memory_verification?: MemoryVerification;
   port?: number; button?: string; held_frames?: number; released?: boolean; ownership?: 'host' | 'injected';
@@ -29,7 +30,7 @@ export interface ExecutionOperation {
 export interface MemoryRegion { id: string; name: string; size: number; readable: boolean; writable: boolean; addressing: 'region-offset'; unavailableReason?: string }
 export interface MemoryRead { region: string; offset: number; length: number; hex: string }
 export interface MemoryWritten { region: string; offset: number; written: number }
-export interface ServiceMap extends StateServiceMap, RecordingServiceMap, AudioServiceMap, N64ServiceMap, InputServiceMap, TraceServiceMap, DmaServiceMap, ProfilerServiceMap, ArtifactServiceMap, FrameServiceMap, ScreenshotServiceMap {
+export interface ServiceMap extends BatchServiceMap, StateServiceMap, RecordingServiceMap, AudioServiceMap, N64ServiceMap, InputServiceMap, TraceServiceMap, DmaServiceMap, ProfilerServiceMap, ArtifactServiceMap, FrameServiceMap, ScreenshotServiceMap {
   'execution.stepInstructions': { params: { count: number; timeoutMs: number }; result: ExecutionOperation };
   'session.status': { params: undefined; result: SessionStatus };
   'session.pause': { params: undefined; result: SessionStatus };
@@ -64,7 +65,11 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
       !METHODS.includes(method) || !token(owner)) throw new ServiceError('invalid_request');
   let suffix = '';
   // Main-only methods use this validator but never enter the native wire.
-  if (method.startsWith('state.') || method.startsWith('n64.state.')) {
+  if (method === 'experiment.batch' || method === 'execution.batchBegin' || method === 'execution.batchCheck') {
+    const encoded = encodeBatch(method, params);
+    if (encoded === undefined) throw new ServiceError('invalid_request');
+    suffix = encoded;
+  } else if (method.startsWith('state.') || method.startsWith('n64.state.')) {
     const encoded = encodeState(method, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
     suffix = encoded;
@@ -155,7 +160,10 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
     if (method === 'n64.input.tap') { decodeReply(JSON.stringify(r), 'execution.status'); valid = s.kind === 'controller_tap'; }
     if (method.startsWith('session.')) valid = !!s && typeof s.paused === 'boolean' && typeof s.system === 'string' && typeof s.synthetic === 'boolean' && Array.isArray(s.capabilities) && s.capabilities.every((m: ServiceMethod) => METHODS.includes(m));
     if (method === 'execution.release') valid = !!s && s.released === true;
-    if (method.startsWith('execution.') && method !== 'execution.release') valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0 && (s.executed === undefined || integer(s.executed)) && (s.debug_stop === undefined || validStop(s.debug_stop)) && (s.memory_verification === undefined || validMemoryVerification(s.memory_verification));
+    if (method.startsWith('execution.') && !['execution.release', 'execution.batchBegin', 'execution.batchCheck'].includes(method)) valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0 && (s.executed === undefined || integer(s.executed)) && (s.debug_stop === undefined || validStop(s.debug_stop)) && (s.memory_verification === undefined || validMemoryVerification(s.memory_verification));
+    if (method === 'experiment.batch') valid = validBatchResult(s) && s.epoch === r.epoch;
+    if (method === 'execution.batchBegin') valid = !!s && integer(s.batch_id) && s.batch_id > 0;
+    if (method === 'execution.batchCheck') valid = !!s && s.active === true;
     if (method === 'memory.regions') valid = !!s && Array.isArray(s.regions) && s.regions.length <= 128 && s.regions.every((region: MemoryRegion) => region && token(region.id) && typeof region.name === 'string' && integer(region.size) && typeof region.readable === 'boolean' && typeof region.writable === 'boolean' && region.addressing === 'region-offset' && (region.unavailableReason === undefined || typeof region.unavailableReason === 'string'));
     if (method === 'memory.read') valid = !!s && token(s.region) && integer(s.offset) && hex(s.hex) && s.length === s.hex.length / 2;
     if (method === 'memory.write') valid = !!s && token(s.region) && integer(s.offset) && integer(s.written) && s.written > 0 && s.written <= MAX_TRANSFER;
