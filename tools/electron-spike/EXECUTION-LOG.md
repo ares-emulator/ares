@@ -730,3 +730,21 @@ copied-app test:package outside the checkout. Bundled Electron 44.9.0 / Node
 PNG worker loading, inline image/png content and byte-identical atomic PNG file
 all passed. GB memory restore/resume/shutdown passed (450 frames); native loader
 and MCP adapter ran with checkout reads denied. Development ad-hoc signing only.
+
+#### Screenshot publication boundary follow-up
+
+Review found a lifetime race after successful file publication: a later guard
+could report cancellation despite an already saved PNG, or an inline-transfer
+failure could hide the published file metadata. Inline-cache installation now
+shares the synchronous file commit point. A later owner release can revoke that
+cache without rewriting completed publication as failure. MCP partial errors
+retain capture/path metadata if inline transfer fails after a file was saved.
+The 30-test suite passed in 11.56s after the commit-point change; the focused
+screenshot suite then passed all three cases, including post-publication lifetime
+transition and a failed inline transfer preserving path/epoch. Native code is
+unchanged; no native rebuild was needed. Final package evidence follows.
+
+Publication follow-up final validation: all 31 tests passed in 11.52s. Built
+artifacts/task-7-images-final/Ares.app and copied-app package verification passed
+again: 36-tool inventory, native capture/worker/inline PNG, identical saved PNG,
+GB memory restore/resume and clean shutdown (450 frames), bundled Node 24.22.0.

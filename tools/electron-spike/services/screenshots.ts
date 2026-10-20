@@ -70,15 +70,19 @@ export class Screenshots {
       guard();
       const { snapshot_id, width: source_width, height: source_height, bytes: rawBytes, format, ...native } = snapshot;
       const result: ScreenshotResult = { ...native, source_width, source_height, width: encoded.width, height: encoded.height, region: encoded.region, scale: p.scale, bytes: encoded.png.length, sha256: createHash('sha256').update(encoded.png).digest('hex'), format: 'png' };
+      // Cache publication shares the file commit point. A later owner/epoch
+      // transition revokes that cache, but cannot turn a saved file into failure.
+      const imageId = p.inline ? randomUUID() : undefined;
+      const retainInline = () => {
+        if (imageId) {
+          this.images.set(imageId, { owner, identity: { ...identity }, bytes: encoded.png, expires: performance.now() + 30000 }); result.image_id = imageId;
+        }
+      };
       if (p.path !== null || !p.inline) {
         const target = p.path ?? path.join(os.tmpdir(), `ares-screenshot-${randomUUID()}.png`);
-        const artifact = await publishArtifact(target, p.overwrite, write => write(encoded.png), guard, 8388608);
+        const artifact = await publishArtifact(target, p.overwrite, write => write(encoded.png), guard, 8388608, retainInline);
         result.path = artifact.path;
-      }
-      guard();
-      if (p.inline) {
-        const id = randomUUID(); this.images.set(id, { owner, identity: { ...identity }, bytes: encoded.png, expires: performance.now() + 30000 }); result.image_id = id;
-      }
+      } else { guard(); retainInline(); }
       return result;
     } finally {
       if (snapshotId !== undefined) await client.request('video.release', identity, { snapshotId }, owner).catch(() => {});

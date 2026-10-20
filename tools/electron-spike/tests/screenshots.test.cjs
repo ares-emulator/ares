@@ -59,7 +59,11 @@ test('native screenshot pipeline: worker PNG is decodable, crop then nearest sca
     const small = await service.capture(native, identity, { ...params, scale: 0.125 }, 'owner', () => true);
     assert.equal(small.width, 1); assert.equal(small.height, 1); service.release('owner');
     assert.throws(() => service.read(small.image_id, 0, small.bytes, 'owner', identity), { code: 'stale_image' });
-    assert.deepEqual(await fs.readdir(dir), ['capture.png']);
+    const committedPath = path.join(dir, 'committed.png');
+    const committed = await service.capture(native, identity, { ...params, path: committedPath, inline: false }, 'owner', () => !require('node:fs').existsSync(committedPath));
+    assert.equal(committed.path, committedPath, 'a completed publication remains successful across a later lifetime transition');
+    assert.equal((await fs.stat(committed.path)).size, committed.bytes);
+    assert.deepEqual((await fs.readdir(dir)).sort(), ['capture.png', 'committed.png']);
     assert.throws(() => encodeRequest('x', identity, 'artifact.screenshot', { ...params, scale: 9 }), /invalid_request/);
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });
@@ -70,4 +74,16 @@ test('screenshot disconnect cancels pending transfer and releases native pin wit
   const capture = service.capture(native, identity, params, 'owner', () => true);
   await started; service.release('owner'); resume();
   await assert.rejects(capture, { code: 'artifact_cancelled' }); assert.equal(native.released, 1);
+});
+test('MCP screenshot preserves published file metadata when subsequent inline transfer fails', async () => {
+  const { registerScreenshotTools } = require('../dist/mcp/screenshot-tools.js'); let handler;
+  const published = { source: 'presented', path: '/tmp/already-published.png', image_id: 'captured-image', epoch: 1, frame: 4, bytes: 10, sha256: 'a'.repeat(64) };
+  const client = { request: async method => method === 'artifact.screenshot'
+    ? { ok: true, result: published }
+    : method === 'artifact.imageRead' ? { ok: false, error: 'stale_epoch' } : { ok: true, result: { released: true } } };
+  registerScreenshotTools({ registerTool: (_name, _schema, action) => handler = action }, client, async () => identity);
+  const result = await handler({ ...params, path: published.path });
+  assert.equal(result.isError, true); const metadata = JSON.parse(result.content[0].text);
+  assert.equal(metadata.error, 'stale_epoch'); assert.equal(metadata.path, published.path); assert.equal(metadata.epoch, 1);
+  assert.equal(metadata.image_id, undefined);
 });

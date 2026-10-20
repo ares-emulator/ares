@@ -8,7 +8,7 @@ import { ServiceError } from './contracts.js';
  * No-overwrite uses a hard link, eliminating an exists/rename race. */
 export async function publishArtifact(destination: string, overwrite: boolean,
   produce: (write: (data: string | Uint8Array) => Promise<void>) => Promise<void>, guard: () => void,
-  maxBytes = 64 * 1024 * 1024): Promise<{ path: string; bytes: number; sha256: string }> {
+  maxBytes = 64 * 1024 * 1024, onCommit: () => void = () => {}): Promise<{ path: string; bytes: number; sha256: string }> {
   const target = path.resolve(destination);
   if (target.length > 4096) throw new ServiceError('invalid_path');
   guard();
@@ -33,6 +33,8 @@ export async function publishArtifact(destination: string, overwrite: boolean,
     guard();
     if (overwrite) renameSync(temporary, target);
     else linkSync(temporary, target);
+    // Non-throwing local cache update; publication is now the completed action.
+    onCommit();
     return { path: target, bytes, sha256: hash.digest('hex') };
   } catch (error) {
     if (error instanceof ServiceError) throw error;
