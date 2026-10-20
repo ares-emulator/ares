@@ -3,9 +3,9 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 39 tools: eleven generic/session/run tools,
+emulator. The verified registry has 42 tools: eleven generic/session/run tools,
 twelve N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools, screenshot and three audio tools. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
@@ -233,7 +233,7 @@ result contains path and artifact byte count/SHA-256, or file_error if export
 fails after capture. Relative paths use the app working directory. Output caps
 at 64 MiB / 25 seconds; owner disconnect, stale epochs or replacement cancel
 unfinished publication. Existing output survives failures. This does not add a
-new MCP tool; video recording remains pending.
+new MCP tool; bounded AVI recording is also implemented.
 
 `screenshot(path=null, source="framebuffer", region=null, scale=1, inline=false,
 overwrite=false)` now returns native PNG output. Framebuffer reads are N64-only;
@@ -274,3 +274,28 @@ reported as `cleanup_error` alongside the successful file metadata. Maximum WAV
 size is 768044 bytes, with one native immutable save pin (30-second lease) and a
 25-second main export deadline. The bounded buffer freezes instead of wrapping;
 this deliberately avoids losing the beginning of a late-saved capture.
+
+### Video recording
+
+`video_start(max_frames=600, max_seconds=60, max_bytes=134217728, fps=60,
+discard_previous=false)` begins connection-owned native presented-frame capture;
+it does not advance emulation. Bounds match the reference: 1..36000 frames,
+0.001..3600 seconds, 1..256 MiB and 1..120 fps. Playback fps does not resample or
+drive emulation. Raw frames use bottom-up BGR24 with four-byte row padding. AVI
+has one uncompressed video stream and no audio. Capture shares the native
+screenshot tap's 4194304-source-pixel limit and works without canvas credits.
+
+`video_status()` reports activity, availability, frame count, dimensions, byte
+budget, actual native frame tags and stop reason. Generic cores explicitly return
+`frame_kind: unavailable`; N64 and synthetic VI tags remain distinct. Captures
+stop at time/frame/byte limits or dimension changes. Reset/disconnect discard
+owned data. An active recording cannot be replaced; stopped, unexported data
+requires `discard_previous: true` to replace. Other owners may read status.
+
+`video_stop(path, overwrite=false)` freezes and exports the recording atomically.
+No frames returns `no_frames`; failed export retains stopped frames for retry.
+Successful export consumes frames and returns path, size/bytes, SHA-256, duration
+and captured coordinates. Native pins expire after 30 seconds; main exports have
+a 25-second deadline and stream bounded pages without assembling the entire AVI
+in memory. Maximum artifact size is 270000000 bytes including headers/index.
+Late cleanup errors retain successful file metadata as `cleanup_error`.

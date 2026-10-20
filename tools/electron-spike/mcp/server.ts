@@ -1,3 +1,4 @@
+import { registerRecordingTools } from './recording-tools.js';
 import { registerAudioTools } from './audio-tools.js';
 import { screenshotSchema, registerScreenshotTools } from './screenshot-tools.js';
 import { runFramesWithScreenshot } from './run-screenshot.js';
@@ -110,6 +111,7 @@ function createServer(): McpServer {
   registerProfilerTools(server, local, status);
   registerScreenshotTools(server, local, status);
   registerAudioTools(server, local, status);
+  registerRecordingTools(server, local, status);
   server.server.onclose = () => local.close();
   return server;
 }

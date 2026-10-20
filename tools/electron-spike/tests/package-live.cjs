@@ -41,8 +41,8 @@ async function run() {
     peer = new StdioPeer(mcpCommand, mcpArgs, { cwd: temporary, env });
     await peer.initialize();
     const inventory = (await peer.request('tools/list', {})).result.tools.map(t => t.name);
-    assert.equal(inventory.length, 39);
-    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save']) assert.ok(inventory.includes(name));
+    assert.equal(inventory.length, 42);
+    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop']) assert.ok(inventory.includes(name));
     let status;
     for (let i = 0; i < 200; ++i) { status = await peer.tool('emu_status'); if (status.system === 'Game Boy') break; await new Promise(r => setTimeout(r, 20)); }
     assert.equal(status.system, 'Game Boy', diagnostics);
@@ -71,6 +71,14 @@ async function run() {
     assert.equal(wav.bytes, 44); assert.equal(wav.frames, 0);
     assert.equal(fs.readFileSync(wavFile).toString('ascii', 0, 12), 'RIFF$\0\0\0WAVE');
     assert.equal((await peer.tool('audio_status')).active, false);
+    assert.equal((await peer.tool('video_start', { max_frames: 2 })).active, true);
+    assert.equal((await peer.tool('resume')).paused, false);
+    for (let n = 0; n < 100 && (await peer.tool('video_status')).frames < 2; n++) await new Promise(r => setTimeout(r, 10));
+    assert.equal((await peer.tool('pause')).paused, true);
+    const movieFile = path.join(temporary, 'packaged video.avi');
+    const movie = await peer.tool('video_stop', { path: movieFile });
+    assert.equal(movie.frames, 2); assert.equal(movie.frame_kind, 'unavailable');
+    assert.equal(fs.readFileSync(movieFile).toString('ascii', 8, 12), 'AVI ');
     assert.equal((await peer.tool('resume')).paused, false);
     assert.equal((await closed)[0], 0, diagnostics);
     assert.ok(['app_not_running', 'app_disconnected'].includes((await peer.tool('emu_status')).error));

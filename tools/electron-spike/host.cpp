@@ -43,12 +43,14 @@ auto locate(const string& name) -> string {
 #include "native/tap-service.hpp"
 #include "native/frame-service.hpp"
 #include "native/audio-service.hpp"
+#include "native/recording-service.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
   InputService injectedInput;
   FrameService captures;
   AudioService audioCapture;
+  RecordingService recording;
   std::atomic<bool> takeoverRequested{false};
   ares::Node::System root;
   std::shared_ptr<HID::Joypad> joypad;
@@ -416,13 +418,19 @@ int main(int argc, char** argv) {
   ares::Video::frameSubmittedObserver = [&](const void* screen) {
     host.captures.submitted(screen, host.service.epoch, n64 ? ares::Nintendo64::executionCoordinate.frame : execution.frame);
   };
+  host.captures.onCapture = [&](const uint8_t* pixels, uint32_t w, uint32_t h, uint64_t epoch, uint64_t frame) { host.recording.capture(pixels, w, h, epoch, frame); };
   host.service.videoRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method.starts_with("video.record.")) {
+      auto result = host.recording.execute(method, args, owner, host.service.epoch, execution.frame, execution.frameKind);
+      if(result.error.empty() && method == "video.record.start") host.captures.enabled = true;
+      return result;
+    }
     return host.captures.execute(method, args, owner, host.service.epoch, execution.frame, n64, execution.frameKind, host.service.paused);
   };
   host.service.audioRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     return host.audioCapture.execute(method, args, owner, !host.streams.empty());
   };
-  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); };
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     if(method == "n64.input.tap") return tapService.execute(args, owner, host.service.epoch, host.service.paused, host.injectedInput, execution);
     // Keep the tapped port stable for its entire owned interval.
@@ -475,6 +483,7 @@ int main(int argc, char** argv) {
       host.injectedInput.releaseAll(); traceService.reset(); profilerService.reset();
       host.captures.reset(host.service.epoch + 1);
       host.audioCapture.reset();
+      host.recording.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
       ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
       if(host.root) { host.output.clear(); host.root->power(); }

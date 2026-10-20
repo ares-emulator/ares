@@ -9,6 +9,7 @@
 #include "../native/tap-service.hpp"
 #include "../native/frame-service.hpp"
 #include "../native/audio-service.hpp"
+#include "../native/recording-service.hpp"
 #include <cstdio>
 #include <cstdlib>
 using namespace ares::Nintendo64;
@@ -32,6 +33,34 @@ static void steps(unsigned count) {
   check(d.halted, "bounded instruction stop");
 }
 int main() {
+  {
+    RecordingService video;
+    std::vector<uint8_t> rgba{255,0,0,255, 0,255,0,255, 0,0,255,255, 255,255,255,255};
+    check(video.execute("video.record.start", {"2", "1048576", "60", "1000", "0"}, "one", 1, 0).error.empty(), "record start");
+    video.capture(rgba.data(), 2, 2, 1, 1); video.capture(rgba.data(), 2, 2, 1, 2); video.capture(rgba.data(), 2, 2, 1, 3);
+    check(video.frames.size() == 2 && video.reason == "frames_limit", "record bounded frame limit");
+    check(video.frames[0] == std::vector<uint8_t>({255,0,0,255,255,255,0,0, 0,0,255,0,255,0,0,0}), "record bottom-up BGR row padding");
+    check(video.execute("video.record.begin", {}, "two", 1, 2).error == "busy", "record foreign export");
+    video.execute("video.record.begin", {}, "one", 1, 2); auto id = std::to_string(video.pin);
+    check(video.execute("video.record.start", {"2", "1048576", "60", "1000", "1"}, "one", 1, 2).error == "busy", "record pin prevents discard");
+    check(video.execute("video.record.read", {id, "31", "2"}, "one", 1, 2).error == "out_of_bounds", "record read bounds");
+    video.execute("video.record.release", {id, "0"}, "one", 1, 2);
+    check(video.available && video.frames.size() == 2, "failed video export retains frames");
+    video.execute("video.record.start", {"2", "1048576", "60", "1000", "1"}, "one", 1, 2);
+    video.capture(rgba.data(), 2, 2, 2, 3); check(video.reason == "epoch_changed", "record old epoch rejected");
+    video.execute("video.record.start", {"2", "1048576", "60", "1000", "1"}, "one", 1, 2);
+    video.capture(rgba.data(), 2, 2, 1, 3); video.capture(rgba.data(), 3, 2, 1, 4);
+    check(video.reason == "dimensions_changed" && video.frames.size() == 1, "record dimension stop");
+    video.releaseOwner("one"); check(!video.available && video.frames.empty(), "record disconnect cleanup");
+    video.execute("video.record.start", {"2", "1048576", "60", "1000", "0"}, "one", 1, 0);
+    video.deadline = RecordingService::Clock::now(); video.execute("video.record.status", {}, "two", 1, 0);
+    check(video.reason == "seconds_limit", "record wall deadline");
+    video.reset(); video.execute("video.record.start", {"10", "1048576", "60", "1000", "0"}, "one", 1, 0);
+    std::vector<uint8_t> large(512 * 512 * 4);
+    video.capture(large.data(), 512, 512, 1, 1); video.capture(large.data(), 512, 512, 1, 2);
+    check(video.reason == "bytes_limit" && video.frames.size() == 1, "record byte bound");
+  }
+
   {
     AudioService audio;
     check(audio.execute("audio.capture", {"2"}, "one", false).error == "unavailable", "audio unavailable without streams");

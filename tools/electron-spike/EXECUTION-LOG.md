@@ -835,3 +835,54 @@ Validation passed:
 
 Task 7 video recording remains next. Milestone 2 physical keyboard/gamepad and
 audible N64 gameplay acceptance remain **not run**. No full 68-tool parity claim.
+
+### Task 7 — bounded presented-frame recording and streamed AVI export
+
+Selective port from reference commit `1c9b9637476a83f7b80d3db1115a0f71529820d9`,
+`desktop-ui/program/video-recording.hpp` SHA-256
+`05d335af9d50c9726a4b52426a5e96d50bb34d6c283d9f921bb0882df30a9b35`.
+Retained source frame/byte/time/fps defaults and ranges, padded bottom-up BGR24,
+AVI 1.0 DIB stream/index and no-audio format. Native observes actual tagged frame
+submissions independent of video credits; main streams immutable pages to atomic
+file publication instead of constructing a second entire movie in memory.
+
+Added connection ownership, export pins (30-second lease), a 25-second main
+export deadline and 270000000-byte artifact ceiling. Failed exports retain stopped
+frames for retry; successful exports consume only the pinned recording. Reset and
+disconnect discard owned buffers. Presented capture also works on generic cores
+with explicitly unavailable frame coordinates and on the isolated VI fixture.
+Native frame taps share the screenshot source-pixel bound (4194304). Active
+recording cannot be replaced; stopped data requires explicit discard_previous.
+
+Validation passed:
+- Native host and CPU fixture rebuilt. Fixture assertions cover exact frame and
+  byte limits, wall deadline, dimension changes, old epoch rejection, ownership,
+  immutable export pin/discard exclusion, read bounds and bottom-up BGR padding.
+- Strict TypeScript build and **37/37** sequential tests (25.78 s). ffprobe and
+  ffmpeg independently decode the AVI's dimensions, codec, playback fps, frame
+  count, orientation and exact RGB pixels. Atomic overwrite/no-overwrite,
+  failed-export retention, retry and revocation/temp cleanup pass.
+- Real MCP stdio captures two full 640x480 synthetic presented frames while video
+  acknowledgements are withheld; confirms actual frame tags, limits, timeout,
+  no-frame failure, retry after existing-path refusal, hash, reset and disconnect.
+- Real Electron integration verifies exact **42-tool** inventory and native GB
+  AVI/WAV plus existing image/memory/CPU/ownership/reload checks.
+- `artifacts/task-7-recording/Ares.app` packaged and copied outside the checkout;
+  loader/MCP denied checkout reads. PNG, empty WAV and two-frame GB AVI exports
+  pass alongside the 42-tool registry. GB displayed 434 frames and shut down.
+
+Task 7's bounded implementation is complete. Task 8 states/experiments is next;
+physical keyboard/gamepad and audible N64 gameplay acceptance remain not run.
+
+### Task 8 — initial state compatibility audit (read-only)
+
+Compared all 16 current N64 `serialization.cpp` files against the reference fork.
+Fifteen are byte-identical. The system file differs only by refactoring header and
+prefix serialization and adding state-version/RDRAM-layout observation; it keeps
+the same field order. Both use `BST1` signature `0x31545342` and N64 version `v153`.
+This is a useful starting point, **not runtime compatibility acceptance**: build
+configuration, configuration-dependent devices and serializer helpers still need
+verification, followed by disposable cross-binary save/load tests. The next
+implementation should expose version/layout observations without loading the live
+emulator, validate whole-file bounds before restoration, and keep offline state
+inspection independent of emulator mutation. No state tools registered yet.

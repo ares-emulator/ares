@@ -201,3 +201,10 @@ with the shared atomic writer. Consumption follows file commit; failed exports
 release only the pin, and disconnect/reset revoke native capture. A published file
 remains reported if subsequent native cleanup fails. Audio is independent of the
 renderer and disabled until requested.
+
+`video.record.*` owns bounded native BGR frame recording. Its render callback
+receives the same immutable submission tags as screenshots and never reads core
+coordinates. A separate mutex protects frame collection; service requests freeze
+and pin it. Main's `artifact.videoStop` streams AVI headers, bounded native pages
+and an index through the atomic publisher. Failed publication releases the pin
+without consuming frames. Owner disconnect/reset revoke collection and export.

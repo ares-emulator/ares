@@ -18,6 +18,7 @@ struct FrameService {
   };
   struct Pin { uint64_t id; std::string owner; std::shared_ptr<const Image> image; Clock::time_point expires; };
   std::atomic<bool> enabled{false};
+  std::function<void(const uint8_t*, uint32_t, uint32_t, uint64_t, uint64_t)> onCapture;
   std::mutex mutex;
   uint64_t epoch = 1, nextId = 1;
   std::unordered_map<const void*, Tag> submissions;
@@ -40,6 +41,7 @@ struct FrameService {
     Tag tag{syntheticEpoch, syntheticFrame};
     if(screen) { auto it = submissions.find(screen); if(it == submissions.end()) return; tag = it->second; }
     if(tag.epoch != epoch) return;
+    if(onCapture) onCapture(rgba, width, height, tag.epoch, tag.frame);
     auto image = std::make_shared<Image>();
     image->width = width; image->height = height; image->epoch = tag.epoch; image->frame = tag.frame; image->sequence = sequence;
     image->pixels.assign(rgba, rgba + uint64_t(width) * height * 4);

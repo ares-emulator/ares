@@ -2082,10 +2082,12 @@
       "family": "Audio/video artifacts",
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 7 recording slice)",
+      "mcpSchemaParity": "Names/defaults retained; explicit ownership/generic-core adaptations documented; full reference generated schema comparison not run",
+      "testEvidence": [
+        "Native byte/frame/time/dimension/epoch/owner fixture; AVI ffprobe/ffmpeg decode; real MCP stalled-video capture/export/retry/reset/disconnect; Electron 42-tool integration passed"
+      ],
+      "knownLimits": "Native presented frames, raw bottom-up BGR24 AVI without audio. Source defaults and bounds retained: 1..36000 frames, 1..256 MiB capture bytes, 0.001..3600 seconds, 1..120 fps; fps sets playback only. Supports N64 and other native cores plus isolated synthetic fixture; frame_kind labels unavailable generic coordinates. Per-connection ownership; reset/disconnect discard frames. Dimension change/epoch/frame/byte/time limits stop capture. Failed atomic export retains frames; overwrite defaults false. One immutable 30-second export pin, 25-second main deadline; streamed AVI at most 270000000 bytes. Captures independently of video acknowledgements. Native tap shares screenshot limit of 4194304 source pixels."
     },
     {
       "name": "video_status",
@@ -2096,10 +2098,12 @@
       "family": "Audio/video artifacts",
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 7 recording slice)",
+      "mcpSchemaParity": "Names/defaults retained; explicit ownership/generic-core adaptations documented; full reference generated schema comparison not run",
+      "testEvidence": [
+        "Native byte/frame/time/dimension/epoch/owner fixture; AVI ffprobe/ffmpeg decode; real MCP stalled-video capture/export/retry/reset/disconnect; Electron 42-tool integration passed"
+      ],
+      "knownLimits": "Native presented frames, raw bottom-up BGR24 AVI without audio. Source defaults and bounds retained: 1..36000 frames, 1..256 MiB capture bytes, 0.001..3600 seconds, 1..120 fps; fps sets playback only. Supports N64 and other native cores plus isolated synthetic fixture; frame_kind labels unavailable generic coordinates. Per-connection ownership; reset/disconnect discard frames. Dimension change/epoch/frame/byte/time limits stop capture. Failed atomic export retains frames; overwrite defaults false. One immutable 30-second export pin, 25-second main deadline; streamed AVI at most 270000000 bytes. Captures independently of video acknowledgements. Native tap shares screenshot limit of 4194304 source pixels."
     },
     {
       "name": "video_stop",
@@ -2123,10 +2127,12 @@
       "family": "Audio/video artifacts",
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 7 recording slice)",
+      "mcpSchemaParity": "Names/defaults retained; explicit ownership/generic-core adaptations documented; full reference generated schema comparison not run",
+      "testEvidence": [
+        "Native byte/frame/time/dimension/epoch/owner fixture; AVI ffprobe/ffmpeg decode; real MCP stalled-video capture/export/retry/reset/disconnect; Electron 42-tool integration passed"
+      ],
+      "knownLimits": "Native presented frames, raw bottom-up BGR24 AVI without audio. Source defaults and bounds retained: 1..36000 frames, 1..256 MiB capture bytes, 0.001..3600 seconds, 1..120 fps; fps sets playback only. Supports N64 and other native cores plus isolated synthetic fixture; frame_kind labels unavailable generic coordinates. Per-connection ownership; reset/disconnect discard frames. Dimension change/epoch/frame/byte/time limits stop capture. Failed atomic export retains frames; overwrite defaults false. One immutable 30-second export pin, 25-second main deadline; streamed AVI at most 270000000 bytes. Captures independently of video acknowledgements. Native tap shares screenshot limit of 4194304 source pixels."
     },
     {
       "name": "cpu_set_registers",

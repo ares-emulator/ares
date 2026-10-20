@@ -371,3 +371,14 @@ immutable partial-save pins and atomic main-owned WAV publication. `audio_save`
 replaces destinations because its reference contract has no overwrite flag. Keep
 post-commit file metadata visible when late cleanup fails. No audio viewer or
 always-on history buffer is ported.
+
+Task 7 recording adaptation: selectively port frame/byte/time/dimension limits,
+bottom-up padded BGR conversion and AVI 1.0 DIB layout from
+`desktop-ui/program/video-recording.hpp` (reference SHA-256
+`05d335af9d50c9726a4b52426a5e96d50bb34d6c283d9f921bb0882df30a9b35`).
+Keep source MCP names/defaults/ranges and no-audio format. Native owns buffers;
+main streams file publication, with immutable export pins and connection leases.
+Use actual frame-submission epoch tags rather than reading core state from the
+render thread. Extend presented recording to other supported cores and synthetic
+fixtures, labeling generic coordinates unavailable. Reset/disconnect discard
+owned buffers; no cross-owner export/discard. A failed export retains frames.
