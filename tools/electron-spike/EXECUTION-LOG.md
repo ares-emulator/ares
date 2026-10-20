@@ -1563,3 +1563,43 @@ Next task 9 work is RSPQ ELF/config/custom descriptor and semantic capture parit
 then the remaining generated-schema/result/bridge/game/fault/physical acceptance
 gates. All 68 rows retain explicit evidence/limits. Task 9 stays in progress and
 task 10 has not started.
+
+## Task 9 generated FastMCP schema comparison (2026-10-20)
+
+Added a real generated reference snapshot from `ares-64` commit
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`, using FastMCP 1.30.0's
+`list_tools()` in an isolated disposable Python environment. The snapshot records
+source SHA-256 and MCP version. No reference emulator or user session is used.
+The exporter suppresses bytecode writes into the reference checkout.
+
+The comparison launches this port's actual built stdio server with an unused
+metadata path and requests `tools/list`; it does not connect to native services.
+All 68 reference names exist, with no extra names. The signature projection
+(parameter names, required fields, primitive types, nullability and defaults)
+matches **67/68** tools. `batch.max_seconds` defaults to 20 here versus 60 in the
+reference, consistent with the current 20-second native reservation limit. This
+remains a recorded compatibility limit, not an accepted parity exception.
+
+The full report retains bounds, nested schemas, unknown-field policy and union
+representations. All 68 schemas differ: Electron rejects unknown fields, and
+many tools impose bounded resources or more specific validation. Documentation
+and irrelevant object/enum/required/union ordering are ignored; tuple order and
+property names such as `title`/`description` remain significant. The checked-in
+report makes these differences reviewable and guards against silent drift. It
+does not establish result-shape or behavioral parity. Regeneration instructions
+are in `tests/reference/README.md`.
+
+The two new tests exercise the actual stdio inventory against the recorded
+comparison and verify that required/default/type/nullability/bounds/unknown-field
+changes remain visible. Reference inspection also confirmed that its bundled
+F3DEX2 descriptor has command names but no argument fields: the general semantic
+formatter is primarily used by RSPQ overlay descriptors. RSPQ ELF/config/runtime
+overlay/custom descriptor capture and semantic decoding remain pending, together
+with migrated bridge/paper-cut/game/result-shape/manual acceptance. Task 9 is still
+in progress; no task 10 work or scope removal is implied.
+
+Validation: strict TypeScript builds and the complete sequential suite passed
+**66/66** tests in **45.90 seconds**, including the two new schema checks and all
+existing native/live viewer, CPU/RSP/RDP, state, transport, audio and recording
+fixtures. `git diff --check` passed. No production/native changes in this slice;
+the existing Electron/copied-package evidence is not claimed as a new run.

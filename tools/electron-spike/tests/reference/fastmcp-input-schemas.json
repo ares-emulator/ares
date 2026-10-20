@@ -1,0 +1,1975 @@
+{
+  "source": "tools/mcp/ares_mcp.py",
+  "commit": "1c9b9637476a83f7b80d3db1115a0f71529820d9",
+  "sha256": "28db87365993793d6844bf05894372fe3f19b30a64a856f06aaabd249ed0465c",
+  "mcp_version": "1.30.0",
+  "tools": [
+    {
+      "name": "audio_capture",
+      "inputSchema": {
+        "properties": {
+          "seconds": {
+            "default": 3.0,
+            "title": "Seconds",
+            "type": "number"
+          }
+        },
+        "title": "audio_captureArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "audio_save",
+      "inputSchema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "audio_saveArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "audio_status",
+      "inputSchema": {
+        "properties": {},
+        "title": "audio_statusArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "batch",
+      "inputSchema": {
+        "properties": {
+          "steps": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          },
+          "stop_on_error": {
+            "default": true,
+            "title": "Stop On Error",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "steps"
+        ],
+        "title": "batchArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "break_add",
+      "inputSchema": {
+        "properties": {
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "condition": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Condition"
+          }
+        },
+        "required": [
+          "addr"
+        ],
+        "title": "break_addArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "break_list",
+      "inputSchema": {
+        "properties": {},
+        "title": "break_listArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "break_remove",
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "break_removeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "call_function",
+      "inputSchema": {
+        "properties": {
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "args": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Args"
+          },
+          "max_instructions": {
+            "default": 100000,
+            "title": "Max Instructions",
+            "type": "integer"
+          },
+          "max_frames": {
+            "default": 60,
+            "title": "Max Frames",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 5.0,
+            "title": "Max Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "addr"
+        ],
+        "title": "call_functionArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "call_recover",
+      "inputSchema": {
+        "properties": {
+          "restore": {
+            "default": true,
+            "title": "Restore",
+            "type": "boolean"
+          }
+        },
+        "title": "call_recoverArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "cancel_operation",
+      "inputSchema": {
+        "properties": {
+          "operation_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation Id"
+          }
+        },
+        "title": "cancel_operationArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "capture_control",
+      "inputSchema": {
+        "properties": {
+          "rsp": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rsp"
+          },
+          "rdp": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rdp"
+          }
+        },
+        "title": "capture_controlArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "controller_host_mode",
+      "inputSchema": {
+        "properties": {
+          "neutral_during_operations": {
+            "default": true,
+            "title": "Neutral During Operations",
+            "type": "boolean"
+          }
+        },
+        "title": "controller_host_modeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "controller_release",
+      "inputSchema": {
+        "properties": {
+          "port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Port"
+          }
+        },
+        "title": "controller_releaseArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "controller_set",
+      "inputSchema": {
+        "properties": {
+          "port": {
+            "default": 1,
+            "title": "Port",
+            "type": "integer"
+          },
+          "a": {
+            "default": false,
+            "title": "A",
+            "type": "boolean"
+          },
+          "b": {
+            "default": false,
+            "title": "B",
+            "type": "boolean"
+          },
+          "z": {
+            "default": false,
+            "title": "Z",
+            "type": "boolean"
+          },
+          "start": {
+            "default": false,
+            "title": "Start",
+            "type": "boolean"
+          },
+          "up": {
+            "default": false,
+            "title": "Up",
+            "type": "boolean"
+          },
+          "down": {
+            "default": false,
+            "title": "Down",
+            "type": "boolean"
+          },
+          "left": {
+            "default": false,
+            "title": "Left",
+            "type": "boolean"
+          },
+          "right": {
+            "default": false,
+            "title": "Right",
+            "type": "boolean"
+          },
+          "c_up": {
+            "default": false,
+            "title": "C Up",
+            "type": "boolean"
+          },
+          "c_down": {
+            "default": false,
+            "title": "C Down",
+            "type": "boolean"
+          },
+          "c_left": {
+            "default": false,
+            "title": "C Left",
+            "type": "boolean"
+          },
+          "c_right": {
+            "default": false,
+            "title": "C Right",
+            "type": "boolean"
+          },
+          "l": {
+            "default": false,
+            "title": "L",
+            "type": "boolean"
+          },
+          "r": {
+            "default": false,
+            "title": "R",
+            "type": "boolean"
+          },
+          "x": {
+            "default": 0,
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "default": 0,
+            "title": "Y",
+            "type": "integer"
+          },
+          "timeout_frames": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Timeout Frames"
+          },
+          "timeout_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Timeout Seconds"
+          }
+        },
+        "title": "controller_setArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "controller_state",
+      "inputSchema": {
+        "properties": {},
+        "title": "controller_stateArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "controller_tap",
+      "inputSchema": {
+        "properties": {
+          "button": {
+            "title": "Button",
+            "type": "string"
+          },
+          "port": {
+            "default": 1,
+            "title": "Port",
+            "type": "integer"
+          },
+          "frames": {
+            "default": 2,
+            "title": "Frames",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          },
+          "keep_override": {
+            "default": false,
+            "title": "Keep Override",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "button"
+        ],
+        "title": "controller_tapArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "cpu_profiler_top",
+      "inputSchema": {
+        "properties": {
+          "window": {
+            "default": "continuous",
+            "title": "Window",
+            "type": "string"
+          },
+          "limit": {
+            "default": 32,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "cpu_profiler_topArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "cpu_registers",
+      "inputSchema": {
+        "properties": {
+          "fpr": {
+            "default": false,
+            "title": "Fpr",
+            "type": "boolean"
+          },
+          "cop0": {
+            "default": false,
+            "title": "Cop0",
+            "type": "boolean"
+          },
+          "verbose": {
+            "default": false,
+            "title": "Verbose",
+            "type": "boolean"
+          }
+        },
+        "title": "cpu_registersArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "cpu_set_registers",
+      "inputSchema": {
+        "properties": {
+          "gpr": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Gpr"
+          },
+          "pc": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Pc"
+          },
+          "hi": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hi"
+          },
+          "lo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Lo"
+          },
+          "llbit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Llbit"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          }
+        },
+        "title": "cpu_set_registersArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "disassemble",
+      "inputSchema": {
+        "properties": {
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "count": {
+            "default": 32,
+            "title": "Count",
+            "type": "integer"
+          },
+          "view": {
+            "default": "cpu",
+            "title": "View",
+            "type": "string"
+          }
+        },
+        "required": [
+          "addr"
+        ],
+        "title": "disassembleArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "dump_range",
+      "inputSchema": {
+        "properties": {
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "length": {
+            "title": "Length",
+            "type": "integer"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "view": {
+            "default": "rdram",
+            "title": "View",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "title": "Overwrite",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "addr",
+          "length",
+          "path"
+        ],
+        "title": "dump_rangeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "dump_rdram",
+      "inputSchema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "title": "Overwrite",
+            "type": "boolean"
+          },
+          "expect_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expect Size"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "dump_rdramArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "emu_status",
+      "inputSchema": {
+        "properties": {
+          "verbose": {
+            "default": false,
+            "title": "Verbose",
+            "type": "boolean"
+          }
+        },
+        "title": "emu_statusArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "last_stop",
+      "inputSchema": {
+        "properties": {
+          "fpr": {
+            "default": false,
+            "title": "Fpr",
+            "type": "boolean"
+          },
+          "cop0": {
+            "default": false,
+            "title": "Cop0",
+            "type": "boolean"
+          },
+          "verbose": {
+            "default": false,
+            "title": "Verbose",
+            "type": "boolean"
+          }
+        },
+        "title": "last_stopArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "memory_regions",
+      "inputSchema": {
+        "properties": {},
+        "title": "memory_regionsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "operation_status",
+      "inputSchema": {
+        "properties": {
+          "operation_id": {
+            "title": "Operation Id",
+            "type": "integer"
+          },
+          "fpr": {
+            "default": false,
+            "title": "Fpr",
+            "type": "boolean"
+          },
+          "cop0": {
+            "default": false,
+            "title": "Cop0",
+            "type": "boolean"
+          },
+          "verbose": {
+            "default": false,
+            "title": "Verbose",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operation_id"
+        ],
+        "title": "operation_statusArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "overlay_log",
+      "inputSchema": {
+        "properties": {
+          "since_id": {
+            "default": 0,
+            "title": "Since Id",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 1024,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "code_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": 1024,
+            "title": "Code Start"
+          },
+          "code_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": 2359296,
+            "title": "Code End"
+          }
+        },
+        "title": "overlay_logArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "pause",
+      "inputSchema": {
+        "properties": {},
+        "title": "pauseArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "peripheral_registers",
+      "inputSchema": {
+        "properties": {},
+        "title": "peripheral_registersArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "profiler_clear",
+      "inputSchema": {
+        "properties": {},
+        "title": "profiler_clearArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "profiler_control",
+      "inputSchema": {
+        "properties": {
+          "enable": {
+            "default": true,
+            "title": "Enable",
+            "type": "boolean"
+          }
+        },
+        "title": "profiler_controlArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rdp_capture",
+      "inputSchema": {
+        "properties": {
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Path"
+          },
+          "next_frame": {
+            "default": true,
+            "title": "Next Frame",
+            "type": "boolean"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          },
+          "max_commands": {
+            "default": 1000000,
+            "title": "Max Commands",
+            "type": "integer"
+          },
+          "dmem_snapshots": {
+            "default": false,
+            "title": "Dmem Snapshots",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 4096,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "overwrite": {
+            "default": false,
+            "title": "Overwrite",
+            "type": "boolean"
+          }
+        },
+        "title": "rdp_captureArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rdp_state",
+      "inputSchema": {
+        "properties": {},
+        "title": "rdp_stateArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "read_memory",
+      "inputSchema": {
+        "properties": {
+          "region": {
+            "title": "Region",
+            "type": "string"
+          },
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "length": {
+            "default": 64,
+            "title": "Length",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "region",
+          "addr"
+        ],
+        "title": "read_memoryArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "read_memory_va",
+      "inputSchema": {
+        "properties": {
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "length": {
+            "default": 64,
+            "title": "Length",
+            "type": "integer"
+          },
+          "view": {
+            "default": "rdram",
+            "title": "View",
+            "type": "string"
+          }
+        },
+        "required": [
+          "addr"
+        ],
+        "title": "read_memory_vaArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "render_probe",
+      "inputSchema": {
+        "properties": {},
+        "title": "render_probeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "resume",
+      "inputSchema": {
+        "properties": {
+          "keep_overrides": {
+            "default": false,
+            "title": "Keep Overrides",
+            "type": "boolean"
+          }
+        },
+        "title": "resumeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rsp_break",
+      "inputSchema": {
+        "properties": {
+          "action": {
+            "default": "list",
+            "title": "Action",
+            "type": "string"
+          },
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Addr"
+          }
+        },
+        "title": "rsp_breakArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rsp_capture",
+      "inputSchema": {
+        "properties": {
+          "limit": {
+            "default": 4096,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "rsp_captureArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rsp_debug",
+      "inputSchema": {
+        "properties": {
+          "enable": {
+            "default": true,
+            "title": "Enable",
+            "type": "boolean"
+          }
+        },
+        "title": "rsp_debugArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rsp_registers",
+      "inputSchema": {
+        "properties": {},
+        "title": "rsp_registersArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rsp_run",
+      "inputSchema": {
+        "properties": {},
+        "title": "rsp_runArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rsp_step",
+      "inputSchema": {
+        "properties": {
+          "count": {
+            "default": 1,
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "title": "rsp_stepArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rsp_stop",
+      "inputSchema": {
+        "properties": {},
+        "title": "rsp_stopArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_frames",
+      "inputSchema": {
+        "properties": {
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          },
+          "screenshot_after": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Screenshot After"
+          },
+          "verbose": {
+            "default": false,
+            "title": "Verbose",
+            "type": "boolean"
+          },
+          "fpr": {
+            "default": false,
+            "title": "Fpr",
+            "type": "boolean"
+          },
+          "cop0": {
+            "default": false,
+            "title": "Cop0",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "n"
+        ],
+        "title": "run_framesArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_until_frame",
+      "inputSchema": {
+        "properties": {
+          "k": {
+            "title": "K",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "k"
+        ],
+        "title": "run_until_frameArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "run_until_hit",
+      "inputSchema": {
+        "properties": {
+          "max_frames": {
+            "default": 600,
+            "title": "Max Frames",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          },
+          "fpr": {
+            "default": false,
+            "title": "Fpr",
+            "type": "boolean"
+          },
+          "cop0": {
+            "default": false,
+            "title": "Cop0",
+            "type": "boolean"
+          },
+          "verbose": {
+            "default": false,
+            "title": "Verbose",
+            "type": "boolean"
+          }
+        },
+        "title": "run_until_hitArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "screenshot",
+      "inputSchema": {
+        "properties": {
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Path"
+          },
+          "source": {
+            "default": "framebuffer",
+            "title": "Source",
+            "type": "string"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Region"
+          },
+          "scale": {
+            "default": 1.0,
+            "title": "Scale",
+            "type": "number"
+          },
+          "inline": {
+            "default": false,
+            "title": "Inline",
+            "type": "boolean"
+          },
+          "overwrite": {
+            "default": false,
+            "title": "Overwrite",
+            "type": "boolean"
+          }
+        },
+        "title": "screenshotArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "stack",
+      "inputSchema": {
+        "properties": {
+          "function_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Function Start"
+          }
+        },
+        "title": "stackArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "state_info",
+      "inputSchema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "state_infoArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "state_list",
+      "inputSchema": {
+        "properties": {
+          "directory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Directory"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 100,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "state_listArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "state_load",
+      "inputSchema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "resume": {
+            "default": false,
+            "title": "Resume",
+            "type": "boolean"
+          },
+          "keep_overrides": {
+            "default": false,
+            "title": "Keep Overrides",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "state_loadArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "state_peek",
+      "inputSchema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "length": {
+            "default": 64,
+            "title": "Length",
+            "type": "integer"
+          },
+          "view": {
+            "default": "rdram",
+            "title": "View",
+            "type": "string"
+          },
+          "assume_current_configuration": {
+            "default": false,
+            "title": "Assume Current Configuration",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path",
+          "addr"
+        ],
+        "title": "state_peekArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "state_save",
+      "inputSchema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "title": "Overwrite",
+            "type": "boolean"
+          },
+          "metadata": {
+            "default": true,
+            "title": "Metadata",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "state_saveArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "step",
+      "inputSchema": {
+        "properties": {},
+        "title": "stepArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "step_instructions",
+      "inputSchema": {
+        "properties": {
+          "n": {
+            "default": 1,
+            "title": "N",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          },
+          "fpr": {
+            "default": false,
+            "title": "Fpr",
+            "type": "boolean"
+          },
+          "cop0": {
+            "default": false,
+            "title": "Cop0",
+            "type": "boolean"
+          },
+          "verbose": {
+            "default": false,
+            "title": "Verbose",
+            "type": "boolean"
+          }
+        },
+        "title": "step_instructionsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "trace_calls",
+      "inputSchema": {
+        "properties": {
+          "start_frame": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Start Frame"
+          },
+          "n_frames": {
+            "default": 1,
+            "title": "N Frames",
+            "type": "integer"
+          },
+          "filter_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Filter Start"
+          },
+          "filter_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Filter End"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Path"
+          },
+          "max_records": {
+            "default": 2000000,
+            "title": "Max Records",
+            "type": "integer"
+          },
+          "inline_limit": {
+            "default": 20000,
+            "title": "Inline Limit",
+            "type": "integer"
+          },
+          "target_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Target Start"
+          },
+          "target_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Target End"
+          },
+          "registers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Registers"
+          },
+          "f12": {
+            "default": false,
+            "title": "F12",
+            "type": "boolean"
+          },
+          "overwrite": {
+            "default": false,
+            "title": "Overwrite",
+            "type": "boolean"
+          }
+        },
+        "title": "trace_callsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "trace_page",
+      "inputSchema": {
+        "properties": {
+          "operation_id": {
+            "title": "Operation Id",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 20000,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "operation_id"
+        ],
+        "title": "trace_pageArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "trace_pc",
+      "inputSchema": {
+        "properties": {
+          "start_frame": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Start Frame"
+          },
+          "n_frames": {
+            "default": 1,
+            "title": "N Frames",
+            "type": "integer"
+          },
+          "filter_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Filter Start"
+          },
+          "filter_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Filter End"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Path"
+          },
+          "max_records": {
+            "default": 2000000,
+            "title": "Max Records",
+            "type": "integer"
+          },
+          "inline_limit": {
+            "default": 20000,
+            "title": "Inline Limit",
+            "type": "integer"
+          },
+          "overwrite": {
+            "default": false,
+            "title": "Overwrite",
+            "type": "boolean"
+          }
+        },
+        "title": "trace_pcArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "video_start",
+      "inputSchema": {
+        "properties": {
+          "max_frames": {
+            "default": 600,
+            "title": "Max Frames",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          },
+          "max_bytes": {
+            "default": 134217728,
+            "title": "Max Bytes",
+            "type": "integer"
+          },
+          "fps": {
+            "default": 60,
+            "title": "Fps",
+            "type": "integer"
+          },
+          "discard_previous": {
+            "default": false,
+            "title": "Discard Previous",
+            "type": "boolean"
+          }
+        },
+        "title": "video_startArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "video_status",
+      "inputSchema": {
+        "properties": {},
+        "title": "video_statusArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "video_stop",
+      "inputSchema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "title": "Overwrite",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "video_stopArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "watch_add",
+      "inputSchema": {
+        "properties": {
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "length": {
+            "default": 4,
+            "title": "Length",
+            "type": "integer"
+          },
+          "kind": {
+            "default": "write",
+            "title": "Kind",
+            "type": "string"
+          },
+          "condition": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Condition"
+          }
+        },
+        "required": [
+          "addr"
+        ],
+        "title": "watch_addArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "watch_list",
+      "inputSchema": {
+        "properties": {},
+        "title": "watch_listArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "watch_remove",
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "watch_removeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "write_memory",
+      "inputSchema": {
+        "properties": {
+          "region": {
+            "title": "Region",
+            "type": "string"
+          },
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "hex_bytes": {
+            "title": "Hex Bytes",
+            "type": "string"
+          }
+        },
+        "required": [
+          "region",
+          "addr",
+          "hex_bytes"
+        ],
+        "title": "write_memoryArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "write_memory_many",
+      "inputSchema": {
+        "properties": {
+          "writes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Writes",
+            "type": "array"
+          },
+          "verify_after_frames": {
+            "default": 0,
+            "title": "Verify After Frames",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "writes"
+        ],
+        "title": "write_memory_manyArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "write_memory_va",
+      "inputSchema": {
+        "properties": {
+          "addr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Addr"
+          },
+          "hex_bytes": {
+            "title": "Hex Bytes",
+            "type": "string"
+          },
+          "view": {
+            "default": "cpu",
+            "title": "View",
+            "type": "string"
+          },
+          "verify_after_frames": {
+            "default": 0,
+            "title": "Verify After Frames",
+            "type": "integer"
+          },
+          "max_seconds": {
+            "default": 60.0,
+            "title": "Max Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "addr",
+          "hex_bytes"
+        ],
+        "title": "write_memory_vaArguments",
+        "type": "object"
+      }
+    }
+  ]
+}

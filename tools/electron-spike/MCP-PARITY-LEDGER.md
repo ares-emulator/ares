@@ -100,3 +100,5 @@ pending.
 
 These mappings identify behavior to preserve; the new session tests are not a
 claim that the fork's legacy bridge tests have passed against this host.
+
+Generated schema evidence is now checked in under `tests/reference/`: real FastMCP 1.30.0 versus the actual stdio registry gives 68 names in both, no missing/extra names and 67 matching parameter signatures. `batch.max_seconds` remains 20 versus 60 by default. Full schema validation differences are recorded rather than accepted as parity; see `tests/reference/README.md`. Result-shape and behavioral acceptance remain pending.

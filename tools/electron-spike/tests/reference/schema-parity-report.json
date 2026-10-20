@@ -1,0 +1,3706 @@
+{
+  "reference": {
+    "commit": "1c9b9637476a83f7b80d3db1115a0f71529820d9",
+    "sha256": "28db87365993793d6844bf05894372fe3f19b30a64a856f06aaabd249ed0465c",
+    "mcp_version": "1.30.0"
+  },
+  "signature_matching": 67,
+  "signature_differences": [
+    {
+      "name": "batch",
+      "reference": {
+        "properties": {
+          "max_seconds": {
+            "default": 60,
+            "types": [
+              "number"
+            ]
+          },
+          "steps": {
+            "types": [
+              "array"
+            ]
+          },
+          "stop_on_error": {
+            "default": true,
+            "types": [
+              "boolean"
+            ]
+          }
+        },
+        "required": [
+          "steps"
+        ]
+      },
+      "current": {
+        "properties": {
+          "max_seconds": {
+            "default": 20,
+            "types": [
+              "number"
+            ]
+          },
+          "steps": {
+            "types": [
+              "array"
+            ]
+          },
+          "stop_on_error": {
+            "default": true,
+            "types": [
+              "boolean"
+            ]
+          }
+        },
+        "required": [
+          "steps"
+        ]
+      }
+    }
+  ],
+  "reference_count": 68,
+  "current_count": 68,
+  "missing": [],
+  "added": [],
+  "matching": 0,
+  "differences": [
+    {
+      "name": "audio_capture",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "seconds",
+          "reference": {
+            "default": 3,
+            "type": "number"
+          },
+          "current": {
+            "default": 3,
+            "maximum": 3600,
+            "minimum": 0,
+            "type": "number"
+          }
+        }
+      ]
+    },
+    {
+      "name": "audio_save",
+      "object": {
+        "reference": {
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "path",
+          "reference": {
+            "type": "string"
+          },
+          "current": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "audio_status",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "batch",
+      "object": {
+        "reference": {
+          "required": [
+            "steps"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "steps"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 20,
+            "maximum": 20,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        },
+        {
+          "field": "steps",
+          "reference": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "current": {
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addr": {
+                      "anyOf": [
+                        {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "hex": {
+                      "maxLength": 2048,
+                      "type": "string"
+                    },
+                    "kind": {
+                      "const": "write",
+                      "type": "string"
+                    },
+                    "view": {
+                      "default": "cpu",
+                      "enum": [
+                        "cpu",
+                        "rdram"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "addr",
+                    "hex",
+                    "kind"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addr": {
+                      "anyOf": [
+                        {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "const": "read",
+                      "type": "string"
+                    },
+                    "length": {
+                      "default": 64,
+                      "maximum": 1024,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "view": {
+                      "default": "rdram",
+                      "enum": [
+                        "cpu",
+                        "rdram"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "addr",
+                    "kind"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "inline": {
+                      "const": false,
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "const": "screenshot",
+                      "type": "string"
+                    },
+                    "overwrite": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "path": {
+                      "maxLength": 4096,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "region": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "maxItems": 4,
+                          "minItems": 4,
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "scale": {
+                      "default": 1,
+                      "maximum": 8,
+                      "minimum": 0.125,
+                      "type": "number"
+                    },
+                    "source": {
+                      "default": "framebuffer",
+                      "enum": [
+                        "framebuffer",
+                        "presented"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "path"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "const": "run",
+                      "type": "string"
+                    },
+                    "n": {
+                      "maximum": 1000000,
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "n"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "const": "state_load",
+                      "type": "string"
+                    },
+                    "path": {
+                      "maxLength": 4096,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "path"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "type": "array"
+          }
+        }
+      ]
+    },
+    {
+      "name": "break_add",
+      "object": {
+        "reference": {
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "break_list",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "break_remove",
+      "object": {
+        "reference": {
+          "required": [
+            "id"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "id"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "id",
+          "reference": {
+            "type": "integer"
+          },
+          "current": {
+            "maximum": 4294967295,
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "call_function",
+      "object": {
+        "reference": {
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "field": "args",
+          "reference": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "maxItems": 4,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "max_frames",
+          "reference": {
+            "default": 60,
+            "type": "integer"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 10000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_instructions",
+          "reference": {
+            "default": 100000,
+            "type": "integer"
+          },
+          "current": {
+            "default": 100000,
+            "maximum": 1000000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 5,
+            "type": "number"
+          },
+          "current": {
+            "default": 5,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        }
+      ]
+    },
+    {
+      "name": "call_recover",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "cancel_operation",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "operation_id",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "capture_control",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "rdp",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "default": null,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        {
+          "field": "rsp",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "default": null,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "controller_host_mode",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "controller_release",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "port",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 4,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "controller_set",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "port",
+          "reference": {
+            "default": 1,
+            "type": "integer"
+          },
+          "current": {
+            "default": 1,
+            "maximum": 4,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "timeout_frames",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 100000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "timeout_seconds",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 3600,
+                "minimum": 0.001,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "x",
+          "reference": {
+            "default": 0,
+            "type": "integer"
+          },
+          "current": {
+            "default": 0,
+            "maximum": 32767,
+            "minimum": -32767,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "y",
+          "reference": {
+            "default": 0,
+            "type": "integer"
+          },
+          "current": {
+            "default": 0,
+            "maximum": 32767,
+            "minimum": -32767,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "controller_state",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "controller_tap",
+      "object": {
+        "reference": {
+          "required": [
+            "button"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "button"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "frames",
+          "reference": {
+            "default": 2,
+            "type": "integer"
+          },
+          "current": {
+            "default": 2,
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        },
+        {
+          "field": "port",
+          "reference": {
+            "default": 1,
+            "type": "integer"
+          },
+          "current": {
+            "default": 1,
+            "maximum": 4,
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cpu_profiler_top",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "limit",
+          "reference": {
+            "default": 32,
+            "type": "integer"
+          },
+          "current": {
+            "default": 32,
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "window",
+          "reference": {
+            "default": "continuous",
+            "type": "string"
+          },
+          "current": {
+            "default": "continuous",
+            "enum": [
+              "continuous",
+              "frame"
+            ],
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cpu_registers",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "cpu_set_registers",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "gpr",
+          "reference": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "propertyNames": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "hi",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "llbit",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "lo",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "pc",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "status",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "disassemble",
+      "object": {
+        "reference": {
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "field": "count",
+          "reference": {
+            "default": 32,
+            "type": "integer"
+          },
+          "current": {
+            "default": 32,
+            "maximum": 128,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "view",
+          "reference": {
+            "default": "cpu",
+            "type": "string"
+          },
+          "current": {
+            "default": "cpu",
+            "enum": [
+              "cpu",
+              "rdram"
+            ],
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dump_range",
+      "object": {
+        "reference": {
+          "required": [
+            "addr",
+            "length",
+            "path"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr",
+            "length",
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "field": "length",
+          "reference": {
+            "type": "integer"
+          },
+          "current": {
+            "maximum": 1048576,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "view",
+          "reference": {
+            "default": "rdram",
+            "type": "string"
+          },
+          "current": {
+            "default": "rdram",
+            "enum": [
+              "cpu",
+              "rdram"
+            ],
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dump_rdram",
+      "object": {
+        "reference": {
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "expect_size",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 8388608,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "emu_status",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "last_stop",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "memory_regions",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "operation_status",
+      "object": {
+        "reference": {
+          "required": [
+            "operation_id"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "operation_id"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "operation_id",
+          "reference": {
+            "type": "integer"
+          },
+          "current": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "overlay_log",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "code_end",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": 2359296
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": 2359296
+          }
+        },
+        {
+          "field": "code_start",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": 1024
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": 1024
+          }
+        },
+        {
+          "field": "limit",
+          "reference": {
+            "default": 1024,
+            "type": "integer"
+          },
+          "current": {
+            "default": 1024,
+            "maximum": 4096,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "since_id",
+          "reference": {
+            "default": 0,
+            "type": "integer"
+          },
+          "current": {
+            "default": 0,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "pause",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "peripheral_registers",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "profiler_clear",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "profiler_control",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "rdp_capture",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "limit",
+          "reference": {
+            "default": 4096,
+            "type": "integer"
+          },
+          "current": {
+            "default": 4096,
+            "maximum": 4096,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_commands",
+          "reference": {
+            "default": 1000000,
+            "type": "integer"
+          },
+          "current": {
+            "default": 1000000,
+            "maximum": 1000000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        },
+        {
+          "field": "path",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "default": null,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rdp_state",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "read_memory",
+      "object": {
+        "reference": {
+          "required": [
+            "addr",
+            "region"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr",
+            "region"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "field": "length",
+          "reference": {
+            "default": 64,
+            "type": "integer"
+          },
+          "current": {
+            "default": 64,
+            "maximum": 1024,
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "read_memory_va",
+      "object": {
+        "reference": {
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "field": "length",
+          "reference": {
+            "default": 64,
+            "type": "integer"
+          },
+          "current": {
+            "default": 64,
+            "maximum": 1024,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "view",
+          "reference": {
+            "default": "rdram",
+            "type": "string"
+          },
+          "current": {
+            "default": "rdram",
+            "enum": [
+              "cpu",
+              "rdram"
+            ],
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "render_probe",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "resume",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "rsp_break",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "action",
+          "reference": {
+            "default": "list",
+            "type": "string"
+          },
+          "current": {
+            "default": "list",
+            "enum": [
+              "add",
+              "clear",
+              "list",
+              "remove"
+            ],
+            "type": "string"
+          }
+        },
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "rsp_capture",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "limit",
+          "reference": {
+            "default": 4096,
+            "type": "integer"
+          },
+          "current": {
+            "default": 4096,
+            "maximum": 1048576,
+            "minimum": 0,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rsp_debug",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "rsp_registers",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "rsp_run",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "rsp_step",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "count",
+          "reference": {
+            "default": 1,
+            "type": "integer"
+          },
+          "current": {
+            "default": 1,
+            "maximum": 1000000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rsp_stop",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "run_frames",
+      "object": {
+        "reference": {
+          "required": [
+            "n"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "n"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        },
+        {
+          "field": "n",
+          "reference": {
+            "type": "integer"
+          },
+          "current": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "screenshot_after",
+          "reference": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "additionalProperties": {},
+                "propertyNames": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "run_until_frame",
+      "object": {
+        "reference": {
+          "required": [
+            "k"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "k"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "k",
+          "reference": {
+            "type": "integer"
+          },
+          "current": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        }
+      ]
+    },
+    {
+      "name": "run_until_hit",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "max_frames",
+          "reference": {
+            "default": 600,
+            "type": "integer"
+          },
+          "current": {
+            "default": 600,
+            "maximum": 1000000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        }
+      ]
+    },
+    {
+      "name": "screenshot",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "path",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maxLength": 4096,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "region",
+          "reference": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "items": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "scale",
+          "reference": {
+            "default": 1,
+            "type": "number"
+          },
+          "current": {
+            "default": 1,
+            "maximum": 8,
+            "minimum": 0.125,
+            "type": "number"
+          }
+        },
+        {
+          "field": "source",
+          "reference": {
+            "default": "framebuffer",
+            "type": "string"
+          },
+          "current": {
+            "default": "framebuffer",
+            "enum": [
+              "framebuffer",
+              "presented"
+            ],
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "stack",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "function_start",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "state_info",
+      "object": {
+        "reference": {
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "path",
+          "reference": {
+            "type": "string"
+          },
+          "current": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "state_list",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "directory",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maxLength": 4096,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "limit",
+          "reference": {
+            "default": 100,
+            "type": "integer"
+          },
+          "current": {
+            "default": 100,
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "offset",
+          "reference": {
+            "default": 0,
+            "type": "integer"
+          },
+          "current": {
+            "default": 0,
+            "maximum": 4096,
+            "minimum": 0,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "state_load",
+      "object": {
+        "reference": {
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "path",
+          "reference": {
+            "type": "string"
+          },
+          "current": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "state_peek",
+      "object": {
+        "reference": {
+          "required": [
+            "addr",
+            "path"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr",
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "field": "length",
+          "reference": {
+            "default": 64,
+            "type": "integer"
+          },
+          "current": {
+            "default": 64,
+            "maximum": 1024,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "path",
+          "reference": {
+            "type": "string"
+          },
+          "current": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        {
+          "field": "view",
+          "reference": {
+            "default": "rdram",
+            "type": "string"
+          },
+          "current": {
+            "default": "rdram",
+            "enum": [
+              "rdram"
+            ],
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "state_save",
+      "object": {
+        "reference": {
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "path",
+          "reference": {
+            "type": "string"
+          },
+          "current": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "step",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "step_instructions",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        },
+        {
+          "field": "n",
+          "reference": {
+            "default": 1,
+            "type": "integer"
+          },
+          "current": {
+            "default": 1,
+            "maximum": 1000000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "trace_calls",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "filter_end",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "filter_start",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "inline_limit",
+          "reference": {
+            "default": 20000,
+            "type": "integer"
+          },
+          "current": {
+            "default": 20000,
+            "maximum": 20000,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_records",
+          "reference": {
+            "default": 2000000,
+            "type": "integer"
+          },
+          "current": {
+            "default": 2000000,
+            "maximum": 2000000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        },
+        {
+          "field": "n_frames",
+          "reference": {
+            "default": 1,
+            "type": "integer"
+          },
+          "current": {
+            "default": 1,
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "path",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "default": null,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        {
+          "field": "registers",
+          "reference": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "start_frame",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "target_end",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "target_start",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "trace_page",
+      "object": {
+        "reference": {
+          "required": [
+            "operation_id"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "operation_id"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "limit",
+          "reference": {
+            "default": 20000,
+            "type": "integer"
+          },
+          "current": {
+            "default": 20000,
+            "maximum": 20000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "offset",
+          "reference": {
+            "default": 0,
+            "type": "integer"
+          },
+          "current": {
+            "default": 0,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "operation_id",
+          "reference": {
+            "type": "integer"
+          },
+          "current": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "trace_pc",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "filter_end",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "filter_start",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "field": "inline_limit",
+          "reference": {
+            "default": 20000,
+            "type": "integer"
+          },
+          "current": {
+            "default": 20000,
+            "maximum": 20000,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_records",
+          "reference": {
+            "default": 2000000,
+            "type": "integer"
+          },
+          "current": {
+            "default": 2000000,
+            "maximum": 2000000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        },
+        {
+          "field": "n_frames",
+          "reference": {
+            "default": 1,
+            "type": "integer"
+          },
+          "current": {
+            "default": 1,
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "path",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "default": null,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        {
+          "field": "start_frame",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": null
+          },
+          "current": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "video_start",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "fps",
+          "reference": {
+            "default": 60,
+            "type": "integer"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 120,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_bytes",
+          "reference": {
+            "default": 134217728,
+            "type": "integer"
+          },
+          "current": {
+            "default": 134217728,
+            "maximum": 268435456,
+            "minimum": 1048576,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_frames",
+          "reference": {
+            "default": 600,
+            "type": "integer"
+          },
+          "current": {
+            "default": 600,
+            "maximum": 36000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 3600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        }
+      ]
+    },
+    {
+      "name": "video_status",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "video_stop",
+      "object": {
+        "reference": {
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "path",
+          "reference": {
+            "type": "string"
+          },
+          "current": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "watch_add",
+      "object": {
+        "reference": {
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "field": "kind",
+          "reference": {
+            "default": "write",
+            "type": "string"
+          },
+          "current": {
+            "default": "write",
+            "enum": [
+              "access",
+              "read",
+              "write"
+            ],
+            "type": "string"
+          }
+        },
+        {
+          "field": "length",
+          "reference": {
+            "default": 4,
+            "type": "integer"
+          },
+          "current": {
+            "default": 4,
+            "maximum": 65536,
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "watch_list",
+      "object": {
+        "reference": {
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "fields": []
+    },
+    {
+      "name": "watch_remove",
+      "object": {
+        "reference": {
+          "required": [
+            "id"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "id"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "id",
+          "reference": {
+            "type": "integer"
+          },
+          "current": {
+            "maximum": 4294967295,
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "write_memory",
+      "object": {
+        "reference": {
+          "required": [
+            "addr",
+            "hex_bytes",
+            "region"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr",
+            "hex_bytes",
+            "region"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "field": "hex_bytes",
+          "reference": {
+            "type": "string"
+          },
+          "current": {
+            "maxLength": 4096,
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "write_memory_many",
+      "object": {
+        "reference": {
+          "required": [
+            "writes"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "writes"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        },
+        {
+          "field": "verify_after_frames",
+          "reference": {
+            "default": 0,
+            "type": "integer"
+          },
+          "current": {
+            "default": 0,
+            "maximum": 100000,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "writes",
+          "reference": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "current": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "addr": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "hex": {
+                  "maxLength": 2048,
+                  "type": "string"
+                },
+                "view": {
+                  "default": "cpu",
+                  "enum": [
+                    "cpu",
+                    "rdram"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "addr",
+                "hex"
+              ],
+              "type": "object"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "type": "array"
+          }
+        }
+      ]
+    },
+    {
+      "name": "write_memory_va",
+      "object": {
+        "reference": {
+          "required": [
+            "addr",
+            "hex_bytes"
+          ],
+          "type": "object"
+        },
+        "current": {
+          "additionalProperties": false,
+          "required": [
+            "addr",
+            "hex_bytes"
+          ],
+          "type": "object"
+        }
+      },
+      "fields": [
+        {
+          "field": "addr",
+          "reference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "current": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "field": "hex_bytes",
+          "reference": {
+            "type": "string"
+          },
+          "current": {
+            "maxLength": 2048,
+            "type": "string"
+          }
+        },
+        {
+          "field": "max_seconds",
+          "reference": {
+            "default": 60,
+            "type": "number"
+          },
+          "current": {
+            "default": 60,
+            "maximum": 600,
+            "minimum": 0.001,
+            "type": "number"
+          }
+        },
+        {
+          "field": "verify_after_frames",
+          "reference": {
+            "default": 0,
+            "type": "integer"
+          },
+          "current": {
+            "default": 0,
+            "maximum": 100000,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "field": "view",
+          "reference": {
+            "default": "cpu",
+            "type": "string"
+          },
+          "current": {
+            "default": "cpu",
+            "enum": [
+              "cpu",
+              "rdram"
+            ],
+            "type": "string"
+          }
+        }
+      ]
+    }
+  ]
+}
