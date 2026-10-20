@@ -759,3 +759,12 @@ prologue-gate changes require invalidation. A real JIT regression compiles and
 executes debugger-only blocks, enables profiling with the tracer still enabled,
 checks invalidation, then verifies the expected 32 cache-refill bytes. Host/core
 fixture rebuilt; all 31 tests passed in 11.96s. Final combined package follows.
+
+Combined session package: artifacts/session-checkpoint/Ares.app includes the
+profiler shared-tracer fix and screenshot publication fixes. Build and copied-
+app test:package passed: 36 MCP tools, bundled worker/native PNG/inline image and
+matching file output, memory restore/resume/shutdown, 451 GB frames. Node 24.22.0 /
+Electron 44.9.0; repository reads denied for native loader and MCP adapter. Final
+source suite: 31/31 passed. Next task-7 slices are audio capture, recording and
+screenshots attached to run operations; milestone-2 physical-device gate is still
+pending. All verification emulator instances were isolated and closed.
