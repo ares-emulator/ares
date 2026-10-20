@@ -55,7 +55,8 @@ export function formatStop(s: Stop, fpr = false, cop0 = false, verbose = false) 
   return { ...s, ...(s.registers ? { registers: formatRegisters(s.registers, fpr, cop0, verbose) } : {}) };
 }
 export function registerN64Tools(server: McpServer, client: SessionClient, status: () => Promise<SessionIdentity>,
-  operation: (method: 'execution.runFrames' | 'execution.runUntilFrame' | 'execution.stepInstructions', amount: number, seconds: number) => Promise<ExecutionOperation>) {
+  operation: (method: 'execution.runFrames' | 'execution.runUntilFrame' | 'execution.stepInstructions', amount: number, seconds: number) => Promise<ExecutionOperation>,
+  rememberOperation: (id: number, identity: SessionIdentity) => void) {
   const unwrap = <T>(reply: SessionReply<T>): T => { if (!reply.ok || !reply.result) throw new ServiceError(reply.error || 'invalid_reply'); return reply.result; };
   const output = (value: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(value) }] });
   const call = (fn: () => Promise<unknown>) => fn().then(output, e => ({ ...output({ error: e instanceof ServiceError ? e.code : 'request_failed', message: e.message }), isError: true }));
@@ -98,9 +99,23 @@ export function registerN64Tools(server: McpServer, client: SessionClient, statu
     server.registerTool(`${prefix}_remove`, { description: `Remove a N64 CPU ${prefix} definition by ID.`, inputSchema: z.object({ id: z.number().int().min(1).max(0xffffffff) }).strict() }, async ({ id }) => call(async () => unwrap(await client.request(watch ? 'n64.debug.watchRemove' : 'n64.debug.breakRemove', await status(), { id }))));
   }
   server.registerTool('read_memory_va', { description: 'Read 1–1024 N64 RDRAM bytes via strict physical/KSEG aliases. CPU view reads resident D-cache without allocation; KSEG1 bypasses it.', inputSchema: z.object({ addr, length: z.number().int().min(1).max(1024).default(64), view: z.enum(['rdram', 'cpu']).default('rdram') }).strict(), annotations: { readOnlyHint: true } }, async ({ addr, length, view }) => call(async () => unwrap(await client.request('n64.memory.read', await status(), { address: lossless(addr), length, view }))));
-  server.registerTool('write_memory_va', { description: 'Write 1–1024 N64 bytes through CPU-cache or physical view. Requires initialized RDRAM; reports cache hazards and invalidates JIT, preserving resident I-cache.', inputSchema: z.object({ addr, hex_bytes: z.string().max(2048), view: z.enum(['cpu', 'rdram']).default('cpu'), verify_after_frames: z.number().int().min(0).max(100000).default(0), max_seconds: deadline }).strict(), annotations: { destructiveHint: true } }, async ({ addr, hex_bytes, view, verify_after_frames }) => call(async () => {
-    if (verify_after_frames) throw new ServiceError('unavailable');
-    return unwrap(await client.request('n64.memory.write', await status(), { address: lossless(addr), view, hex: hex_bytes.trim() }));
+  async function writeMany(writes: { address: string; view: 'cpu' | 'rdram'; hex: string }[], frames: number, seconds: number) {
+    const identity = await status();
+    const result = unwrap(await client.request('n64.memory.writeMany', identity, { writes, verifyAfterFrames: frames, timeoutMs: Math.ceil(seconds * 1000) }));
+    let op = result.operation;
+    if (op) rememberOperation(op.operation_id, identity);
+    while (op?.state === 'running') {
+      await new Promise(resolve => setTimeout(resolve, 20));
+      op = unwrap(await client.request('execution.status', identity, { operationId: op.operation_id }));
+    }
+    return { ...result, operation: op };
+  }
+  const verification = { verify_after_frames: z.number().int().min(0).max(100000).default(0), max_seconds: deadline };
+  server.registerTool('write_memory_many', { description: 'Prevalidate 1–32 ordered N64 writes, at most 1024 bytes total, before applying any. Readbacks follow all writes, so overlaps are visible. Optional bounded VI verification retains immutable final readbacks and actual stop reason. Effects are not rolled back.', inputSchema: z.object({ writes: z.array(z.object({ addr, hex: z.string().max(2048), view: z.enum(['cpu', 'rdram']).default('cpu') }).strict()).min(1).max(32), ...verification }).strict(), annotations: { destructiveHint: true } }, async ({ writes, verify_after_frames, max_seconds }) => call(() => writeMany(writes.map(w => ({ address: lossless(w.addr), hex: w.hex.trim(), view: w.view })), verify_after_frames, max_seconds)));
+  server.registerTool('write_memory_va', { description: 'Write 1–1024 N64 bytes through CPU-cache or physical view. Requires initialized RDRAM; reports cache hazards and invalidates JIT, preserving resident I-cache. Optional delayed VI verification reports actual early stops and immutable readbacks.', inputSchema: z.object({ addr, hex_bytes: z.string().max(2048), view: z.enum(['cpu', 'rdram']).default('cpu'), ...verification }).strict(), annotations: { destructiveHint: true } }, async ({ addr, hex_bytes, view, verify_after_frames, max_seconds }) => call(async () => {
+    const write = { address: lossless(addr), view, hex: hex_bytes.trim() };
+    if (verify_after_frames) return writeMany([write], verify_after_frames, max_seconds);
+    return unwrap(await client.request('n64.memory.write', await status(), write));
   }));
 }
 

@@ -1004,3 +1004,55 @@ Validation passed:
 Task 8 remains in progress: multiwrite prevalidation, delayed verification and
 bounded baseline/load/write/run/crop experiments are next. Physical keyboard/
 gamepad and audible N64 acceptance still remain not run.
+
+
+## Task 8 continuation — multiwrite and delayed verification (2026-10-20)
+
+Added `write_memory_many` (48 registered tools of 68) and enabled nonzero
+`verify_after_frames` on `write_memory_va`. Reference behavior was audited in
+`ares-64` commit `1c9b9637476a83f7b80d3db1115a0f71529820d9`, telemetry-server.cpp's
+`mem.write_many` / `mem.write_va` handler and tools/mcp/ares_mcp.py. The port uses
+its own bounded native service and existing execution ownership, not the legacy
+transport or a second scheduler.
+
+- One safe point prevalidates every payload, full address range, total byte budget
+  and run/deadline before any write. 1–32 writes / 1024 total bytes fit the existing
+  4096-byte native request budget (reference: 256 writes / 8 MiB).
+- Ordered CPU/physical writes retain cache hazards and JIT invalidation. Immediate
+  readbacks follow all writes; later overlaps can invalidate earlier expectations.
+  Earlier effects are never described as rolled back.
+- Optional 1–100000 VI verification uses the existing owned operation. Final
+  readbacks/matches are frozen inside its native completion snapshot, before
+  ownership release. Stops, timeouts, cancellation/disconnect and retention use
+  existing execution semantics. MCP retains the starting identity through polls
+  and registers the handle for operation_status.
+- Integration found a real paused-post-restore crash: state power defers Vulkan
+  setup, leaving hidden RDRAM null until the next CPU run. Extracted System's
+  existing deferred setup into prepareVideo(), shared by run and memory mutation.
+  This prepares backing without CPU execution; unavailable backing fails clearly
+  before writes. No serializer fields/order/version changed.
+
+Validation:
+
+- Native host and CPU fixture rebuilt successfully.
+- Full strict-TS/service/native/MCP suite: **44/44**, 20.41 seconds. CPU fixture
+  covers invalid later ranges/hex/deadlines, no earlier write on failure, overlap
+  ordering, owned exclusion, final readback immutability, frame completion and
+  timeout. Early-watch completion is exercised through the native operation
+  fixture; this is not a claim of a running game's post-write watchpoint gate.
+- Isolated real N64/MCP fixture loads an original generated state with initialized
+  RDRAM mapping, then performs successful many writes, rejects an invalid later
+  range without altering the first byte, runs delayed verification to a real
+  inactive-VI timeout and proves later writes cannot alter operation_status.
+  Deferred video preparation plus immediate mutation leaves all CPU registers
+  unchanged. No user ROM, emulator instance, state or saves were used.
+- Actual Electron MCP integration: **48-tool** registry and prior N64 state/GB
+  workflow pass.
+- Fresh standalone `artifacts/task-8-memory/Ares.app`: copied app package smoke
+  passes, Electron 44.9.0 / Node 24.22.0, 455 Game Boy frames; native loader and
+  MCP denied checkout reads. This package gate is not a N64 game acceptance gate.
+
+Task 8 remains in progress: bounded batch ownership/orchestration and the full
+baseline-load/write/run/crop sweep are still pending. Physical gamepad/audible
+N64 acceptance remains separately unrun. Cross-binary state format compatibility
+was verified in the previous slice; no serialization change was introduced here.

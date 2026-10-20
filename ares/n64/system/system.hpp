@@ -20,6 +20,7 @@ struct System {
   //system.cpp
   auto game() -> string;
   auto run() -> void;
+  auto prepareVideo() -> void;
   auto load(Node::System& node, string name) -> bool;
   auto unload() -> void;
   auto save() -> void;

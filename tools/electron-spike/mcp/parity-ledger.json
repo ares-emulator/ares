@@ -862,16 +862,22 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 memory experiments; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained; multiwrite reduced to 32 writes/1024 bytes total for the native 4 KiB request protocol. Full FastMCP schema equality not run.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 8 bounded memory experiments",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/state-loading-live.test.cjs; Electron MCP and copied package gates",
+          "result": "Passed: 44 tests; full-list rejection before writes, overlapping readbacks, immutable native stop verification, actual stdio delayed timeout after restore, 48-tool Electron registry and copied app checkout-denied smoke.",
+          "date": "2026-10-20"
         }
       ],
-      "knownLimits": "1..1024 bytes; prevalidation, CPU/physical views, JIT invalidation, preserved I-cache and cache hazards. Rejects uninitialized/nonidentity RDRAM; delayed verify_after_frames is unavailable until task 8."
+      "knownLimits": "1..1024 bytes total; many accepts 1..32 ordered writes, all prevalidated. Optional 0..100000 VI verification freezes readbacks at the actual owned stop. CPU/physical cache hazards retained; no rollback. Renderer backing must be available; restore prepares it without CPU execution."
     },
     {
       "name": "dump_rdram",
@@ -2322,10 +2328,17 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 8,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded N64 memory experiments; full reference parity pending)",
+      "mcpSchemaParity": "Reference names/defaults retained; multiwrite reduced to 32 writes/1024 bytes total for the native 4 KiB request protocol. Full FastMCP schema equality not run.",
+      "testEvidence": [
+        {
+          "scope": "task 8 bounded memory experiments",
+          "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/state-loading-live.test.cjs; Electron MCP and copied package gates",
+          "result": "Passed: 44 tests; full-list rejection before writes, overlapping readbacks, immutable native stop verification, actual stdio delayed timeout after restore, 48-tool Electron registry and copied app checkout-denied smoke.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "1..1024 bytes total; many accepts 1..32 ordered writes, all prevalidated. Optional 0..100000 VI verification freezes readbacks at the actual owned stop. CPU/physical cache hazards retained; no rollback. Renderer backing must be available; restore prepares it without CPU execution."
     },
     {
       "name": "batch",

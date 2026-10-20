@@ -136,7 +136,7 @@ struct N64Service {
     }
     return {"unavailable", {}};
   }
-  static ControlResult memory(const std::string& method, const std::vector<std::string>& args, bool busy) {
+  static ControlResult memory(const std::string& method, const std::vector<std::string>& args, bool busy, bool dryRun = false) {
     using namespace ares::Nintendo64;
     bool write = method == "n64.memory.write";
     if(write && (busy || nall::GDB::server.hasClient())) return {"busy", {}};
@@ -155,6 +155,11 @@ struct N64Service {
     if(!cpu.debugControl.normalizeAddress(addr, length, paddr, error)) return {"out_of_bounds", {}};
     // Until RDRAM initialization finishes, chip mapping can silently drop a write.
     if(write && !rdram.mapIdentity) return {"rdram_not_initialized", {}};
+    if(dryRun) return {{}, "{}"};
+    if(write) {
+      ares::Nintendo64::system.prepareVideo(); // restore/power defers hidden-RDRAM backing until the next run
+      if(!rdram.hidden.data) return {"renderer_unavailable", {}};
+    }
 #if defined(VULKAN)
     if(vulkan.enable) vulkan.flush();
 #endif

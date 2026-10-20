@@ -105,7 +105,7 @@ function createServer(): McpServer {
     if (!local.identity) await status();
     return unwrap(await local.request('execution.cancel', operation_id === null ? undefined : operationIdentities.get(operation_id), { operationId: operation_id ?? 0 }));
   }));
-  registerN64Tools(server, local, status, operation);
+  registerN64Tools(server, local, status, operation, rememberOperation);
   registerInputTools(server, local, status, rememberOperation);
   registerTraceTools(server, local, status, rememberOperation, id => operationIdentities.get(id));
   registerDmaTools(server, local, status);

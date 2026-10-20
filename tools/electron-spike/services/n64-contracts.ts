@@ -1,6 +1,7 @@
+import type { ExecutionOperation } from './contracts.js';
 export const GPR_NAMES = ['zero', 'at', 'v0', 'v1', 'a0', 'a1', 'a2', 'a3', 't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 't8', 't9', 'k0', 'k1', 'gp', 'sp', 's8', 'ra'];
 /** N64-only contracts. All architectural integers travel as lossless hex strings. */
-export const N64_METHODS = ['n64.debug.registers', 'n64.debug.lastStop', 'n64.debug.breakAdd', 'n64.debug.breakRemove', 'n64.debug.breakList', 'n64.debug.watchAdd', 'n64.debug.watchRemove', 'n64.debug.watchList', 'n64.debug.clear', 'n64.memory.read', 'n64.memory.write'] as const;
+export const N64_METHODS = ['n64.debug.registers', 'n64.debug.lastStop', 'n64.debug.breakAdd', 'n64.debug.breakRemove', 'n64.debug.breakList', 'n64.debug.watchAdd', 'n64.debug.watchRemove', 'n64.debug.watchList', 'n64.debug.clear', 'n64.memory.read', 'n64.memory.write', 'n64.memory.writeMany'] as const;
 export type N64Method = typeof N64_METHODS[number];
 export interface Predicate { field: 'pc' | 'gpr' | 'hi' | 'lo' | 'value'; index: number; op: 'eq' | 'ne' | 'lt' | 'le' | 'gt' | 'ge'; value: string; mask: string }
 export interface Registers { pc: string; next_pc: string; delay_slot: boolean; lo: string; hi: string; gpr: string[]; cop0: (string | null)[]; fpr: string[]; fcr0: string; fcr31: string }
@@ -9,7 +10,10 @@ export interface Definition { id: number; addr: string; paddr: string; hits: num
 interface MemoryBase { addr: string; paddr: string; view: 'rdram' | 'cpu'; cache_aware: boolean }
 export interface N64Read extends MemoryBase { length: number; hex: string }
 export interface N64Write extends MemoryBase { hazards: string[]; written: number; jit_invalidated: boolean; icache_invalidated: false; dcache_dirty_lines_overlapping: number; icache_lines_overlapping: number }
+export interface MemoryVerification { readbacks: N64Read[]; matches: boolean[] }
+export interface MemoryWrites { writes: N64Write[]; immediate_verification: MemoryVerification; side_effects_rolled_back: false; operation: ExecutionOperation | null }
 export interface N64ServiceMap {
+  'n64.memory.writeMany': { params: { writes: { address: string; view: 'rdram' | 'cpu'; hex: string }[]; verifyAfterFrames: number; timeoutMs: number }; result: MemoryWrites };
   'n64.debug.registers': { params: undefined; result: Registers };
   'n64.debug.lastStop': { params: undefined; result: Stop };
   'n64.debug.breakAdd': { params: { address: string; condition: Predicate[] }; result: { id: number } };
@@ -45,6 +49,17 @@ export function encodeN64(method: N64Method, params: unknown): string | undefine
     }
     return out;
   }
+  if (method === 'n64.memory.writeMany') {
+    if (!keys(p, ['writes', 'verifyAfterFrames', 'timeoutMs']) || !Array.isArray(p.writes) || p.writes.length < 1 || p.writes.length > 32 ||
+      !integer(p.verifyAfterFrames) || p.verifyAfterFrames > 100000 || !integer(p.timeoutMs) || p.timeoutMs < 1 || p.timeoutMs > 600000) return;
+    let out = ` ${p.verifyAfterFrames} ${p.timeoutMs}`, total = 0;
+    for (const w of p.writes) {
+      const encoded = encodeN64('n64.memory.write', w);
+      if (encoded === undefined || (total += w.hex.length / 2) > 1024) return;
+      out += encoded;
+    }
+    return out;
+  }
   const write = method === 'n64.memory.write';
   if (!keys(p, ['address', 'view', write ? 'hex' : 'length']) || !hex64(p.address) || !['rdram', 'cpu'].includes(p.view) ||
     (write ? !bytes(p.hex) : !integer(p.length) || p.length < 1 || p.length > 1024)) return;
@@ -63,6 +78,10 @@ export function validStop(s: any): s is Stop {
 }
 export function validN64(method: N64Method, s: any): boolean {
   if (!s) return false;
+  if (method === 'n64.memory.writeMany') return Array.isArray(s.writes) && s.writes.length >= 1 && s.writes.length <= 32 &&
+    s.writes.every((w: unknown) => validN64('n64.memory.write', w)) && s.writes.reduce((n: number, w: N64Write) => n + w.written, 0) <= 1024 &&
+    validMemoryVerification(s.immediate_verification) && s.immediate_verification.readbacks.length === s.writes.length && s.side_effects_rolled_back === false &&
+    (s.operation === null || (s.operation && s.operation.kind === 'verify_writes'));
   if (method === 'n64.debug.registers') return validRegisters(s);
   if (method === 'n64.debug.lastStop') return validStop(s);
   if (method === 'n64.debug.clear') return s.cleared === true;
@@ -72,4 +91,10 @@ export function validN64(method: N64Method, s: any): boolean {
   if (!hex64(s.addr) || !hex64(s.paddr) || !['rdram', 'cpu'].includes(s.view) || typeof s.cache_aware !== 'boolean') return false;
   if (method === 'n64.memory.read') return bytes(s.hex) && s.length === s.hex.length / 2;
   return Array.isArray(s.hazards) && s.hazards.every((h: unknown) => ['dirty_dcache_may_overwrite', 'resident_icache_not_updated'].includes(h as string)) && integer(s.written) && s.written > 0 && s.written <= 1024 && typeof s.jit_invalidated === 'boolean' && s.icache_invalidated === false && integer(s.dcache_dirty_lines_overlapping) && integer(s.icache_lines_overlapping);
+}
+
+export function validMemoryVerification(s: any): s is MemoryVerification {
+  return !!s && Array.isArray(s.readbacks) && s.readbacks.length >= 1 && s.readbacks.length <= 32 &&
+    s.readbacks.every((r: unknown) => validN64('n64.memory.read', r)) && s.readbacks.reduce((n: number, r: N64Read) => n + r.length, 0) <= 1024 &&
+    Array.isArray(s.matches) && s.matches.length === s.readbacks.length && s.matches.every((v: unknown) => typeof v === 'boolean');
 }

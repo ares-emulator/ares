@@ -83,6 +83,26 @@ test('real N64 save/load restores registers, starts a new epoch and preflights f
     child.stdin.write('key A 0\n'); unwrap(await native.request('session.pause'));
     const resumed = await peer.tool('state_load', { path: file, resume: true }); assert.equal(resumed.running, true); assert.equal(resumed.epoch, 4);
     await peer.tool('pause'); assert.equal(unwrap(await native.request('session.status')).paused, true);
+    // Original generated state fixture: enable the serialized RDRAM identity
+    // mapping (n1 immediately after the raw RAM bytes), without a product backdoor.
+    const layout = unwrap(await native.request('n64.state.layout'));
+    const initialized = fs.readFileSync(file); initialized[layout.offset + layout.size] = 1;
+    const initializedFile = path.join(dir, 'initialized-fixture.bs'); fs.writeFileSync(initializedFile, initialized);
+    const initializedLoad = await peer.tool('state_load', { path: initializedFile }); assert.equal(initializedLoad.epoch, 5);
+    const beforeExperiment = unwrap(await native.request('n64.debug.registers'));
+    const many = await peer.tool('write_memory_many', { writes: [{ addr: '0x2000', hex: '1122', view: 'rdram' }, { addr: '0x2001', hex: 'AA', view: 'rdram' }] });
+    assert.equal(many.error, undefined, JSON.stringify(many)); assert.deepEqual(many.immediate_verification.matches, [false, true]);
+    assert.equal(many.immediate_verification.readbacks[0].hex, '11aa'); assert.equal(many.operation, null);
+    assert.deepEqual(unwrap(await native.request('n64.debug.registers')), beforeExperiment, 'preparing deferred video and immediate writes execute no CPU instructions');
+    const invalid = await peer.tool('write_memory_many', { writes: [{ addr: '0x2000', hex: 'FF', view: 'rdram' }, { addr: '0x7fffff', hex: 'FFFF', view: 'rdram' }] });
+    assert.equal(invalid.error, 'out_of_bounds');
+    assert.equal((await peer.tool('read_memory_va', { addr: '0x2000', length: 2 })).hex, '11aa');
+    const verified = await peer.tool('write_memory_va', { addr: '0x2000', hex_bytes: 'BB', view: 'rdram', verify_after_frames: 1, max_seconds: 0.01 });
+    assert.equal(verified.error, undefined, JSON.stringify(verified)); assert.equal(verified.operation.stop_reason, 'timeout');
+    assert.deepEqual(verified.operation.memory_verification.matches, [true]); assert.equal(verified.operation.elapsed_frames, 0);
+    await peer.tool('write_memory_va', { addr: '0x2000', hex_bytes: 'CC', view: 'rdram' });
+    const retained = await peer.tool('operation_status', { operation_id: verified.operation.operation_id });
+    assert.deepEqual(retained.memory_verification, verified.operation.memory_verification);
     await peer.close(); peer = undefined; client.close(); await endpoint.close(); router.detach(); native.close(); child.stdin.end('quit\n'); assert.equal((await closed)[0], 0, log);
   } finally {
     if (peer) await peer.close(); client?.close(); await endpoint.close(); router.detach(); native.close();

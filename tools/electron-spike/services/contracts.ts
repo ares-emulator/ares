@@ -8,7 +8,7 @@ import { PROFILER_METHODS, encodeProfiler, validProfiler, type ProfilerMethod, t
 import { encodeDma, validDma, type DmaServiceMap } from './dma-contracts.js';
 import { TRACE_METHODS, encodeTrace, validTracePage, type TraceServiceMap } from './trace-contracts.js';
 import { INPUT_METHODS, encodeInput, validInput, type InputMethod, type InputServiceMap } from './input-contracts.js';
-import { N64_METHODS, encodeN64, validN64, type N64Method, type N64ServiceMap, type Stop, validStop } from './n64-contracts.js';
+import { validMemoryVerification, type MemoryVerification, N64_METHODS, encodeN64, validN64, type N64Method, type N64ServiceMap, type Stop, validStop } from './n64-contracts.js';
 /** Shared contract for Electron routing, the inspector and the future MCP adapter. */
 export const PROTOCOL = 1 as const;
 export const MAX_TRANSFER = 1024;
@@ -19,6 +19,7 @@ export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
 export interface SessionIdentity { session: string; epoch: number }
 export interface SessionStatus { paused: boolean; system: string; synthetic: boolean; capabilities: ServiceMethod[]; frame?: number; frame_kind?: string; at_frame_boundary?: boolean; executor?: string; operation_id?: number | null }
 export interface ExecutionOperation {
+  memory_verification?: MemoryVerification;
   port?: number; button?: string; held_frames?: number; released?: boolean; ownership?: 'host' | 'injected';
   operation_id: number; kind: string; owner: string; state: 'running' | 'done'; stopped: boolean;
   stop_reason: string; epoch: number; start_epoch: number; start_frame: number; target_frame: number;
@@ -140,7 +141,10 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
     else if (method.startsWith('video.')) valid = validFrame(method, s) && (method !== 'video.begin' || s.epoch === r.epoch);
     if (SCREENSHOT_METHODS.includes(method as typeof SCREENSHOT_METHODS[number])) valid = validScreenshotResult(method, s) && (method !== 'artifact.screenshot' || s.epoch === r.epoch);
     if (method === 'artifact.traceExport') valid = validArtifact(s) && s.session === r.session && s.epoch === r.epoch;
-    if (N64_METHODS.includes(method as N64Method)) valid = validN64(method as N64Method, s);
+    if (N64_METHODS.includes(method as N64Method)) {
+      valid = validN64(method as N64Method, s);
+      if (valid && method === 'n64.memory.writeMany' && s.operation !== null) decodeReply(JSON.stringify({ ...r, result: s.operation }), 'execution.status');
+    }
     if (PROFILER_METHODS.includes(method as ProfilerMethod)) valid = validProfiler(method as ProfilerMethod, s);
     if (method === 'n64.dma.log') valid = validDma(s) && s.epoch === r.epoch;
     if (method === 'n64.trace.page') valid = validTracePage(s) && s.epoch === r.epoch;
@@ -151,7 +155,7 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
     if (method === 'n64.input.tap') { decodeReply(JSON.stringify(r), 'execution.status'); valid = s.kind === 'controller_tap'; }
     if (method.startsWith('session.')) valid = !!s && typeof s.paused === 'boolean' && typeof s.system === 'string' && typeof s.synthetic === 'boolean' && Array.isArray(s.capabilities) && s.capabilities.every((m: ServiceMethod) => METHODS.includes(m));
     if (method === 'execution.release') valid = !!s && s.released === true;
-    if (method.startsWith('execution.') && method !== 'execution.release') valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0 && (s.executed === undefined || integer(s.executed)) && (s.debug_stop === undefined || validStop(s.debug_stop));
+    if (method.startsWith('execution.') && method !== 'execution.release') valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0 && (s.executed === undefined || integer(s.executed)) && (s.debug_stop === undefined || validStop(s.debug_stop)) && (s.memory_verification === undefined || validMemoryVerification(s.memory_verification));
     if (method === 'memory.regions') valid = !!s && Array.isArray(s.regions) && s.regions.length <= 128 && s.regions.every((region: MemoryRegion) => region && token(region.id) && typeof region.name === 'string' && integer(region.size) && typeof region.readable === 'boolean' && typeof region.writable === 'boolean' && region.addressing === 'region-offset' && (region.unavailableReason === undefined || typeof region.unavailableReason === 'string'));
     if (method === 'memory.read') valid = !!s && token(s.region) && integer(s.offset) && hex(s.hex) && s.length === s.hex.length / 2;
     if (method === 'memory.write') valid = !!s && token(s.region) && integer(s.offset) && integer(s.written) && s.written > 0 && s.written <= MAX_TRANSFER;

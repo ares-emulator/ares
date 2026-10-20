@@ -38,6 +38,11 @@ test('N64 contracts preserve 64-bit values and bound predicates and memory reque
   assert.throws(() => encodeRequest('x', identity, 'n64.debug.breakAdd', { address: '0x80001000', condition: conditions({ field: 'value', value: 1 }) }), /invalid_request/);
   assert.throws(() => encodeRequest('x', identity, 'n64.memory.write', { address: '0x80000000', view: 'cpu', hex: '00'.repeat(1025) }), /invalid_request/);
   assert.throws(() => encodeRequest('x', identity, 'n64.memory.read', { address: '0x80000000', view: 'cpu', length: 0 }), /invalid_request/);
+  const writes = [{ address: '0x80002000', view: 'cpu', hex: '00'.repeat(1024) }];
+  assert.match(encodeRequest('x', identity, 'n64.memory.writeMany', { writes, verifyAfterFrames: 1, timeoutMs: 10 }), /writeMany 1 10/);
+  for (const bad of [[], Array(33).fill(writes[0]), [...writes, { address: '0x2000', view: 'rdram', hex: '00' }]]) {
+    assert.throws(() => encodeRequest('x', identity, 'n64.memory.writeMany', { writes: bad, verifyAfterFrames: 0, timeoutMs: 10 }), /invalid_request/);
+  }
   assert.throws(() => decodeReply(JSON.stringify({ protocol: 1, id: 'x', ...identity, ok: true, result: { pc: 123 } }), 'n64.debug.registers'), /invalid_reply/);
 });
 test('real core fixture: MIPS stops/cache semantics and VI-latched controller leases', async () => {

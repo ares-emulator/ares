@@ -80,11 +80,15 @@ auto System::game() -> string {
   return "(no cartridge connected)";
 }
 
-auto System::run() -> void {
+auto System::prepareVideo() -> void {
   if(_vulkanNeedsLoad) {
     vulkan.load(node);
     _vulkanNeedsLoad = false;
   }
+}
+
+auto System::run() -> void {
+  prepareVideo();
   cpu.main();
 }
 

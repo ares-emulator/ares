@@ -3,8 +3,8 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 47 tools: eleven generic/session/run tools,
-twelve N64 CPU/VA tools, five controller tools (including controller_tap), three
+emulator. The verified registry has 48 tools: eleven generic/session/run tools,
+thirteen N64 CPU/VA tools, five controller tools (including controller_tap), three
 trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
@@ -163,7 +163,21 @@ KSEG0/KSEG1 and sign-extended spellings work; TLB/MMIO/wrapped ranges reject.
 CPU view observes or patches resident D-cache without allocating misses; KSEG1
 bypasses cache. Writes synchronize Vulkan and invalidate JIT, preserve I-cache,
 and report cache hazards. They reject before RDRAM initialization completes.
-`verify_after_frames > 0` remains unavailable until task 8.
+`verify_after_frames` (0..100000) optionally runs under native execution ownership
+with a 0.001..600 second deadline. The result includes the immediate write results,
+`immediate_verification` and `operation`; its final `memory_verification` contains
+readbacks and per-write matches frozen at the actual stop (including debug hits,
+timeout, pause or cancellation). Later writes cannot change retained results.
+
+`write_memory_many(writes, verify_after_frames=0, max_seconds=60)` accepts 1..32
+strict `{addr, hex, view="cpu"}` objects, at most 1024 bytes total. It validates
+all payloads, address ranges and execution availability at one native safe point
+before writing. Writes apply in order; readbacks follow the complete set, so
+later overlaps can make earlier matches false. No rollback is promised. This is
+a narrower bound than the reference's 256 writes/8 MiB, matching the 4 KiB native
+request protocol. A restored machine prepares deferred video/hidden-RDRAM backing
+without executing CPU instructions before mutation; unavailable backing rejects
+with `renderer_unavailable`.
 
 
 ## Input ownership slice
@@ -332,7 +346,7 @@ pause or load the live emulator. File inputs are bounded to 64 MiB; nonregular
 inputs reject. Inspections allow two global jobs/one per owner and a 25-second
 deadline, with reset/disconnect revocation.
 
-Safe loading is implemented; delayed write verification and batch experiments remain pending.
+Safe loading, multiwrite prevalidation and delayed verification are implemented; bounded batch experiments remain pending.
 
 `state_load(path, resume=false, keep_overrides=false)` starts an owned, bounded
 upload while the emulator is paused. Native dispatch reserves mutations for that

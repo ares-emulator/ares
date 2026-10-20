@@ -6,7 +6,7 @@ Runtime evidence and pending checks are recorded in
 [EXECUTION-LOG.md](EXECUTION-LOG.md). Task 6 is in progress: input ownership, bounded PC/call traces and PI DMA provenance are implemented;
 profiling and controller taps are implemented; automated and package checks passed.
 Milestone 2 physical keyboard/gamepad acceptance remains pending. Task 7 is implemented: atomic artifact publishing, trace-file export, native screenshots, run_frames screenshot_after and bounded audio/WAV export and presented-frame AVI recording are implemented.
-Task 8 is in progress: bounded native state saving and offline header, inventory and RDRAM inspection are implemented. Safe load and the default-configuration cross-binary compatibility gate now pass. Multiwrite/delayed verification and batch experiments remain planned. Start here when
+Task 8 is in progress: bounded native state saving and offline header, inventory and RDRAM inspection are implemented. Safe load and the default-configuration cross-binary compatibility gate now pass. Multiwrite prevalidation and delayed verification are implemented; bounded batch experiments remain planned. Start here when
 choosing the next task.
 
 ## Which plan owns what
@@ -280,6 +280,6 @@ Conversely, none of those deferrals removes an existing MCP tool from the parity
 target without an explicit scope decision. A clean host-library extraction can
 follow when concrete coupling impedes a task; it is not an initial rewrite mandate.
 
-The immediate next action is **task 8 multiwrite/delayed verification and bounded experiments**. Tasks 1–5 and 4.5
+The immediate next action is **task 8 bounded batch experiments**. Tasks 1–5 and 4.5
 are implemented, and task 6 backend checks pass with physical input acceptance
 still pending. Runtime evidence and remaining manual checks are in the execution log.

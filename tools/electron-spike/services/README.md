@@ -225,3 +225,16 @@ chunks at a time; the paused loop wakes from a request condition variable. UI or
 cannot override a newer user action. Native commit alone advances the epoch and
 resets capture/coordinate ownership. Main returns the commit's new identity and
 never applies an old-epoch guard after successful mutation.
+
+### Task 8 memory experiments
+
+`n64.memory.writeMany` accepts 1..32 `{address, view, hex}` writes (1024 bytes
+total), `verifyAfterFrames` (0..100000) and `timeoutMs` (1..600000). The native
+safe point validates the complete list and run target before applying ordered
+writes. The reply contains write hazard results, immediate readbacks/matches,
+`side_effects_rolled_back:false` and an optional owned execution operation.
+Final operation snapshots capture `memory_verification` before releasing execution
+ownership; the last 16 remain immutable. UI pause, debug hits, deadlines and
+owner disconnect use existing operation stop semantics. Native state uploads
+exclude this mutation. Restore/power's deferred video initialization is prepared
+without guest CPU execution before writing hidden RDRAM; absent backing rejects.

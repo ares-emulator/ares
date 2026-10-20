@@ -42,7 +42,7 @@ async function run() {
     peer = new StdioPeer(mcpCommand, mcpArgs, { cwd: temporary, env });
     await peer.initialize();
     const inventory = (await peer.request('tools/list', {})).result.tools.map(t => t.name);
-    assert.equal(inventory.length, 47);
+    assert.equal(inventory.length, 48);
     for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save', 'state_load']) assert.ok(inventory.includes(name));
     let status;
     for (let i = 0; i < 200; ++i) { status = await peer.tool('emu_status'); if (status.system === 'Game Boy') break; await new Promise(r => setTimeout(r, 20)); }

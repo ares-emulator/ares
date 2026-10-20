@@ -36,6 +36,7 @@ auto locate(const string& name) -> string {
 
 #include "native/session-service.hpp"
 #include "native/n64-service.hpp"
+#include "native/memory-experiment.hpp"
 #include "native/input-service.hpp"
 #include "native/trace-service.hpp"
 #include "native/dma-service.hpp"
@@ -449,6 +450,7 @@ int main(int argc, char** argv) {
     return std::find(allowed.begin(), allowed.end(), method) != allowed.end() ? std::string{} : "busy";
   };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method == "n64.memory.writeMany") return MemoryExperiment::execute(args, owner, host.service.epoch, n64, execution, host.service.paused);
     if(method.starts_with("n64.state.load")) {
       if(method == "n64.state.loadCommit" && host.stateLoader.upload && host.takeoverRequested.load()) {
         host.stateLoader.reset(); if(!host.injectedInput.takeover()) ++host.injectedInput.takeovers;

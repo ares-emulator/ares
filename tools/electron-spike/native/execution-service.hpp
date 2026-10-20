@@ -21,6 +21,7 @@ struct ExecutionService {
     Clock::time_point started, deadline;
     uint32_t tapPort = 0, tapButton = 0;
     bool tapKeep = false;
+    std::function<std::string()> memoryVerification;
   };
   std::optional<Operation> active;
   uint64_t instructions = 0;
@@ -58,6 +59,7 @@ struct ExecutionService {
       + ",\"at_frame_boundary\":" + (atBoundary ? "true" : "false")
       + ",\"executor\":\"" + executor + "\",\"slices\":" + std::to_string(op.slices)
       + ",\"elapsed_seconds\":" + std::to_string(std::chrono::duration<double>(Clock::now() - op.started).count()) + ",\"executed\":" + std::to_string(instructions - instructionStart)
+      + (!reason.empty() && op.memoryVerification ? ",\"memory_verification\":" + op.memoryVerification() : "")
       + (!reason.empty() && debugSnapshot ? ",\"debug_stop\":" + debugSnapshot() : "") + tap + "}";
   }
   std::string complete(const std::string& reason, bool& paused) {

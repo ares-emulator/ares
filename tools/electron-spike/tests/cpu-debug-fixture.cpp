@@ -2,6 +2,7 @@
 // 1c9b9637476a83f7b80d3db1115a0f71529820d9. No ROM or live user machine.
 #include <n64/n64.hpp>
 #include "../native/n64-service.hpp"
+#include "../native/memory-experiment.hpp"
 #include "../native/input-service.hpp"
 #include "../native/trace-service.hpp"
 #include "../native/dma-service.hpp"
@@ -217,6 +218,28 @@ int main() {
   check(N64Service::memory("n64.memory.write", {"0x3fffff", "rdram", "1122"}, false).error == "out_of_bounds", "service prevalidates whole range");
   check(N64Service::memory("n64.memory.write", {"0x2000", "cpu", "99zz"}, false).error == "invalid_request", "service prevalidates all hex bytes");
   check(cpu.dcache.readDebug<Byte>(data, 0x2000) == 0x55, "invalid write makes no partial change");
+  {
+    ExecutionService ex; ex.supported = true; bool paused = true;
+    auto many = [&](std::vector<std::string> args) { return MemoryExperiment::execute(args, "test", 1, true, ex, paused); };
+    check(many({"0", "1000", "0x2010", "rdram", "11", "0x3fffff", "rdram", "1122"}).error == "out_of_bounds", "many validates later address before writing");
+    check(rdram.ram.read<Byte>(0x2010, RBusDevice::ARES_DEBUGGER) == 0xab, "many invalid tail leaves first byte unchanged");
+    check(many({"1", "0", "0x2010", "rdram", "11"}).error == "invalid_request", "many validates deadline before writing");
+    check(many({"0", "1000", "0x2010", "rdram", "11", "0x2011", "cpu", "zz"}).error == "invalid_request", "many validates later hex");
+    auto overlap = many({"0", "1000", "0x2010", "rdram", "1122", "0x2011", "rdram", "AA"});
+    check(overlap.error.empty() && overlap.json.find("\"matches\":[false,true]") != std::string::npos, "many readbacks follow all overlapping writes");
+    auto run = many({"2", "1000", "0x2010", "rdram", "BB"});
+    check(run.error.empty() && ex.active && ex.active->kind == "verify_writes", "delayed verification starts owned run");
+    check(many({"0", "1000", "0x2010", "rdram", "00"}).error == "busy", "active verification excludes another write");
+    rdram.ram.write<Byte>(0x2010, 0xcc, RBusDevice::ARES_DEBUGGER);
+    ex.frame = 1; auto final = ex.complete("watchpoint", paused);
+    check(final.find("\"hex\":\"cc\"") != std::string::npos && final.find("\"matches\":[false]") != std::string::npos, "early stop freezes delayed readback");
+    rdram.ram.write<Byte>(0x2010, 0xdd, RBusDevice::ARES_DEBUGGER);
+    check(ex.execute("execution.status", {"1"}, "test", 1, paused).json == final, "final verification remains immutable after later changes");
+    run = many({"1", "1000", "0x2010", "rdram", "EE"}); ex.frame = 2; ex.service(paused);
+    check(!ex.active && ex.finished.back().second.find("\"matches\":[true]") != std::string::npos, "VI target verifies at completion");
+    run = many({"1", "1000", "0x2010", "rdram", "FF"}); ex.active->deadline = ExecutionService::Clock::now(); ex.service(paused);
+    check(!ex.active && ex.finished.back().second.find("\"stop_reason\":\"timeout\"") != std::string::npos, "verification timeout reports actual stop");
+  }
   // Exercise the actual JIT dispatch again after removing the last debug hook.
   word(0x80, 0x1000ffff); word(0x84, 0);
   cpu.icache.power(false); pc(base + 0x80);
