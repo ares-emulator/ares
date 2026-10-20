@@ -1,3 +1,4 @@
+import { RdpArtifacts } from './rdp-artifacts.js';
 import { Batches } from './batches.js';
 import type { BatchParams } from './batch-contracts.js';
 import { StateLoading } from './state-loading.js';
@@ -15,7 +16,7 @@ import { METHODS, PROTOCOL, encodeRequest, ServiceError, type SessionIdentity, t
 import type { NativeSessionClient } from './native-client.js';
 
 function mainCapabilities(reply: SessionReply<any>): void {
-  if (reply.ok && Array.isArray(reply.result?.capabilities)) for (const method of ['experiment.batch', 'artifact.traceExport', ...SCREENSHOT_METHODS, ...STATE_METHODS, 'artifact.audioSave', 'artifact.videoStop']) if (!reply.result.capabilities.includes(method)) reply.result.capabilities.push(method);
+  if (reply.ok && Array.isArray(reply.result?.capabilities)) for (const method of ['experiment.batch', 'artifact.traceExport', 'artifact.rdpExport', ...SCREENSHOT_METHODS, ...STATE_METHODS, 'artifact.audioSave', 'artifact.videoStop']) if (!reply.result.capabilities.includes(method)) reply.result.capabilities.push(method);
 }
 
 /** Electron main owns this router, independently of renderer/plugin lifetimes. */
@@ -28,6 +29,7 @@ export class SessionRouter {
   private audio = new AudioArtifacts();
   private screenshots = new Screenshots();
   private artifacts = new TraceArtifacts();
+  private rdpArtifacts = new RdpArtifacts();
   private nextArtifactId = 0;
   private client?: NativeSessionClient;
   private stateTimer?: ReturnType<typeof setInterval>;
@@ -51,13 +53,13 @@ export class SessionRouter {
     this.stateTimer.unref();
   }
   detach(): void {
-    this.batches.close(); this.artifacts.close(); this.screenshots.close(); this.audio.close(); this.recording.close(); this.states.close(); this.stateArtifacts.close(); this.stateLoading.close();
+    this.rdpArtifacts.close(); this.batches.close(); this.artifacts.close(); this.screenshots.close(); this.audio.close(); this.recording.close(); this.states.close(); this.stateArtifacts.close(); this.stateLoading.close();
     clearInterval(this.stateTimer); this.stateTimer = undefined;
     this.client?.close(); this.client = undefined;
   }
   async request<M extends ServiceMethod>(method: M, identity?: SessionIdentity, params?: ServiceParams<M>, owner = 'ui'): Promise<SessionReply<ServiceResult<M>>> {
     if (!METHODS.includes(method)) throw new ServiceError('invalid_request');
-    if (method === 'execution.release') { this.batches.release(owner); this.artifacts.release(owner); this.screenshots.release(owner); this.audio.release(owner); this.recording.release(owner); this.states.release(owner); this.stateArtifacts.release(owner); this.stateLoading.release(owner); }
+    if (method === 'execution.release') { this.rdpArtifacts.release(owner); this.batches.release(owner); this.artifacts.release(owner); this.screenshots.release(owner); this.audio.release(owner); this.recording.release(owner); this.states.release(owner); this.stateArtifacts.release(owner); this.stateLoading.release(owner); }
     if (!this.client) throw new ServiceError('native_host_disconnected');
     const client = this.client;
     if (method.startsWith('artifact.') || method.startsWith('state.') || method === 'experiment.batch') {
@@ -70,6 +72,7 @@ export class SessionRouter {
         else if (method === 'state.load') result = await this.stateLoading.load(client, startingIdentity, params as { path: string; resume: boolean; keepOverrides: boolean }, owner, () => this.client === client);
         else if (method === 'state.save') result = await this.stateArtifacts.save(client, startingIdentity, params as { path: string; overwrite: boolean; metadata: boolean }, owner, () => this.client === client);
         else if (method === 'state.info' || method === 'state.list' || method === 'state.peek') result = await this.states.inspect(client, startingIdentity, method, params, owner, () => this.client === client);
+        else if (method === 'artifact.rdpExport') result = await this.rdpArtifacts.export(client, startingIdentity, params as TraceExportParams, owner, () => this.client === client);
         else if (method === 'artifact.traceExport') result = await this.artifacts.export(client, startingIdentity, params as TraceExportParams, owner, () => this.client === client);
         else if (method === 'artifact.videoStop') { const p = params as { path: string; overwrite: boolean }; result = await this.recording.stop(client, startingIdentity, p.path, p.overwrite, owner, () => this.client === client); }
         else if (method === 'artifact.audioSave') result = await this.audio.save(client, startingIdentity, (params as { path: string }).path, owner, () => this.client === client);

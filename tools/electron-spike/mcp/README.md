@@ -1,11 +1,11 @@
-# MCP adapter (tasks 3–8, partial)
+# MCP adapter (tasks 3–9, partial)
 
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 54 tools: eleven generic/session/run tools,
+emulator. The verified registry has 60 tools: eleven generic/session/run tools,
 thirteen N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch and five task 9 machine/disassembly/mutation tools. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch and five task 9 machine/disassembly/mutation tools, five RSP debugger tools and exact rdp_capture. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
@@ -510,3 +510,25 @@ owner observation/control renews a 30-second session lease. Disable, owner relea
 disconnect, UI/owner pause or resume, reset, human takeover, lease expiry and GDB
 attachment release the gate; timeout/cancel/stop retain a frozen session. Full
 reference schema/result equality and real-game/physical acceptance remain pending.
+
+
+### Exact RDP interval capture
+
+`rdp_capture(next_frame=true)` requires an observed native VI boundary. It owns
+one VI interval through the existing operation coordinator; early break/cancel/
+timeout returns `complete:false`. RDP submissions are copied before software or
+Vulkan dispatch. RSP HALT-clear snapshots the 64-byte task header and XXH64 hashes
+of both memories, plus optional DMEM. This preserves data before buffer reuse.
+
+`max_commands` defaults to the reference 1000000 but effective word storage caps
+at 65536, with at most 512 batches and 64 tasks. Drops/truncation are explicit;
+a dropped task cannot be attributed to an older retained task. XBUS submissions
+follow the reference 4 KiB clamp. Words retain full 64-bit values, source addresses
+and batch IDs; batches include DPC registers, CPU/RSP PCs and task association.
+Decoded command grouping is not implemented. `limit` caps inline words at 1024;
+use `path` for all retained words, batches and task bytes in atomic
+`ares-rdp-capture-v1` JSON. File failures preserve an existing destination and
+return `file_error` alongside the completed capture. Export is bounded to 64 MiB,
+25 seconds, two jobs globally and one per owner. Reset/disconnect revoke jobs;
+newer captures invalidate old pages instead of mixing them. Legacy
+`next_frame=false` returns `legacy_capture_unavailable` until viewer buffers land.

@@ -38,6 +38,7 @@ auto locate(const string& name) -> string {
 #include "native/n64-service.hpp"
 #include "native/machine-service.hpp"
 #include "native/rsp-debug-service.hpp"
+#include "native/rdp-capture-service.hpp"
 #include "native/memory-experiment.hpp"
 #include "native/input-service.hpp"
 #include "native/trace-service.hpp"
@@ -419,6 +420,7 @@ int main(int argc, char** argv) {
   TraceService traceService; traceService.available = n64;
   TapService tapService;
   RspDebugService rspDebugService;
+  RdpCaptureService rdpCaptureService;
   ProfilerService profilerService; profilerService.available = n64;
   DmaService dmaService; dmaService.available = n64;
   execution.cpuSupported = n64;
@@ -438,7 +440,7 @@ int main(int argc, char** argv) {
   host.service.audioRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     return host.audioCapture.execute(method, args, owner, !host.streams.empty());
   };
-  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); host.stateSnapshot.releaseOwner(owner); host.stateLoader.releaseOwner(owner); rspDebugService.releaseOwner(owner); };
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); host.stateSnapshot.releaseOwner(owner); host.stateLoader.releaseOwner(owner); rspDebugService.releaseOwner(owner); rdpCaptureService.releaseOwner(owner); };
   host.service.beforeRequest = [&](const std::string& method, const std::string& owner) -> std::string {
     rspDebugService.service(execution, host.service.paused);
     if(!rspDebugService.permitted(method, owner, bool(execution.active))) return "busy";
@@ -456,6 +458,7 @@ int main(int argc, char** argv) {
     return std::find(allowed.begin(), allowed.end(), method) != allowed.end() ? std::string{} : "busy";
   };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method == "n64.rdp.captureStart" || method == "n64.rdp.capturePage") return rdpCaptureService.execute(method, args, owner, host.service.epoch, n64, host.service.paused, execution);
     if(method == "n64.rsp.debug" || method == "n64.rsp.break" || method == "n64.rsp.step" || method == "n64.rsp.run" || method == "n64.rsp.stop") return rspDebugService.execute(method, args, owner, host.service.epoch, n64, execution, host.service.paused);
     if(method == "n64.rsp.registers") rspDebugService.observe(owner);
     if(method == "n64.cpu.setRegisters" || method == "n64.cpu.disassemble" || method == "n64.rsp.registers" || method == "n64.rdp.state" || method == "n64.peripheral.registers") {
@@ -475,7 +478,7 @@ int main(int argc, char** argv) {
       if(host.stateLoader.touched) {
         ++host.service.epoch;
         host.injectedInput.releaseAll(); host.injectedInput.operationRunning = false;
-        traceService.reset(); profilerService.reset(); host.captures.reset(host.service.epoch);
+        traceService.reset(); profilerService.reset(); rdpCaptureService.reset(); host.captures.reset(host.service.epoch);
         host.audioCapture.reset(); host.recording.reset(); host.stateSnapshot.reset();
         ares::Nintendo64::executionCoordinate.reset();
         ares::Nintendo64::executionCoordinate.atBoundary = false; // restored VI phase is not an observed boundary
@@ -553,7 +556,7 @@ int main(int argc, char** argv) {
       if(execution.instructionCount) debug.requestStepInstructions(execution.instructionCount);
       execution.executor = N64Service::executor();
     };
-    execution.onFinish = [&](const std::string& reason) { rspDebugService.finish(reason); traceService.finish(reason); tapService.finish(reason, host.injectedInput, host.service.epoch, execution.frame); host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
+    execution.onFinish = [&](const std::string& reason) { rspDebugService.finish(reason); rdpCaptureService.finish(reason); traceService.finish(reason); tapService.finish(reason, host.injectedInput, host.service.epoch, execution.frame); host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
     execution.debugSnapshot = [&] { return debug.halted && execution.active && execution.active->slices ? N64Service::stop(host.service.epoch) : "{\"valid\":false}"; };
   }
   execution.supported = synthetic || n64;
@@ -580,7 +583,7 @@ int main(int argc, char** argv) {
       host.audioCapture.reset();
       host.recording.reset();
       host.stateSnapshot.reset();
-      host.stateLoader.reset(); rspDebugService.reset();
+      host.stateLoader.reset(); rspDebugService.reset(); rdpCaptureService.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
       ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
       if(host.root) { host.output.clear(); host.root->power(); }

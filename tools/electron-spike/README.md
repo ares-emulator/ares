@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 59 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 60 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -369,7 +369,7 @@ Exports stream four bounded native pages per batch, cap output at 64 MiB and
 connection; disconnect, host replacement and stale epochs abort work. Relative
 paths resolve against the app process working directory. `file_error` reports
 export failure after capture; completed emulation is retained. Native screenshots are implemented below; audio taps and recording remain task 7 work.
-The MCP registry now exposes 59 tools.
+The MCP registry now exposes 60 tools.
 
 ### Native screenshots (task 7, partial)
 
@@ -422,7 +422,7 @@ mutation and require an operation-free pause. PC edits canonicalize 32-bit KSEG
 addresses, reset delay-slot/pipeline and stale stop state, and drop JIT translations.
 Non-PC edits preserve immutable stops. Read-only snapshots copy direct fields
 without invoking MMIO side effects. Disassembly observes CPU D-cache or physical
-RDRAM (1–128 instructions); it does not claim I-cache fetch coherence. RSP debugger control now uses an owned cooperative instruction gate; exact command/task capture remains pending. See
+RDRAM (1–128 instructions); it does not claim I-cache fetch coherence. RSP debugger control now uses an owned cooperative instruction gate; exact RDP interval and task capture are implemented; legacy viewer streams remain pending. See
 [task 9 machine services](mcp/README.md#machine-services-task-9-in-progress).
 
 
@@ -433,3 +433,12 @@ hardware HALT and configured JIT flags. Debug DMA drains both bounded queue slot
 Step/run return operation handles with RSP-specific counts; each has a five-second
 deadline. The owner has a renewable 30-second lease; disconnect, UI pause/resume,
 reset or human takeover releases the gate. See the parity ledger for limits.
+
+
+`rdp_capture` now captures exactly the next VI interval from an observed boundary.
+It copies full 64-bit words before RDP backend dispatch and task memory at the
+RSP HALT-clear write. Optional atomic JSON output includes all retained words,
+batches and task descriptors; inline output returns at most 1024 words. Storage
+caps are 65536 words, 512 batches and 64 tasks, with explicit drops/truncation.
+An early stop returns `complete:false`. Legacy `next_frame=false` viewer capture
+remains unavailable. See [exact capture](mcp/README.md#exact-rdp-interval-capture).

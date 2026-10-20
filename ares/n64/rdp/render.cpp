@@ -45,6 +45,7 @@ static const std::vector<string> commandNames = {
 };
 
 auto RDP::render() -> void {
+  debugCapture.onBatch(command.start, command.current, command.end, command.source, cpu.ipu.pc);
   #if defined(VULKAN)
   if(vulkan.enable && vulkan.render()) {
     const char *msg = vulkan.crashed();
@@ -53,10 +54,11 @@ auto RDP::render() -> void {
   }
   #endif
 
-  auto& memory = !command.source ? (Memory::Writable&)rdram.ram : (Memory::Writable&)rsp.dmem;
-
   auto fetch = [&]() -> u64 {
-    u64 op = memory.readUnaligned<Dual>(command.current);
+    // DMEM is byte-ordered RSP storage; casting to the RDRAM base reader
+    // incorrectly applies its word-swizzle and disagrees with Vulkan's reads.
+    u64 op = command.source ? rsp.dmem.readUnaligned<Dual>(command.current)
+                            : rdram.ram.readUnaligned<Dual>(command.current);
     command.current += 8;
     return op;
   };

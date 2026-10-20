@@ -1,3 +1,4 @@
+import { registerRdpCaptureTools } from './rdp-capture-tools.js';
 import { registerRspTools } from './rsp-tools.js';
 import { registerMachineTools } from './machine-tools.js';
 import { registerBatchTools } from './batch-tools.js';
@@ -108,6 +109,7 @@ function createServer(): McpServer {
     if (operation_id === null || !local.identity) await status();
     return unwrap(await local.request('execution.cancel', operation_id === null ? undefined : operationIdentities.get(operation_id), { operationId: operation_id ?? 0 }));
   }));
+  registerRdpCaptureTools(server, local, status, rememberOperation);
   registerRspTools(server, local, status, rememberOperation);
   registerMachineTools(server, local, status);
   registerBatchTools(server, local, status);

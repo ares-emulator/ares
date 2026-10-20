@@ -1,7 +1,10 @@
 //Reality Display Processor
 
+#include "debug-capture.hpp"
+
 struct RDP : Thread, Memory::RCP<RDP> {
   Node::Object node;
+  RDPDebugCapture debugCapture;
 
   struct Debugger {
     //debugger.cpp

@@ -7,7 +7,7 @@ Runtime evidence and pending checks are recorded in
 profiling and controller taps are implemented; automated and package checks passed.
 Milestone 2 physical keyboard/gamepad acceptance remains pending. Task 7 is implemented: atomic artifact publishing, trace-file export, native screenshots, run_frames screenshot_after and bounded audio/WAV export and presented-frame AVI recording are implemented.
 Task 8 is implemented within documented bounds: native save/load, offline inspection, default-configuration cross-binary compatibility, multiwrite/delayed verification and native-reserved batch experiments pass. The disposable baseline-load/write/active-VI-run/crop sweep passes. Start here when
-choosing the next task. Task 9 is in progress: register mutation, disassembly and direct machine snapshots are implemented; the cooperative RSP debugger is implemented; command/task/submission capture and bounded calls are next.
+choosing the next task. Task 9 is in progress: register mutation, disassembly and direct machine snapshots are implemented; the cooperative RSP debugger is implemented; exact RDP submission/task capture is implemented; legacy viewer capture and bounded calls are next.
 
 ## Which plan owns what
 
@@ -280,8 +280,8 @@ Conversely, none of those deferrals removes an existing MCP tool from the parity
 target without an explicit scope decision. A clean host-library extraction can
 follow when concrete coupling impedes a task; it is not an initial rewrite mandate.
 
-Task 9 is in progress: atomic paused CPU register mutation, bounded CPU disassembly and direct RSP/RDP/peripheral snapshots are implemented. Cooperative RSP debugger progress and bounded debug DMA are implemented. Command/task/submission capture hooks, exact RDP capture and bounded calls/recovery remain pending.
+Task 9 is in progress: atomic paused CPU register mutation, bounded CPU disassembly and direct RSP/RDP/peripheral snapshots are implemented. Cooperative RSP debugger progress and bounded debug DMA are implemented. Submission-time RDP and HALT-clear task hooks support bounded exact VI capture. Legacy viewer command capture and bounded calls/recovery remain pending.
 
-The immediate next action is **task 9 command/task/submission capture hooks and exact RDP capture**. Tasks 1–5, 4.5
+The immediate next action is **task 9 legacy viewer command capture, remaining inspection/artifact tools and bounded calls/recovery**. Tasks 1–5, 4.5
 and 7–8 are implemented, and task 6 backend checks pass with physical input acceptance
 still pending. Runtime evidence and remaining manual checks are in the execution log.

@@ -1267,3 +1267,75 @@ Still pending: exact command/task/submission hooks and capture, stack/dump/probe
 bounded calls/recovery (nine unregistered tools). GDB-attachment/human physical
 input acceptance and real-game/fault-injection milestone cases remain not run;
 all 68 tools remain preservation targets.
+
+## Task 9 exact RDP submission/task capture slice (2026-10-20)
+
+Adds bounded exact `rdp_capture`: **60 of 68** MCP tools registered. Task 9 remains
+in progress; legacy viewer command capture and calls are not implemented.
+
+Audited `ares-64` source at `1c9b9637476a83f7b80d3db1115a0f71529820d9`:
+
+| Source | SHA-256 |
+| --- | --- |
+| `ares/n64/rdp/debug-capture.cpp` | `d9142849081b1e6de06cea9512ba9f613e2753fd868e4c0fed71f4b75272ee77` |
+| `ares/n64/rdp/rdp.hpp` | `f84fe9b6c05a4c8febebbf75f85f7b465e9eb8cd2d20073e6af06e0d2e7c2282` |
+
+The host-only capture hook runs at RDP::render entry, before software/Vulkan
+backend dispatch. SP_STATUS HALT-clear snapshots task header, XXH64 hashes of both
+RSP memories and optional full DMEM before reuse. The native frame coordinate
+selects exactly one interval; capture requires an observed boundary and uses the
+existing owned one-frame operation/deadline/cancel paths. Early stops report
+complete:false. Completion is frozen, independent of later VI progress.
+
+Storage is explicitly bounded: 65536 full 64-bit words, 512 DPC batches and 64
+tasks. Overflow has word/batch/task counters and truncation; after dropped tasks,
+batches use task=-1 rather than misattribute an older task. Full storage skips
+remaining word reads/iteration. XBUS range retains the reference 4 KiB clamp.
+Pages hold words/source addresses/batch IDs, DPC/source/CPU/RSP/task provenance,
+and task bytes/hashes. They are operation/epoch scoped and invalidated by reset,
+state load, owner disconnect or a newer capture. No serializer/version change.
+
+The live Vulkan test exposed a reference bug: casting RSP DMEM to the generic
+RDRAM reader applies word swizzling to byte-ordered DMEM. Capture and software
+RDP fetch now use the actual RSP reader, matching Vulkan's two 32-bit reads.
+The software fixture checks full XBUS values and no RDP crash; real Vulkan
+capture checks the same original byte pattern. This is an intentional correction
+to the audited implementation, not a claim that reference bugs were preserved.
+
+MCP keeps reference parameter names/defaults; max_commands clamps effective word
+storage to 65536 and inline words to 1024. Optional main-owned atomic
+`ares-rdp-capture-v1` JSON exports every retained word/batch/task. Export jobs cap
+at two globally/one per owner, 64 MiB and 25 seconds; reset/disconnect revoke.
+Failed publication returns file_error without replacing an existing artifact.
+Legacy next_frame=false returns legacy_capture_unavailable; decoded command
+grouping and full reference schema/result equality remain pending.
+
+Validation:
+
+- Native host/real-core fixture and strict TypeScript builds passed.
+- Full sequential suite **56/56** passed in 33.58s. Core tests exercise real
+  software RDP submissions, source-buffer reuse, actual HALT-clear task bytes,
+  exact next-VI exclusion, large dropped ranges, batch/task bounds and unknown
+  association after task overflow. The final explicit no-crash XBUS assertion
+  was rebuilt and affected machine/core tests passed **2/2**.
+- Disposable original CPU/RSP programs configure real VI and continuously submit
+  DMEM words to Vulkan. Actual MCP captures exactly one interval, full bytes,
+  batches and task DMEM; tests assert truncation, all retained JSON data, failed
+  overwrite preservation, immutable completion after a later VI, stale-capture
+  rejection and boundary preconditions. No user machine/ROM/saves were used.
+- Main artifact tests stream multiple word pages plus batch/task sections and
+  verify disconnect/cancellation/stale-page failures leave prior files intact.
+- Actual Electron integration passed the exact **60-tool** registry, incomplete
+  inactive-VI timeout and atomic capture JSON plus prior session/debug/state
+  regressions. The fixture explicitly resets before capture to establish a
+  boundary; a mid-frame attempt is correctly rejected.
+- Fresh `artifacts/task-9-rdp/Ares.app` copied outside checkout passed with native
+  loader/MCP checkout reads denied: **60-tool** registry, explicit RDP/RSP N64
+  unavailability on GB, prior memory/state/image/audio/video checks, 454 GB
+  frames, Electron 44.9.0 / Node 24.22.0. Packaged N64 game acceptance is not run.
+
+Eight tools remain unregistered: rsp_capture, capture_control, render_probe,
+stack, dump_rdram, dump_range, call_function and call_recover. The registered
+rdp_capture also retains an explicit legacy-viewer gap. Physical input/audible
+N64, game acceptance and broader fault-injection gates remain pending. All 68
+remain preservation targets; task 10 has not started.

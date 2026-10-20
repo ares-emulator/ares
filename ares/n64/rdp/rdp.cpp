@@ -3,6 +3,7 @@
 namespace ares::Nintendo64 {
 
 RDP rdp;
+#include "debug-capture.cpp"
 #include "render.cpp"
 #include "io.cpp"
 #include "debugger.cpp"
@@ -35,6 +36,7 @@ auto RDP::main() -> void {
 }
 
 auto RDP::power(bool reset) -> void {
+  debugCapture = {};
   Thread::reset();
   command = {};
   edge = {};
