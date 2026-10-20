@@ -1522,9 +1522,14 @@
           "scope": "task 6 trace slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
           "result": "Passed in 25-test service suite: actual MIPS PC/call capture, JALR rd=rs, filters, caps/overflow, native call serialization, freed buffers and real JIT restoration; real MCP paging, timeout, future intervals and disconnect cleanup."
+        },
+        {
+          "scope": "task 7 trace export slice",
+          "check": "tests/artifacts.test.cjs, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: real native PC export and fixture call argument/f12 export, whole-file hash, JSON shape, overwrite races, failed/oversized/revoked/stale jobs, real MCP path export and Electron main publication."
         }
       ],
-      "knownLimits": "Owned N64 interpreter interval with sorted per-frame PCs, filters and counters. Up to 262144 stored records; outside-RDRAM map bounded and counters saturate with explicit overflow. MCP inline/page responses cap at 1024 entries with next_offset. File export unavailable until task 7."
+      "knownLimits": "Owned N64 interpreter interval with sorted per-frame PCs, filters and counters. Up to 262144 stored records; outside-RDRAM map bounded and counters saturate with explicit overflow. MCP inline/page responses cap at 1024 entries with next_offset. Optional atomic JSON export through Electron main: bounded 64 MiB, 25-second export deadline, two concurrent jobs and one per owner. Relative paths resolve against the app working directory. Failed exports return file_error and preserve an existing destination."
     },
     {
       "name": "trace_calls",
@@ -1621,9 +1626,14 @@
           "scope": "task 6 trace slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
           "result": "Passed in 25-test service suite: actual MIPS PC/call capture, JALR rd=rs, filters, caps/overflow, native call serialization, freed buffers and real JIT restoration; real MCP paging, timeout, future intervals and disconnect cleanup."
+        },
+        {
+          "scope": "task 7 trace export slice",
+          "check": "tests/artifacts.test.cjs, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: real native PC export and fixture call argument/f12 export, whole-file hash, JSON shape, overwrite races, failed/oversized/revoked/stale jobs, real MCP path export and Electron main publication."
         }
       ],
-      "knownLimits": "Owned N64 JAL/JALR/taken branch-link capture before execution; target/callsite filters, selected GPRs and raw f12/FR. Up to 65536 stored calls and 1024 entries per MCP response. File export unavailable until task 7."
+      "knownLimits": "Owned N64 JAL/JALR/taken branch-link capture before execution; target/callsite filters, selected GPRs and raw f12/FR. Up to 65536 stored calls and 1024 entries per MCP response. Optional atomic JSON export through Electron main: bounded 64 MiB, 25-second export deadline, two concurrent jobs and one per owner. Relative paths resolve against the app working directory. Failed exports return file_error and preserve an existing destination."
     },
     {
       "name": "trace_page",

@@ -1,3 +1,4 @@
+export const GPR_NAMES = ['zero', 'at', 'v0', 'v1', 'a0', 'a1', 'a2', 'a3', 't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 't8', 't9', 'k0', 'k1', 'gp', 'sp', 's8', 'ra'];
 /** N64-only contracts. All architectural integers travel as lossless hex strings. */
 export const N64_METHODS = ['n64.debug.registers', 'n64.debug.lastStop', 'n64.debug.breakAdd', 'n64.debug.breakRemove', 'n64.debug.breakList', 'n64.debug.watchAdd', 'n64.debug.watchRemove', 'n64.debug.watchList', 'n64.debug.clear', 'n64.memory.read', 'n64.memory.write'] as const;
 export type N64Method = typeof N64_METHODS[number];

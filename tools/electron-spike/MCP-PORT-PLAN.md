@@ -262,6 +262,18 @@ Electron host, not an old fork binary. Verify exact frames, partial-frame stops,
 watch access semantics, cached writes, delay slots and immutable stop snapshots.
 Use physical keyboard/gamepad handoff as an explicit manual gate.
 
+Task 7 publication adaptation: Electron main owns asynchronous streaming exports,
+using immutable native pages rather than forwarding client filesystem paths to
+the emulation thread. Native and main-only service capabilities are distinct.
+Preserve the reference version-1 trace file envelope and named call/f12 entries;
+add session identity and artifact SHA-256. Limit each output to 64 MiB/25 seconds,
+two concurrent jobs and one per owner. Exclusive private temporary siblings and
+hard-link no-overwrite publication preserve the reference race protection.
+Disconnect/epoch/replacement revocation and final publication share main lifetime
+checks. Only final link/rename is synchronous. Relative paths resolve on the app
+host. Export failure reports file_error after completed emulation, without a
+rollback claim. Native image/audio taps and recording remain separate work.
+
 ### C. Preserve artifacts, states and the protocol-3 expansion
 
 Port screenshot/framebuffer/native audio taps, atomic artifact handling, state

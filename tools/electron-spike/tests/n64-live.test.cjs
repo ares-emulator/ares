@@ -40,7 +40,7 @@ test('N64 contracts preserve 64-bit values and bound predicates and memory reque
   assert.throws(() => encodeRequest('x', identity, 'n64.memory.read', { address: '0x80000000', view: 'cpu', length: 0 }), /invalid_request/);
   assert.throws(() => decodeReply(JSON.stringify({ protocol: 1, id: 'x', ...identity, ok: true, result: { pc: 123 } }), 'n64.debug.registers'), /invalid_reply/);
 });
-test('real core fixture: MIPS stops/cache semantics and VI-latched controller leases', () => {
+test('real core fixture: MIPS stops/cache semantics and VI-latched controller leases', async () => {
   assert.ok(fs.existsSync(fixture), 'Build the ares-electron-cpu-fixture CMake target first');
   const output = execFileSync(fixture, { encoding: 'utf8', timeout: 10000 });
   assert.match(output, /CPU_DEBUG_FIXTURE_PASS/);
@@ -50,6 +50,17 @@ test('real core fixture: MIPS stops/cache semantics and VI-latched controller le
   assert.equal(page.records[0].link_value, '0xffffffff80001108');
   assert.equal(page.records[0].registers['24'], '0xffffffff80001180');
   assert.equal(page.records[0].f12, '0x0');
+  const { TraceArtifacts } = require('../dist/services/trace-artifacts.js');
+  const callExportDirectory = fs.mkdtempSync('/tmp/ares-call-export-');
+  try {
+    const destination = path.join(callExportDirectory, 'calls.json');
+    const captureClient = { identity, request: async () => ({ protocol: 1, id: 'fixture', ...identity, ok: true, result: page }) };
+    const exported = await new TraceArtifacts().export(captureClient, identity, { operationId: page.operation_id, path: destination, overwrite: false }, 'fixture', () => true);
+    const file = JSON.parse(fs.readFileSync(exported.path));
+    assert.equal(file.entries[0].callsite, '0xffffffff80001100');
+    assert.equal(file.entries[0].registers.t8, '0xffffffff80001180');
+    assert.deepEqual(file.entries[0].f12, { raw: '0x0', fr: true });
+  } finally { fs.rmSync(callExportDirectory, { recursive: true, force: true }); }
   const prof = JSON.parse(output.split('\n').find(line => line.startsWith('PROFILER_TOP ')).slice('PROFILER_TOP '.length));
   const profile = decodeReply(JSON.stringify({ protocol: 1, id: 'proffixture', ...identity, ok: true, result: prof }), 'n64.profiler.top').result;
   assert.equal(profile.entries[0].addr, '0x80001340'); assert.equal(profile.entries[0].inclCycles, 106);
@@ -126,7 +137,16 @@ test('isolated N64 host and real MCP stdio share instruction operations, registe
     assert.equal(pcPage.total, pcTrace.total_entries); assert.equal(pcPage.entries.length, pcPage.total);
     await done(native, unwrap(await native.request('execution.stepInstructions', undefined, { count: 1, timeoutMs: 1000 })));
     assert.deepEqual(await peer.tool('trace_page', { operation_id: pcTrace.operation_id, offset: 0, limit: 64 }), pcPage, 'trace pages freeze after completion');
-    const callTrace = await peer.tool('trace_calls', { max_seconds: 0.01, max_records: 4, registers: ['t8', 'sp'], f12: true });
+    const exportedPcPath = path.join(dir, 'trace é pc.json');
+    const exportedPc = unwrap(await client.request('artifact.traceExport', undefined, { operationId: pcTrace.operation_id, path: exportedPcPath, overwrite: false }));
+    const exportedPcFile = JSON.parse(fs.readFileSync(exportedPcPath));
+    assert.equal(exportedPcFile.entries.length, pcPage.total); assert.ok(exportedPcFile.entries.length > 0);
+    assert.equal(exportedPcFile.summary.session, native.identity.session);
+    assert.equal(exportedPc.bytes, fs.statSync(exportedPcPath).size);
+    assert.equal((await client.request('artifact.traceExport', undefined, { operationId: pcTrace.operation_id, path: exportedPcPath, overwrite: false })).error, 'file_exists');
+
+    const callTrace = await peer.tool('trace_calls', { path: path.join(dir, 'calls.json'), max_seconds: 0.01, max_records: 4, registers: ['t8', 'sp'], f12: true });
+    assert.equal(callTrace.path, path.join(dir, 'calls.json')); assert.equal(JSON.parse(fs.readFileSync(callTrace.path)).kind, 'trace_calls');
     assert.equal(callTrace.stop_reason, 'timeout'); assert.equal(callTrace.capture_point, 'before call instruction; delay slot may still change arguments');
     assert.equal((await peer.tool('trace_page', { operation_id: pcTrace.operation_id })).error, 'stale_trace');
     const future = await peer.tool('trace_pc', { start_frame: 5, n_frames: 1, max_seconds: 0.01, max_records: 4, inline_limit: 0 });

@@ -1,3 +1,4 @@
+import { traceEntries as entries } from '../services/trace-format.js';
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { ServiceError, type SessionClient, type SessionIdentity, type SessionReply, type ServiceParams } from '../services/contracts.js';
@@ -31,15 +32,7 @@ export function registerTraceTools(server: McpServer, client: SessionClient, sta
     const next = offset + records.length;
     return { ...first, records, next_offset: next < first.record_count ? next : null, inline_limit_effective: effective };
   }
-  function entries(result: TracePage) {
-    return result.records.map(r => result.kind === 'pc' ? r : {
-      seq: r.sequence, frame: r.frame, callsite: r.pc, target: r.target, kind: ['jal', 'jalr', 'branch_and_link'][r.kind!], link_register: r.link_register, link_value: r.link_value, sp: r.sp,
-      ...(r.registers && Object.keys(r.registers).length ? { registers: Object.fromEntries(Object.entries(r.registers).map(([n, value]) => [GPR_NAMES[Number(n)], value])) } : {}),
-      ...(r.f12 === undefined ? {} : { f12: { raw: r.f12, fr: r.fr } }),
-    });
-  }
   async function trace(kind: 'pc' | 'calls', input: any) {
-    if (input.path !== null) throw new ServiceError('unavailable');
     const state = await status(), identity = { session: state.session, epoch: state.epoch };
     let start = state.frame;
     if (input.start_frame !== null && input.start_frame !== 'now') {
@@ -62,15 +55,22 @@ export function registerTraceTools(server: McpServer, client: SessionClient, sta
     }
     const result = await page(operation.operation_id, 0, input.inline_limit, identity);
     const { records, ...summary } = result;
-    return { ...operation, ...summary, kind: operation.kind, trace_kind: kind, entries: entries(result), entries_inline: result.records.length, total_entries: result.record_count, record_capacity: started.storage_record_limit,
+    let artifact: Record<string, unknown> = {};
+    if (input.path !== null) {
+      try {
+        const published = unwrap(await client.request('artifact.traceExport', identity, { operationId: operation.operation_id, path: input.path, overwrite: input.overwrite }));
+        artifact = { path: published.path, artifact: published };
+      } catch (e) { artifact = { file_error: e instanceof ServiceError ? e.code : 'write_failed' }; }
+    }
+    return { ...operation, ...artifact, ...summary, kind: operation.kind, trace_kind: kind, entries: entries(result), entries_inline: result.records.length, total_entries: result.record_count, record_capacity: started.storage_record_limit,
       interval: { start_frame: params.startFrame, end_frame: params.startFrame + params.frames, epoch: identity.epoch }, filter: { start: params.low, end: params.high },
       ...(kind === 'pc' ? { records: result.record_count } : {}),
       ...(kind === 'calls' ? { calls: result.record_count, retained: result.record_count, excluded_by_callsite: result.excluded_callsite, excluded_by_target: result.excluded_target, capture_point: 'before call instruction; delay slot may still change arguments' } : {}),
       ...(result.next_offset === null ? {} : { more: 'use trace_page with operation_id and next_offset' }) };
 
   }
-  server.registerTool('trace_pc', { description: 'N64 per-frame executing-PC histogram, sorted by frame/PC. Owned interpreter run, bounded counters/storage and paging. File export is unavailable.', inputSchema: z.object(common).strict() }, async input => call(() => trace('pc', input)));
-  server.registerTool('trace_calls', { description: 'N64 linked calls (JAL/JALR/taken branch-link) with pre-instruction targets/selected GPRs and raw f12. Owned interpreter run; file export unavailable.', inputSchema: z.object({ ...common, target_start: bound, target_end: bound, registers: z.array(z.string()).max(32).nullable().default(null), f12: z.boolean().default(false) }).strict() }, async input => call(() => trace('calls', input)));
+  server.registerTool('trace_pc', { description: 'N64 per-frame executing-PC histogram, sorted by frame/PC. Owned interpreter run, bounded counters/storage and paging. Optional JSON export is atomic and bounded.', inputSchema: z.object(common).strict() }, async input => call(() => trace('pc', input)));
+  server.registerTool('trace_calls', { description: 'N64 linked calls (JAL/JALR/taken branch-link) with pre-instruction targets/selected GPRs and raw f12. Owned interpreter run; optional atomic JSON export.', inputSchema: z.object({ ...common, target_start: bound, target_end: bound, registers: z.array(z.string()).max(32).nullable().default(null), f12: z.boolean().default(false) }).strict() }, async input => call(() => trace('calls', input)));
   server.registerTool('trace_page', { description: 'Page the most recent completed trace by operation ID. Returns at most 1024 entries per MCP response, with explicit next_offset; old captures return stale_trace.', inputSchema: z.object({ operation_id: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER), offset: z.number().int().min(0).default(0), limit: z.number().int().min(1).max(20000).default(20000) }).strict(), annotations: { readOnlyHint: true } }, async ({ operation_id, offset, limit }) => call(async () => {
     const identity = identityFor(operation_id) ?? await status();
     const result = await page(operation_id, offset, limit, identity);

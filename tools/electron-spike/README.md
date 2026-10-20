@@ -324,7 +324,7 @@ before execution. Filters and future VI intervals are supported. Captures report
 truncation, overflow, observed/counted instructions and their actual storage cap
 (262144 PC records or 65536 calls). Histogram buffers are released on completion.
 `trace_page` reads the most recent capture by operation ID. MCP responses contain
-at most 1024 entries, with an explicit next offset; file exports await task 7.
+at most 1024 entries, with an explicit next offset; optional atomic JSON file exports are implemented in the first task 7 slice.
 
 
 `overlay_log` exposes a bounded PI cartridge-to-RDRAM transfer history (4096
@@ -354,3 +354,19 @@ start; all finish paths release it. `keep_override` keeps a neutral port except
 when ownership is revoked by disconnect, reset, shutdown or human takeover.
 The tapped port cannot be overwritten/released during the operation. Its result
 freezes `held_frames`, release status and resulting ownership.
+
+### Task 7 artifact publishing (in progress)
+
+Trace `path`/`overwrite` now export version-1 JSON with the complete retained
+capture, summary, session/epoch, named call arguments and raw f12 data. Electron
+main owns artifact I/O. The MCP adapter requests it through the authenticated
+shared service and never opens destination files. Files publish from exclusive
+private temporary siblings: no-overwrite uses an atomic hard link, explicit
+overwrite uses rename. Failed or cancelled work preserves existing output.
+
+Exports stream four bounded native pages per batch, cap output at 64 MiB and
+25 seconds, and report byte count/SHA-256. Two jobs may run globally, one per
+connection; disconnect, host replacement and stale epochs abort work. Relative
+paths resolve against the app process working directory. `file_error` reports
+export failure after capture; completed emulation is retained. Image/audio taps,
+screenshots and recording remain task 7 work. The MCP registry stays at 35 tools.

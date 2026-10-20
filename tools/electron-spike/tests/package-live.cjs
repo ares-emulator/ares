@@ -46,6 +46,7 @@ async function run() {
     let status;
     for (let i = 0; i < 200; ++i) { status = await peer.tool('emu_status'); if (status.system === 'Game Boy') break; await new Promise(r => setTimeout(r, 20)); }
     assert.equal(status.system, 'Game Boy', diagnostics);
+    assert.ok(status.capabilities.includes('artifact.traceExport'), 'packaged main advertises artifact service');
     assert.equal((await peer.tool('pause')).paused, true);
     const regions = await peer.tool('memory_regions');
     const region = regions.regions.find(r => r.writable && r.readable && r.name.includes('RAM'));

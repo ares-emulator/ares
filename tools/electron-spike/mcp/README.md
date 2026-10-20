@@ -194,8 +194,7 @@ are explicit; observed-instruction counters remain available. Source inline/page
 defaults are accepted, with an effective MCP response ceiling of 1024 entries and
 `next_offset` for continuation. Native replies page 64 PCs or 32 calls to stay
 inside the control transport bound. Captures are immutable after completion;
-starting another trace supersedes the stored pages. A non-null file path returns
-`unavailable` until artifact exports land in task 7.
+starting another trace supersedes the stored pages. A non-null file path requests atomic bounded JSON export through Electron main.
 
 
 ## PI provenance
@@ -227,3 +226,11 @@ Capture ownership, bounded storage and disconnect/reset cleanup apply.
 is an owned native VI operation. Button names accept case/whitespace/hyphen
 normalization. Timeout/cancel/hits also release the button; keep_override retains
 neutral isolation, while disconnect/reset/shutdown/human takeover revoke it.
+
+Task 7 trace export: supplying `path` exports all retained entries independently
+of inline_limit. `overwrite=false` refuses an existing file atomically. The
+result contains path and artifact byte count/SHA-256, or file_error if export
+fails after capture. Relative paths use the app working directory. Output caps
+at 64 MiB / 25 seconds; owner disconnect, stale epochs or replacement cancel
+unfinished publication. Existing output survives failures. This does not add a
+new MCP tool; images/audio/recording remain pending.

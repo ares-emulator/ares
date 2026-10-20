@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { ServiceError, type ExecutionOperation, type SessionClient, type SessionIdentity, type SessionReply } from '../services/contracts.js';
 import type { Definition, Predicate, Registers, Stop } from '../services/n64-contracts.js';
-const names = ['zero', 'at', 'v0', 'v1', 'a0', 'a1', 'a2', 'a3', 't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 't8', 't9', 'k0', 'k1', 'gp', 'sp', 's8', 'ra'];
+import { GPR_NAMES as names } from '../services/n64-contracts.js';
 const fields = ['pc', 'gpr', 'hi', 'lo', 'value'];
 const ops = ['eq', 'ne', 'lt', 'le', 'gt', 'ge'] as const;
 export function lossless(value: number | string): string {

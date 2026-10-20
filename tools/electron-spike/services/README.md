@@ -175,3 +175,11 @@ thread, ahead of normal input mapping/focus filtering. The reader only requests
 human takeover with an atomic flag. The existing reserved owner-release request
 revokes input leases as well as owned execution. Default external resume releases
 only its own holds; UI resume can release all. N64 keepOverrides preserves holds.
+
+Task 7 adds a main-owned method, `artifact.traceExport`, alongside
+NATIVE_METHODS. It is validated by the shared/browser-safe contract but routed
+before native serialization. SessionRouter advertises that capability and owns
+bounded export jobs and revocation. Native code remains responsible for immutable
+trace pages. Bulk file writes are asynchronous; only final hard-link/rename
+publication is synchronous, immediately following the main-thread lifetime guard.
+Temporary files are private exclusive siblings, with byte/time limits and SHA-256.

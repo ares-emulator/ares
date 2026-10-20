@@ -630,3 +630,45 @@ inventory, GB memory write/read/restore/resume and clean shutdown. Electron
 44.9.0 / bundled Node 24.22.0; 455 rendered GB frames. This remains an ad-hoc-signed
 development app, not a distribution-signing/notarization claim. Next work: task 7
 artifact publishing and trace exports; carry the milestone-2 physical-device gate.
+
+### Task 7 — atomic artifact publishing and trace export (partial)
+
+Added main-owned `artifact.traceExport` and a reusable asynchronous artifact
+publisher. `trace_pc` / `trace_calls` path and overwrite parameters now export all
+retained entries independently of the inline limit; registry remains 35 tools.
+Native code supplies immutable bounded pages. Electron main streams four pages
+per batch and owns filesystem access; the MCP adapter does not open client paths.
+Exports cap at 64 MiB and a 25-second deadline checked between I/O operations,
+with two jobs globally and one per connection. Owner release, detach and stale
+epochs revoke unfinished jobs. Private exclusive sibling temporaries, fsync and
+atomic hard-link no-overwrite / rename overwrite publication preserve old output
+on failure. Only the final small publication step is synchronous to prevent a
+main-thread lifetime transition between guard and publication. Relative paths
+resolve against the app working directory. Results include size/SHA-256; export
+failure returns file_error after capture, without implying emulation rollback.
+
+Source: ares-64 `1c9b9637476a83f7b80d3db1115a0f71529820d9`,
+`desktop-ui/program/artifact.hpp` SHA-256
+`f0b03467c0bbeff3dcad11a68a942ee07b1b41966a370a3679efd8e0ec5e6297`.
+Version-1 trace envelope/entries derive from the already journaled
+`desktop-ui/program/debug-session.cpp`. Shared formatting preserves named GPRs
+and raw f12/FR for MCP and files. Distinct NATIVE_METHODS/main capabilities keep
+host paths out of the native wire. The router's status observer also advertises
+main capabilities consistently across renderer reload and operation completion.
+
+Validation: final 27-test suite passed in 9.45s. Tests cover a two-writer
+no-overwrite race, explicit replacement, failed/oversized/revoked exports,
+dangling symlink refusal, temporary cleanup, whole-file SHA-256 and streamed
+multi-page order. A real core JALR page exports selected registers and f12 through
+the shared formatter; real N64/native/local/MCP exports nonempty PC data and call
+files. Electron/MCP passed including actual main-owned native trace publication
+with inline_limit=0, stopped UI and renderer reload. Native core was unchanged,
+so no full-core rebuild or repeated ordinary-play smoke was needed. Packaging
+check follows below. Screenshots, native image/audio taps and recording remain
+unimplemented; physical-device milestone 2 acceptance remains not run.
+
+Task-7 trace package passed: built `artifacts/task-7-traces/Ares.app`, then copied
+it outside the checkout for `test:package`. Bundled Node 24.22.0 / Electron 44.9.0,
+35-tool inventory and main artifact capability passed, along with GB memory
+write/read/restore, resume and shutdown (452 frames). Native loader and MCP
+adapter could not read the repository. No screenshot/audio/recording claim.

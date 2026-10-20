@@ -139,6 +139,12 @@ app.whenReady().then(async () => {
   const tap = await mcp.tool('controller_tap', { button: 'a', max_seconds: 0.01 });
   assert.equal(tap.stop_reason, 'timeout'); assert.equal(tap.released, true);
   assert.equal((await mcp.tool('controller_state')).ports[0].pending.overridden, false);
+  const tracePath = path.join(temporary, 'electron trace.json');
+  const exportedTrace = await mcp.tool('trace_pc', { max_seconds: 0.01, max_records: 4, inline_limit: 0, path: tracePath });
+  assert.equal(exportedTrace.path, tracePath); assert.equal(exportedTrace.entries.length, 0);
+  assert.equal(JSON.parse(fs.readFileSync(tracePath, 'utf8')).entries.length, exportedTrace.total_entries);
+  assert.ok(exportedTrace.artifact.bytes > 0);
+
   await until(() => window.webContents.executeJavaScript("document.getElementById('pause').textContent === 'Resume'"));
   enter('native shutdown');
   await stopNative();
