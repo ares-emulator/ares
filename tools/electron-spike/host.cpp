@@ -39,6 +39,8 @@ auto locate(const string& name) -> string {
 #include "native/machine-service.hpp"
 #include "native/rsp-debug-service.hpp"
 #include "native/rdp-capture-service.hpp"
+#include "native/inspection-service.hpp"
+#include "native/stack-service.hpp"
 #include "native/memory-experiment.hpp"
 #include "native/input-service.hpp"
 #include "native/trace-service.hpp"
@@ -421,6 +423,7 @@ int main(int argc, char** argv) {
   TapService tapService;
   RspDebugService rspDebugService;
   RdpCaptureService rdpCaptureService;
+  InspectionService inspectionService;
   ProfilerService profilerService; profilerService.available = n64;
   DmaService dmaService; dmaService.available = n64;
   execution.cpuSupported = n64;
@@ -440,7 +443,7 @@ int main(int argc, char** argv) {
   host.service.audioRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     return host.audioCapture.execute(method, args, owner, !host.streams.empty());
   };
-  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); host.stateSnapshot.releaseOwner(owner); host.stateLoader.releaseOwner(owner); rspDebugService.releaseOwner(owner); rdpCaptureService.releaseOwner(owner); };
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); host.stateSnapshot.releaseOwner(owner); host.stateLoader.releaseOwner(owner); rspDebugService.releaseOwner(owner); rdpCaptureService.releaseOwner(owner); inspectionService.releaseOwner(owner); };
   host.service.beforeRequest = [&](const std::string& method, const std::string& owner) -> std::string {
     rspDebugService.service(execution, host.service.paused);
     if(!rspDebugService.permitted(method, owner, bool(execution.active))) return "busy";
@@ -450,7 +453,7 @@ int main(int argc, char** argv) {
     if(!load.upload || method.starts_with("n64.state.load")) return {};
     static const std::vector<std::string> allowed = {
       "session.status", "session.pause", "session.resume", "session.reset", "execution.status", "execution.cancel", "execution.release", "execution.batchCheck",
-      "n64.cpu.disassemble", "n64.rsp.registers", "n64.rdp.state", "n64.peripheral.registers",
+      "n64.cpu.stack", "n64.render.probe", "n64.dump.read", "n64.dump.release", "n64.cpu.disassemble", "n64.rsp.registers", "n64.rdp.state", "n64.peripheral.registers",
       "memory.regions", "memory.read", "n64.memory.read", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
       "n64.input.state", "n64.profiler.top", "n64.dma.log", "n64.trace.page", "n64.state.format", "n64.state.layout", "n64.state.read", "n64.state.release",
       "video.begin", "video.read", "video.release", "video.record.status", "video.record.read", "video.record.release", "audio.status", "audio.read", "audio.release"
@@ -458,6 +461,8 @@ int main(int argc, char** argv) {
     return std::find(allowed.begin(), allowed.end(), method) != allowed.end() ? std::string{} : "busy";
   };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method == "n64.cpu.stack") return StackService::execute(args, n64, host.service.epoch, execution.frame);
+    if(method == "n64.render.probe" || method.starts_with("n64.dump.")) return inspectionService.execute(method, args, owner, host.service.epoch, execution.frame, n64, bool(execution.active) || bool(execution.reservation), host.service.paused);
     if(method == "n64.rdp.captureStart" || method == "n64.rdp.capturePage") return rdpCaptureService.execute(method, args, owner, host.service.epoch, n64, host.service.paused, execution);
     if(method == "n64.rsp.debug" || method == "n64.rsp.break" || method == "n64.rsp.step" || method == "n64.rsp.run" || method == "n64.rsp.stop") return rspDebugService.execute(method, args, owner, host.service.epoch, n64, execution, host.service.paused);
     if(method == "n64.rsp.registers") rspDebugService.observe(owner);
@@ -478,7 +483,7 @@ int main(int argc, char** argv) {
       if(host.stateLoader.touched) {
         ++host.service.epoch;
         host.injectedInput.releaseAll(); host.injectedInput.operationRunning = false;
-        traceService.reset(); profilerService.reset(); rdpCaptureService.reset(); host.captures.reset(host.service.epoch);
+        traceService.reset(); profilerService.reset(); rdpCaptureService.reset(); inspectionService.reset(); host.captures.reset(host.service.epoch);
         host.audioCapture.reset(); host.recording.reset(); host.stateSnapshot.reset();
         ares::Nintendo64::executionCoordinate.reset();
         ares::Nintendo64::executionCoordinate.atBoundary = false; // restored VI phase is not an observed boundary
@@ -583,7 +588,7 @@ int main(int argc, char** argv) {
       host.audioCapture.reset();
       host.recording.reset();
       host.stateSnapshot.reset();
-      host.stateLoader.reset(); rspDebugService.reset(); rdpCaptureService.reset();
+      host.stateLoader.reset(); rspDebugService.reset(); rdpCaptureService.reset(); inspectionService.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
       ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
       if(host.root) { host.output.clear(); host.root->power(); }

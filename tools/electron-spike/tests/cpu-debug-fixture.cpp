@@ -3,6 +3,8 @@
 #include <n64/n64.hpp>
 #include "../native/n64-service.hpp"
 #include "../native/machine-service.hpp"
+#include "../native/stack-service.hpp"
+#include "../native/inspection-service.hpp"
 #include "../native/rsp-debug-service.hpp"
 #include "../native/memory-experiment.hpp"
 #include "../native/input-service.hpp"
@@ -602,6 +604,55 @@ int main() {
     check(capture.batches.size() == 512 && capture.droppedBatches == 2, "batch storage strictly bounded");
     capture = {}; rdp.unload(); executionCoordinate.reset();
     rsp.unload();
+  }
+  {
+    cpu.dcache.power(false);
+    constexpr uint64_t entry = 0xffffffff80030000ull, stack = 0xffffffff80031000ull;
+    rdram.ram.write<Word>(0x30000, 0x27bdffe0, RBusDevice::ARES_DEBUGGER); // addiu sp,sp,-32
+    rdram.ram.write<Word>(0x30004, 0xffbf0018, RBusDevice::ARES_DEBUGGER); // sd ra,24(sp)
+    rdram.ram.write<Word>(0x30008, 0, RBusDevice::ARES_DEBUGGER);
+    rdram.ram.write<Word>(0x30010, 0x27bd0020, RBusDevice::ARES_DEBUGGER); // executed epilogue
+    rdram.ram.write<Word>(0x30100, 0x0c00c000, RBusDevice::ARES_DEBUGGER); // caller JAL
+    rdram.ram.write<Dual>(0x31018, 0xffffffff80030108ull, RBusDevice::ARES_DEBUGGER);
+    cpu.ipu.r[29].u64 = stack; cpu.ipu.r[31].u64 = 0xffffffff80030108ull; cpu.pipeline.setPc(entry + 8);
+    auto observed = cpu.debugControl.snapshot(); auto hits = cpu.profile.dcacheHits, misses = cpu.profile.dcacheMisses;
+    auto frames = StackService::unwind(observed, 8, entry);
+    check(frames.frames.size() == 2 && frames.frames[0].ra == 0xffffffff80030108ull && frames.frames[0].frameSize == 32 && frames.frames[0].confidence == 2, "stack saved 64-bit RA and caller prologue");
+    check(frames.frames[0].raSaveWidth == 8 && frames.frames[0].callsite == 0xffffffff80030100ull && frames.rawBytes.size() == 256, "stack linked callsite and bounded raw window");
+    auto stackJson = StackService::execute({"0x80030000"}, true, 7, 10);
+    check(stackJson.error.empty() && StackService::execute({"0x80030001"}, true, 7, 10).error == "invalid_function_start", "stack hint validation");
+    auto pre = observed; pre.pc = entry;
+    check(StackService::unwind(pre, 8, entry).frames[0].frameSize == 0, "stack excludes unexecuted allocation at current PC");
+    auto post = observed; post.pc = entry + 20; post.gpr[29] += 32;
+    auto epilogue = StackService::unwind(post, 8, entry);
+    check(epilogue.frames[0].epilogueSeen && epilogue.frames[0].frameSize == 0 && epilogue.frames[0].raSource == "live_ra_after_epilogue", "stack recognizes executed epilogue");
+    auto bad = observed; bad.pc = 0x04040010;
+    check(StackService::unwind(bad, 8, 0).frames.empty(), "stack refuses MMIO code");
+    check(cpu.ipu.pc == observed.pc && cpu.ipu.r[29].u64 == observed.gpr[29] && cpu.profile.dcacheHits == hits && cpu.profile.dcacheMisses == misses, "stack leaves CPU and cache counters unchanged");
+    InspectionService inspection;
+    auto request = [&](const char* method, std::vector<std::string> args, const char* owner = "inspect") { return inspection.execute(method, args, owner, 7, 10, true, false, true); };
+    check(request("n64.dump.begin", {"all", "0x0", "0", "8388608"}).error == "size_mismatch" && !inspection.pin, "dump expected size prevalidation");
+    // Dirty CPU view and physical backing differ without allocating cache lines.
+    auto& line = cpu.dcache.line(0xffffffff80030000ull); line.fill(0x30000);
+    cpu.dcache.writeDebug<Byte>(0xffffffff80030000ull, 0x30000, 0xaa);
+    auto dump = request("n64.dump.begin", {"cpu", "0x80030000", "8", "0"});
+    check(dump.error.empty() && inspection.pin->bytes[0] == 0xaa, "dump uses resident dirty D-cache view");
+    std::string id = std::to_string(inspection.pin->id);
+    check(request("n64.dump.read", {id, "0", "8"}, "foreign").error == "busy", "dump snapshot ownership");
+    rdram.ram.write<Word>(0x30000, 0, RBusDevice::ARES_DEBUGGER);
+    check(inspection.pin->bytes[0] == 0xaa, "dump bytes immutable after source changes");
+    check(request("n64.dump.read", {id, "7", "2"}).error == "out_of_bounds", "dump complete read range validation");
+    request("n64.dump.release", {id});
+    check(request("n64.dump.begin", {"cpu", "0xa0030000", "8", "0"}).error.empty() && inspection.pin->bytes[0] == 0, "dump KSEG1 bypasses dirty cache");
+    inspection.pin->expires = InspectionService::Clock::now();
+    check(request("n64.dump.read", {std::to_string(inspection.pin->id), "0", "1"}).error == "stale_snapshot", "dump snapshot expiry");
+    auto probe1 = request("n64.render.probe", {});
+    check(probe1.json.find("\"originChanged\":null") != std::string::npos, "probe first observation has no delta");
+    vi.io.dramAddress ^= 8; rdp.command.clock += 1;
+    auto probe2 = inspection.execute("n64.render.probe", {}, "inspect", 7, 11, true, false, true);
+    check(probe2.json.find("\"originChanged\":true") != std::string::npos && probe2.json.find("\"dpcAdvanced\":true") != std::string::npos && probe2.json.find("\"frameAdvanced\":true") != std::string::npos, "probe compares observed coordinates");
+    check(request("n64.render.probe", {}, "foreign").json.find("\"originChanged\":null") != std::string::npos, "probe baselines isolated by owner");
+    std::printf("INSPECTION_STACK %s\nINSPECTION_DUMP %s\nINSPECTION_PROBE %s\n", stackJson.json.c_str(), dump.json.c_str(), probe2.json.c_str());
   }
   pi.detach(cartridge.romDevice); cartridge.rom.reset();
   rdram.ram.reset();

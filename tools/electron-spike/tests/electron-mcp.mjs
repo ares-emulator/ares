@@ -39,7 +39,7 @@ app.whenReady().then(async () => {
   const mcp = peer(); await mcp.initialize();
   enter('MCP tools');
   const list = (await mcp.request('tools/list', {})).result.tools;
-  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'write_memory_many', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save', 'state_load', 'batch', 'cpu_set_registers', 'rsp_registers', 'rdp_state', 'peripheral_registers', 'disassemble', 'rdp_capture', 'rsp_debug', 'rsp_break', 'rsp_step', 'rsp_run', 'rsp_stop'].sort());
+  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'write_memory_many', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save', 'state_load', 'batch', 'cpu_set_registers', 'rsp_registers', 'rdp_state', 'peripheral_registers', 'disassemble', 'stack', 'render_probe', 'dump_rdram', 'dump_range', 'rdp_capture', 'rsp_debug', 'rsp_break', 'rsp_step', 'rsp_run', 'rsp_stop'].sort());
   assert.equal(list.find(t => t.name === 'read_memory').inputSchema.properties.length.default, 64);
   assert.equal(list.find(t => t.name === 'resume').inputSchema.properties.keep_overrides.default, false);
   assert.equal(list.find(t => t.name === 'emu_status').inputSchema.properties.verbose.default, false);
@@ -166,6 +166,13 @@ app.whenReady().then(async () => {
   const emptyRdp = await mcp.tool('rdp_capture', { max_seconds: 0.01, path: rdpFile, max_commands: 4 });
   assert.equal(emptyRdp.complete, false, JSON.stringify(emptyRdp)); assert.equal(emptyRdp.stop_reason, 'timeout');
   assert.equal(JSON.parse(fs.readFileSync(rdpFile, 'utf8')).words.length, 0);
+  assert.equal((await mcp.tool('render_probe')).originChanged, null);
+  assert.equal((await mcp.tool('render_probe')).originChanged, false);
+  assert.equal((await mcp.tool('stack')).heuristic, true);
+  const dumpFile = path.join(temporary, 'electron range.bin');
+  assert.equal((await mcp.tool('dump_range', { addr: 0, length: 16, path: dumpFile })).size, 16);
+  assert.equal(fs.statSync(dumpFile).size, 16);
+  assert.equal((await mcp.tool('dump_rdram', { path: dumpFile, expect_size: 1 })).error, 'size_mismatch');
   const initialCpu = await mcp.tool('cpu_registers');
   assert.equal((await mcp.tool('cpu_set_registers', { gpr: { t0: '0x123456789abcdef0' } })).changed.gpr.t0, '0x123456789abcdef0');
   await mcp.tool('cpu_set_registers', { gpr: { t0: initialCpu.gpr.t0 } });

@@ -1339,3 +1339,79 @@ stack, dump_rdram, dump_range, call_function and call_recover. The registered
 rdp_capture also retains an explicit legacy-viewer gap. Physical input/audible
 N64, game acceptance and broader fault-injection gates remain pending. All 68
 remain preservation targets; task 10 has not started.
+
+## Task 9 stack/probe and immutable memory dumps (2026-10-20)
+
+Adds stack/render_probe/dump_rdram/dump_range: **64 of 68** MCP tools registered.
+Task 9 remains in progress; viewer command capture and bounded calls are pending.
+
+Audited `ares-64` at `1c9b9637476a83f7b80d3db1115a0f71529820d9`:
+
+| Source | SHA-256 |
+| --- | --- |
+| `desktop-ui/program/telemetry-server.cpp` | `738abe2ed5dd789b7b9968bd0f77c45ab03ddcecdf81e9106e962d250799646b` |
+| `ares/n64/cpu/debug-control.cpp` | `6952c5c0d7898ff6f0dfd6d73c98e67ff34c12940ba6c2d57285d8fa637e1597` |
+
+Stack analysis is a native safe-point observation using the reference bounded
+prologue/epilogue algorithm: eight frames, 256 backward instructions per frame,
+256 raw stack bytes. Saved SW/SD RA, linked callsite checks, caller-SP direction,
+cycles and unreadable code/data stop the heuristic. Output includes confidence,
+RA source/width/slot, scan bounds, hint use, epilogue and explicit assumptions.
+The optional function_start must be aligned readable RDRAM within 1024 bytes
+before PC. The port uses directly validated RDRAM-backed KSEG CPU D-cache byte
+reads with KSEG1 bypass, avoiding MMIO, cache allocation and guest execution.
+This is no replacement for symbol/unwind metadata or proof of the stack.
+
+Render probes use direct VI active/origin, DPC clock and native VI coordinate.
+Baselines are per connection, capped at 16 and reset/released with owner/epoch,
+so another client cannot consume a delta. First observation has null deltas;
+rendering is the reference origin/DPC/frame-change heuristic, using actual
+VI::active(). Legacy presented_frame/VPS counters are explicitly null.
+
+Memory dumps copy all bytes at one native safe point into an immutable owner
+pin, then use bounded main-process streaming and the shared atomic writer.
+Full dumps cover installed 4/8 MiB RDRAM; ranges are reduced to 1..1 MiB and
+support physical/KSEG addresses, CPU dirty-cache view and KSEG1 bypass. Bytes
+are guest big-endian with no header. Complete range/expected-size prevalidation
+precedes capture, renderer writes flush first, and pause state is preserved;
+no guest instructions run. Active operations, upload, batch, RSP gate and GDB
+conflicts return busy. One global native pin has a fixed 30-second lease.
+Main has two global/one owner jobs, four 16 KiB pages in flight, a 25-second
+deadline and 8 MiB output bound. Files include no snapshot header; result metadata
+reports SHA-256, size, source/physical address, view and capture epoch/frame.
+Reset/state load/disconnect revoke and success/failure releases the pin. Native
+contains no path handling or file publication.
+
+Validation on the actual new binary:
+
+- Native host/real-core fixture and strict TypeScript builds passed. No core or
+  serializer fields/version changed in this slice.
+- Full sequential suite **59/59** passed in 37.65s. Core fixture checks a saved
+  64-bit RA/caller callsite, unexecuted allocation, executed epilogue, bad hint,
+  MMIO refusal, raw-window bounds and CPU/cache-counter nonmutation. Native dump
+  tests cover expected-size prevalidation, dirty D-cache/KSEG1 distinction,
+  immutable bytes after source reuse, owner/read bounds and lease expiry.
+  Probe tests cover changed coordinates and per-owner baselines.
+- Disposable initialized N64 fixture and actual MCP stdio dump all installed
+  RDRAM, verify full file size/selected guest-order bytes/SHA-256, unaligned KSEG
+  range bytes, failed-overwrite preservation, range/size failures, no CPU advance,
+  stack output/hints and active-operation exclusion. The fixture uses its own
+  serializer data to initialize chip mapping; no user ROM, emulator or saves.
+- Main dump tests verify multipage byte order, cancellation/invalid-page cleanup,
+  native pin release and preservation of an existing artifact. Shared contract
+  tests validate actual native stack/dump/probe DTOs and reject malformed bounds.
+- Actual Electron integration passed exact **64-tool** registry, stack/probe,
+  real 16-byte range file, full-dump size precondition and prior RSP/RDP/state/
+  input/image/audio/video/session regressions.
+- Added an ordinary-play dump check after the suite: affected live test passed
+  **1/1**, confirming snapshot.stopped=false and pause state remains running.
+- Fresh `artifacts/task-9-inspection/Ares.app` copied outside checkout passed:
+  **64-tool** registry, explicit stack/probe/dump unavailability on GB, prior
+  memory/state/image/audio/video checks, native loader/MCP checkout reads denied,
+  454 GB frames, Electron 44.9.0 / Node 24.22.0. Packaged N64 game acceptance
+  remains not run.
+
+Four tools remain unregistered: rsp_capture, capture_control, call_function and
+call_recover. Exact rdp_capture's legacy viewer mode remains unavailable. Task 9
+still needs these native hooks/recovery semantics and remaining physical/game/
+fault-injection acceptance; all 68 preservation targets remain in scope.

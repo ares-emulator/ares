@@ -34,7 +34,7 @@ struct ExecutionService {
     if(owner == "ui" && (method == "session.pause" || method == "session.resume" || method == "session.reset" || method == "execution.cancel")) return true;
     static const std::vector<std::string> reads = {
       "session.status", "memory.regions", "memory.read", "execution.status", "execution.release",
-      "n64.cpu.disassemble", "n64.rsp.registers", "n64.rdp.state", "n64.peripheral.registers",
+      "n64.cpu.stack", "n64.render.probe", "n64.dump.read", "n64.dump.release", "n64.cpu.disassemble", "n64.rsp.registers", "n64.rdp.state", "n64.peripheral.registers",
       "n64.memory.read", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
       "n64.input.state", "n64.profiler.top", "n64.dma.log", "n64.trace.page", "n64.state.format", "n64.state.layout",
       "n64.state.read", "n64.state.release", "video.begin", "video.read", "video.release", "video.record.status",

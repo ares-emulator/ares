@@ -3,9 +3,9 @@
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 60 tools: eleven generic/session/run tools,
+emulator. The verified registry has 64 tools: eleven generic/session/run tools,
 thirteen N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch and five task 9 machine/disassembly/mutation tools, five RSP debugger tools and exact rdp_capture. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and five state tools, plus batch and five task 9 machine/disassembly/mutation tools, five RSP debugger tools and exact rdp_capture, plus stack/render_probe/dump_rdram/dump_range. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
@@ -532,3 +532,36 @@ return `file_error` alongside the completed capture. Export is bounded to 64 MiB
 25 seconds, two jobs globally and one per owner. Reset/disconnect revoke jobs;
 newer captures invalidate old pages instead of mixing them. Legacy
 `next_frame=false` returns `legacy_capture_unavailable` until viewer buffers land.
+
+
+### Inspection and memory dumps
+
+`stack(function_start=null)` inspects current CPU state without execution. It
+scans at most 256 instructions per frame, up to eight frames, and returns a
+256-byte raw stack window, candidate frame sizes/return slots/callsites, confidence,
+assumptions and stop reason. Only RDRAM-backed KSEG code/stack addresses are read,
+using CPU D-cache bytes with KSEG1 bypass. The optional hint must be aligned and
+within 1024 bytes before PC. This is heuristic analysis without symbols or unwind
+metadata; a candidate frame is not proof of a call stack.
+
+`render_probe()` reports native VI active/origin, DPC clock and VI frame. Each
+connection has its own baseline; first observation/epoch change returns null
+deltas. `rendering` requires active VI plus changed origin, DPC clock and VI frame;
+that heuristic is not proof of visible pixels. Legacy `presented_frame` and `vps`
+are explicitly null. Baselines are bounded to 16 owners and removed on release.
+
+`dump_rdram(path,overwrite=false,expect_size=null)` snapshots all installed RDRAM,
+up to 8 MiB. `dump_range(addr,length,path,view='rdram',overwrite=false)` snapshots
+1..1048576 bytes through physical/KSEG aliases; `cpu` includes resident dirty
+D-cache bytes while KSEG1 bypasses. Snapshots contain guest big-endian bytes with
+no header. Complete ranges/expected size are validated first, renderer writes are
+flushed, and all bytes copy at one safe point without guest execution or pause
+change. Active operations, upload, batch, RSP gate and GDB conflicts return busy.
+
+One owner-scoped native pin has a fixed 30-second lease. Main streams 16 KiB pages
+(four in flight) through the shared atomic writer, capped at 25 seconds and two
+jobs globally/one per owner. Results include SHA-256, size, physical/source
+address, view and snapshot epoch/frame. Reset/state load/disconnect revoke pins
+and jobs. Every success/failure releases the pin; failed publication preserves an
+existing destination. Native snapshot bytes remain immutable if play resumes or
+RAM changes while the file is written.

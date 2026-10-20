@@ -729,10 +729,16 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 inspection/artifact slice)",
+      "mcpSchemaParity": "Reference names/defaults retained. Explicit bounds and counter gaps documented; full generated schema/result equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/inspection.test.cjs, tests/inspection-live.test.cjs; Electron/package gates in execution log",
+          "result": "Passed: native stack/prologue/epilogue/cache/snapshot/owner/expiry/probe fixture, actual MCP full installed-RDRAM file/hash and range/stack/probe, streamed export cancellation and atomic file preservation; full suite 59/59.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Native current safe-point snapshot, up to 8 frames, 256 backward instructions per frame and 256 raw stack bytes. RDRAM-backed KSEG only; CPU D-cache-aware byte reads with KSEG1 bypass, no MMIO/guest execution/cache allocation. Saved SW RA sign-extension and SD, pre-prologue and executed epilogue rules from reference. Optional aligned function_start must be readable within 1024 bytes before current PC. Reports heuristic/confidence/assumptions and stop reason; no symbols or unwind metadata. Full reference result/schema equality and real-game acceptance pending."
     },
     {
       "name": "state_save",
@@ -928,10 +934,16 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 inspection/artifact slice)",
+      "mcpSchemaParity": "Reference names/defaults retained. Explicit bounds and counter gaps documented; full generated schema/result equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/inspection.test.cjs, tests/inspection-live.test.cjs; Electron/package gates in execution log",
+          "result": "Passed: native stack/prologue/epilogue/cache/snapshot/owner/expiry/probe fixture, actual MCP full installed-RDRAM file/hash and range/stack/probe, streamed export cancellation and atomic file preservation; full suite 59/59.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "One connection-owned immutable native safe-point snapshot of all installed RDRAM, up to 8 MiB, physical guest big-endian bytes without header. Optional expected size prevalidated. No guest execution or pause change. Exclusive with active operations/uploads/batches/RSP gate/GDB; one native pin, fixed 30-second lease. Main streams 16 KiB pages, four at a time, to atomic publication with SHA-256 and capture coordinates; 25-second deadline, two global/one owner jobs. Reset/state load/disconnect revoke; errors preserve existing file and release the pin. No renderer host pointers/filesystem in MCP adapter."
     },
     {
       "name": "memory_regions",
@@ -1229,10 +1241,16 @@
       "family": "Images/render captures",
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 inspection/artifact slice)",
+      "mcpSchemaParity": "Reference names/defaults retained. Explicit bounds and counter gaps documented; full generated schema/result equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/inspection.test.cjs, tests/inspection-live.test.cjs; Electron/package gates in execution log",
+          "result": "Passed: native stack/prologue/epilogue/cache/snapshot/owner/expiry/probe fixture, actual MCP full installed-RDRAM file/hash and range/stack/probe, streamed export cancellation and atomic file preservation; full suite 59/59.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Per-connection native baseline (at most 16), reset on epoch/reset/disconnect. First observation returns null deltas. VI active/origin, DPC clock and native VI frame are direct observations; rendering requires all three changes and is heuristic. Uses actual VI active() predicate. Presented-frame and VPS are explicitly null because the legacy viewer counters are not ported. No guest execution or MMIO."
     },
     {
       "name": "controller_set",
@@ -2111,10 +2129,16 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 inspection/artifact slice)",
+      "mcpSchemaParity": "Reference names/defaults retained. Explicit bounds and counter gaps documented; full generated schema/result equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/inspection.test.cjs, tests/inspection-live.test.cjs; Electron/package gates in execution log",
+          "result": "Passed: native stack/prologue/epilogue/cache/snapshot/owner/expiry/probe fixture, actual MCP full installed-RDRAM file/hash and range/stack/probe, streamed export cancellation and atomic file preservation; full suite 59/59.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Same immutable snapshot/atomic streaming path as dump_rdram, reduced to 1..1048576 bytes per range. Physical/KSEG aliases; CPU view observes resident dirty D-cache, KSEG1 bypasses. Complete range validated before snapshot; no wrap/MMIO/TLB access or guest execution/pause change. One native 30-second pin and main 25-second job; no mixed-frame pagination. SHA-256 and snapshot epoch/frame/address/view reported. Full reference schema/result equality pending."
     },
     {
       "name": "video_start",
