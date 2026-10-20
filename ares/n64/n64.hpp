@@ -11,6 +11,7 @@
 #include <nall/recompiler/generic/generic.hpp>
 #include <nall/tcptext/tcp-socket.hpp>
 #include <component/processor/sm5k/sm5k.hpp>
+#include <deque>
 #include <functional>
 #include <span>
 #include <vector>
