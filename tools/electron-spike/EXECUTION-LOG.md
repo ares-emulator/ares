@@ -1208,3 +1208,62 @@ legacy blocking pump must be reconciled with native safe-point ownership and
 DMA progress. Stack/dump/probe parity rows also remain in the 14-tool remainder.
 All 68 remain preservation targets. Physical input/audible N64, real-game and
 fault-injection milestone gates are still separately pending.
+
+## Task 9 RSP debugger slice (2026-10-20)
+
+Adds rsp_debug/rsp_break/rsp_step/rsp_run/rsp_stop: **59 of 68** MCP tools.
+Task 9 remains in progress; this does not implement command/task capture or calls.
+
+The reference `ares-64` commit remains
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`. Audited source SHA-256:
+
+| Source | SHA-256 |
+| --- | --- |
+| `ares/n64/rsp/rsp-commands.cpp` | `3abfb3ca71448d67948faf2c92201db20be784246ac1afa379d820eab6796476` |
+| `ares/n64/rsp/dma.cpp` | `0a91027e34f502dd8486502bbd0e6b98701b86fc158111bbd3b8426810c8643e` |
+
+The blocking legacy transport pump is replaced with a host-only cooperative gate.
+Before-instruction stops unwind RSP/CPU main loops to the existing host safe point.
+The ordinary owned operation coordinator grants steps or run; no second scheduler
+or transport exists. RSP debug mode disables dual issue and selects CPU/RSP
+interpreters without modifying configured JIT flags. IMEM debugger writes now
+invalidate RSP translations. Hardware HALT is preserved. Debug DMA promotes a
+stranded full slot and drains at most two 256-row slots synchronously; ordinary
+DMA timing is unchanged when debugging is inactive. No serializer field/version
+change was made.
+
+A 30-second owner lease and five-second per-operation deadline bound frozen or
+nonprogressing sessions. Breakpoints are before-instruction, aligned IMEM PCs,
+16 entries maximum; starting PC suppression occurs once per grant. Step grants
+are 1..1000000 instructions. Completed operations freeze separate RSP counts,
+PC and reason; generic executed remains the CPU count. Parent/UI pause snapshots
+before releasing the gate. Owner release/disconnect, pause/resume/reset, human
+takeover, lease expiry and GDB attachment release debugging. Stop/cancel/timeout
+retain a frozen session. Competing mutations, CPU operations, uploads and batches
+return busy; owner memory edits are allowed only while frozen.
+
+Validation on the actual new binary:
+
+- Native host and real-core fixture builds passed; strict TypeScript passed.
+- Full sequential suite **52/52** passed in 31.27s; after adding negative RSP
+  contract checks and native lease/table cases, affected machine/RSP tests **4/4**
+  passed. Real interpreter checks cover exact single instruction, branch delay,
+  before-breakpoint/starting-PC skip, hardware BREAK, unchanged JIT flag, pending
+  DMA promotion and both maximum-row DMA slots. Native lease expiry freezes the
+  result before releasing; foreign release/table mutation and table bounds pass.
+- Disposable original N64 CPU/RSP programs and actual MCP stdio verify all five
+  tools, actual counts/PCs/reasons, exclusive owner, CPU-operation exclusion,
+  running memory-write exclusion, hardware-HALT timeout with zero instructions,
+  immutable completed results, pause and idle disconnect cleanup. No user ROM,
+  active emulator or saves were used.
+- Actual Electron integration passed exact **59-tool** registry, RSP operation
+  acknowledgments, stop/poll and UI pause revocation, plus prior regression gates.
+- Fresh `artifacts/task-9-rsp/Ares.app` copied outside checkout passed with loader
+  and MCP checkout reads denied; **59-tool** registry, explicit five-tool RSP
+  unavailability on GB, previous memory/state/image/audio/video checks, 456 GB
+  frames, Electron 44.9.0 / Node 24.22.0. Packaged N64 game acceptance is not run.
+
+Still pending: exact command/task/submission hooks and capture, stack/dump/probe,
+bounded calls/recovery (nine unregistered tools). GDB-attachment/human physical
+input acceptance and real-game/fault-injection milestone cases remain not run;
+all 68 tools remain preservation targets.

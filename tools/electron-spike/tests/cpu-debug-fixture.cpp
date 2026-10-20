@@ -3,6 +3,7 @@
 #include <n64/n64.hpp>
 #include "../native/n64-service.hpp"
 #include "../native/machine-service.hpp"
+#include "../native/rsp-debug-service.hpp"
 #include "../native/memory-experiment.hpp"
 #include "../native/input-service.hpp"
 #include "../native/trace-service.hpp"
@@ -519,6 +520,57 @@ int main() {
     auto after = cpu.debugControl.snapshot();
     check(before.pc == after.pc && std::memcmp(before.gpr, after.gpr, sizeof(before.gpr)) == 0 && std::memcmp(before.cop0, after.cop0, sizeof(before.cop0)) == 0 && retired == cpu.debugControl.instructionsRetired, "offline layout preserves CPU state");
     check(ram == rdram.ram.read<Word>(0x2000, RBusDevice::ARES_DEBUGGER), "offline layout preserves RDRAM");
+  }
+  {
+    // Real RSP interpreter, branch pipeline, DMA slots and configured JIT.
+    rsp.load(root); rsp.power(false); rsp.status.halted = false;
+    auto& gate = rsp.debugControl;
+    rsp.imem.write<Word>(0, 0x24080001); // addiu t0,zero,1
+    rsp.imem.write<Word>(4, 0x10000002); // beq zero,zero,0x10
+    rsp.imem.write<Word>(8, 0x25080001); // delay slot
+    rsp.imem.write<Word>(12, 0x25080040); // skipped
+    rsp.imem.write<Word>(16, 0x25080002);
+    rsp.imem.write<Word>(20, 0x0000000d); // BREAK
+    auto jitEnabled = rsp.recompiler.enabled;
+    gate.active = true; gate.pause(0, "fixture"); gate.grant(1, false);
+    rsp.instruction();
+    check(gate.stopped && gate.instructions == 1 && rsp.ipu.pc == 4 && rsp.ipu.r[8].u32 == 1, "RSP one instruction grant has no dual issue");
+    rsp.instruction(); check(gate.instructions == 1 && rsp.ipu.pc == 4, "stopped gate does not execute");
+    gate.breakpoints = {4, 16}; gate.grant(0, true);
+    for(unsigned i = 0; i < 8 && !gate.stopped; ++i) rsp.instruction();
+    check(gate.reason == "rsp_breakpoint" && rsp.ipu.pc == 16 && gate.instructions == 3 && rsp.ipu.r[8].u32 == 2, "RSP skips starting breakpoint once and stops before branch target after delay slot");
+    gate.grant(1, false); rsp.instruction();
+    check(gate.instructions == 4 && rsp.ipu.r[8].u32 == 4 && rsp.ipu.pc == 20, "RSP step from breakpoint executes exactly once");
+    gate.grant(100, false); rsp.instruction();
+    check(gate.reason == "rsp_halted" && gate.instructions == 5 && rsp.status.halted && rsp.status.broken, "RSP hardware BREAK ends grant without clearing HALT");
+    check(rsp.recompiler.enabled == jitEnabled, "RSP gate preserves configured JIT flag");
+    // A stale full slot must progress even if the busy slot is already empty.
+    rdram.ram.write<Word>(0x3000, 0x12345678, RBusDevice::ARES_DEBUGGER);
+    rsp.dma = {}; rsp.dma.full.read = 1; rsp.dma.pending.dramAddress = 0x3000;
+    rsp.dma.pending.length = 0; rsp.dma.pending.pbusAddress = 0x100;
+    rsp.dmaStep(0);
+    check(!rsp.dma.busy.any() && !rsp.dma.full.any() && rsp.dmem.read<Word>(0x100) == 0x12345678, "RSP debug DMA promotes and drains pending slot");
+    rsp.dma = {}; rsp.dma.busy.read = 1; rsp.dma.full.read = 1;
+    rsp.dma.current.count = 255; rsp.dma.current.length = 0; rsp.dma.current.dramAddress = 0x3000;
+    rsp.dma.pending.count = 255; rsp.dma.pending.length = 0; rsp.dma.pending.dramAddress = 0x3000;
+    rsp.dmaStep(0);
+    check(!rsp.dma.busy.any() && !rsp.dma.full.any(), "RSP bounded DMA drain handles both maximum-row slots");
+    gate = {};
+    RspDebugService service; ExecutionService exec; bool paused = true;
+    exec.supported = true; exec.frameKind = "vi";
+    exec.onFinish = [&](const std::string& reason) { service.finish(reason); };
+    auto request = [&](const char* method, std::vector<std::string> args = {}, const char* owner = "rsp-owner") { return service.execute(method, args, owner, 1, true, exec, paused); };
+    check(request("n64.rsp.debug", {"1"}).error.empty() && service.active(), "RSP native session enables");
+    for(unsigned i = 0; i < 16; ++i) check(request("n64.rsp.break", {"add", N64Service::hex(i * 4)}).error.empty(), "RSP breakpoint table accepts bounded entries");
+    check(request("n64.rsp.break", {"add", "0x40"}).error == "table_full" && request("n64.rsp.break", {"add", "0x1"}).error == "invalid_request", "RSP breakpoint table and alignment bounds");
+    check(request("n64.rsp.break", {"clear"}, "foreign").error == "busy", "RSP breakpoint mutation owned");
+    check(request("n64.rsp.step", {"1"}).error.empty() && exec.active && !gate.stopped, "RSP step is existing execution operation");
+    service.expires = RspDebugService::Clock::now(); service.service(exec, paused);
+    check(!exec.active && !service.active() && paused && exec.finished.back().second.find("rsp_lease_expired") != std::string::npos, "RSP lease expiry freezes result before releasing gate");
+    check(request("n64.rsp.debug", {"1"}).error.empty(), "RSP reacquires after expiry");
+    service.releaseOwner("foreign"); check(service.active(), "foreign release leaves RSP owner intact");
+    service.releaseOwner("rsp-owner"); check(!service.active(), "RSP owner release clears idle gate");
+    rsp.unload();
   }
   pi.detach(cartridge.romDevice); cartridge.rom.reset();
   rdram.ram.reset();

@@ -109,6 +109,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
     } tracer;
   } debugger;
 
+  #include "debug-control.hpp"
+
   //rsp.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;

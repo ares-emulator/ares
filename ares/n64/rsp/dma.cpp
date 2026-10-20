@@ -3,6 +3,13 @@ auto RSP::dmaQueue(u32 clocks, Thread& thread) -> void {
 }
 
 auto RSP::dmaStep(u32 clocks) -> void {
+  if(debugControl.active) {
+    // A slow gated interpreter must not strand the SP_DMA_FULL wait loop.
+    // Two queue slots, at most 256 rows each: finite synchronous debug progress.
+    if(!dma.busy.any() && dma.full.any()) dmaTransferStart(*this);
+    for(unsigned rows = 0; dma.busy.any() && rows < 512; ++rows) dmaTransferStep();
+    return;
+  }
   if(dma.busy.any()) {
     dma.clock += clocks;
     if(dma.clock >= 0) {

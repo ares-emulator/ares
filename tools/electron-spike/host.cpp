@@ -37,6 +37,7 @@ auto locate(const string& name) -> string {
 #include "native/session-service.hpp"
 #include "native/n64-service.hpp"
 #include "native/machine-service.hpp"
+#include "native/rsp-debug-service.hpp"
 #include "native/memory-experiment.hpp"
 #include "native/input-service.hpp"
 #include "native/trace-service.hpp"
@@ -417,6 +418,7 @@ int main(int argc, char** argv) {
   N64Service n64Service; n64Service.available = n64;
   TraceService traceService; traceService.available = n64;
   TapService tapService;
+  RspDebugService rspDebugService;
   ProfilerService profilerService; profilerService.available = n64;
   DmaService dmaService; dmaService.available = n64;
   execution.cpuSupported = n64;
@@ -436,8 +438,10 @@ int main(int argc, char** argv) {
   host.service.audioRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     return host.audioCapture.execute(method, args, owner, !host.streams.empty());
   };
-  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); host.stateSnapshot.releaseOwner(owner); host.stateLoader.releaseOwner(owner); };
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); host.stateSnapshot.releaseOwner(owner); host.stateLoader.releaseOwner(owner); rspDebugService.releaseOwner(owner); };
   host.service.beforeRequest = [&](const std::string& method, const std::string& owner) -> std::string {
+    rspDebugService.service(execution, host.service.paused);
+    if(!rspDebugService.permitted(method, owner, bool(execution.active))) return "busy";
     auto& load = host.stateLoader;
     if(load.upload && Clock::now() >= load.upload->deadline) load.reset();
     if(load.upload && (method == "session.pause" || method == "session.resume") && owner != "ui" && owner != load.upload->owner) return "busy";
@@ -452,6 +456,8 @@ int main(int argc, char** argv) {
     return std::find(allowed.begin(), allowed.end(), method) != allowed.end() ? std::string{} : "busy";
   };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method == "n64.rsp.debug" || method == "n64.rsp.break" || method == "n64.rsp.step" || method == "n64.rsp.run" || method == "n64.rsp.stop") return rspDebugService.execute(method, args, owner, host.service.epoch, n64, execution, host.service.paused);
+    if(method == "n64.rsp.registers") rspDebugService.observe(owner);
     if(method == "n64.cpu.setRegisters" || method == "n64.cpu.disassemble" || method == "n64.rsp.registers" || method == "n64.rdp.state" || method == "n64.peripheral.registers") {
       auto result = MachineService::execute(method, args, host.service.epoch, execution.frame, n64, bool(execution.active), host.service.paused);
       if(n64) execution.executor = N64Service::executor();
@@ -532,9 +538,9 @@ int main(int argc, char** argv) {
   };
   if(n64) {
     auto& debug = ares::Nintendo64::cpu.debugControl;
-    host.service.onPause = [&] { host.stateLoader.reset(); };
+    host.service.onPause = [&] { host.stateLoader.reset(); rspDebugService.reset(); };
     host.service.onResume = [&](bool keepOverrides, const std::string& owner) {
-      host.stateLoader.reset();
+      host.stateLoader.reset(); rspDebugService.reset();
       if(!keepOverrides) {
         if(owner == "ui") host.injectedInput.releaseAll();
         else host.injectedInput.releaseOwner(owner);
@@ -547,7 +553,7 @@ int main(int argc, char** argv) {
       if(execution.instructionCount) debug.requestStepInstructions(execution.instructionCount);
       execution.executor = N64Service::executor();
     };
-    execution.onFinish = [&](const std::string& reason) { traceService.finish(reason); tapService.finish(reason, host.injectedInput, host.service.epoch, execution.frame); host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
+    execution.onFinish = [&](const std::string& reason) { rspDebugService.finish(reason); traceService.finish(reason); tapService.finish(reason, host.injectedInput, host.service.epoch, execution.frame); host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
     execution.debugSnapshot = [&] { return debug.halted && execution.active && execution.active->slices ? N64Service::stop(host.service.epoch) : "{\"valid\":false}"; };
   }
   execution.supported = synthetic || n64;
@@ -566,6 +572,7 @@ int main(int argc, char** argv) {
       execution.executor = N64Service::executor();
     }
     if(n64) host.injectedInput.service(host.service.epoch, execution.frame);
+    rspDebugService.service(execution, host.service.paused);
     bool wasControlled = bool(execution.active);
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
       host.injectedInput.releaseAll(); traceService.reset(); profilerService.reset();
@@ -573,20 +580,22 @@ int main(int argc, char** argv) {
       host.audioCapture.reset();
       host.recording.reset();
       host.stateSnapshot.reset();
-      host.stateLoader.reset();
+      host.stateLoader.reset(); rspDebugService.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
       ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
       if(host.root) { host.output.clear(); host.root->power(); }
     }, host.memory)) { host.quit = true; break; }
     bool takeover = host.takeoverRequested.exchange(false);
+    bool rspTakeover = takeover && n64 && rspDebugService.active();
     bool batchTakeover = takeover && n64 && execution.reservation.has_value();
     if(batchTakeover) execution.reservation.reset();
     bool loadTakeover = takeover && n64 && host.stateLoader.upload.has_value();
     if(loadTakeover) host.stateLoader.reset();
     bool inputTakeover = takeover && n64 && host.injectedInput.takeover();
-    if((loadTakeover || batchTakeover) && !inputTakeover) ++host.injectedInput.takeovers;
-    if(loadTakeover || inputTakeover || batchTakeover) {
+    if((loadTakeover || batchTakeover || rspTakeover) && !inputTakeover) ++host.injectedInput.takeovers;
+    if(loadTakeover || inputTakeover || batchTakeover || rspTakeover) {
       execution.complete("host_input", host.service.paused);
+      rspDebugService.reset();
       ares::Nintendo64::cpu.debugControl.resume();
       host.service.paused = false;
     }
@@ -618,6 +627,7 @@ int main(int argc, char** argv) {
       auto& debug = ares::Nintendo64::cpu.debugControl;
       execution.instructions = debug.instructionsRetired;
       execution.executor = N64Service::executor();
+      if(rspDebugService.active() && ares::Nintendo64::rsp.debugControl.stopped) { execution.complete(ares::Nintendo64::rsp.debugControl.reason, host.service.paused); host.service.paused = true; }
       if(debug.halted) { execution.complete(N64Service::reason(debug.stop.reason), host.service.paused); host.service.paused = true; }
     }
     execution.service(host.service.paused);

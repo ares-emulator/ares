@@ -39,6 +39,7 @@ auto CPU::unload() -> void {
 auto CPU::main() -> void {
   u32 remaining = executionCoordinate.sliceBudget;
   while(!vi.refreshed && GDB::server.reportPC(ipu.pc & 0xFFFFFFFF)) {
+    if(rsp.debugControl.active && rsp.debugControl.stopped) break;
     if(debugControl.gate && debugControl.exitMain()) break;
     if(executionCoordinate.sliceBudget && !remaining--) break;
     if(instruction()) synchronize();
@@ -168,7 +169,7 @@ auto CPU::instruction() -> bool {
   bool debugging = unlikely(debugControl.active);
   if(debugging && debugControl.beforeInstruction(access)) return true;
 
-  if(!debugging && Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
+  if(!debugging && !rsp.debugControl.active && Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
     if(vaddrAlignedError<Word>(access.vaddr, false)) return true;
     auto block = recompiler.block(ipu.pc, access.paddr);
     if(block) {

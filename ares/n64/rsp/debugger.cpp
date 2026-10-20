@@ -16,7 +16,8 @@ auto RSP::Debugger::load(Node::Object parent) -> void {
     return rsp.imem.read<Byte>(address);
   });
   memory.imem->setWrite([&](u32 address, u8 data) -> void {
-    return rsp.imem.write<Byte>(address, data);
+    rsp.imem.write<Byte>(address, data);
+    if constexpr(Accuracy::RSP::Recompiler) rsp.recompiler.invalidate(address);
   });
 
   tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "RSP");

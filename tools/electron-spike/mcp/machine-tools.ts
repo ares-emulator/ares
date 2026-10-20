@@ -8,7 +8,7 @@ export function registerMachineTools(server: McpServer, client: SessionClient, s
   const call = (fn: () => Promise<unknown>) => fn().then(output, e => ({ ...output({ error: e instanceof ServiceError ? e.code : 'request_failed' }), isError: true }));
   const addr = z.union([z.number().int().nonnegative(), z.string()]);
   for (const [name, method, description] of [
-    ['rsp_registers', 'n64.rsp.registers', 'N64 RSP scalar/vector/accumulator, status and DMA snapshot at a native safe point. Direct fields, including semaphore, are observed without MMIO read side effects. RSP instruction debugging is not yet available.'],
+    ['rsp_registers', 'n64.rsp.registers', 'N64 RSP scalar/vector/accumulator, status and DMA snapshot at a native safe point. Direct fields, including semaphore, are observed without MMIO read side effects. The debug object reports the cooperative RSP instruction gate and current executor.'],
     ['rdp_state', 'n64.rdp.state', 'Native N64 DPC command/status snapshot. Direct registers only; does not reconstruct or capture submitted commands.'],
     ['peripheral_registers', 'n64.peripheral.registers', 'Native N64 VI/AI/PI/SI/RI fields, with no MMIO read side effects or guest execution.']
   ] as const) server.registerTool(name, { description, inputSchema: z.object({}).strict(), annotations: { readOnlyHint: true } }, () => call(async () => {

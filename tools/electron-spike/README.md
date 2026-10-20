@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 54 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 59 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -369,7 +369,7 @@ Exports stream four bounded native pages per batch, cap output at 64 MiB and
 connection; disconnect, host replacement and stale epochs abort work. Relative
 paths resolve against the app process working directory. `file_error` reports
 export failure after capture; completed emulation is retained. Native screenshots are implemented below; audio taps and recording remain task 7 work.
-The MCP registry now exposes 54 tools.
+The MCP registry now exposes 59 tools.
 
 ### Native screenshots (task 7, partial)
 
@@ -422,6 +422,14 @@ mutation and require an operation-free pause. PC edits canonicalize 32-bit KSEG
 addresses, reset delay-slot/pipeline and stale stop state, and drop JIT translations.
 Non-PC edits preserve immutable stops. Read-only snapshots copy direct fields
 without invoking MMIO side effects. Disassembly observes CPU D-cache or physical
-RDRAM (1–128 instructions); it does not claim I-cache fetch coherence. RSP debugger
-control and exact command/task capture are still pending. See
+RDRAM (1–128 instructions); it does not claim I-cache fetch coherence. RSP debugger control now uses an owned cooperative instruction gate; exact command/task capture remains pending. See
 [task 9 machine services](mcp/README.md#machine-services-task-9-in-progress).
+
+
+Task 9 also exposes `rsp_debug`, `rsp_break`, `rsp_step`, `rsp_run` and `rsp_stop`.
+Enabling freezes at a safe point; grants execute actual RSP instructions with
+single issue while CPU/devices advance through the normal scheduler. It preserves
+hardware HALT and configured JIT flags. Debug DMA drains both bounded queue slots.
+Step/run return operation handles with RSP-specific counts; each has a five-second
+deadline. The owner has a renewable 30-second lease; disconnect, UI pause/resume,
+reset or human takeover releases the gate. See the parity ledger for limits.

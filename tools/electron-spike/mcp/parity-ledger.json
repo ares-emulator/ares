@@ -108,7 +108,7 @@
           "date": "2026-10-20"
         }
       ],
-      "knownLimits": "Direct safe-point scalar32/vector32x8/accumulator/status/DMA and current instruction snapshots. No semaphore/MMIO side effects. DMA clock is signed decimal string for precision; debug.available:false until RSP gate is ported. No command capture claim. DMA origin PC retains full64 rather than reference helper truncation."
+      "knownLimits": "Direct safe-point scalar32/vector32x8/accumulator/status/DMA and current instruction snapshots. No semaphore/MMIO side effects. DMA clock is signed decimal string for precision; debug.available:true with direct cooperative gate metadata, instruction counts and breakpoint table. No command capture claim. DMA origin PC retains full64 rather than reference helper truncation."
     },
     {
       "name": "rdp_state",
@@ -1914,10 +1914,16 @@
       "family": "RSP instruction debugger",
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
     },
     {
       "name": "rsp_break",
@@ -1941,10 +1947,16 @@
       "family": "RSP instruction debugger",
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
     },
     {
       "name": "rsp_step",
@@ -1962,10 +1974,16 @@
       "family": "RSP instruction debugger",
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
     },
     {
       "name": "rsp_run",
@@ -1976,10 +1994,16 @@
       "family": "RSP instruction debugger",
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
     },
     {
       "name": "rsp_stop",
@@ -1990,10 +2014,16 @@
       "family": "RSP instruction debugger",
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "testEvidence": [
+        {
+          "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
+          "date": "2026-10-20"
+        }
+      ],
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
     },
     {
       "name": "disassemble",

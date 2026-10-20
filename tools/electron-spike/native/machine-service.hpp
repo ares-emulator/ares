@@ -1,5 +1,6 @@
 #pragma once
 #include "n64-service.hpp"
+#include "rsp-debug-state.hpp"
 
 // Safe-point observations/mutation adapted from ares-64 telemetry-server.cpp at
 // 1c9b9637476a83f7b80d3db1115a0f71529820d9. No MMIO reads or legacy transport.
@@ -84,7 +85,7 @@ struct MachineService {
     dma.hex("curPbus", d.current.pbusAddress); dma.number("curRegion", d.current.pbusRegion);
     dma.hex("pendDram", d.pending.dramAddress); dma.hex("pendPbus", d.pending.pbusAddress); dma.number("pendRegion", d.pending.pbusRegion); dma.number("pendLen", d.pending.length);
     dma.add("curOriginCpu", d.current.originCpu ? "true" : "false"); dma.hex("curOriginPc", d.current.originPc);
-    out.add("dma", dma.end()); out.add("debug", "{\"available\":false}");
+    out.add("dma", dma.end()); out.add("debug", rspDebugState());
     uint32_t instruction = rsp.imem.size >= 4096 ? rsp.imem.read<Word>(rsp.ipu.pc & 0xfff) : 0;
     out.hex("curInstrHex", instruction);
     RSP::Disassembler disassembler(rsp); disassembler.showColors = false;

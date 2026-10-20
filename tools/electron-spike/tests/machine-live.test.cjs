@@ -49,7 +49,7 @@ test('real N64 and MCP: atomic register mutation, PC pipeline/stops, observation
     peer = new StdioPeer(process.execPath, [path.resolve(__dirname, '../dist/mcp/server.js'), '--connection', endpoint.metadataFile, '--instance', endpoint.instance]); await peer.initialize();
     const stopped = await peer.tool('step_instructions', { n: 2 }), before = await peer.tool('cpu_registers', { cop0: true });
     const originalOperation = unwrap(await native.request('execution.status', undefined, { operationId: stopped.operation_id }));
-    const rsp1 = await peer.tool('rsp_registers'); assert.equal(rsp1.gpr.length, 32); assert.equal(rsp1.vu.length, 32); assert.equal(rsp1.debug.available, false);
+    const rsp1 = await peer.tool('rsp_registers'); assert.equal(rsp1.gpr.length, 32); assert.equal(rsp1.vu.length, 32); assert.equal(rsp1.debug.available, true);
     const rdp = await peer.tool('rdp_state'); assert.ok(['DMEM', 'RDRAM'].includes(rdp.source));
     const peripherals = await peer.tool('peripheral_registers'); assert.equal(typeof peripherals.vi.VI_WIDTH, 'number');
     assert.equal((await peer.tool('disassemble', { addr: '0x80001000', count: 128 })).instructions.length, 128);

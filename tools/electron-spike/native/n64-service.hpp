@@ -21,7 +21,7 @@ struct N64Service {
   }
   static std::string executor() {
     using namespace ares::Nintendo64;
-    return !cpu.debugControl.active && Accuracy::CPU::Recompiler && cpu.recompiler.enabled ? "recompiler" : "interpreter";
+    return !cpu.debugControl.active && !rsp.debugControl.active && Accuracy::CPU::Recompiler && cpu.recompiler.enabled ? "recompiler" : "interpreter";
   }
   static std::string registers(const Debug::Snapshot& s) {
     std::string out = "{\"pc\":" + controlQuote(hex(s.pc)) + ",\"next_pc\":" + controlQuote(hex(s.nextPc))

@@ -32,6 +32,7 @@ auto RSP::unload() -> void {
 
 auto RSP::main() -> void {
   while(Thread::clock < 0) {
+    if(debugControl.active && debugControl.stopped) break;
     auto clock = Thread::clock;
 
     if(status.halted) {
@@ -47,7 +48,8 @@ auto RSP::main() -> void {
 }
 
 auto RSP::instruction() -> void {
-  if(Accuracy::RSP::Recompiler && recompiler.enabled) {
+  if(!debugControl.before(ipu.pc)) return;
+  if(!debugControl.active && Accuracy::RSP::Recompiler && recompiler.enabled) {
     auto block = recompiler.block(ipu.pc);
     block->execute(*this);
   } else {
@@ -60,7 +62,7 @@ auto RSP::instruction() -> void {
     pipeline.issue(op0);
     interpreterEXECUTE();
 
-    if(!pipeline.singleIssue && !op0.branch()) {
+    if(!debugControl.active && !pipeline.singleIssue && !op0.branch()) {
       u32 instruction = imem.read<Word>(ipu.pc + 4);
       OpInfo op1 = decoderEXECUTE(instruction);
 
@@ -83,6 +85,7 @@ auto RSP::instruction() -> void {
   step(pipeline.clocks);
   profile.cycles += pipeline.clocks;
   pipeline.clocksTotal += pipeline.clocks;
+  debugControl.after(ipu.pc, status.halted);
 }
 
 auto RSP::instructionPrologue(u32 instruction) -> void {
@@ -119,6 +122,7 @@ auto RSP::instructionEpilogue(u32 clocks) -> s32 {
 }
 
 auto RSP::power(bool reset) -> void {
+  debugControl = {};
   Thread::reset();
   dmem.fill();
   imem.fill();

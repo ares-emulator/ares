@@ -486,3 +486,27 @@ All five tools are N64-only; other cores return unavailable. Task 9 still needs
 cooperative RSP debugger progress, command/task/submission hooks, exact RDP
 interval capture and experimental bounded calls/recovery. The 68-tool milestone
 and physical/game acceptance gates are not complete.
+
+
+### RSP debugger (task 9 in progress)
+
+`rsp_debug(enable=true)` acquires an exclusive native RSP gate and pauses. It never
+clears hardware HALT. `rsp_break` manages 16 aligned IMEM PCs (0..0xFFC).
+`rsp_step(count=1)` grants 1..1000000 actual single-issued RSP instructions;
+`rsp_run()` runs to a breakpoint or hardware HALT/BREAK. Both acknowledge with an
+`operation` handle immediately; use `operation_status` for the immutable final
+`rsp` counts/PC/reason. Ordinary operation `executed` remains CPU instructions.
+`rsp_registers.debug` observes the gate, and `rsp_stop` ends the grant while
+retaining the debugger and breakpoint table. Starting-PC breakpoints are skipped
+once per grant. An already hardware-halted RSP waits for the emulated CPU to start
+it; a grant has a five-second wall deadline.
+
+The normal scheduler advances CPU/devices; no transport runs inside the core.
+CPU and RSP select the interpreter while the debugger is enabled, without changing
+configured JIT flags. Debug DMA synchronously drains up to two 256-row slots to
+prevent SP_DMA_FULL waits. The owning connection may edit memory while frozen;
+competing mutations, CPU operations, state upload and batches return busy. Each
+owner observation/control renews a 30-second session lease. Disable, owner release,
+disconnect, UI/owner pause or resume, reset, human takeover, lease expiry and GDB
+attachment release the gate; timeout/cancel/stop retain a frozen session. Full
+reference schema/result equality and real-game/physical acceptance remain pending.

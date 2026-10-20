@@ -1,3 +1,4 @@
+import { validRspDebug, type RspDebugState } from './rsp-contracts.js';
 import { GPR_NAMES, hex64 } from './n64-contracts.js';
 export const MACHINE_METHODS = ['n64.cpu.setRegisters', 'n64.cpu.disassemble', 'n64.rsp.registers', 'n64.rdp.state', 'n64.peripheral.registers'] as const;
 export type MachineMethod = typeof MACHINE_METHODS[number];
@@ -6,7 +7,7 @@ export interface RegisterMutation { gpr: { index: number; value: string }[]; pc:
 export interface MutationResult { changed: RegisterChanges; pc: string; epoch: number; frame: number; jit_invalidated: boolean }
 export interface Instruction { addr: string; word: string; mnemonic: string; operands: string; target?: string; target_source?: 'current_register_context'; target_register?: string }
 export interface Disassembly { instructions: Instruction[]; view: 'cpu' | 'rdram'; epoch: number; frame: number }
-export interface RspRegisters { gpr: string[]; pc: string; status: Record<string, number | number[]>; vu: number[][]; acch: number[]; accm: number[]; accl: number[]; dma: Record<string, number | boolean | string>; debug: { available: false }; curInstrHex: string; curInstr: string }
+export interface RspRegisters { gpr: string[]; pc: string; status: Record<string, number | number[]>; vu: number[][]; acch: number[]; accm: number[]; accl: number[]; dma: Record<string, number | boolean | string>; debug: RspDebugState; curInstrHex: string; curInstr: string }
 export type RdpState = Record<'DPC_START' | 'DPC_END' | 'DPC_CURRENT' | 'DPC_CLOCK' | 'PIPE_BUSY' | 'TMEM_BUSY' | 'BUFFER_BUSY', string> & { ready: number; freeze: number; crashed: number; flush: number; source: 'DMEM' | 'RDRAM' };
 export type PeripheralRegisters = Record<'vi' | 'ai' | 'pi' | 'si' | 'ri', Record<string, number | string>>;
 export interface MachineServiceMap {
@@ -53,7 +54,7 @@ export function validMachine(method: MachineMethod, s: any): boolean {
   if (method === 'n64.peripheral.registers') return Object.entries(peripheralFields).every(([group, fields]) => hexFields(s[group], fields.hex) && numericFields(s[group], fields.number));
   if (method === 'n64.rsp.registers') return hex32(s.pc) && Array.isArray(s.gpr) && s.gpr.length === 32 && s.gpr.every(hex32) &&
     numericFields(s.status, ['halted', 'broken', 'full', 'singleStep', 'interruptOnBreak', 'semaphore'], 1) && Array.isArray(s.status.signal) && s.status.signal.length === 8 && s.status.signal.every((v: unknown) => integer(v, 1)) &&
-    Array.isArray(s.vu) && s.vu.length === 32 && s.vu.every(lane) && [s.acch, s.accm, s.accl].every(lane) && s.debug?.available === false && hex32(s.curInstrHex) && typeof s.curInstr === 'string' && s.curInstr.length <= 2048 &&
+    Array.isArray(s.vu) && s.vu.length === 32 && s.vu.every(lane) && [s.acch, s.accm, s.accl].every(lane) && validRspDebug(s.debug) && hex32(s.curInstrHex) && typeof s.curInstr === 'string' && s.curInstr.length <= 2048 &&
     typeof s.dma?.busy === 'boolean' && typeof s.dma.full === 'boolean' && typeof s.dma.curOriginCpu === 'boolean' && hex64(s.dma.curOriginPc) &&
     numericFields(s.dma, ['busyR', 'busyW', 'fullR', 'fullW', 'curRegion', 'pendRegion'], 1) && numericFields(s.dma, ['curLen', 'curCount', 'pendLen']) && hexFields(s.dma, ['curDram', 'curPbus', 'pendDram', 'pendPbus']) && typeof s.dma.clock === 'string' && /^-?\d{1,19}$/.test(s.dma.clock);
   if (!integer(s.epoch) || s.epoch < 1 || !integer(s.frame)) return false;
