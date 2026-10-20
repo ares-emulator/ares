@@ -7,7 +7,7 @@ import { ServiceError } from './contracts.js';
 /** Reference artifact.hpp publication semantics, with asynchronous bounded bulk I/O.
  * No-overwrite uses a hard link, eliminating an exists/rename race. */
 export async function publishArtifact(destination: string, overwrite: boolean,
-  produce: (write: (text: string) => Promise<void>) => Promise<void>, guard: () => void,
+  produce: (write: (data: string | Uint8Array) => Promise<void>) => Promise<void>, guard: () => void,
   maxBytes = 64 * 1024 * 1024): Promise<{ path: string; bytes: number; sha256: string }> {
   const target = path.resolve(destination);
   if (target.length > 4096) throw new ServiceError('invalid_path');
@@ -23,7 +23,7 @@ export async function publishArtifact(destination: string, overwrite: boolean,
     }
     handle = await fs.open(temporary, 'wx', 0o600);
     await produce(async text => {
-      guard(); const data = Buffer.from(text, 'utf8');
+      guard(); const data = typeof text === 'string' ? Buffer.from(text, 'utf8') : Buffer.from(text.buffer, text.byteOffset, text.byteLength);
       if (bytes + data.length > maxBytes) throw new ServiceError('artifact_too_large');
       await handle!.writeFile(data); bytes += data.length; hash.update(data);
     });

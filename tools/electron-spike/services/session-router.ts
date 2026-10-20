@@ -1,14 +1,18 @@
+import { Screenshots } from './screenshots.js';
+import { SCREENSHOT_METHODS } from './screenshot-contracts.js';
+import type { ScreenshotParams } from './screenshot-contracts.js';
 import { TraceArtifacts } from './trace-artifacts.js';
 import type { TraceExportParams } from './artifact-contracts.js';
 import { METHODS, PROTOCOL, encodeRequest, ServiceError, type SessionIdentity, type ServiceMethod, type ServiceParams, type ServiceResult, type SessionReply } from './contracts.js';
 import type { NativeSessionClient } from './native-client.js';
 
 function mainCapabilities(reply: SessionReply<any>): void {
-  if (reply.ok && Array.isArray(reply.result?.capabilities) && !reply.result.capabilities.includes('artifact.traceExport')) reply.result.capabilities.push('artifact.traceExport');
+  if (reply.ok && Array.isArray(reply.result?.capabilities)) for (const method of ['artifact.traceExport', ...SCREENSHOT_METHODS]) if (!reply.result.capabilities.includes(method)) reply.result.capabilities.push(method);
 }
 
 /** Electron main owns this router, independently of renderer/plugin lifetimes. */
 export class SessionRouter {
+  private screenshots = new Screenshots();
   private artifacts = new TraceArtifacts();
   private nextArtifactId = 0;
   private client?: NativeSessionClient;
@@ -33,21 +37,28 @@ export class SessionRouter {
     this.stateTimer.unref();
   }
   detach(): void {
-    this.artifacts.close();
+    this.artifacts.close(); this.screenshots.close();
     clearInterval(this.stateTimer); this.stateTimer = undefined;
     this.client?.close(); this.client = undefined;
   }
   async request<M extends ServiceMethod>(method: M, identity?: SessionIdentity, params?: ServiceParams<M>, owner = 'ui'): Promise<SessionReply<ServiceResult<M>>> {
     if (!METHODS.includes(method)) throw new ServiceError('invalid_request');
-    if (method === 'execution.release') this.artifacts.release(owner);
+    if (method === 'execution.release') { this.artifacts.release(owner); this.screenshots.release(owner); }
     if (!this.client) throw new ServiceError('native_host_disconnected');
     const client = this.client;
-    if (method === 'artifact.traceExport') {
+    if (method.startsWith('artifact.')) {
       const startingIdentity = { ...(identity ?? client.identity) };
       encodeRequest('validation', startingIdentity, method, params, owner);
       const envelope = { protocol: PROTOCOL, id: `artifact${++this.nextArtifactId}`, ...startingIdentity };
       try {
-        const result = await this.artifacts.export(client, startingIdentity, params as TraceExportParams, owner, () => this.client === client);
+        let result;
+        if (method === 'artifact.traceExport') result = await this.artifacts.export(client, startingIdentity, params as TraceExportParams, owner, () => this.client === client);
+        else if (method === 'artifact.screenshot') result = await this.screenshots.capture(client, startingIdentity, params as ScreenshotParams, owner, () => this.client === client);
+        else {
+          if (startingIdentity.session !== client.identity.session || startingIdentity.epoch !== client.identity.epoch) throw new ServiceError('stale_epoch');
+          const p = params as { imageId: string; offset: number; length: number };
+          result = method === 'artifact.imageRead' ? this.screenshots.read(p.imageId, p.offset, p.length, owner, startingIdentity) : this.screenshots.releaseImage(p.imageId, owner);
+        }
         return { ...envelope, ok: true, result } as SessionReply<ServiceResult<M>>;
       } catch (error) { return { ...envelope, ...client.identity, ok: false, error: error instanceof ServiceError ? error.code : 'write_failed' }; }
     }

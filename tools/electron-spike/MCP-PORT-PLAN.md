@@ -274,6 +274,19 @@ checks. Only final link/rename is synchronous. Relative paths resolve on the app
 host. Export failure reports file_error after completed emulation, without a
 rollback claim. Native image/audio taps and recording remain separate work.
 
+Task 7 image adaptation: capture native pre-VI RDRAM or post-screen presented
+pixels, with frame/epoch tagged when queued on the emulation thread rather than
+sampling mutable session state on the screen worker. An optional submission
+observer is disabled by default and installed only by the host. Old-epoch refreshes
+are dropped; reset clears the cache and returns no_frame until fresh output.
+Bound immutable native pins and main PNG leases to two each / 30 seconds.
+Main streams 16 KiB native pages and uses a worker for crop, nearest-neighbor
+scale and RGB8 PNG encoding. Bound source/output to 4194304 pixels and PNGs to
+8 MiB; transfer inline PNGs in bounded authenticated chunks with final SHA-256.
+Preserve default/source/path/region/scale/inline/overwrite semantics; generic-core
+frame kinds are explicit. Screenshot-after-run, audio and recording remain later
+slices. No renderer/canvas readback or implicit emulation advancement.
+
 ### C. Preserve artifacts, states and the protocol-3 expansion
 
 Port screenshot/framebuffer/native audio taps, atomic artifact handling, state

@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { app, BrowserWindow, dialog } from 'electron';
+import { app, BrowserWindow, dialog, nativeImage } from 'electron';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -38,7 +38,7 @@ app.whenReady().then(async () => {
   const mcp = peer(); await mcp.initialize();
   enter('MCP tools');
   const list = (await mcp.request('tools/list', {})).result.tools;
-  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap'].sort());
+  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot'].sort());
   assert.equal(list.find(t => t.name === 'read_memory').inputSchema.properties.length.default, 64);
   assert.equal(list.find(t => t.name === 'resume').inputSchema.properties.keep_overrides.default, false);
   assert.equal(list.find(t => t.name === 'emu_status').inputSchema.properties.verbose.default, false);
@@ -72,6 +72,13 @@ app.whenReady().then(async () => {
   await window.webContents.executeJavaScript("document.getElementById('memory-offset').value='0xf0'; document.getElementById('memory-length').value='4'; document.getElementById('memory-read').click()");
   await until(() => window.webContents.executeJavaScript("document.getElementById('memory-output').textContent.includes('deadbeef')"));
   assert.equal((await mcp.tool('read_memory', { region: 'CPU WRAM', addr: 240, length: 4 })).hex, 'deadbeef');
+  enter('native presented screenshot');
+  const imageReply = await mcp.request('tools/call', { name: 'screenshot', arguments: { source: 'presented', region: [0, 0, 4, 4], scale: 2, inline: true } });
+  assert.equal(imageReply.result.isError, undefined);
+  const imageContent = imageReply.result.content.find(c => c.type === 'image');
+  const imageMetadata = JSON.parse(imageReply.result.content.find(c => c.type === 'text').text);
+  assert.equal(imageContent.mimeType, 'image/png'); assert.equal(imageMetadata.epoch, initial.epoch);
+  assert.deepEqual(nativeImage.createFromBuffer(Buffer.from(imageContent.data, 'base64')).getSize(), { width: 8, height: 8 });
   enter('paused reload');
   const loaded = once(window.webContents, 'did-finish-load'); window.webContents.reload(); await loaded;
   assert.equal((await mcp.tool('emu_status')).session, initial.session);
@@ -86,6 +93,7 @@ app.whenReady().then(async () => {
   reconnect.disconnect(); assert.equal((await reconnect.request('session.status')).session, initial.session); reconnect.close();
   enter('reset and ROM revocation');
   await sessions.request('session.reset');
+  assert.equal((await mcp.tool('screenshot', { source: 'presented' })).error, 'no_frame');
   assert.equal((await mcp.tool('write_memory', { region: ram.id, addr: 240, hex_bytes: '00' })).error, 'stale_epoch');
   assert.equal((await mcp.tool('memory_regions')).epoch, 2);
   await window.webContents.executeJavaScript("document.getElementById('synthetic').click()");

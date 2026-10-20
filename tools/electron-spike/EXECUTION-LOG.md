@@ -672,3 +672,61 @@ it outside the checkout for `test:package`. Bundled Node 24.22.0 / Electron 44.9
 35-tool inventory and main artifact capability passed, along with GB memory
 write/read/restore, resume and shutdown (452 frames). Native loader and MCP
 adapter could not read the repository. No screenshot/audio/recording claim.
+
+### Task 7 — native images and bounded screenshot transport (partial)
+
+Added screenshot, bringing the verified MCP registry to 36 of 68. N64 framebuffer
+reads capture actual pre-VI RDRAM RGBA5551/RGBA8888 pixels, with renderer flush,
+VI-derived dimensions, clipping and source metadata. Presented snapshots use
+native post-screen output (post-VI on N64), independently of canvas credits.
+A small optional frame-submission observer runs on the emulation thread after
+previous refresh completion and before queueing the next worker refresh. The
+host tags epoch/VI at submission, avoiding unsynchronized render-thread reads
+of mutable session coordinates and rejecting delayed pre-reset output. It is
+installed before execution and removed after unload; default frontends perform
+no capture work. Services-enabled Electron starts capture at boot. Raw hosts
+can opt in with --debug-capture or enable future capture with the first query.
+
+Native snapshots are immutable and connection owned: two pins, 30-second leases,
+16 KiB raw pages. Main fetches four pages per batch, uses a worker for crop,
+nearest-neighbor scale and RGB8 PNG encoding, and publishes through the shared
+atomic writer. Inline PNGs use two owned 30-second leases and bounded chunks;
+MCP verifies SHA-256 before returning ImageContent plus metadata. Source/output
+caps are 4194304 pixels, scale 0.125..8 and 8 MiB PNG. Jobs retain the 25-second
+deadline checked between work. Default non-inline output uses a unique host
+/tmp PNG. Reset clears caches (no_frame until fresh output); generic core frame
+coordinates explicitly report unavailable rather than fabricating VI semantics.
+A one-pixel RDRAM framebuffer remains valid; presented 1x1 invalid GPU scanout is
+rejected, matching the reference distinction.
+
+Reference: ares-64 `1c9b9637476a83f7b80d3db1115a0f71529820d9`.
+`desktop-ui/program/platform.cpp` SHA-256:
+`0c1f8ec210b4d82727278f6efd28b2d8e51b2fc8950680597a4ea04e94a0bb8e`;
+`desktop-ui/program/telemetry-server.cpp` SHA-256:
+`738abe2ed5dd789b7b9968bd0f77c45ab03ddcecdf81e9106e962d250799646b`.
+Publication uses the already journaled artifact.hpp semantics. Transport,
+submission tagging, reset behavior and worker encoding adaptations are recorded
+in MCP-PORT-PLAN.md.
+
+Validation: native host and CPU fixture built. Final 30-test suite passed in
+11.95s: actual RDRAM 16/32-bit pixel decoding, immutable pins, ownership/ranges,
+expiry, blank and one-pixel VI, delayed old refresh rejection, worker crop/scale
+pixels, PNG decoding by macOS sips, refused overwrites, pixel budgets and owner
+cancellation. The initial 5551 assertion had an overlong expected hex literal;
+corrected before the passing run. Code review caught the one-pixel framebuffer
+versus presented distinction and added a focused regression. Real isolated MCP
+returns decodable image content with no video acknowledgements, checks source
+pixels/hash, saves PNG, rejects stale/reset/invalid-region/foreign-owner cases
+and revokes image leases on disconnect. Electron/MCP passed all 36 tools and
+actual nativeImage PNG decoding, paused reload, stopped state and replacement.
+Ordinary-play smoke with capture disabled passed: registry/GB/NES, synthetic
+59.75/59.72 fps, GB native SDL audio 56.49 fps and NES 60.08 fps. Package result
+follows. Audio taps/recording and run_frames screenshot_after remain task 7 work;
+physical keyboard/gamepad and audible N64 gameplay acceptance remain not run.
+
+Task-7 image package gate passed: built artifacts/task-7-images/Ares.app and ran
+copied-app test:package outside the checkout. Bundled Electron 44.9.0 / Node
+24.22.0, 36-tool inventory, main artifact capability, native GB presented capture,
+PNG worker loading, inline image/png content and byte-identical atomic PNG file
+all passed. GB memory restore/resume/shutdown passed (450 frames); native loader
+and MCP adapter ran with checkout reads denied. Development ad-hoc signing only.

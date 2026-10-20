@@ -7,6 +7,7 @@
 #include "../native/dma-service.hpp"
 #include "../native/profiler-service.hpp"
 #include "../native/tap-service.hpp"
+#include "../native/frame-service.hpp"
 #include <cstdio>
 #include <cstdlib>
 using namespace ares::Nintendo64;
@@ -328,6 +329,39 @@ int main() {
     tapInput.releaseAll();
   }
   check(tap.execute({"1", "14", "2", "1000", "0"}, "tap-owner", 1, tapPaused, tapInput, tapExecution).error == "invalid_request" && !tapInput.hasOverrides(), "invalid tap makes no input mutation");
+  // Native image snapshots: actual VI RDRAM formats and render-thread epoch tags.
+  FrameService images;
+  vi.io.dramAddress = 0x4000; vi.io.width = 2; vi.io.colorDepth = 2; vi.io.vstart = 0; vi.io.vend = 4; vi.io.yscale = 0x400;
+  const uint16_t colors[] = {0xf801, 0x07c1, 0x003f, 0xffff};
+  for(unsigned n = 0; n < 4; ++n) rdram.ram.write<Half>(0x4000 + n * 2, colors[n], RBusDevice::ARES_DEBUGGER);
+  auto framebuffer = images.execute("video.begin", {"framebuffer"}, "image-owner", 1, 10, true);
+  check(framebuffer.error.empty() && images.pins.back().image->width == 2 && images.pins.back().image->height == 2 && images.pins.back().image->nonblack == 4, "VI framebuffer dimensions and nonblack count");
+  auto raw = images.execute("video.read", {"1", "0", "16"}, "image-owner", 1, 10, true);
+  check(raw.error.empty() && raw.json.find("ff0000ff00ff00ff0000ffffffffffff") != std::string::npos, "RGBA5551 converts big-endian RDRAM pixels to opaque RGBA8");
+  check(images.execute("video.read", {"1", "0", "16"}, "foreign-owner", 1, 10, true).error == "busy", "native image pins are connection owned");
+  rdram.ram.write<Half>(0x4000, 0, RBusDevice::ARES_DEBUGGER);
+  check(images.execute("video.read", {"1", "0", "16"}, "image-owner", 1, 10, true).json == raw.json, "native framebuffer snapshot is immutable after RAM writes");
+  check(images.execute("video.read", {"1", "15", "2"}, "image-owner", 1, 10, true).error == "out_of_bounds", "native pixel range bounds");
+  check(images.execute("video.release", {"1"}, "image-owner", 1, 10, true).error.empty(), "native framebuffer release");
+  vi.io.colorDepth = 3;
+  rdram.ram.write<Word>(0x4000, 0x12345600, RBusDevice::ARES_DEBUGGER);
+  check(images.execute("video.begin", {"framebuffer"}, "image-owner", 1, 10, true).error.empty(), "RGBA8888 framebuffer capture");
+  check(images.execute("video.read", {"2", "0", "4"}, "image-owner", 1, 10, true).json.find("123456ff") != std::string::npos, "RGBA8888 preserves RGB and ignores source alpha like reference PNG");
+  images.releaseOwner("image-owner"); check(images.pins.empty(), "owner revocation drops native image pins");
+  vi.io.colorDepth = 0; check(images.execute("video.begin", {"framebuffer"}, "image-owner", 1, 10, true).error == "vi_blank", "blank VI does not fabricate a framebuffer");
+  vi.io.colorDepth = 2; vi.io.width = 1; vi.io.vend = 2;
+  check(images.execute("video.begin", {"framebuffer"}, "image-owner", 1, 10, true).error.empty(), "one-pixel RDRAM framebuffer remains valid (only presented 1x1 is invalid scanout)");
+  images.releaseOwner("image-owner");
+  const void* screenToken = &images;
+  const uint8_t rgba[16] = {255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255};
+  images.submitted(screenToken, 1, 10); images.observe(screenToken, rgba, 2, 2, 1);
+  check(images.latest && images.latest->epoch == 1 && images.latest->frame == 10, "native presented image uses emulation-thread submission tag");
+  images.reset(2); images.observe(screenToken, rgba, 2, 2, 2);
+  check(!images.latest && images.execute("video.begin", {"presented"}, "image-owner", 2, 0, true).error == "no_frame", "delayed pre-reset refresh cannot become a fresh image");
+  images.submitted(screenToken, 2, 0); images.observe(screenToken, rgba, 2, 2, 3);
+  check(images.execute("video.begin", {"presented"}, "image-owner", 2, 0, true).error.empty(), "new-epoch presented snapshot accepted");
+  images.pins[0].expires = FrameService::Clock::now() - std::chrono::seconds(1);
+  check(images.execute("video.read", {std::to_string(images.pins[0].id), "0", "4"}, "image-owner", 2, 0, true).error == "stale_snapshot", "expired native image pin revoked");
   pi.detach(cartridge.romDevice); cartridge.rom.reset();
   rdram.ram.reset();
   std::puts("CPU_DEBUG_FIXTURE_PASS");

@@ -1067,10 +1067,16 @@
       "family": "Images/render captures",
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 7,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 7 image slice)",
+      "mcpSchemaParity": "Source tool/defaults retained; bounded pixels/PNG/chunk transport and source metadata explicit. Reset returns no_frame after clearing cache. Full generated-schema/result equality pending.",
+      "testEvidence": [
+        {
+          "scope": "task 7 image slice",
+          "check": "tests/cpu-debug-fixture.cpp, tests/screenshots.test.cjs, tests/screenshots-live.test.cjs, tests/electron-mcp.mjs",
+          "result": "Passed: real RDRAM pixel formats and immutable pins, delayed old refresh rejection, worker PNG decoded by sips/Electron, crop/scale pixels, real MCP image content without video credits, reset/owner revocation and file overwrite failure. Copied package passed native capture, bundled worker PNG encoding, inline MCP image and identical atomic PNG output with repository reads denied for loader/adapter."
+        }
+      ],
+      "knownLimits": "N64 pre-VI RGBA5551/RGBA8888 RDRAM framebuffer, or native presented output (post-VI on N64) across cores. Crop then nearest-neighbor scale 0.125..8, up to 4194304 source/output pixels and 8 MiB PNG. Two connection-owned native snapshots and two inline images; 30-second leases, 25-second job deadline. Reset clears old frames (no_frame); first raw-host query only enables future presented capture. No canvas readback. run_frames screenshot_after remains pending."
     },
     {
       "name": "rdp_capture",

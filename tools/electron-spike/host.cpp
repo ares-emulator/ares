@@ -20,6 +20,7 @@
 #endif
 #include <desktop-ui/desktop-ui.hpp>
 #include <n64/n64.hpp>
+#include <ares/frame-observer.hpp>
 #include <nall/gdb/server.hpp>
 namespace ruby { Video video; Audio audio; Input input; }
 
@@ -40,10 +41,12 @@ auto locate(const string& name) -> string {
 #include "native/dma-service.hpp"
 #include "native/profiler-service.hpp"
 #include "native/tap-service.hpp"
+#include "native/frame-service.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
   InputService injectedInput;
+  FrameService captures;
   std::atomic<bool> takeoverRequested{false};
   ares::Node::System root;
   std::shared_ptr<HID::Joypad> joypad;
@@ -143,6 +146,7 @@ struct Host : ares::Platform {
     appliedInput = controls.load() >> 32;
   }
   auto detach(ares::Node::Object node) -> void override {
+    captures.forget(node.get());
     if(auto stream = node->cast<ares::Node::Audio::Stream>()) std::erase(streams, stream);
   }
   auto video(ares::Node::Video::Screen screen, const u32* data, u32 pitch, u32 width, u32 height) -> void override {
@@ -170,6 +174,7 @@ struct Host : ares::Platform {
         *p++ = color >> 16; *p++ = color >> 8; *p++ = color; *p++ = 255;
       }
     }
+    captures.observe(screen.get(), latest.data() + 48, width, height, sequence, screen ? 0 : service.epoch, screen ? 0 : service.execution.frame);
     captured = now; available = true; wake.notify_one();
   }
   void writeFrames() {
@@ -283,7 +288,8 @@ int main(int argc, char** argv) {
   std::vector<string> extraMedia;
   for(int i = 1; i < argc; i++) {
     std::string arg = argv[i];
-    if(arg == "--debug-provenance") ares::Nintendo64::dmaProvenance.enabled = true;
+    if(arg == "--debug-capture") host.captures.enabled = true;
+    else if(arg == "--debug-provenance") ares::Nintendo64::dmaProvenance.enabled = true;
     else if(arg == "--silent") host.sound = false;
     else if(arg == "--control-session" && i + 1 < argc) {
       host.service.session = argv[++i];
@@ -404,7 +410,13 @@ int main(int argc, char** argv) {
   DmaService dmaService; dmaService.available = n64;
   execution.cpuSupported = n64;
   host.injectedInput.available = n64;
-  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); };
+  ares::Video::frameSubmittedObserver = [&](const void* screen) {
+    host.captures.submitted(screen, host.service.epoch, n64 ? ares::Nintendo64::executionCoordinate.frame : execution.frame);
+  };
+  host.service.videoRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    return host.captures.execute(method, args, owner, host.service.epoch, execution.frame, n64, execution.frameKind);
+  };
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     if(method == "n64.input.tap") return tapService.execute(args, owner, host.service.epoch, host.service.paused, host.injectedInput, execution);
     // Keep the tapped port stable for its entire owned interval.
@@ -455,6 +467,7 @@ int main(int argc, char** argv) {
     bool wasControlled = bool(execution.active);
     if(!host.service.dispatch(synthetic ? "Synthetic" : std::string(host.systemName.data()), synthetic, [&] {
       host.injectedInput.releaseAll(); traceService.reset(); profilerService.reset();
+      host.captures.reset(host.service.epoch + 1);
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
       ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
       if(host.root) { host.output.clear(); host.root->power(); }
@@ -510,6 +523,7 @@ int main(int argc, char** argv) {
   if(host.root) {
     emulator->unload(); host.streams.clear(); host.root.reset(); emulator.reset();
   }
+  ares::Video::frameSubmittedObserver = {};
   std::cerr << "stopped\n";
   ares::platform = nullptr;
 }

@@ -1,13 +1,13 @@
-# MCP adapter (tasks 3–6, partial)
+# MCP adapter (tasks 3–7, partial)
 
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. There are 35 registered tools: the original eleven generic/session/run
-tools plus `cpu_registers`, `step_instructions`, `run_until_hit`,
-`break_add/remove/list`, `watch_add/remove/list`, `last_stop`, `read_memory_va`,
-`write_memory_va`, and `controller_set/release/state/host_mode`, and `trace_pc/calls/page`, plus `overlay_log`. The CPU, VA, controller and trace tools are N64-specific. Diagnostics go to
-stderr; stdout carries MCP JSON-RPC only.
+emulator. The verified registry has 36 tools: eleven generic/session/run tools,
+twelve N64 CPU/VA tools, five controller tools (including controller_tap), three
+trace tools, overlay_log, three CPU profiler tools and screenshot. CPU/VA/input/
+trace/profiler/framebuffer features are N64-specific; presented screenshots also
+support other cores. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
 ## Start and explicitly select an app
 
@@ -234,3 +234,14 @@ fails after capture. Relative paths use the app working directory. Output caps
 at 64 MiB / 25 seconds; owner disconnect, stale epochs or replacement cancel
 unfinished publication. Existing output survives failures. This does not add a
 new MCP tool; images/audio/recording remain pending.
+
+`screenshot(path=null, source="framebuffer", region=null, scale=1, inline=false,
+overwrite=false)` now returns native PNG output. Framebuffer reads are N64-only;
+presented output supports other cores and synthetic fixtures independently of
+canvas readback. Region is [x,y,width,height] in source pixels; scale is nearest
+neighbor after cropping. Bounds: 4194304 pixels / 8 MiB PNG / scale 0.125..8.
+Inline mode returns image/png MCP content and text metadata; optional path writes
+the same bytes atomically. Default non-inline output uses a unique host temporary
+path. No fresh post-reset frame returns no_frame, not a stale image. The tool
+does not advance emulation. Screenshot-after-run, audio and recording remain
+pending.

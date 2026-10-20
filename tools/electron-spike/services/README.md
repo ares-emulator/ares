@@ -183,3 +183,12 @@ bounded export jobs and revocation. Native code remains responsible for immutabl
 trace pages. Bulk file writes are asynchronous; only final hard-link/rename
 publication is synchronous, immediately following the main-thread lifetime guard.
 Temporary files are private exclusive siblings, with byte/time limits and SHA-256.
+
+Native video.begin/read/release pin immutable RGBA8 snapshots with connection and
+epoch identity, independently of video credits. Main artifact.screenshot fetches
+bounded pages, uses png-worker.js for crop/nearest-neighbor/PNG, and publishes via
+the shared artifact writer. artifact.imageRead/imageRelease provide bounded PNG
+transfer to MCP; the adapter assembles at most 8 MiB and verifies SHA-256 before
+returning ImageContent. The frame observer is installed before execution and
+removed after unload. Submission tagging avoids reading emulator epoch/frame
+state on the screen worker thread and rejects delayed pre-reset output.

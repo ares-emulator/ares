@@ -1,3 +1,4 @@
+import { registerScreenshotTools } from './screenshot-tools.js';
 import { registerProfilerTools } from './profiler-tools.js';
 import { registerDmaTools } from './dma-tools.js';
 import { registerTraceTools } from './trace-tools.js';
@@ -103,6 +104,7 @@ function createServer(): McpServer {
   registerTraceTools(server, local, status, rememberOperation, id => operationIdentities.get(id));
   registerDmaTools(server, local, status);
   registerProfilerTools(server, local, status);
+  registerScreenshotTools(server, local, status);
   server.server.onclose = () => local.close();
   return server;
 }

@@ -41,8 +41,8 @@ async function run() {
     peer = new StdioPeer(mcpCommand, mcpArgs, { cwd: temporary, env });
     await peer.initialize();
     const inventory = (await peer.request('tools/list', {})).result.tools.map(t => t.name);
-    assert.equal(inventory.length, 35);
-    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap']) assert.ok(inventory.includes(name));
+    assert.equal(inventory.length, 36);
+    for (const name of ['profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot']) assert.ok(inventory.includes(name));
     let status;
     for (let i = 0; i < 200; ++i) { status = await peer.tool('emu_status'); if (status.system === 'Game Boy') break; await new Promise(r => setTimeout(r, 20)); }
     assert.equal(status.system, 'Game Boy', diagnostics);
@@ -57,6 +57,14 @@ async function run() {
       assert.equal((await peer.tool('write_memory', { region: region.id, addr: offset, hex_bytes: '12345678' })).written, 4);
       assert.equal((await peer.tool('read_memory', { region: region.id, addr: offset, length: 4 })).hex, '12345678');
     } finally { assert.equal((await peer.tool('write_memory', { region: region.id, addr: offset, hex_bytes: before.hex })).written, 4); }
+    const pngFile = path.join(temporary, 'packaged screenshot.png');
+    const capture = await peer.request('tools/call', { name: 'screenshot', arguments: { source: 'presented', path: pngFile, region: [0, 0, 2, 2], inline: true } });
+    assert.equal(capture.result.isError, undefined);
+    const image = capture.result.content.find(c => c.type === 'image');
+    assert.equal(image.mimeType, 'image/png');
+    const png = Buffer.from(image.data, 'base64');
+    assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+    assert.deepEqual(fs.readFileSync(pngFile), png, 'packaged worker and file publisher agree with inline image');
     assert.equal((await peer.tool('resume')).paused, false);
     assert.equal((await closed)[0], 0, diagnostics);
     assert.ok(['app_not_running', 'app_disconnected'].includes((await peer.tool('emu_status')).error));

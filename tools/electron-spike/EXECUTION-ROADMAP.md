@@ -5,8 +5,8 @@ integration gate passed on macOS arm64.
 Runtime evidence and pending checks are recorded in
 [EXECUTION-LOG.md](EXECUTION-LOG.md). Task 6 is in progress: input ownership, bounded PC/call traces and PI DMA provenance are implemented;
 profiling and controller taps are implemented; automated and package checks passed.
-Milestone 2 physical keyboard/gamepad acceptance remains pending. Task 7 is in progress: atomic artifact publishing and trace-file export are implemented.
-Images/audio/recording and later tasks remain planned. Start here when
+Milestone 2 physical keyboard/gamepad acceptance remains pending. Task 7 is in progress: atomic artifact publishing, trace-file export and native screenshots are implemented.
+Audio/recording and later tasks remain planned. Start here when
 choosing the next task.
 
 ## Which plan owns what

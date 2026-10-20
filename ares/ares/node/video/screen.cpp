@@ -216,6 +216,7 @@ auto Screen::colors(u32 colors, std::function<n64 (n32)> color) -> void {
 auto Screen::frame() -> void {
   if(runAhead()) return;
   while(_frame) spinloop();
+  if(ares::Video::frameSubmittedObserver) ares::Video::frameSubmittedObserver(this);
 
   lock_guard<recursive_mutex> lock(_mutex);
   _inputA.swap(_inputB);

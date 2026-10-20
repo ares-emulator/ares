@@ -1,3 +1,5 @@
+import { FRAME_METHODS, encodeFrame, validFrame, type FrameServiceMap } from './frame-contracts.js';
+import { SCREENSHOT_METHODS, validScreenshotRequest, validScreenshotResult, type ScreenshotServiceMap } from './screenshot-contracts.js';
 import { ARTIFACT_METHODS, validArtifact, validTraceExport, type ArtifactServiceMap } from './artifact-contracts.js';
 import { PROFILER_METHODS, encodeProfiler, validProfiler, type ProfilerMethod, type ProfilerServiceMap } from './profiler-contracts.js';
 import { encodeDma, validDma, type DmaServiceMap } from './dma-contracts.js';
@@ -7,8 +9,8 @@ import { N64_METHODS, encodeN64, validN64, type N64Method, type N64ServiceMap, t
 /** Shared contract for Electron routing, the inspector and the future MCP adapter. */
 export const PROTOCOL = 1 as const;
 export const MAX_TRANSFER = 1024;
-export const NATIVE_METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS.filter(m => m !== 'n64.input.tap'), ...TRACE_METHODS, 'n64.dma.log', ...PROFILER_METHODS, 'n64.input.tap'] as const;
-export const METHODS = [...NATIVE_METHODS, ...ARTIFACT_METHODS] as const;
+export const NATIVE_METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS.filter(m => m !== 'n64.input.tap'), ...TRACE_METHODS, 'n64.dma.log', ...PROFILER_METHODS, 'n64.input.tap', ...FRAME_METHODS] as const;
+export const METHODS = [...NATIVE_METHODS, ...ARTIFACT_METHODS, ...SCREENSHOT_METHODS] as const;
 export type ServiceMethod = typeof METHODS[number];
 export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
 export interface SessionIdentity { session: string; epoch: number }
@@ -23,7 +25,7 @@ export interface ExecutionOperation {
 export interface MemoryRegion { id: string; name: string; size: number; readable: boolean; writable: boolean; addressing: 'region-offset'; unavailableReason?: string }
 export interface MemoryRead { region: string; offset: number; length: number; hex: string }
 export interface MemoryWritten { region: string; offset: number; written: number }
-export interface ServiceMap extends N64ServiceMap, InputServiceMap, TraceServiceMap, DmaServiceMap, ProfilerServiceMap, ArtifactServiceMap {
+export interface ServiceMap extends N64ServiceMap, InputServiceMap, TraceServiceMap, DmaServiceMap, ProfilerServiceMap, ArtifactServiceMap, FrameServiceMap, ScreenshotServiceMap {
   'execution.stepInstructions': { params: { count: number; timeoutMs: number }; result: ExecutionOperation };
   'session.status': { params: undefined; result: SessionStatus };
   'session.pause': { params: undefined; result: SessionStatus };
@@ -58,7 +60,13 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
       !METHODS.includes(method) || !token(owner)) throw new ServiceError('invalid_request');
   let suffix = '';
   // Main-only methods use this validator but never enter the native wire.
-  if (method === 'artifact.traceExport') {
+  if (SCREENSHOT_METHODS.includes(method as typeof SCREENSHOT_METHODS[number])) {
+    if (!validScreenshotRequest(method, params)) throw new ServiceError('invalid_request');
+  } else if (method.startsWith('video.')) {
+    const encoded = encodeFrame(method, params);
+    if (encoded === undefined) throw new ServiceError('invalid_request');
+    suffix = encoded;
+  } else if (method === 'artifact.traceExport') {
     if (!validTraceExport(params)) throw new ServiceError('invalid_request');
   } else if (method === 'session.resume' && params !== undefined) {
     const p = params as { keepOverrides: boolean };
@@ -111,6 +119,8 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
   if (r.ok) {
     const s = r.result;
     let valid = false;
+    if (method.startsWith('video.')) valid = validFrame(method, s) && (method !== 'video.begin' || s.epoch === r.epoch);
+    if (SCREENSHOT_METHODS.includes(method as typeof SCREENSHOT_METHODS[number])) valid = validScreenshotResult(method, s) && (method !== 'artifact.screenshot' || s.epoch === r.epoch);
     if (method === 'artifact.traceExport') valid = validArtifact(s) && s.session === r.session && s.epoch === r.epoch;
     if (N64_METHODS.includes(method as N64Method)) valid = validN64(method as N64Method, s);
     if (PROFILER_METHODS.includes(method as ProfilerMethod)) valid = validProfiler(method as ProfilerMethod, s);
