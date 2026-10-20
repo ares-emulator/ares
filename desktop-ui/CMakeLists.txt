@@ -67,6 +67,9 @@ if(ARES_ENABLE_RCHEEVOS)
   find_package(CURL CONFIG REQUIRED)
   find_package(rcheevos CONFIG REQUIRED)
 
+  # The FDS adapter reads cartridge RAM through the Famicom core header.
+  target_include_directories(desktop-ui PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/ymfm/src)
+
   target_sources(
     desktop-ui
     PRIVATE

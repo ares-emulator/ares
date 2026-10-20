@@ -3,6 +3,9 @@
 
 #include <rc_consoles.h>
 
+#if defined(CORE_FC)
+#include <fc/fc.hpp>
+#endif
 #if defined(CORE_GB)
 #include <gb/gb.hpp>
 #endif
@@ -26,6 +29,48 @@ auto appendPakFile(const std::shared_ptr<vfs::directory>& pak, const string& nam
   for(u32 index : range(fp->size())) out[offset + index] = fp->read();
   return true;
 }
+
+#if defined(CORE_FC)
+auto appendFdsSide(const string& location, const string& name, std::vector<u8>& out) -> bool {
+  auto side = file::read({location, name});
+  if(side.empty()) return false;
+  if(side.size() == 65500) {
+    out.insert(out.end(), side.begin(), side.end());
+    return true;
+  }
+  if(side.size() < 0x12000) return false;
+
+  // mia expands FDS blocks with gaps, sync bytes, and CRCs for the drive.
+  // Recover the 65500-byte side image used by rcheevos for directory media.
+  std::vector<u8> canonical;
+  canonical.reserve(65500);
+  size_t offset = 0;
+  auto skip = [&](size_t count) -> bool {
+    if(count > side.size() - offset) return false;
+    offset += count;
+    return true;
+  };
+  auto block = [&](size_t gap, size_t length) -> bool {
+    if(!skip(gap) || offset >= side.size() || side[offset++] != 0x80) return false;
+    if(length > side.size() - offset) return false;
+    canonical.insert(canonical.end(), side.begin() + offset, side.begin() + offset + length);
+    offset += length;
+    return skip(2);
+  };
+
+  if(!block(0x0e00, 0x38) || !block(0x80, 2)) return false;
+  while(offset + 0x80 + 1 + 0x10 + 2 + 0x80 + 1 <= side.size()) {
+    auto header = offset + 0x80 + 1;
+    if(side[header - 1] != 0x80 || side[header] != 0x03) break;
+    auto dataSize = (u16)(side[header + 0x0d] | side[header + 0x0e] << 8);
+    if(!block(0x80, 0x10) || !block(0x80, 1 + dataSize)) return false;
+  }
+  if(canonical.size() > 65500) return false;
+  canonical.resize(65500, 0);
+  out.insert(out.end(), canonical.begin(), canonical.end());
+  return true;
+}
+#endif
 
 #if defined(CORE_SFC)
 auto readSfcRomFromManifest(const std::shared_ptr<vfs::directory>& pak, std::vector<u8>& out) -> bool {
@@ -366,6 +411,7 @@ struct SuperFamicomAdapter final : Adapter {
 };
 #endif
 
+#if defined(CORE_FC)
 struct FamicomAdapter final : Adapter {
   struct Cache : NodeCache {
     ares::Node::Debugger::Memory cpuRamMemory;
@@ -379,18 +425,32 @@ struct FamicomAdapter final : Adapter {
   }
 
   auto supports(const Emulator& emu) const -> bool override {
-    // FDS is excluded for now
-    return supportsAnyName(emu, {"Famicom"});
+    return supportsAnyName(emu, {"Famicom", "Famicom Disk System"});
   }
 
   auto consoleId(const Emulator& emu) const -> u32 override {
-    (void)emu;
-    return RC_CONSOLE_NINTENDO;
+    return emu.name == "Famicom Disk System" ? RC_CONSOLE_FAMICOM_DISK_SYSTEM : RC_CONSOLE_NINTENDO;
   }
 
   auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool override {
     out.clear();
     if(!emu.game || !emu.game->pak) return false;
+
+    if(emu.name == "Famicom Disk System") {
+      if(file::exists(emu.game->location)) {
+        out = emu.game->read(emu.game->location);
+        return !out.empty();
+      }
+      if(!directory::exists(emu.game->location)) return false;
+      if(!appendFdsSide(emu.game->location, "disk1.sideA", out)) return false;
+      for(auto name : {"disk1.sideB", "disk2.sideA", "disk2.sideB"}) {
+        if(file::exists({emu.game->location, name}) && !appendFdsSide(emu.game->location, name, out)) {
+          out.clear();
+          return false;
+        }
+      }
+      return true;
+    }
 
     auto hasInes = appendPakFile(emu.game->pak, "ines.rom", out);
     auto hasProgramFlash = appendPakFile(emu.game->pak, "program.flash", out);
@@ -402,8 +462,13 @@ struct FamicomAdapter final : Adapter {
 
   auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 override {
     if(!buffer || size == 0) return 0;
+    if(emu.name == "Famicom Disk System" && address >= 0x6000 && address <= 0xdfff) {
+      auto readable = min(size, 0xe000 - address);
+      for(u32 index : range(readable)) buffer[index] = ares::Famicom::cartridge.readPRG(address + index, 0xff);
+      return readable;
+    }
     if(!ensureCpuRamMemory(emu)) return 0;
-    // rcheevos RAM exposure for NES:
+    // rcheevos RAM exposure for NES and FDS:
     // 0x0000-0x07ff base RAM, mirrored to 0x1fff.
     if(address > 0x1fff) return 0;
     auto readable = size;
@@ -415,12 +480,19 @@ struct FamicomAdapter final : Adapter {
   }
 
   auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
-    if(!buffer || !size || address > 0x1fff || !ensureCpuRamMemory(emu)) return 0;
+    if(!buffer || !size) return 0;
+    if(emu.name == "Famicom Disk System" && address >= 0x6000 && address <= 0xdfff) {
+      auto writable = min(size, 0xe000 - address);
+      for(u32 index : range(writable)) ares::Famicom::cartridge.writePRG(address + index, buffer[index]);
+      return writable;
+    }
+    if(address > 0x1fff || !ensureCpuRamMemory(emu)) return 0;
     auto writable = min(size, 0x2000 - address);
     for(u32 index : range(writable)) cache.cpuRamMemory->write((address + index) & 0x07ff, buffer[index]);
     return writable;
   }
 };
+#endif
 
 #if defined(CORE_N64)
 struct Nintendo64Adapter final : Adapter {
