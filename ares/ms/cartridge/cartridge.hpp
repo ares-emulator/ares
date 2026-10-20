@@ -3,6 +3,7 @@ struct Cartridge;
 
 struct Cartridge {
   Node::Peripheral node;
+  Node::Debugger::Memory ramMemory;
   VFS::Pak pak;
 
   auto title() const -> string { return information.title; }

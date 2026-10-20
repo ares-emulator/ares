@@ -3,6 +3,10 @@
 
 #include <rc_consoles.h>
 
+#if defined(CORE_SG)
+  #include <sg/sg.hpp>
+#endif
+
 namespace {
 
 using namespace RA::Platform;
@@ -16,6 +20,84 @@ auto appendPakFile(const std::shared_ptr<vfs::directory>& pak, const string& nam
   for(u32 index : range(fp->size())) out[offset + index] = fp->read();
   return true;
 }
+
+struct Sega8BitAdapter final : Adapter {
+  struct Cache : NodeCache {
+    ares::Node::Debugger::Memory cpuRamMemory;
+    ares::Node::Debugger::Memory cartridgeRamMemory;
+    CompiledMap masterSystemMap;
+  };
+
+  mutable Cache cache;
+
+  auto refreshMasterSystemMap(const Emulator& emu) const -> void {
+    bool changed = false;
+    refreshMemoryNodeCache(cache, &emu.root, {
+      {"CPU RAM", &cache.cpuRamMemory},
+      {"Cartridge RAM", &cache.cartridgeRamMemory},
+    }, &changed);
+    if(!changed && !cache.masterSystemMap.empty()) return;
+
+    cache.masterSystemMap = compileMemoryMap({
+      {0x0000, 0x1fff, ReadMode::Linear, 0x2000, &cache.cpuRamMemory},
+      {0x2000, 0x9fff, ReadMode::Linear, 0x8000, &cache.cartridgeRamMemory},
+    });
+  }
+
+  static auto sgAddress(u32 address) -> u16 {
+    if(address < 0x2000) return 0xc000 + address;
+    if(address < 0x4000) return address;
+    return 0x8000 + (address - 0x4000);
+  }
+
+  auto supports(const Emulator& emu) const -> bool override {
+    return supportsAnyName(emu, {"SG-1000", "Master System"});
+  }
+
+  auto consoleId(const Emulator& emu) const -> u32 override {
+    return emu.name == "SG-1000" ? RC_CONSOLE_SG1000 : RC_CONSOLE_MASTER_SYSTEM;
+  }
+
+  auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool override {
+    out.clear();
+    if(!emu.game || !emu.game->pak) return false;
+    return appendPakFile(emu.game->pak, "program.rom", out);
+  }
+
+  auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 override {
+    if(emu.name == "SG-1000") {
+#if defined(CORE_SG)
+      if(!buffer || address >= 0x6000) return 0;
+      auto readable = min(size, 0x6000 - address);
+      // SG-1000 expansions appear at different CPU addresses; the cartridge
+      // board resolves which regions actually contain RAM.
+      for(u32 index : range(readable)) buffer[index] = ares::SG1000::cpu.read(sgAddress(address + index));
+      return readable;
+#else
+      return 0;
+#endif
+    }
+
+    refreshMasterSystemMap(emu);
+    return Adapter::readMemoryMap(cache.masterSystemMap, address, buffer, size);
+  }
+
+  auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
+    if(emu.name == "SG-1000") {
+#if defined(CORE_SG)
+      if(!buffer || address >= 0x6000) return 0;
+      auto writable = min(size, 0x6000 - address);
+      for(u32 index : range(writable)) ares::SG1000::cpu.write(sgAddress(address + index), buffer[index]);
+      return writable;
+#else
+      return 0;
+#endif
+    }
+
+    refreshMasterSystemMap(emu);
+    return Adapter::writeMemoryMap(cache.masterSystemMap, address, buffer, size);
+  }
+};
 
 struct MegaDriveAdapter final : Adapter {
   struct Cache : NodeCache {
@@ -57,12 +139,7 @@ struct MegaDriveAdapter final : Adapter {
 
   auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 override {
     refreshMemoryMap(emu);
-    // rcheevos Mega Drive map:
-    // 0x000000-0x00ffff -> MD RAM
-    // 0x010000-0x01ffff -> Cartridge RAM
-    // rcheevos expects the libretro-style 68K byte lane view (addr^1 on LE
-    // hosts for MD RAM). Mirror that layout here so achievement conditions
-    // evaluate against the expected bytes.
+    // rcheevos uses the 68K byte lane view (addr^1 on little-endian hosts).
     return Adapter::readMemoryMap(cache.memoryMap, address, buffer, size);
   }
 
@@ -77,6 +154,10 @@ struct MegaDriveAdapter final : Adapter {
 namespace RA::Platform {
 
 auto registerSegaAdapters(std::vector<Adapter*>& list) -> void {
+#if defined(CORE_SG) || defined(CORE_MS)
+  static Sega8BitAdapter sega8Bit;
+  list.push_back(&sega8Bit);
+#endif
 #if defined(CORE_MD)
   static MegaDriveAdapter megaDrive;
   list.push_back(&megaDrive);
