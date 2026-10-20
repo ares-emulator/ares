@@ -301,7 +301,18 @@ int main() {
   cpu.debugger.tracer.instruction->setEnabled(true);
   profView.releaseOwner("old-generation"); check(prof.enabled, "stale profiler owner cannot disable new capture");
   profView.releaseOwner("fixture"); check(!prof.enabled && cpu.recompiler.callInstructionPrologue, "disconnect disables profiler while preserving debugger prologue");
+  ares::Platform quietPlatform; auto* previousPlatform = ares::platform; ares::platform = &quietPlatform;
+  prof.clearStats(); cpu.icache.power(false); pc(base + 0x300); cpu.jitClockTarget = cpu.clock + 100000;
+  cpu.instruction(); cpu.instruction();
+  check(cpu.recompiler.sections[cpu.recompiler.sectionIndex(0x1300)] != nullptr, "debugger-only JIT block compiled with inline cache refill");
+  check(profView.execute("n64.profiler.control", {"1"}, "fixture", false).error.empty(), "enable profiler while instruction tracer already owns shared hook");
+  check(cpu.recompiler.callInstructionPrologue && !cpu.recompiler.sections[cpu.recompiler.sectionIndex(0x1300)], "profiler toggle invalidates blocks even when shared prologue stays enabled");
+  cpu.icache.power(false); pc(base + 0x300); cpu.jitClockTarget = cpu.clock + 100000;
+  for(unsigned n = 0; n < 10 && prof.stats.empty(); ++n) cpu.instruction();
+  check(prof.stats.count(0x80001340) && prof.stats.at(0x80001340).exclBytesIn == 32, "shared-tracer JIT counts actual cache-refill bytes after enabling profiling");
+  profView.releaseOwner("fixture");
   cpu.debugger.tracer.instruction->setEnabled(false); check(!cpu.recompiler.callInstructionPrologue, "both disabled restores JIT without prologues");
+  ares::platform = previousPlatform;
   prof.clearStats();
   CPU::Profiler::Frame boundedFrame; boundedFrame.funcAddr = 0x80001000;
   for(unsigned n = 0; n < CPU::Profiler::maxFunctions; ++n) prof.stats.emplace(n, CPU::Profiler::FuncStat{});

@@ -235,7 +235,13 @@ auto CPU::Profiler::setEnabled(bool value) -> void {
   enabled = value;
   callStack.clear(); suspended.clear(); haveSp = false; excActive = 0;
   spLo = spHi = 0; stackClock = 0;
+  bool oldHook = cpu.recompiler.callInstructionPrologue;
   cpu.updatePrologueHook();
+  // Profiling also changes generated icache refill paths. The shared prologue
+  // may stay enabled for the debugger, but those existing blocks must expire.
+  if constexpr(Accuracy::CPU::Recompiler) {
+    if(oldHook == cpu.recompiler.callInstructionPrologue) cpu.recompiler.reset();
+  }
 }
 auto CPU::Profiler::power() -> void {
   callStack.clear(); suspended.clear(); haveSp = false; excActive = 0;

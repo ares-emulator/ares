@@ -250,7 +250,9 @@ reset revokes/clears it. Symbol discovery, wait-name classification and large UI
 cache/timeline rings are deferred; their absence is explicit. JIT entry labels
 must precede the profiling hook so return arrival into an internal target is
 observed. Run the hook after instruction-cache refill to charge a callsite fetch
-to its caller, matching interpreter attribution.
+to its caller, matching interpreter attribution. Profiling toggles also invalidate
+blocks when the instruction tracer keeps the shared prologue enabled, because
+generated icache refill paths depend on profiling mode.
 
 Task 6 tap adaptation: per-connection port ownership supersedes the single-client
 reference. The tapped port is stable for the owned interval. keep_override may

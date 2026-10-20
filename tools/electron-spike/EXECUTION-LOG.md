@@ -748,3 +748,14 @@ Publication follow-up final validation: all 31 tests passed in 11.52s. Built
 artifacts/task-7-images-final/Ares.app and copied-app package verification passed
 again: 36-tool inventory, native capture/worker/inline PNG, identical saved PNG,
 GB memory restore/resume and clean shutdown (450 frames), bundled Node 24.22.0.
+
+#### Profiler shared-tracer invalidation follow-up
+
+Review found that profiling changes generated icache refill paths even when the
+instruction debugger already keeps the shared prologue enabled. A profiler toggle
+now invalidates compiled blocks in that case as well (one reset, without forcing
+the interpreter). This corrects the earlier task-6 journal statement that only
+prologue-gate changes require invalidation. A real JIT regression compiles and
+executes debugger-only blocks, enables profiling with the tracer still enabled,
+checks invalidation, then verifies the expected 32 cache-refill bytes. Host/core
+fixture rebuilt; all 31 tests passed in 11.96s. Final combined package follows.
