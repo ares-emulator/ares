@@ -104,20 +104,36 @@ struct Sega8BitAdapter final : Adapter {
 struct MegaDriveAdapter final : Adapter {
   struct Cache : NodeCache {
     ares::Node::Debugger::Memory cpuRamMemory;
+    ares::Node::Debugger::Memory m32xSdramMemory;
     ares::Node::Debugger::Memory cartridgeRamMemory;
     CompiledMap memoryMap;
+    CompiledMap m32xMemoryMap;
   };
 
   mutable Cache cache;
 
   auto refreshMemoryMap(const Emulator& emu) const -> void {
     bool changed = false;
+    if(emu.name == "Mega 32X") {
+      refreshMemoryNodeCache(cache, &emu.root, {
+        {"CPU RAM", &cache.cpuRamMemory},
+        {"32X SDRAM", &cache.m32xSdramMemory},
+        {"Cartridge RAM", &cache.cartridgeRamMemory},
+      }, &changed);
+      if(!changed && !cache.m32xMemoryMap.empty()) return;
+      cache.m32xMemoryMap = compileMemoryMap({
+        {0x000000, 0x00ffff, ReadMode::LinearSwapped, 0x10000, &cache.cpuRamMemory},
+        {0x010000, 0x04ffff, ReadMode::LinearSwapped, 0x40000, &cache.m32xSdramMemory},
+        {0x050000, 0x05ffff, ReadMode::WrappedSwapped, 0, &cache.cartridgeRamMemory},
+      });
+      return;
+    }
+
     refreshMemoryNodeCache(cache, &emu.root, {
       {"CPU RAM", &cache.cpuRamMemory},
       {"Cartridge RAM", &cache.cartridgeRamMemory},
     }, &changed);
     if(!changed && !cache.memoryMap.empty()) return;
-
     cache.memoryMap = compileMemoryMap({
       {0x000000, 0x00ffff, ReadMode::LinearSwapped, 0x10000, &cache.cpuRamMemory},
       {0x010000, 0x01ffff, ReadMode::WrappedSwapped, 0, &cache.cartridgeRamMemory},
@@ -125,12 +141,11 @@ struct MegaDriveAdapter final : Adapter {
   }
 
   auto supports(const Emulator& emu) const -> bool override {
-    return supportsAnyName(emu, {"Mega Drive"});
+    return supportsAnyName(emu, {"Mega Drive", "Mega 32X"});
   }
 
   auto consoleId(const Emulator& emu) const -> u32 override {
-    (void)emu;
-    return RC_CONSOLE_MEGA_DRIVE;
+    return emu.name == "Mega 32X" ? RC_CONSOLE_SEGA_32X : RC_CONSOLE_MEGA_DRIVE;
   }
 
   auto romData(const Emulator& emu, std::vector<u8>& out) const -> bool override {
@@ -142,12 +157,14 @@ struct MegaDriveAdapter final : Adapter {
   auto readMemory(const Emulator& emu, u32 address, u8* buffer, u32 size) const -> u32 override {
     refreshMemoryMap(emu);
     // rcheevos uses the 68K byte lane view (addr^1 on little-endian hosts).
-    return Adapter::readMemoryMap(cache.memoryMap, address, buffer, size);
+    auto& memoryMap = emu.name == "Mega 32X" ? cache.m32xMemoryMap : cache.memoryMap;
+    return Adapter::readMemoryMap(memoryMap, address, buffer, size);
   }
 
   auto writeMemory(const Emulator& emu, u32 address, const u8* buffer, u32 size) const -> u32 override {
     refreshMemoryMap(emu);
-    return Adapter::writeMemoryMap(cache.memoryMap, address, buffer, size);
+    auto& memoryMap = emu.name == "Mega 32X" ? cache.m32xMemoryMap : cache.memoryMap;
+    return Adapter::writeMemoryMap(memoryMap, address, buffer, size);
   }
 };
 
