@@ -886,3 +886,58 @@ verification, followed by disposable cross-binary save/load tests. The next
 implementation should expose version/layout observations without loading the live
 emulator, validate whole-file bounds before restoration, and keep offline state
 inspection independent of emulator mutation. No state tools registered yet.
+
+### Task 8 — native state save and offline inspection checkpoint
+
+Implemented `state_save`, `state_info`, `state_list` and `state_peek`; registry is
+now **46 of 68** tools. This is a task 8 slice, not completion of loading or
+experiments. Selective reference commit:
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`.
+- `ares/n64/system/serialization.cpp`: SHA-256
+  `f19255ef37dd7ef482aee659d8892034a3a2acce9919ba8bb46a631bdefbf96c`
+- `ares/n64/system/system.hpp`: SHA-256
+  `07ad9f64c178dcf4981322ae20fd3df6ef51e28803a4944b46abf9534b2369b6`
+- `desktop-ui/program/states.cpp`: SHA-256
+  `9149868f5262eee42f2be3f65f4f789b887238979d5dd830a44dd967c1706fa7`
+- Header/list/peek and metadata behavior uses the previously audited reference
+  telemetry-server.cpp. Fifteen other N64 serialization.cpp files remain identical.
+
+Refactored the serializer header/prefix without changing field order/version.
+The native observer reports `v153`, `BST1`, 533-byte header and configuration-
+dependent RDRAM offset/size. A fixture independently assembles the reference
+header/prefix and checks layout equality and CPU/RAM nonmutation. Header support
+is explicitly not machine/configuration/load acceptance.
+
+Native state saving pauses at a safe point, rejects active execution/GDB and
+pins one immutable snapshot (64 MiB max, 30-second lease). Main streams pages to
+atomic file publication and separately publishes hash/ROM/layout metadata.
+Sidecar failure preserves the state-file result as metadata_error. Main exports
+are bounded to 25 seconds; owner release/reset revoke the snapshot.
+
+Offline inspection reads only bounded regular files (including direct symlinks);
+nonblocking open rejects FIFOs. Header-only info does not pause/serialize CPU or
+restore a machine. Inventory scans at most 4096 regular directory entries, hashes
+at most 64 MiB of file content and returns 48 KiB pages with next_offset. Native
+slot paths match legacy names but do not call locate(), which creates directories.
+Saved RDRAM reads use validated hash/layout metadata, or explicit current-
+configuration assumption through prefix observation only. Ranges are lossless
+physical/KSEG aliases, capped to 1024 bytes; saved CPU-cache view is unsupported.
+
+Validation passed:
+- Native host and CPU fixture build; strict TypeScript; **41/41** sequential tests
+  (23.89 s final run). Covers stale/malformed sidecars, header/version/truncation,
+  address/endian/range checks, 4096-entry scan and response bounds, huge/special
+  files, cancellation/cleanup, atomic state+sidecar failure boundaries and retry.
+- Actual paused N64 native save with real MCP stdio, followed by hash-validated
+  saved-RDRAM reads agreeing with live backing-store bytes; registers unchanged.
+  Foreign snapshot access, ranges, busy pin and disconnect revocation pass.
+- Real Electron MCP: exact 46-tool registry, real N64 state save/peek plus prior
+  CPU/input/trace/image/audio/recording/reload checks pass.
+- Packaged `artifacts/task-8-state-inspection/Ares.app`; copied-app test passes
+  with loader/MCP checkout reads denied, 46-tool registry, offline header/list/
+  hash-sidecar reads and explicit non-N64 save rejection. GB displayed 155 frames.
+
+Remaining task 8 work: preflighted safe load/new-epoch behavior, cross-binary
+restore compatibility, multiwrite/delayed verification and bounded batch sweeps.
+No existing fork state was loaded or accepted solely from its version/header.
+Milestone 2 physical keyboard/gamepad/audible N64 acceptance remains not run.

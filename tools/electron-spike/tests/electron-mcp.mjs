@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { once } from 'node:events';
+import { writeStateFixture } from './state-file-fixture.cjs';
 import { makeFixture } from '../fixture.cjs';
 import { StdioPeer } from './stdio-peer.cjs';
 import { LocalServiceClient } from '../dist/services/local-endpoint.js';
@@ -38,7 +39,7 @@ app.whenReady().then(async () => {
   const mcp = peer(); await mcp.initialize();
   enter('MCP tools');
   const list = (await mcp.request('tools/list', {})).result.tools;
-  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop'].sort());
+  assert.deepEqual(list.map(t => t.name).sort(), ['emu_status', 'pause', 'resume', 'memory_regions', 'read_memory', 'write_memory', 'run_frames', 'run_until_frame', 'step', 'operation_status', 'cancel_operation', 'cpu_registers', 'last_stop', 'step_instructions', 'run_until_hit', 'break_add', 'break_remove', 'break_list', 'watch_add', 'watch_remove', 'watch_list', 'read_memory_va', 'write_memory_va', 'controller_set', 'controller_release', 'controller_state', 'controller_host_mode', 'trace_pc', 'trace_calls', 'trace_page', 'overlay_log', 'profiler_control', 'profiler_clear', 'cpu_profiler_top', 'controller_tap', 'screenshot', 'audio_capture', 'audio_status', 'audio_save', 'video_start', 'video_status', 'video_stop', 'state_info', 'state_list', 'state_peek', 'state_save'].sort());
   assert.equal(list.find(t => t.name === 'read_memory').inputSchema.properties.length.default, 64);
   assert.equal(list.find(t => t.name === 'resume').inputSchema.properties.keep_overrides.default, false);
   assert.equal(list.find(t => t.name === 'emu_status').inputSchema.properties.verbose.default, false);
@@ -72,6 +73,10 @@ app.whenReady().then(async () => {
   await window.webContents.executeJavaScript("document.getElementById('memory-offset').value='0xf0'; document.getElementById('memory-length').value='4'; document.getElementById('memory-read').click()");
   await until(() => window.webContents.executeJavaScript("document.getElementById('memory-output').textContent.includes('deadbeef')"));
   assert.equal((await mcp.tool('read_memory', { region: 'CPU WRAM', addr: 240, length: 4 })).hex, 'deadbeef');
+  const offlineFile = path.join(temporary, 'offline fixture.bs'); writeStateFixture(offlineFile);
+  assert.equal((await mcp.tool('state_info', { path: offlineFile })).compatibility, 'header_supported_configuration_unverified');
+  assert.equal((await mcp.tool('state_peek', { path: offlineFile, addr: '0xa0000001', length: 7 })).hex, '41424344454647');
+  assert.equal((await mcp.tool('state_list', { directory: temporary })).entries[0].capture_frame, 7);
   enter('native presented screenshot');
   const imageReply = await mcp.request('tools/call', { name: 'screenshot', arguments: { source: 'presented', region: [0, 0, 4, 4], scale: 2, inline: true } });
   assert.equal(imageReply.result.isError, undefined);
@@ -168,6 +173,13 @@ app.whenReady().then(async () => {
   assert.equal(exportedTrace.path, tracePath); assert.equal(exportedTrace.entries.length, 0);
   assert.equal(JSON.parse(fs.readFileSync(tracePath, 'utf8')).entries.length, exportedTrace.total_entries);
   assert.ok(exportedTrace.artifact.bytes > 0);
+  const nativeStateFile = path.join(temporary, 'electron native state.bs');
+  const savedNative = await mcp.tool('state_save', { path: nativeStateFile });
+  assert.equal(savedNative.stopped, true); assert.equal(savedNative.version, 'v153');
+  assert.equal(fs.statSync(nativeStateFile).size, savedNative.size);
+  const peekNative = await mcp.tool('state_peek', { path: nativeStateFile, addr: '0x80000000', length: 16 });
+  assert.equal(peekNative.active_machine_unchanged, true); assert.equal(peekNative.layout_source, 'hash_validated_sidecar');
+  assert.equal(peekNative.capture_frame, savedNative.frame);
 
   await until(() => window.webContents.executeJavaScript("document.getElementById('pause').textContent === 'Resume'"));
   enter('native shutdown');

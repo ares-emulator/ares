@@ -44,6 +44,7 @@ auto locate(const string& name) -> string {
 #include "native/frame-service.hpp"
 #include "native/audio-service.hpp"
 #include "native/recording-service.hpp"
+#include "native/state-snapshot.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
@@ -51,6 +52,7 @@ struct Host : ares::Platform {
   FrameService captures;
   AudioService audioCapture;
   RecordingService recording;
+  StateSnapshot stateSnapshot;
   std::atomic<bool> takeoverRequested{false};
   ares::Node::System root;
   std::shared_ptr<HID::Joypad> joypad;
@@ -430,8 +432,32 @@ int main(int argc, char** argv) {
   host.service.audioRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     return host.audioCapture.execute(method, args, owner, !host.streams.empty());
   };
-  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); };
+  host.service.onReleaseOwner = [&](const std::string& owner) { host.injectedInput.releaseOwner(owner); profilerService.releaseOwner(owner); host.captures.releaseOwner(owner); host.audioCapture.releaseOwner(owner); host.recording.releaseOwner(owner); host.stateSnapshot.releaseOwner(owner); };
   host.service.n64Request = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
+    if(method == "n64.state.begin" || method == "n64.state.read" || method == "n64.state.release") return host.stateSnapshot.execute(method, args, owner, host.service.epoch, execution.frame, n64, bool(execution.active), host.service.paused);
+    if(method == "n64.state.format" || method == "n64.state.layout") {
+      if(!args.empty()) return ControlResult{"invalid_request", {}};
+      if(method == "n64.state.layout" && !n64) return ControlResult{"unavailable", {}};
+      auto& system = ares::Nintendo64::system;
+      auto json = std::string("{\"version\":") + controlQuote(system.stateVersion().data()) + ",\"signature\":" + std::to_string(ares::SerializerSignature) + ",\"header_size\":533";
+      if(method == "n64.state.format") {
+        json += ",\"slots\":[";
+        if(emulator && emulator->game) for(unsigned slot = 1; slot <= 9; ++slot) {
+          if(slot > 1) json += ',';
+          // Match legacy slot names without locate()'s directory creation.
+          auto location = emulator->game->location;
+          string slotPath = settings.paths.saves ? string{settings.paths.saves, host.root->name(), "/", Location::prefix(location), ".bs", slot}
+                                                : string{Location::notsuffix(location), ".bs", slot};
+          json += controlQuote(slotPath.data());
+        }
+        json += ']';
+      }
+      if(method == "n64.state.layout") {
+        auto [offset, size] = system.inspectStateRdramLayout();
+        json += ",\"offset\":" + std::to_string(offset) + ",\"size\":" + std::to_string(size) + ",\"storage\":\"lsb32\"";
+      }
+      return ControlResult{{}, json + "}"};
+    }
     if(method == "n64.input.tap") return tapService.execute(args, owner, host.service.epoch, host.service.paused, host.injectedInput, execution);
     // Keep the tapped port stable for its entire owned interval.
     if(tapService.active() && (method == "n64.input.set" || method == "n64.input.release") && !args.empty() &&
@@ -484,6 +510,7 @@ int main(int argc, char** argv) {
       host.captures.reset(host.service.epoch + 1);
       host.audioCapture.reset();
       host.recording.reset();
+      host.stateSnapshot.reset();
       ares::Nintendo64::executionCoordinate.reset(); syntheticPhase = 0;
       ares::Nintendo64::dmaProvenance.reset(host.service.epoch + 1);
       if(host.root) { host.output.clear(); host.root->power(); }

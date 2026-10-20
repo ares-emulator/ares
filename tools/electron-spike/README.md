@@ -169,7 +169,7 @@ and its mapped `RDRAM` region is read-only. Explicit N64 VA/cache services are
 separate; region access does not imply those semantics.
 
 The [68-tool parity ledger](MCP-PARITY-LEDGER.md) records the audited reference
-schemas/defaults and dependencies. 42 bounded MCP tools are exposed by
+schemas/defaults and dependencies. 46 bounded MCP tools are exposed by
 the opt-in stdio adapter; [setup and bundled runtime](mcp/README.md). `npm test` requires
 the built native host and CPU fixture, and includes sequential isolated session checks.
 `test:electron` uses a disposable profile and verifies stalled-renderer controls,
@@ -369,7 +369,7 @@ Exports stream four bounded native pages per batch, cap output at 64 MiB and
 connection; disconnect, host replacement and stale epochs abort work. Relative
 paths resolve against the app process working directory. `file_error` reports
 export failure after capture; completed emulation is retained. Native screenshots are implemented below; audio taps and recording remain task 7 work.
-The MCP registry now exposes 42 tools.
+The MCP registry now exposes 46 tools.
 
 ### Native screenshots (task 7, partial)
 
@@ -400,3 +400,10 @@ freezes at its cap; reset and disconnect revoke it. WAV exports run in main,
 atomically replace existing destinations (matching the reference audio API), and
 consume capture only after successful publication. Partial and empty exports
 work; failed exports retain samples for retry. See [MCP audio details](mcp/README.md#audio-capture).
+
+Task 8 now includes N64 `state_save` and offline `state_info`, `state_list` and
+`state_peek`. Native state files and metadata use bounded atomic publishing;
+offline inspection never loads/restores the active machine. Header support is
+reported separately from configuration compatibility. See the
+[MCP state contract](mcp/README.md#native-states-task-8-in-progress). Safe loading,
+delayed write verification and experiments are still in progress.

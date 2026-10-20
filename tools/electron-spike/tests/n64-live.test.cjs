@@ -109,6 +109,47 @@ test('isolated N64 host and real MCP stdio share instruction operations, registe
     await endpoint.listen(path.join(dir, 'ipc'));
     client = new LocalServiceClient(endpoint.metadataFile, endpoint.instance); await client.request('session.status');
     peer = new StdioPeer(process.execPath, [path.resolve(__dirname, '../dist/mcp/server.js'), '--connection', endpoint.metadataFile, '--instance', endpoint.instance]); await peer.initialize();
+    const stateRegisters = unwrap(await native.request('n64.debug.registers'));
+    const stateCoordinate = unwrap(await native.request('session.status'));
+    const stateRam = unwrap(await native.request('n64.memory.read', undefined, { address: '0x2000', length: 32, view: 'rdram' }));
+    const stateFormat = unwrap(await native.request('n64.state.format'));
+    const slotDirectory = path.dirname(stateFormat.slots[0]);
+    // Do not let a read-only format/list query recreate an absent save directory.
+    try { fs.rmdirSync(slotDirectory); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    unwrap(await native.request('n64.state.format')); assert.equal(fs.existsSync(slotDirectory), false);
+    const stateLayout = unwrap(await native.request('n64.state.layout'));
+    assert.equal(stateFormat.version, 'v153'); assert.equal(stateFormat.header_size, 533); assert.equal(stateFormat.slots.length, 9);
+    const statePath = path.join(dir, 'offline.bs'), savedState = Buffer.alloc(stateLayout.offset + stateLayout.size);
+    savedState.writeUInt32LE(stateFormat.signature); savedState[4] = 1; savedState.write('v153', 5);
+    for (let n = 0; n < 16; n++) savedState[stateLayout.offset + (n ^ 3)] = n + 0x40;
+    fs.writeFileSync(statePath, savedState);
+    assert.equal((await peer.tool('state_info', { path: statePath })).compatibility, 'header_supported_configuration_unverified');
+    assert.equal((await peer.tool('state_peek', { path: statePath, addr: '0x80000001', length: 7 })).error, 'layout_unavailable');
+    const offline = await peer.tool('state_peek', { path: statePath, addr: '0xa0000001', length: 7, assume_current_configuration: true });
+    assert.equal(offline.hex, '41424344454647'); assert.equal(offline.active_machine_unchanged, true);
+    assert.equal((await peer.tool('state_list', { directory: dir })).entries.length, 1);
+    assert.equal((await peer.tool('state_list')).entries.length, 9);
+    assert.deepEqual(unwrap(await native.request('n64.debug.registers')), stateRegisters);
+    assert.deepEqual(unwrap(await native.request('n64.memory.read', undefined, { address: '0x2000', length: 32, view: 'rdram' })), stateRam);
+    assert.deepEqual(unwrap(await native.request('session.status')), stateCoordinate);
+    const nativeStatePath = path.join(dir, 'native saved.bs');
+    const savedNative = await peer.tool('state_save', { path: nativeStatePath });
+    assert.equal(savedNative.version, 'v153'); assert.equal(savedNative.stopped, true); assert.equal(savedNative.epoch, native.identity.epoch);
+    assert.equal(savedNative.size, fs.statSync(nativeStatePath).size); assert.ok(savedNative.size > stateLayout.offset + stateLayout.size);
+    const savedNativeMetadata = JSON.parse(fs.readFileSync(savedNative.metadata_path));
+    assert.equal(savedNativeMetadata.rdram_layout.offset, stateLayout.offset); assert.equal(savedNativeMetadata.rdram_layout.size, stateLayout.size);
+    const actualSavedRam = await peer.tool('state_peek', { path: nativeStatePath, addr: '0x2000', length: 32 });
+    assert.equal(actualSavedRam.hex, stateRam.hex); assert.equal(actualSavedRam.layout_source, 'hash_validated_sidecar');
+    assert.deepEqual(unwrap(await native.request('n64.debug.registers')), stateRegisters);
+    assert.equal((await peer.tool('state_save', { path: nativeStatePath })).error, 'file_exists');
+    const rawPin = unwrap(await native.request('n64.state.begin', undefined, undefined, 'state-owner'));
+    assert.equal((await native.request('n64.state.read', undefined, { snapshotId: rawPin.snapshot_id, offset: 0, length: 4 }, 'foreign')).error, 'busy');
+    assert.equal((await native.request('n64.state.read', undefined, { snapshotId: rawPin.snapshot_id, offset: rawPin.bytes - 1, length: 2 }, 'state-owner')).error, 'out_of_bounds');
+    assert.equal((await peer.tool('state_save', { path: path.join(dir, 'busy.bs') })).error, 'busy');
+    unwrap(await native.request('execution.release', undefined, undefined, 'state-owner'));
+    assert.equal((await native.request('n64.state.read', undefined, { snapshotId: rawPin.snapshot_id, offset: 0, length: 4 }, 'state-owner')).error, 'stale_snapshot');
+
+
     const tools = (await peer.request('tools/list', {})).result.tools;
     assert.equal(tools.find(t => t.name === 'step_instructions').inputSchema.properties.n.default, 1);
     assert.equal(tools.find(t => t.name === 'watch_add').inputSchema.properties.kind.default, 'write');

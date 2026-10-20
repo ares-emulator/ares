@@ -741,10 +741,12 @@
       "family": "States",
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 8 state slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit bounds documented; full generated source schema comparison not run",
+      "testEvidence": [
+        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
+      ],
+      "knownLimits": "N64 only. Pauses at a native safe point; active execution/GDB or an existing native state pin returns busy. Up to 64 MiB; one connection-owned immutable snapshot with 30-second lease, main streaming export deadline 25 seconds. Atomic state file and separately atomic hash/ROM/layout sidecar (metadata=true); sidecar failure returns metadata_error alongside the saved file. No-overwrite by default. Native state field order/version unchanged (v153); load/cross-build compatibility acceptance remains pending."
     },
     {
       "name": "state_load",
@@ -2201,10 +2203,12 @@
       "family": "States",
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 8 state slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit bounds documented; full generated source schema comparison not run",
+      "testEvidence": [
+        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
+      ],
+      "knownLimits": "Header-only regular-file inspection, up to 64 MiB and 533-byte header. Returns compiled N64 version support separately from hardware/configuration compatibility. Does not pause, serialize CPU or restore the active emulator; capture coordinates remain unknown and metadata unchecked in this header-only API."
     },
     {
       "name": "state_list",
@@ -2234,10 +2238,12 @@
       "family": "States",
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 8 state slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit bounds documented; full generated source schema comparison not run",
+      "testEvidence": [
+        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
+      ],
+      "knownLimits": "Nonrecursive regular directory entries only (does not follow directory-entry symlinks), max 4096 scanned entries. Null directory resolves configured slots 1\u20139 without creating directories. Up to 1000 requested entries but 48 KiB actual response pages; explicit next_offset. Hash/layout sidecar validation shares a 64 MiB content budget per request. Header support does not verify hardware compatibility."
     },
     {
       "name": "state_peek",
@@ -2279,10 +2285,12 @@
       "family": "States",
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
-      "implementationStatus": "not implemented",
-      "mcpSchemaParity": "not run; adapter deferred to task 3",
-      "testEvidence": [],
-      "knownLimits": "Backend and MCP adapter not yet ported."
+      "implementationStatus": "MCP implemented (bounded task 8 state slice)",
+      "mcpSchemaParity": "Source names/defaults retained; explicit bounds documented; full generated source schema comparison not run",
+      "testEvidence": [
+        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
+      ],
+      "knownLimits": "Offline v153 RDRAM backing-store only, 1\u20131024 bytes through physical/KSEG aliases (sign-extended lossless addresses). Hash-validated size/layout sidecar required by default; explicit assume_current_configuration visits only native serializer prefix observations with a loaded N64. Validates offset/size/storage and rejects CPU-cache view, bad headers, stale sidecars and wrapped/outside ranges. No pause, state load/restore, CPU serialization or guest execution. Two global/one per-owner inspection jobs, 25-second deadline; reset/disconnect revoke."
     },
     {
       "name": "write_memory_many",

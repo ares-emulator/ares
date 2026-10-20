@@ -430,6 +430,22 @@ int main() {
   check(images.execute("video.begin", {"presented"}, "image-owner", 2, 0, true).error.empty(), "new-epoch presented snapshot accepted");
   images.pins[0].expires = FrameService::Clock::now() - std::chrono::seconds(1);
   check(images.execute("video.read", {std::to_string(images.pins[0].id), "0", "4"}, "image-owner", 2, 0, true).error == "stale_snapshot", "expired native image pin revoked");
+  {
+    // Reference state header/prefix field order, independently assembled here.
+    auto before = cpu.debugControl.snapshot(); auto retired = cpu.debugControl.instructionsRetired;
+    auto ram = rdram.ram.read<Word>(0x2000, RBusDevice::ARES_DEBUGGER);
+    serializer prefix; u32 signature = ares::SerializerSignature; bool synchronize = true;
+    char version[16] = "v153", description[512] = {};
+    prefix(signature); prefix(synchronize); prefix(version); prefix(description);
+    check(prefix.size() == 533, "state header is 533 bytes");
+    prefix(ares::Nintendo64::random); prefix(ares::Nintendo64::queue); prefix(cartridge);
+    prefix(controllerPort1); prefix(controllerPort2); prefix(controllerPort3); prefix(controllerPort4);
+    auto [offset, size] = ares::Nintendo64::system.inspectStateRdramLayout();
+    check(offset == prefix.size() && size == rdram.ram.size, "offline layout matches reference prefix");
+    auto after = cpu.debugControl.snapshot();
+    check(before.pc == after.pc && std::memcmp(before.gpr, after.gpr, sizeof(before.gpr)) == 0 && std::memcmp(before.cop0, after.cop0, sizeof(before.cop0)) == 0 && retired == cpu.debugControl.instructionsRetired, "offline layout preserves CPU state");
+    check(ram == rdram.ram.read<Word>(0x2000, RBusDevice::ARES_DEBUGGER), "offline layout preserves RDRAM");
+  }
   pi.detach(cartridge.romDevice); cartridge.rom.reset();
   rdram.ram.reset();
   std::puts("CPU_DEBUG_FIXTURE_PASS");

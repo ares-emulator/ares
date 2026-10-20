@@ -26,6 +26,8 @@ struct System {
   auto power(bool reset) -> void;
 
   //serialization.cpp
+  auto stateVersion() const -> string;
+  auto inspectStateRdramLayout() -> std::pair<u64, u64>;
   auto serialize(bool synchronize = true) -> serializer;
   auto unserialize(serializer&) -> bool;
 
@@ -45,6 +47,8 @@ private:
   auto _power(bool reset) -> void;
 
   //serialization.cpp
+  auto serializeHeader(serializer&, bool synchronize) -> void;
+  auto serializePrefix(serializer&) -> void;
   auto serialize(serializer&, bool synchronize) -> void;
 };
 

@@ -1,11 +1,11 @@
-# MCP adapter (tasks 3–7, partial)
+# MCP adapter (tasks 3–8, partial)
 
 The Node stdio entry point is `dist/mcp/server.js`, compiled as native ESM from `server.ts`.
 It attaches to an already-running Electron main process through the shared
 `services/` contracts, `LocalServiceClient` and `MemoryClient`. It never spawns an
-emulator. The verified registry has 42 tools: eleven generic/session/run tools,
+emulator. The verified registry has 46 tools: eleven generic/session/run tools,
 twelve N64 CPU/VA tools, five controller tools (including controller_tap), three
-trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools. CPU/VA/input/
+trace tools, overlay_log, three CPU profiler tools, screenshot, three audio tools and three video recording tools and four state save/inspection tools. CPU/VA/input/
 trace/profiler/framebuffer features are N64-specific; presented screenshots also
 support other cores, as does post-mix audio capture when streams are available. Diagnostics go to stderr; stdout carries MCP JSON-RPC only.
 
@@ -299,3 +299,37 @@ and captured coordinates. Native pins expire after 30 seconds; main exports have
 a 25-second deadline and stream bounded pages without assembling the entire AVI
 in memory. Maximum artifact size is 270000000 bytes including headers/index.
 Late cleanup errors retain successful file metadata as `cleanup_error`.
+
+### Native states (task 8, in progress)
+
+`state_save(path, overwrite=false, metadata=true)` pauses and snapshots a loaded
+N64 at a native safe point. An active execution operation/GDB session or existing
+state pin returns `busy`. Main streams the immutable native bytes to atomic file
+publication (64 MiB bound). A separate atomic `.json` sidecar records file hash,
+ROM hash, serializer version, capture epoch/frame and the saved RDRAM layout.
+These are two publications: `metadata_error` preserves a successfully saved state
+when the sidecar cannot be published. Native pins have 30-second leases; exports
+have a 25-second deadline. Reset/disconnect revoke them. Saved-state field order
+and version remain `v153`; save support alone does not establish load compatibility.
+
+`state_info(path)` reads only the 533-byte header of a bounded regular file. Its
+`header_supported_configuration_unverified` result deliberately does not approve
+restoration. Capture coordinates remain unknown and sidecar status unchecked.
+`state_list(directory=null, offset=0, limit=100)` scans at most 4096 regular
+entries, non-recursively, or resolves configured slots 1–9 without creating save
+directories. Requested pages may contain up to 1000 entries, but actual responses
+are capped near 48 KiB with `next_offset`. Sidecar validation has a shared 64 MiB
+content budget per request. Directory-entry symlinks are excluded; an explicit
+file path may resolve through a symlink to a regular file.
+
+`state_peek(path, addr, length=64, view="rdram",
+assume_current_configuration=false)` reads 1–1024 saved guest-order RDRAM bytes.
+It validates the state hash and layout sidecar, or uses an explicitly requested
+observation of the currently loaded N64's serializer prefix. That observation
+never serializes/restores the CPU or runs the machine. Physical and KSEG aliases
+are supported; CPU-cache view and wrapped/outside ranges reject. Inspections never
+pause or load the live emulator. File inputs are bounded to 64 MiB; nonregular
+inputs reject. Inspections allow two global jobs/one per owner and a 25-second
+deadline, with reset/disconnect revocation.
+
+Safe loading, delayed write verification and batch experiments remain pending.

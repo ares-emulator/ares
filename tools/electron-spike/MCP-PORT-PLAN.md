@@ -382,3 +382,15 @@ Use actual frame-submission epoch tags rather than reading core state from the
 render thread. Extend presented recording to other supported cores and synthetic
 fixtures, labeling generic coordinates unavailable. Reset/disconnect discard
 owned buffers; no cross-owner export/discard. A failed export retains frames.
+
+Task 8 first state slice ports the reference system header/prefix observations and
+path-save/header/list/peek behavior. Preserve `v153` field order; header support
+is explicitly separate from configuration/load compatibility. Main owns all file
+I/O and atomic publishing; native owns one immutable paused state snapshot and
+ROM/layout observations. Save remains N64-only for this slice. Header inspection
+never serializes the active CPU; legacy offline reads require explicit current-
+configuration assumption. Keep the reference's 64 MiB state bound, 4096-entry scan
+and metadata-hash budget; bound control replies to 48 KiB inventory pages and
+1024-byte offline reads. Direct file reads follow regular-file symlinks; directory
+inventory excludes symlink entries. Loading/experiments remain pending and must
+not be enabled merely because header/version and static field order agree.

@@ -1,7 +1,8 @@
 static const string SerializerVersion = "v153";
 
-auto System::serialize(bool synchronize) -> serializer {
-  serializer s;
+auto System::stateVersion() const -> string { return SerializerVersion; }
+
+auto System::serializeHeader(serializer& s, bool synchronize) -> void {
 
   u32  signature = SerializerSignature;
   char version[16] = {};
@@ -13,6 +14,11 @@ auto System::serialize(bool synchronize) -> serializer {
   s(version);
   s(description);
 
+}
+
+auto System::serialize(bool synchronize) -> serializer {
+  serializer s;
+  serializeHeader(s, synchronize);
   serialize(s, synchronize);
   return s;
 }
@@ -36,7 +42,7 @@ auto System::unserialize(serializer& s) -> bool {
   return true;
 }
 
-auto System::serialize(serializer& s, bool synchronize) -> void {
+auto System::serializePrefix(serializer& s) -> void {
   s(random);
   s(queue);
   s(cartridge);
@@ -44,6 +50,17 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(controllerPort2);
   s(controllerPort3);
   s(controllerPort4);
+}
+
+auto System::inspectStateRdramLayout() -> std::pair<u64, u64> {
+  serializer s;
+  serializeHeader(s, true);
+  serializePrefix(s);
+  return {s.size(), rdram.ram.size};
+}
+
+auto System::serialize(serializer& s, bool synchronize) -> void {
+  serializePrefix(s);
   s(rdram);
   s(mi);
   s(vi);

@@ -208,3 +208,12 @@ coordinates. A separate mutex protects frame collection; service requests freeze
 and pin it. Main's `artifact.videoStop` streams AVI headers, bounded native pages
 and an index through the atomic publisher. Failed publication releases the pin
 without consuming frames. Owner disconnect/reset revoke collection and export.
+
+State inspection lives in main: `state.info/list/peek` read bounded regular files,
+validate sidecar hashes and decode saved `lsb32` RDRAM. The only native reads are
+compiled format/slot names and, on explicit legacy-file assumption, serializer
+prefix layout. Neither touches CPU serialization or pause/restore. Slot names are
+computed without the legacy locate helper's directory-creation side effect.
+`state.save` uses one native immutable snapshot pin and main-owned streaming
+publication plus a separately published metadata sidecar. The new native layout
+observer refactors serializer header/prefix code without changing field order.
