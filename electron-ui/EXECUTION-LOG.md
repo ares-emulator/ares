@@ -2072,3 +2072,59 @@ Next: extract loader/firmware/save/config/input/resource code from desktop-ui,
 inventory remaining features and retire its frontend/Hiro coupling. Then add the
 single acceptance entry point, CI and plugin startup recovery before task 13.
 Physical input, audible output and serializer fault-injection gates remain open.
+
+
+## 2026-10-21 — frontend-native loader extraction and desktop retirement (foundation slice 3)
+
+Extracted the existing compiled-system registry/loaders, firmware, save/media
+routing, peripheral setup, input mappings and BML configuration model into
+`electron-ui/native/runtime/`. Replaced the inactive desktop Program global with
+an explicit input mutex/capture context and companion-media queue; palette
+application remains. Removed unused Hiro menus/dialogs, hotkeys and disc-tray
+callbacks/timers, preserving actual host/core/service behavior.
+
+`DESKTOP-RETIREMENT.md` inventories each desktop subsystem, its replacement or
+explicit deferral, provenance (`b9f42e052`) and remaining gates. After extraction
+and acceptance, removed the superseded desktop-ui tree. Git retains the reference.
+The root CMake frontend now defaults to the native Electron host. Normal builds
+have no desktop or Hiro target; optional standalone MIA/genius utilities can still
+use the retained Hiro toolkit. Retired desktop-specific build/archive/sign/release
+workflows, wrappers and the obsolete universal-app script; updated root/build docs
+and format targets. The Electron macOS CI lane remains the next foundation slice.
+No cores, Ruby backends or working native service implementations were removed.
+
+MIA gains a narrow optional resource resolver; standalone MIA keeps its previous
+lookup without that callback. Electron passes the selected runtime resource root
+explicitly to probes and host starts. Snapshot launches copy its databases. The
+host has no compiled source-root fallback or implicit desktop-settings lookup.
+Default settings are `<profile>/settings.bml`, with explicit read-only BML override
+still supported. Imported Paths/Home cannot redirect writable system data outside
+the profile's save/system tree.
+
+Validation on macOS arm64:
+- Configure/build both native targets after physically removing desktop-ui, with
+  optional utilities OFF. Generated target help, host link command and compiler
+  dependencies contain no desktop/Hiro targets, libraries or headers.
+- All **40 registry variants** compare byte-for-byte with the pre-extraction host.
+- Three strict TS targets; final sequential suite: **87 passed, zero failures,
+  one optional private-Kirby-ROM test skipped** (88 total).
+- New original GBA BIOS/cartridge fixture verifies precise missing-firmware
+  diagnostics, explicit firmware loading, virtual A press/release, SRAM flushing
+  and persisted boot-byte increment on a second run. Media and foreign imported
+  home paths are untouched. No private game/firmware is needed for this fixture.
+- New resource-root check distinguishes missing databases from a supplied original
+  fixture database and proves no checkout/user database fallback.
+- Actual Electron session/renderer-reload and actual Electron/MCP integration pass.
+- Independent launch/rebuild acceptance passes with the extracted host/resources,
+  unchanged MCP session/epoch and snapshot cleanup.
+- Fresh `/tmp/ares-retired-package/Ares.app` copied-app acceptance passes: 875 GB
+  frames, 68 MCP tools, packaged CLI scaffold/build/list/add/enable/open/reload/
+  command and TSX hot replacement with checkout reads denied. Ignored evidence:
+  `artifacts/package-mcp.json`.
+- `git diff --check` passes.
+
+Next: one repeatable fixture acceptance command, macOS CI, startup plugin recovery
+and explicit manual/fault-check dispositions. Task 13 remains on hold. Existing
+physical keyboard/gamepad, audible-output and serializer rollback-failure gates
+are not closed by this extraction; broader desktop UI features are inventoried,
+not silently claimed as Electron parity.

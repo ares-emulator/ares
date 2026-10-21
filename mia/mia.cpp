@@ -7,8 +7,10 @@ namespace mia {
 std::function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/Systems/"}; };
 std::function<string ()> saveLocation = [] { return string{}; };
 std::vector<string> media;
+std::function<string (const string&)> resourceResolver;
 
 auto locate(const string &name) -> string {
+  if(resourceResolver) return resourceResolver(name);
   // First check each path for the presence of the file we are looking for in the following order
   // allowing users to override the default resources if they wish to do so.
 
@@ -79,6 +81,10 @@ auto setHomeLocation(std::function<string ()> callback) -> void {
 
 auto setSaveLocation(std::function<string ()> callback) -> void {
   saveLocation = callback;
+}
+
+auto setResourceResolver(std::function<string (const string&)> callback) -> void {
+  resourceResolver = std::move(callback);
 }
 
 auto construct() -> void {

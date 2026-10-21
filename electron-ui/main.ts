@@ -197,11 +197,13 @@ const hostPath =
   (installedLayout
     ? installedHost
     : path.resolve(appRoot, '../build-electron-make/bin/ares-electron-host'))
+const resourceDirectory = process.env.ARES_RESOURCE_DIR || path.dirname(hostPath)
 let generation = 0,
-  settingsFile = process.env.ARES_SETTINGS || ''
+  settingsFile = process.env.ARES_SETTINGS ||
+    path.join(app.getPath('userData'), 'settings.bml')
 const probe = (args: string[]): Promise<string> =>
   new Promise((resolve, reject) => {
-    execFile(hostPath, args, { timeout: 30000 }, (error, stdout, stderr) => {
+    execFile(hostPath, ['--resource-dir', resourceDirectory, ...args], { timeout: 30000 }, (error, stdout, stderr) => {
       if (error) reject(new Error(stderr.trim() || error.message))
       else resolve(stdout.trim())
     })
@@ -268,7 +270,7 @@ async function start(options: StartOptions) {
   if (settingsFile) args.push('--settings', settingsFile)
   if (options.hd) args.push('--1080p')
   if (options.silent || process.env.ARES_SILENT === '1') args.push('--silent')
-  args.push('--save-dir', saveDirectory)
+  args.push('--save-dir', saveDirectory, '--resource-dir', resourceDirectory)
   const identity = { session: randomUUID(), epoch: 1 }
   args.push('--control-session', identity.session)
   const child = spawn(hostPath, args, {

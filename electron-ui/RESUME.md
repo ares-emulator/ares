@@ -7,7 +7,9 @@ Updated 2026-10-21. Read this before building, testing or changing runtime files
 Promotion is in progress: sources have moved to `electron-ui/`, the build option
 is `ARES_BUILD_ELECTRON_UI`, and the product is Ares Workbench. Package version
 0.1.0 is the shared source/bundle version. Profile ownership and independent
-development launch snapshots are implemented; native desktop extraction is next.
+development launch snapshots are implemented. Native loaders/config/input have
+been extracted, desktop-ui is retired, and Electron has no Hiro dependency.
+Next: the repeatable acceptance/CI lane and startup plugin recovery.
 
 Tasks 1–12 (including 4.5) are implemented. Task 12 landed in `539755659`.
 **The user approved the promotion/cleanup triage on 2026-10-21.** Task 13 stays
@@ -22,7 +24,7 @@ Approved order:
 2. Make development independent of active play: separate build outputs/test
    profiles and define per-profile ownership so instances cannot overwrite each
    other's data.
-3. Extract live loader/firmware/save/config/input/resource functionality from
+3. **Implemented:** extract live loader/firmware/save/config/input/resource functionality from
    `desktop-ui/`; inventory remaining desktop features, remove Electron's desktop
    and Hiro dependencies, and retire the superseded frontend after that inventory.
    Git history can preserve the reference. Preserve working native services,

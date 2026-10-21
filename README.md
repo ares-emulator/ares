@@ -22,65 +22,30 @@ Nightly Builds
 Automated, untested builds of ares are available for Windows and macOS as a [pre-release](https://github.com/ares-emulator/ares/releases/tag/nightly). 
 Only the latest nightly build is kept.
 
-Building ares
--------------
+Building this fork
+------------------
 
-ares supports building on Windows, macOS, and various Linux/BSD distributions. See build instructions for:
+This fork uses [Ares Workbench's Electron frontend](electron-ui/README.md).
+The native host is the default CMake frontend target; emulation remains native
+C++. Build/run instructions, tested macOS arm64 prerequisites, isolated profiles
+and development/package checks are in that README. For ongoing implementation,
+start with [the handoff](electron-ui/RESUME.md).
 
-* [Windows](https://github.com/ares-emulator/ares/wiki/Build-Instructions-For-Windows)
-* [macOS](https://github.com/ares-emulator/ares/wiki/Build-Instructions-For-macOS)
-* [Linux](https://github.com/ares-emulator/ares/wiki/Build-Instructions-For-Linux)
-* [BSD](https://github.com/ares-emulator/ares/wiki/Build-Instructions-For-BSD)
-
-Command-line options
---------------------
-
-When started from the command-line, ares accepts a few options.
-
-```
-Usage: ./ares [options] game(s)
-
-  --help                 Displays available options and exit
-  --version              Displays the version string of the application
-  --terminal             Create new terminal window (Windows only)
-  --fullscreen           Start in full screen mode
-  --pseudofullscreen     Start in pseudo full screen mode
-  --kiosk                Start in minimal UI mode (implies --no-file-prompt)
-  --system system        Specify the system name
-  --shader shader        Specify a slang shader to load (requires OpenGL or Metal)
-  --setting name=value   Specify a value for a setting
-  --dump-all-settings    Show a list of all existing settings and exit
-  --no-file-prompt       Do not prompt to load (optional) additional roms (eg: 64DD)
-  --settings-file path   Specify a settings file override (settings.bml)
-  --save-state slot      Specify a save state slot to load (1-9)
-```
-
-The --system option is useful when the system type cannot be auto-detected.
---fullscreen will only have an effect if a game is also passed in argument.
-
-Example:
-`ares --system MSX examples.rom --fullscreen`
-
-Specifying multiple games allows for multi-cart support.  For example, to load
-the Super GameBoy BIOS and a game in one command (to avoid a file prompt), you 
-can do:
-
-`ares "Super GameBoy.sfc" "Super Mario Land.gb"`
-
-The --no-file-prompt option is useful if you wish to launch a game from CLI
-without being prompted to load additional roms. For example, some Nintendo 64 
-games optionally support 64DD expansion disks, so this option can be used to
-suppress the "64DD Disk" file dialog, and assume any secondary content is 
-disconnected.
+The superseded desktop frontend has been retired after extracting its loaders,
+firmware, save routing, input and configuration support. The
+[retirement inventory](electron-ui/DESKTOP-RETIREMENT.md) records preserved
+behavior and deferred desktop features. Windows/Linux frontend distribution and
+public-release packaging remain separate projects. Release links above describe
+upstream ares, not releases of this fork's Electron frontend.
 
 High-level Components
 ---------------------
 
 * __ares__:       emulator cores and component implementations
-* __desktop-ui__: main GUI implementation for this project
-* __hiro__:       cross-platform GUI toolkit that utilizes native APIs on supported platforms
+* __electron-ui__: Electron frontend, native host, tools and shared services
+* __hiro__:       native GUI toolkit for optional standalone MIA/genius utilities
 * __nall__:       Near's alternative to the C++ standard library
-* __ruby__:       interface between a hiro application and platform-specific APIs for emulator video, audio, and input
+* __ruby__:       platform-specific APIs for emulator video, audio, and input
 * __mia__:        internal ROM database and ROM/image loader
 * __libco__:      cooperative multithreading library
 

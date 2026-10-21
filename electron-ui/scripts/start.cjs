@@ -24,8 +24,8 @@ try {
   copy(sourceHost, host)
   // Match both nall CLI resource lookup and executable-adjacent lookup.
   for (const destination of [path.join(native, 'Database'), path.join(native, 'bin', 'Database')])
-    copy(path.join(root, '../mia/Database'), destination)
-  const env = { ...process.env, ARES_HOST: host, ARES_PROFILE: process.env.ARES_PROFILE || 'development' }
+    copy(path.join(process.env.ARES_RESOURCE_DIR || path.join(root, '../mia'), 'Database'), destination)
+  const env = { ...process.env, ARES_HOST: host, ARES_PROFILE: process.env.ARES_PROFILE || 'development', ARES_RESOURCE_DIR: path.join(native, 'bin') }
   for (const key of ['ARES_ROM', 'ARES_SETTINGS', 'ARES_SAVE_DIR', 'ARES_REPORT', 'ARES_SERVICE_DIR', 'ARES_PROFILE_DIR'])
     if (env[key]) env[key] = path.resolve(env[key])
   if (env.ARES_PLUGIN_DIRS)

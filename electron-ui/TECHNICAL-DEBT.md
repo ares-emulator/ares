@@ -34,8 +34,10 @@ Relocation/identity and development/profile isolation have landed as the first t
 foundation slices. `npm start` uses an independent compiled/native runtime snapshot;
 profiles own saves, plugin state and browser preferences with one app writer per
 canonical root. The execution log records actual regression, ownership, rebuild-
-during-play and copied-package evidence. Native desktop extraction is next;
-remaining findings below retain their original audit context.
+during-play and copied-package evidence. Native desktop extraction and retirement
+are now implemented; see
+[DESKTOP-RETIREMENT.md](DESKTOP-RETIREMENT.md). Acceptance/CI and startup plugin
+recovery are next. Remaining findings below retain their original audit context.
 
 ## Findings to triage
 

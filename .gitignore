@@ -5,7 +5,6 @@
 !/.github
 !/ares
 !/electron-ui
-!/desktop-ui
 !/hiro
 !/cmake
 !/libco
@@ -37,8 +36,6 @@ ares/ares/resource/resource.cpp
 ares/ares/resource/resource.hpp
 hiro/resource/resource.cpp
 hiro/resource/resource.hpp
-desktop-ui/resource/resource.cpp
-desktop-ui/resource/resource.hpp
 mia/resource/resource.cpp
 mia/resource/resource.hpp
 

@@ -1,15 +1,12 @@
-# Reuse the existing adapters and their supporting types. We do not construct
-# Presentation/SettingsWindow or run Program's desktop event loop in this host.
-add_executable(ares-electron-host host.cpp)
-foreach(source IN ITEMS resource/resource.cpp input/input.cpp emulator/emulator.cpp
-    game-browser/game-browser.cpp program/program.cpp presentation/presentation.cpp
-    settings/settings.cpp tools/tools.cpp)
-  target_sources(ares-electron-host PRIVATE "${CMAKE_SOURCE_DIR}/desktop-ui/${source}")
-endforeach()
-add_dependencies(ares-electron-host desktop-ui-resource)
+# Frontend-native loaders and mapping/configuration support, without a GUI toolkit.
+add_executable(ares-electron-host host.cpp
+  native/runtime/runtime.cpp
+  native/runtime/input/input.cpp
+  native/runtime/emulator/emulator.cpp
+  native/runtime/settings/settings.cpp)
 target_include_directories(ares-electron-host PRIVATE ${CMAKE_SOURCE_DIR})
-target_compile_definitions(ares-electron-host PRIVATE ARES_SOURCE_ROOT="${CMAKE_SOURCE_DIR}/")
-target_link_libraries(ares-electron-host PRIVATE ares::ares ares::mia ares::ruby ares::hiro ares::nall)
+target_compile_definitions(ares-electron-host PRIVATE MIA_LIBRARY)
+target_link_libraries(ares-electron-host PRIVATE ares::ares ares::mia ares::ruby ares::nall)
 if(ARES_ENABLE_CHD)
   target_link_libraries(ares-electron-host PRIVATE chdr-static)
 endif()
@@ -18,7 +15,7 @@ if(APPLE)
   # nall's shared startup object also contains its optional main wrapper. This
   # host supplies a plain main; discard the unused wrapper even without LTO.
   target_link_options(ares-electron-host PRIVATE "LINKER:-dead_strip")
-  # Unlike desktop-ui this is not an app bundle with copied Frameworks.
+  # The native host is an unbundled executable, with explicit runtime libraries.
   # The repository's macOS defaults disable CMake RPATH generation globally.
   get_filename_component(sdl_framework_directory "${SDL_LIBRARY}" DIRECTORY)
   target_link_options(ares-electron-host PRIVATE "LINKER:-rpath,${sdl_framework_directory}")

@@ -60,6 +60,7 @@ async function run() {
     ARES_PLUGIN_DIRS: plugin,
     ARES_REPORT: report,
   }
+  delete env.ARES_RESOURCE_DIR
   delete env.ARES_HOST
   delete env.ELECTRON_RUN_AS_NODE
   // This executable, launcher, JS graph, host and dynamic libraries all come from

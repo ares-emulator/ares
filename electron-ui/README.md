@@ -16,11 +16,11 @@ UI customization and bundled settings is in [PLUGIN-PLAN.md](PLUGIN-PLAN.md).
 The ares-64 debugging audit and preservation plan for the existing MCP tools are
 in [MCP-PORT-PLAN.md](MCP-PORT-PLAN.md).
 
-The native host **uses the existing `desktop-ui/emulator` registry and loaders**.
+The native host **uses the extracted `native/runtime/emulator/` registry and loaders**.
 Every system included in `ARES_CORES` is available, including each core's frontend
 variants (for example, Mega Drive/32X/CD and PC Engine/SuperGrafx/CD). There is no
 second per-system loading implementation in the Electron code. Firmware and valid
-media are still required for systems that require them in desktop ares.
+media are still required for systems whose loaders require them.
 
 ## Build and run (verified on macOS arm64)
 
@@ -29,7 +29,7 @@ From the repository root:
 ```sh
 cmake -S . -B build-electron-make -G 'Unix Makefiles' \
   -UARES_CORES -DARES_BUILD_ELECTRON_UI=ON \
-  -DARES_ENABLE_LIBRASHADER=OFF -DENABLE_CCACHE=OFF -DENABLE_IPO=OFF
+  -DARES_BUILD_OPTIONAL_TARGETS=OFF -DARES_ENABLE_LIBRASHADER=OFF -DENABLE_CCACHE=OFF -DENABLE_IPO=OFF
 cmake --build build-electron-make --target ares-electron-host ares-electron-cpu-fixture -j 8
 npm ci --prefix electron-ui
 npm start --prefix electron-ui
@@ -51,11 +51,11 @@ Multiple matches produce a system-choice dialog. For companion-media setups,
 select the primary ROM first and additional media in the same file picker; their
 paths are passed to the existing loader queue.
 
-The host reads the existing ares `settings.bml` when found, including firmware
-locations, core options, and peripheral configuration. **Use ares settings…** can
+The host reads `<profile>/settings.bml` by default, including firmware locations,
+core options and peripheral configuration. **Use ares settings…** can
 select another settings file. The selected settings apply to the next ROM and are
-read only: the spike does not rewrite the desktop settings. Firmware failures are
-reported in the status bar. No firmware is downloaded by this frontend.
+read only: the native host does not rewrite the selected configuration. Firmware
+failures are reported in the status bar. No firmware is downloaded by this frontend.
 
 ```sh
 ARES_ROM='/absolute/path/to/game.z64' npm start --prefix electron-ui
@@ -82,6 +82,7 @@ Development launches use the `development` profile by default; copied apps use
 | Directory | Contents |
 | --- | --- |
 | `saves/` | MIA system-specific game saves |
+| `systems/` | Writable native system data (beside the selected save root) |
 | `plugins/` | Enabled plugins, plugin storage and rebuildable plugin artifacts |
 | `browser/` | Browser preferences/local storage and rebuildable Chromium cache |
 | `logs/` | Application logs |
@@ -142,10 +143,15 @@ backpressure while native audio/emulation continue.
 - `host.cpp` supplies an `ares::Platform` adapter, native SDL audio, virtual HID
   input, and the emulator loop. System loading, firmware, peripherals, and saves
   are delegated to the existing `Emulator` implementations.
-- The host currently links desktop support code and Hiro because the existing
-  loader types reference menus/timers and desktop support classes. It **does not
-  construct the desktop presentation/settings windows or run their UI loop**.
-  Extracting a clean frontend-independent loader library is subsequent work.
+- `native/runtime/` owns loader, imported BML configuration and virtual-input
+  mappings. Electron neither compiles desktop frontend sources nor includes/links
+  Hiro. [Retirement inventory and deferred features](DESKTOP-RETIREMENT.md).
+- Media databases resolve only through the selected runtime's resource root.
+  Electron passes `--resource-dir` to the host; `ARES_RESOURCE_DIR` can select a
+  different resource root. Development snapshots copy that root's `Database/`.
+  There is no compiled source-tree lookup or automatic desktop-settings import.
+  Firmware paths remain explicit BML inputs; writable system data stays beside
+  the profile's saves even when imported BML contains another `Paths/Home`.
 - Video is copied from the core's callback before its pixel pointer expires.
   Source pitch is respected and ARGB words are explicitly converted to RGBA bytes.
   Aspect ratio is carried separately; rotation is already applied by ares.
@@ -160,10 +166,6 @@ backpressure while native audio/emulation continue.
   dedicated MessagePort. This is an intentionally **copied** baseline, not zero-copy.
 - The renderer is sandboxed with context isolation and no Node integration.
   A narrow preload API exposes dialogs, controls, and the frame port.
-
-The existing desktop adapter code is compiled into this target unchanged, except
-for an opt-in external-input flag that lets virtual mouse mappings report capture
-without a native viewport. Native desktop behavior retains its default path.
 
 ### AEF2 protocol
 

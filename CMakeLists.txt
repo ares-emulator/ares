@@ -13,7 +13,11 @@ add_subdirectory(thirdparty)
 add_subdirectory(nall/nall)
 add_subdirectory(libco)
 add_subdirectory(ruby)
-add_subdirectory(hiro)
+option(ARES_BUILD_OPTIONAL_TARGETS "Include supplemental tools and tests" OFF)
+# Hiro is only needed by the independent optional MIA/genius utilities.
+if(ARES_BUILD_OPTIONAL_TARGETS)
+  add_subdirectory(hiro)
+endif()
 
 # gersemi: off
 set(
@@ -25,14 +29,11 @@ set(
 
 add_subdirectory(ares)
 add_subdirectory(mia)
-add_subdirectory(desktop-ui)
 
-option(ARES_BUILD_ELECTRON_UI "Build the native Electron frontend" OFF)
+option(ARES_BUILD_ELECTRON_UI "Build the native Electron frontend" ON)
 if(ARES_BUILD_ELECTRON_UI)
   add_subdirectory(electron-ui)
 endif()
-
-option(ARES_BUILD_OPTIONAL_TARGETS "Include supplemental tools and tests" OFF)
 
 if(ARES_BUILD_OPTIONAL_TARGETS)
   enable_testing()

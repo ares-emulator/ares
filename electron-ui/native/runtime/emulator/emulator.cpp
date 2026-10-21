@@ -1,0 +1,348 @@
+#include "../runtime.hpp"
+#include "emulators.cpp"
+
+std::vector<std::shared_ptr<Emulator>> emulators;
+std::shared_ptr<Emulator> emulator;
+
+auto Emulator::enumeratePorts(string name) -> std::vector<InputPort>& {
+  for(auto& emulator : emulators) {
+    if(emulator->name == name && !emulator->ports.empty()) return emulator->ports;
+  }
+  static std::vector<InputPort> ports;
+  if(ports.empty()) {
+    for(auto id : range(5)) {
+      InputPort port{string{"Controller Port ", 1 + id}};
+      port.append(virtualPorts[id].pad);
+      port.append(virtualPorts[id].mouse);
+      ports.push_back(port);
+    }
+  }
+  return ports;
+}
+
+auto Emulator::configuredPeripheral(const string& portName) -> string* {
+  if(configuration.peripherals.size() < ports.size()) configuration.peripherals.resize(ports.size());
+  for(auto index : range(ports.size())) {
+    if(ports[index].name == portName) return &configuration.peripherals[index];
+  }
+  return nullptr;
+}
+
+auto Emulator::setPeripheralConfiguration(const string& portName, const string& peripheral) -> bool {
+  if(auto configured = configuredPeripheral(portName)) {
+    *configured = peripheral;
+    return true;
+  }
+  return false;
+}
+
+auto Emulator::applyPeripheralConfiguration() -> void {
+  if(configuration.peripherals.size() < ports.size()) configuration.peripherals.resize(ports.size());
+
+  for(auto index : range(ports.size())) {
+    auto& peripheral = configuration.peripherals[index];
+    if(!peripheral) continue;
+
+    auto& portName = ports[index].name;
+    if(std::ranges::find(peripheralConfigurationBlacklist, portName) != peripheralConfigurationBlacklist.end()) continue;
+
+    auto port = root->find<ares::Node::Port>(portName);
+    if(!port) continue;
+
+    if(peripheral == "Nothing") {
+      port->disconnect();
+      continue;
+    }
+
+    auto supported = port->supported();
+    if(std::ranges::find(supported, peripheral) == supported.end()) continue;
+
+    if(auto connected = port->connected()) {
+      if(connected->name() == peripheral) continue;
+    }
+
+    port->disconnect();
+    if(port->allocate(peripheral)) port->connect();
+  }
+}
+
+auto Emulator::location() -> string {
+  return {settings.paths.saves, name, "/"};
+}
+
+auto Emulator::locate(const string& location, const string& suffix, const string& path, maybe<string> system) -> string {
+  if(!system) system = root->name();
+
+  //game path
+  if(!path) return {Location::notsuffix(location), suffix};
+
+  //path override
+  string pathname = {path, *system, "/"};
+  directory::create(pathname);
+  return {pathname, Location::prefix(location), suffix};
+}
+
+//handles region selection when games support multiple regions
+auto Emulator::region() -> string {
+  auto preferredRegions = nall::split_and_strip(settings.boot.prefer, ",");
+  if(game && game->pak) {
+    auto regionList = game->pak->attribute("region");
+    auto regions = nall::split_and_strip(regionList, ",");
+    if(!regions.empty()) {
+      for(auto &prefer: preferredRegions) {
+        if(std::ranges::find(regions, prefer) != regions.end()) return prefer; //NTSC-U, NTSC-J or PAL
+        if(prefer == "NTSC-U" || prefer == "NTSC-J") {
+          if(std::ranges::find(regions, string("NTSC")) != regions.end()) return "NTSC";
+        }
+      }
+
+      //If no preferred region was found, return the first region in the list
+      //NOTE: required for 'unsual' regions like NTSC-DEV for 64DD
+      return regions.front();
+    }
+  }
+
+  return {};
+}
+
+auto Emulator::handleLoadResult(LoadResult result) -> void {
+  string errorText;
+
+  switch (result.result) {
+    case successful:
+      return;
+    case noFileSelected:
+      return;
+    case invalidROM:
+      errorText = { "There was an error trying to parse the selected ROM. \n",
+                    "Your ROM may be corrupt or contain a bad dump. " };
+      break;
+    case unsupportedMedia:
+      errorText = { "This title was recognized, but its hardware configuration \n",
+                    "is not currently supported by ares. " };
+      break;
+    case wrongMediaType:
+      errorText = { "The selected ROM media type is ", result.mediaType, " \n",
+                    "which is not supported by this system. Please select \n",
+                    "a compatible ROM for this system, or use the correct \n",
+                    "system to load this ROM. " };
+      break;
+    case couldNotParseManifest:
+      errorText = { "An error occurred while parsing the database file. You \n",
+                    "may need to reinstall ares. " };
+      break;
+    case databaseNotFound:
+      errorText = { "The database file for the system was not found. \n",
+                    "Make sure that you have installed or packaged ares correctly. \n",
+                    "Missing database file: " };
+      break;
+    case noFirmware:
+      errorText = { "Error: firmware is missing or invalid.\n",
+                    result.firmwareSystemName, " - ", result.firmwareType, " (", result.firmwareRegion, ") is required to play this game.\n",
+                    "Configure the required firmware before loading again. " };
+      break;
+    case romNotFound:
+      errorText = "The selected ROM file was not found or could not be opened. ";
+      break;
+    case romNotFoundInDatabase:
+      errorText = { "The required manifest for this ROM was not found in the database. \n",
+                    "This title may not be currently supported by ares. " };
+      break;
+    case otherError:
+      errorText = "An internal error occurred when initializing the emulator core. ";
+      break;
+  }
+
+  if(result.info) {
+    errorText = { errorText, result.info };
+  }
+
+  error(errorText);
+}
+
+auto Emulator::load(const string& location) -> bool {
+  if(inode::exists(location)) locationQueue.push_back(location);
+
+  peripheralConfigurationBlacklist.clear();
+  LoadResult result = load();
+  handleLoadResult(result);
+  if(result != successful) {
+    return false;
+  }
+  setBoolean("Color Emulation", settings.video.colorEmulation);
+  setBoolean("Deep Black Boost", settings.superFamicom.deepBlackBoost);
+  setBoolean("Interframe Blending", settings.video.interframeBlending);
+  setOverscan(settings.video.overscan);
+  setColorBleed(settings.video.colorBleed);
+  applyPeripheralConfiguration();
+
+  latch = {};
+  root->power();
+  return true;
+}
+
+auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
+  string location;
+  if(!locationQueue.empty()) {
+    location = locationQueue.front();
+    locationQueue.erase(locationQueue.begin());  //pull from the game queue if an entry is available
+  } else if(!runtime.mediaQueue.empty()) {
+    location = runtime.mediaQueue.front();
+    runtime.mediaQueue.erase(runtime.mediaQueue.begin()); //pull from the command line if an entry is available
+
+  }
+
+  if(location) {
+    path = Location::dir(location);
+    return location;
+  }
+  return {};
+}
+
+auto Emulator::loadFirmware(const Firmware& firmware) -> std::shared_ptr<vfs::file> {
+  if(firmware.location.iendsWith(".zip")) {
+    Decode::ZIP archive;
+    if(archive.open(firmware.location) && !archive.file.empty()) {
+      auto image = archive.extract(archive.file.front());
+      return vfs::memory::open(image);
+    }
+  } else {
+    auto image = file::read(firmware.location);
+    if(!image.empty()) {
+      return vfs::memory::open(image);
+    }
+  }
+  return {};
+}
+
+auto Emulator::unload() -> void {
+  save();
+  root->unload();
+  game = {};
+  system = {};
+  root.reset();
+  locationQueue.clear();
+}
+
+auto Emulator::load(mia::Pak& node, string name) -> bool {
+  if(auto fp = node.pak->read(name)) {
+    auto memory = file::read({node.location, name});
+    if(!memory.empty()) {
+      fp->read(memory);
+      return true;
+    }
+  }
+  return false;
+}
+
+auto Emulator::save(mia::Pak& node, string name) -> bool {
+  if(auto memory = node.pak->write(name)) {
+    return file::write({node.location, name}, {memory->data(), memory->size()});
+  }
+  return false;
+}
+
+auto Emulator::refresh() -> void {
+  if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
+    screen->refresh();
+  }
+}
+
+auto Emulator::setBoolean(const string& name, bool value) -> bool {
+  if(auto node = root->scan<ares::Node::Setting::Boolean>(name)) {
+    node->setValue(value);  //setValue() will not call modify() if value has not changed;
+    node->modify(value);    //but that may prevent the initial setValue() from working
+    return true;
+  }
+  return false;
+}
+
+auto Emulator::setOverscan(bool value) -> bool {
+  if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
+    screen->setOverscan(value);
+    return true;
+  }
+  return false;
+}
+
+auto Emulator::setColorBleed(bool value) -> bool {
+  if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
+    screen->setColorBleed(screen->height() < 720 ? value : false);  //only apply to sub-HD content
+    return true;
+  }
+
+  return false;
+}
+
+auto Emulator::error(const string& text) -> void {
+  std::fprintf(stderr, "error: %s\n", text.data());
+}
+
+auto Emulator::input(ares::Node::Input::Input input) -> void {
+  //looking up inputs is very time-consuming; skip call if input was called too recently
+  //note: allow rumble to be polled at full speed to prevent missed motor events
+  if(!input->cast<ares::Node::Input::Rumble>()) {
+    auto thisPoll = chrono::millisecond();
+    if(thisPoll - input->lastPoll < 5) return;
+    input->lastPoll = thisPoll;
+  }
+
+  lock_guard<recursive_mutex> programinputLock(runtime.inputMutex);
+  auto device = ares::Node::parent(input);
+  if(!device) return;
+
+  auto port = ares::Node::parent(device);
+  if(!port) return;
+
+  for(auto& inputPort : ports) {
+    if(inputPort.name != port->name()) continue;
+    for(auto& inputDevice : inputPort.devices) {
+      if(inputDevice.name != device->name()) continue;
+      for(auto& inputNode : inputDevice.inputs) {
+        if(inputNode.name != input->name()) continue;
+        if(auto button = input->cast<ares::Node::Input::Button>()) {
+          auto pressed = inputNode.effectiveMapping().pressed();
+          return button->setValue(pressed);
+        }
+        if(auto axis = input->cast<ares::Node::Input::Axis>()) {
+          auto value = inputNode.effectiveMapping().value();
+          return axis->setValue(value);
+        }
+        if(auto trigger = input->cast<ares::Node::Input::Trigger>()) {
+          //normalise the full span of a host axis onto the trigger's own range
+          auto value = inputNode.effectiveMapping().value();
+          return trigger->setValue((value + 32768) >> 1);
+        }
+        if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
+          if(auto target = dynamic_cast<InputRumble*>(&inputNode.effectiveMapping())) {
+            return target->rumble(rumble->strongValue(), rumble->weakValue());
+          }
+        }
+      }
+      for(auto& inputPair : inputDevice.pairs) {
+        if(inputPair.name != input->name()) continue;
+        if(auto axis = input->cast<ares::Node::Input::Axis>()) {
+          auto value = inputPair.value();
+          return axis->setValue(value);
+        }
+      }
+    }
+  }
+}
+
+auto Emulator::inputKeyboard(string name) -> bool {
+  lock_guard<recursive_mutex> programinputLock(runtime.inputMutex);
+  for (auto& device : inputManager.devices) {
+    if (!device->isKeyboard()) continue;
+
+    auto keyboard = std::dynamic_pointer_cast<HID::Keyboard>(device);
+    if (!keyboard) continue;
+
+    auto key = keyboard->buttons().find(name);
+    if (!key) return false;
+
+    return keyboard->buttons().input(*key).value();
+  }
+
+  return false;
+}

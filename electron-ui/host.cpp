@@ -1,4 +1,4 @@
-// Experimental native host. stdout is exclusively the AEF2 binary protocol.
+// Native Electron host. stdout is exclusively the AEF2 binary protocol.
 #include <atomic>
 #include <array>
 #include <chrono>
@@ -18,22 +18,10 @@
 #include <fcntl.h>
 #include <io.h>
 #endif
-#include <desktop-ui/desktop-ui.hpp>
+#include "native/runtime/runtime.hpp"
 #include <n64/n64.hpp>
 #include <ares/frame-observer.hpp>
 #include <nall/gdb/server.hpp>
-namespace ruby { Video video; Audio audio; Input input; }
-
-// Resource/config lookup shared with existing loaders, without changing user settings.
-auto locate(const string& name) -> string {
-  for(auto base : {Path::program(), Path::resources(), string{Path::userData(), "ares/"},
-                   string{ARES_SOURCE_ROOT, "mia/"}, string{ARES_SOURCE_ROOT, "desktop-ui/"}}) {
-    string candidate{base, name};
-    if(inode::exists(candidate)) return candidate;
-  }
-  return {Path::userData(), "ares/", name};
-}
-
 #include "native/session-service.hpp"
 #include "native/n64-service.hpp"
 #include "native/machine-service.hpp"
@@ -136,8 +124,8 @@ struct Host : ares::Platform {
         if(pair.directMappingHi) pair.directMappingHi->unbind();
       }
     }
-    program.externalInput = true;
-    program.keyboardCaptured = true;
+    runtime.externalInput = true;
+    runtime.keyboardCaptured = true;
   }
   auto status(string_view message) -> void override { std::cerr << string{message}.data() << "\n"; }
   auto refreshRateHint(double rate) -> void override { if(rate > 1 && rate < 300) refreshRate = rate; }
@@ -245,7 +233,7 @@ struct Host : ares::Platform {
             previousAxes[i] = axes[i];
           }
           if(moved) takeoverRequested = true;
-          std::lock_guard lock(program.inputMutex);
+          std::lock_guard lock(runtime.inputMutex);
           if(joypad) {
             for(unsigned i = 0; i < 4; i++) joypad->axes().input(i).setValue(std::clamp(axes[i], -32767, 32767));
             for(unsigned i = 0; i < 32; i++) joypad->buttons().input(i).setValue((mask >> i) & 1);
@@ -256,7 +244,7 @@ struct Host : ares::Platform {
       if(name == "key" && keyboard) {
         std::string key; int value;
         if(command >> key >> value && key.size() <= 32) {
-          std::lock_guard lock(program.inputMutex);
+          std::lock_guard lock(runtime.inputMutex);
           auto found = keyboard->buttons().find(key.c_str());
           if(!found && keyboard->buttons().size() < 128) { keyboard->buttons().append(key.c_str()); found = keyboard->buttons().find(key.c_str()); }
           if(found) {
@@ -269,7 +257,7 @@ struct Host : ares::Platform {
       if(name == "mouse" && mouse) {
         int x, y; unsigned mask;
         if(command >> x >> y >> mask) {
-          std::lock_guard lock(program.inputMutex);
+          std::lock_guard lock(runtime.inputMutex);
           mouse->motion(0).move(std::clamp(x, -32767, 32767)); mouse->motion(1).move(std::clamp(y, -32767, 32767));
           for(unsigned i = 0; i < 4; i++) {
             auto& button = mouse->buttons().input(i);
@@ -279,7 +267,7 @@ struct Host : ares::Platform {
         }
       }
       if(name == "clear") {
-        std::lock_guard lock(program.inputMutex);
+        std::lock_guard lock(runtime.inputMutex);
         if(keyboard) for(auto& key : keyboard->buttons()) key.setValue(0);
         if(mouse) for(auto& button : mouse->buttons()) button.setValue(0);
       }
@@ -310,6 +298,7 @@ int main(int argc, char** argv) {
   bool synthetic = false, identifyOnly = false, listSystems = false;
   unsigned width = 640, height = 480;
   std::string rom, saveDirectory, settingsFile, selectedSystem;
+  string resourceDirectory = Path::program();
   std::vector<string> extraMedia;
   for(int i = 1; i < argc; i++) {
     std::string arg = argv[i];
@@ -333,18 +322,20 @@ int main(int argc, char** argv) {
     else if(arg == "--settings" && i + 1 < argc) settingsFile = argv[++i];
     else if(arg == "--system" && i + 1 < argc) selectedSystem = argv[++i];
     else if(arg == "--media" && i + 1 < argc) extraMedia.push_back(argv[++i]);
+    else if(arg == "--resource-dir" && i + 1 < argc) resourceDirectory = argv[++i];
     else if(arg == "--save-dir" && i + 1 < argc) saveDirectory = argv[++i];
     else if(arg == "--identify" && i + 1 < argc) { identifyOnly = true; rom = argv[++i]; }
     else if(arg == "--rom" && i + 1 < argc) rom = argv[++i];
-    else { std::cerr << "Usage: ares-electron-host [--rom file | --identify file | --synthetic [--1080p]] [--silent] [--save-dir directory]\n"; return 2; }
+    else { std::cerr << "Usage: ares-electron-host [--rom file | --identify file | --synthetic [--1080p]] [--silent] [--save-dir directory] [--resource-dir directory]\n"; return 2; }
   }
   ares::Nintendo64::dmaProvenance.reset(host.service.epoch);
-  inputManager.create();
+  if(!resourceDirectory.endsWith("/")) resourceDirectory.append("/");
+  mia::setResourceResolver([resourceDirectory](const string& name) -> string {
+    return {resourceDirectory, name};
+  });
   Emulator::construct();
-  program.kiosk = true; program.noFilePrompt = true;
   if(listSystems) { for(auto& entry : emulators) std::fprintf(host.frameOutput, "%s\n", entry->name.data()); return 0; }
   if(!synthetic && rom.empty()) { std::cerr << "A ROM is required\n"; return 2; }
-  if(settingsFile.empty()) settingsFile = locate("settings.bml").data();
   static_cast<Markup::Node&>(settings) = BML::unserialize(string::read(settingsFile.c_str()), " ");
   settings.process(true); // Read configuration only; never rewrite the desktop settings.
   if(saveDirectory.empty()) saveDirectory = std::string(Path::program().data()) + "electron-data/saves/";
@@ -352,10 +343,9 @@ int main(int argc, char** argv) {
   directory::create(saveDirectory.c_str());
   settings.paths.saves = saveDirectory.c_str();
   mia::setSaveLocation([&]() -> string { return settings.paths.saves; });
-  mia::setHomeLocation([&]() -> string {
-    if(settings.paths.home) return settings.paths.home;
-    return {saveDirectory.c_str(), "/../systems/"};
-  });
+  // Imported desktop paths must not redirect writable system data out of the profile.
+  settings.paths.home = {saveDirectory.c_str(), "../systems/"};
+  mia::setHomeLocation([&]() -> string { return settings.paths.home; });
   ares::platform = &host;
   ares::Memory::FixedAllocator::get();
   if(!synthetic) {
@@ -380,8 +370,7 @@ int main(int argc, char** argv) {
     for(auto& entry : emulators) if(entry->name == matches.front()) emulator = entry;
     if(!emulator) { std::cerr << "System is not compiled into this host\n"; return 2; }
     host.systemName = emulator->name;
-    program.startGameLoad = extraMedia;
-    settings.general.noFilePrompt = extraMedia.empty();
+    runtime.mediaQueue = extraMedia;
     settings.boot.fast = true;
     settings.nintendo64.quality = "SD";
     settings.nintendo64.supersampling = false;
@@ -400,7 +389,7 @@ int main(int argc, char** argv) {
       host.contentSize = bytes->size();
       host.contentHash = nall::Hash::SHA256({bytes->data(), bytes->size()}).digest();
     }
-    program.paletteUpdate();
+    updatePalette();
   }
   std::cerr << "ready: " << (synthetic ? "synthetic RGBA source" : host.systemName.data())
             << "; audio=" << (!synthetic && host.sound ? "native SDL" : "off") << "\n";
