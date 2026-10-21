@@ -7,6 +7,9 @@ It is a descendant of [higan](https://github.com/higan-emu/higan) and [bsnes](ht
 
 It's worth noting that ares takes some uncommon design approaches that essentially trade speed for code clarity. We avoid state machines and bitmasks (when possible). Most cores end up being half the amount of code, but slower. The code is clearer and less spaghettified, especially for systems with lots of processors. C bitfields being non-portable incurs a speedhit. Windows also has a speedhit over Linux due to its ABI needing more instructions to switch contexts.
 
+The Electron frontend lives in [electron-ui/](electron-ui/README.md).
+For ongoing frontend work, start with [the handoff](electron-ui/RESUME.md).
+
 Official Releases
 -----------------
 

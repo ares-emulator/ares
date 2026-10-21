@@ -27,9 +27,9 @@ add_subdirectory(ares)
 add_subdirectory(mia)
 add_subdirectory(desktop-ui)
 
-option(ARES_BUILD_ELECTRON_SPIKE "Build the experimental native Electron host" OFF)
-if(ARES_BUILD_ELECTRON_SPIKE)
-  add_subdirectory(tools/electron-spike)
+option(ARES_BUILD_ELECTRON_UI "Build the native Electron frontend" OFF)
+if(ARES_BUILD_ELECTRON_UI)
+  add_subdirectory(electron-ui)
 endif()
 
 option(ARES_BUILD_OPTIONAL_TARGETS "Include supplemental tools and tests" OFF)

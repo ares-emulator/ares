@@ -4,6 +4,7 @@
 # Except for default project files
 !/.github
 !/ares
+!/electron-ui
 !/desktop-ui
 !/hiro
 !/cmake
