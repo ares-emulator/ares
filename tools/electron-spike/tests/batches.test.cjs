@@ -12,7 +12,8 @@ test('batch contracts reject nesting, extra keys, malformed later payloads and a
     Array(33).fill(params.steps[0]), Array(2).fill({ kind: 'run', n: 1000000 }), Array(17).fill({ kind: 'read', address: '0x2000', view: 'rdram', length: 1024 }), Array(9).fill(capture), [{ ...capture, inline: true }]]) {
     assert.throws(() => encodeRequest('x', identity, 'experiment.batch', { ...params, steps }), /invalid_request/);
   }
-  assert.throws(() => encodeRequest('x', identity, 'experiment.batch', { ...params, timeoutMs: 20001 }), /invalid_request/);
+  assert.doesNotThrow(() => encodeRequest('x',identity,'experiment.batch',{...params,timeoutMs:600000}));
+  assert.throws(() => encodeRequest('x', identity, 'experiment.batch', { ...params, timeoutMs: 600001 }), /invalid_request/);
   assert.throws(() => decodeReply(JSON.stringify({ protocol: 1, id: 'x', ...identity, ok: true, result: { side_effects_rolled_back: true } }), 'experiment.batch'), /invalid_reply/);
 });
 function nativeFixture() {
@@ -59,4 +60,14 @@ test('batch result-space exhaustion stops before a following mutation and preser
   assert.equal(result.stop_reason, 'result_limit'); assert.equal(writes, 0); assert.equal(result.results.length, 15);
   assert.ok(Buffer.byteLength(JSON.stringify(result)) <= 49152);
   decodeReply(JSON.stringify({ protocol: 1, id: 'result', ...identity, ok: true, result }), 'experiment.batch');
+});
+test('batch cancellation token cannot revoke a foreign or later job',async()=>{
+  const batches=new Batches(),native=nativeFixture();let begin,finish;
+  const started=new Promise(r=>begin=r),waiting=new Promise(r=>finish=r);
+  const invoke={async request(){begin();await waiting;return {protocol:1,id:'read',...identity,ok:true,result:{hex:'aa'}};}};
+  const token='12345678-1234-1234-1234-123456789abc';
+  const job=batches.run(native,invoke,identity,{...params,cancellationToken:token,steps:[{kind:'read',address:'0x2000',length:1,view:'rdram'}]},'parent',()=>true,()=>{});
+  await started;assert.equal(batches.cancel('foreign',token),false);assert.equal(batches.cancel('parent','87654321-1234-1234-1234-123456789abc'),false);
+  assert.equal(batches.cancel('parent',token),true);finish();assert.equal((await job).stop_reason,'cancelled');
+  assert.equal(batches.cancel('parent',token),false,'finished token is inert');
 });

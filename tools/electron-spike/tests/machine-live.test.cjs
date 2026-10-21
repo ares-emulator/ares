@@ -49,6 +49,8 @@ test('real N64 and MCP: atomic register mutation, PC pipeline/stops, observation
     peer = new StdioPeer(process.execPath, [path.resolve(__dirname, '../dist/mcp/server.js'), '--connection', endpoint.metadataFile, '--instance', endpoint.instance]); await peer.initialize();
     const stopped = await peer.tool('step_instructions', { n: 2 }), before = await peer.tool('cpu_registers', { cop0: true });
     const originalOperation = unwrap(await native.request('execution.status', undefined, { operationId: stopped.operation_id }));
+    const statusView=await peer.tool('emu_status',{verbose:true});
+    assert.equal(statusView.loaded,true);assert.equal(statusView.protocol_version,1);assert.ok(['Vulkan','software'].includes(statusView.debug_mode.renderer));assert.equal(typeof statusView.save.type,'string');assert.equal(typeof statusView.input.ports[0].pending.overridden,'boolean');
     const rsp1 = await peer.tool('rsp_registers'); assert.equal(rsp1.gpr.length, 32); assert.equal(rsp1.vu.length, 32); assert.equal(rsp1.debug.available, true);
     const rdp = await peer.tool('rdp_state'); assert.ok(['DMEM', 'RDRAM'].includes(rdp.source));
     const peripherals = await peer.tool('peripheral_registers'); assert.equal(typeof peripherals.vi.VI_WIDTH, 'number');
@@ -67,10 +69,15 @@ test('real N64 and MCP: atomic register mutation, PC pipeline/stops, observation
     assert.equal((await peer.tool('write_memory', { region: 'RSP DMEM', addr: 0x80, hex_bytes: '240200071000ffff00000000' })).written, 12);
     const changed = await peer.tool('cpu_set_registers', { gpr: { t0: '0xfedcba9876543210', fp: '0xffffffffffffffff' }, pc: '0xa4000080', hi: '0x123456789abcdef0', lo: '0xdeadbeef', llbit: 1, status: before.cop0[12] });
     assert.equal(changed.error, undefined, JSON.stringify(changed)); assert.equal(changed.pc, '0xffffffffa4000080'); assert.equal(changed.changed.gpr.s8, '0xffffffffffffffff');
-    const current = await peer.tool('cpu_registers'); assert.equal(current.gpr.t0, '0xfedcba9876543210'); assert.equal(current.next_pc, '0xffffffffa4000084'); assert.equal(current.delay_slot, false);
+    const frozen = await peer.tool('run_frames',{n:0,fpr:true,cop0:true});
+    assert.equal(frozen.completion_registers.fpr.length,32);assert.equal(frozen.completion_registers.cop0.Random,null);
+    const current = await peer.tool('cpu_registers'); assert.equal(current.gpr_named.t0, '0xfedcba9876543210'); assert.equal(current.next_pc, '0xffffffffa4000084'); assert.equal(current.delay_slot, false);
     assert.equal((await peer.tool('last_stop')).valid, false);
-    assert.deepEqual((await peer.tool('operation_status', { operation_id: stopped.operation_id })).debug_stop, originalOperation.debug_stop, 'completed execution result stays immutable after PC mutation');
-    const step = await peer.tool('step_instructions', { n: 1 }); assert.equal(step.executed, 1); assert.equal((await peer.tool('cpu_registers')).gpr.v0, '0x7');
+    assert.deepEqual((await peer.tool('operation_status', { operation_id: stopped.operation_id })).debug_stop, require('../dist/mcp/n64-tools.js').formatStop(originalOperation.debug_stop), 'completed execution result stays immutable after PC mutation');
+    await peer.tool('cpu_set_registers',{gpr:{t0:'0x111'}});
+    const polled=await peer.tool('operation_status',{operation_id:frozen.operation_id,fpr:true,cop0:true});
+    assert.deepEqual(polled.completion_registers,frozen.completion_registers,'completion registers remain frozen after later mutation');
+    const step = await peer.tool('step_instructions', { n: 1 }); assert.equal(step.executed, 1); assert.equal((await peer.tool('cpu_registers')).gpr_named.v0, '0x7');
     await peer.tool('cpu_set_registers', { hi: '0x1' }); assert.equal((await peer.tool('cpu_registers')).hi, '0x1'); assert.equal((await peer.tool('last_stop')).registers.hi, '0x123456789abcdef0');
     await peer.tool('resume'); assert.equal((await peer.tool('cpu_set_registers', { lo: 1 })).error, 'not_stopped'); await peer.tool('pause');
     const run = unwrap(await native.request('execution.runFrames', undefined, { count: 1, timeoutMs: 1000 }));

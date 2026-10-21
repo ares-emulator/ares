@@ -7,20 +7,22 @@ export type BatchStep = { kind: 'state_load'; path: string }
   | { kind: 'read'; address: string; length: number; view: 'cpu' | 'rdram' }
   | { kind: 'run'; n: number }
   | ({ kind: 'screenshot' } & ScreenshotParams);
-export interface BatchParams { steps: BatchStep[]; timeoutMs: number; stopOnError: boolean }
+export interface BatchParams { steps: BatchStep[]; timeoutMs: number; stopOnError: boolean; cancellationToken?: string }
 export interface BatchStepResult { step: number; kind: BatchStep['kind']; ok: boolean; epoch: number; frame: number; data?: unknown; error?: string }
 export interface BatchResult { batch_id: number; state: 'done'; stopped: true; stop_reason: string; start_epoch: number; epoch: number; frame: number; steps_completed: number; steps_attempted: number; results: BatchStepResult[]; side_effects_rolled_back: false }
 export interface BatchServiceMap {
   'execution.batchBegin': { params: { timeoutMs: number }; result: { batch_id: number } };
   'execution.batchCheck': { params: { batchId: number }; result: { active: true } };
+  'experiment.cancelBatch': { params: { token: string }; result: { cancelled: boolean } };
   'experiment.batch': { params: BatchParams; result: BatchResult };
 }
 const integer = (v: unknown, max = Number.MAX_SAFE_INTEGER): v is number => Number.isSafeInteger(v) && (v as number) >= 0 && (v as number) <= max;
 const keys = (p: any, names: string) => p && typeof p === 'object' && Object.keys(p).sort().join(',') === names;
 export function encodeBatch(method: string, p: any): string | undefined {
-  if (method === 'execution.batchBegin') return keys(p, 'timeoutMs') && integer(p.timeoutMs, 20000) && p.timeoutMs > 0 ? ` ${p.timeoutMs}` : undefined;
+  if (method === 'experiment.cancelBatch') return keys(p,'token') && typeof p.token === 'string' && /^[a-f0-9-]{36}$/.test(p.token) ? '' : undefined;
+  if (method === 'execution.batchBegin') return keys(p, 'timeoutMs') && integer(p.timeoutMs, 600000) && p.timeoutMs > 0 ? ` ${p.timeoutMs}` : undefined;
   if (method === 'execution.batchCheck') return keys(p, 'batchId') && integer(p.batchId) && p.batchId > 0 ? ` ${p.batchId}` : undefined;
-  if (!keys(p, 'steps,stopOnError,timeoutMs') || !integer(p.timeoutMs, 20000) || p.timeoutMs < 1 || typeof p.stopOnError !== 'boolean' || !Array.isArray(p.steps) || !p.steps.length || p.steps.length > 32) return;
+  if (!(keys(p,'steps,stopOnError,timeoutMs') || keys(p,'cancellationToken,steps,stopOnError,timeoutMs') && typeof p.cancellationToken === 'string' && /^[a-f0-9-]{36}$/.test(p.cancellationToken)) || !integer(p.timeoutMs, 600000) || p.timeoutMs < 1 || typeof p.stopOnError !== 'boolean' || !Array.isArray(p.steps) || !p.steps.length || p.steps.length > 32) return;
   let bytes = 0, frames = 0, artifacts = 0;
   for (const s of p.steps) {
     if (s?.kind === 'write' || s?.kind === 'read') {

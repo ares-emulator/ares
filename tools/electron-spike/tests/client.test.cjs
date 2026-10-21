@@ -80,3 +80,23 @@ test('main observes a native CPU stop without a renderer request or frame', { ti
     assert.equal((await observed)?.result.paused, true);
   } finally { clearTimeout(deadline); router.detach(); }
 });
+
+// Migrated test_bridge.py wire-integrity assertions, on the new native protocol.
+for(const [name,wire,code] of [
+  ['mismatched reply ID',JSON.stringify(reply('wrong'))+'\n','unexpected_reply'],
+  ['wrong session',JSON.stringify({...reply('req1'),session:'other'})+'\n','wrong_session'],
+  ['oversized fragmented reply','x'.repeat(65537),'reply_too_large'],
+  ['malformed JSON','{broken}\n',undefined],
+]) test(`bridge integrity: ${name} drops all pending requests without replay`,async()=>{
+  const input=new PassThrough(),output=new PassThrough();let sent='',failure;
+  input.on('data',b=>sent+=b);const client=new NativeSessionClient(input,output,identity,e=>{failure=e;});
+  const pending=client.request('session.pause');output.write(wire);
+  await assert.rejects(pending);if(code)assert.equal(failure.code,code);
+  await assert.rejects(client.request('session.pause'),/native_host_disconnected/);assert.equal(sent.split('\n').filter(Boolean).length,1);
+});
+test('bridge integrity: native error code is preserved without retry or connection loss',async()=>{
+  const input=new PassThrough(),output=new PassThrough();let sent=0;input.on('data',()=>++sent);
+  const client=new NativeSessionClient(input,output,identity,e=>assert.fail(e.message));
+  const result=client.request('session.pause');output.write(JSON.stringify({protocol:1,id:'req1',...identity,ok:false,error:'busy'})+'\n');
+  assert.equal((await result).error,'busy');assert.equal(sent,1);client.close();
+});

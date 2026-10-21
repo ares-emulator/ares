@@ -15,12 +15,12 @@ import { PROFILER_METHODS, encodeProfiler, validProfiler, type ProfilerMethod, t
 import { encodeDma, validDma, type DmaServiceMap } from './dma-contracts.js';
 import { TRACE_METHODS, encodeTrace, validTracePage, type TraceServiceMap } from './trace-contracts.js';
 import { INPUT_METHODS, encodeInput, validInput, type InputMethod, type InputServiceMap } from './input-contracts.js';
-import { validMemoryVerification, type MemoryVerification, N64_METHODS, encodeN64, validN64, type N64Method, type N64ServiceMap, type Stop, validStop } from './n64-contracts.js';
+import { validMemoryVerification, type MemoryVerification, N64_METHODS, encodeN64, validN64, type N64Method, type N64ServiceMap, type Stop, validStop, validRegisters } from './n64-contracts.js';
 /** Shared contract for Electron routing, the inspector and the future MCP adapter. */
 export const PROTOCOL = 1 as const;
 export const MAX_TRANSFER = 1024;
 export const NATIVE_METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS.filter(m => m !== 'n64.input.tap'), ...TRACE_METHODS, 'n64.dma.log', ...PROFILER_METHODS, 'n64.input.tap', ...FRAME_METHODS, ...AUDIO_METHODS, ...RECORDING_METHODS, ...NATIVE_STATE_METHODS, ...NATIVE_BATCH_METHODS, ...MACHINE_METHODS, ...RSP_METHODS, ...RDP_CAPTURE_METHODS, ...INSPECTION_METHODS, ...CALL_METHODS, ...VIEWER_METHODS] as const;
-export const METHODS = [...NATIVE_METHODS, ...ARTIFACT_METHODS, 'artifact.rdpExport', 'artifact.dump', ...SCREENSHOT_METHODS, 'artifact.audioSave', 'artifact.videoStop', ...STATE_METHODS, 'experiment.batch'] as const;
+export const METHODS = [...NATIVE_METHODS, ...ARTIFACT_METHODS, 'artifact.rdpExport', 'artifact.dump', ...SCREENSHOT_METHODS, 'artifact.audioSave', 'artifact.videoStop', ...STATE_METHODS, 'experiment.batch', 'experiment.cancelBatch'] as const;
 export type ServiceMethod = typeof METHODS[number];
 export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
 export interface SessionIdentity { session: string; epoch: number }
@@ -33,7 +33,7 @@ export interface ExecutionOperation {
   operation_id: number; kind: string; owner: string; state: 'running' | 'done'; stopped: boolean;
   stop_reason: string; epoch: number; start_epoch: number; start_frame: number; target_frame: number;
   frame: number; frame_kind: string; elapsed_frames: number; start_at_frame_boundary: boolean;
-  at_frame_boundary: boolean; executor: string; slices: number; elapsed_seconds: number; executed?: number; debug_stop?: Stop;
+  at_frame_boundary: boolean; executor: string; slices: number; elapsed_seconds: number; executed?: number; debug_stop?: Stop; completion_registers?: import('./n64-contracts.js').Registers;
 }
 export interface MemoryRegion { id: string; name: string; size: number; readable: boolean; writable: boolean; addressing: 'region-offset'; unavailableReason?: string }
 export interface MemoryRead { region: string; offset: number; length: number; hex: string }
@@ -97,7 +97,7 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
     const encoded = encodeMachine(method as MachineMethod, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
     suffix = encoded;
-  } else if (method === 'experiment.batch' || method === 'execution.batchBegin' || method === 'execution.batchCheck') {
+  } else if (method.startsWith('experiment.') || method === 'execution.batchBegin' || method === 'execution.batchCheck') {
     const encoded = encodeBatch(method, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
     suffix = encoded;
@@ -192,7 +192,7 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
     if (method === 'n64.input.tap') { decodeReply(JSON.stringify(r), 'execution.status'); valid = s.kind === 'controller_tap'; }
     if (method.startsWith('session.')) valid = !!s && typeof s.paused === 'boolean' && typeof s.system === 'string' && typeof s.synthetic === 'boolean' && Array.isArray(s.capabilities) && s.capabilities.every((m: ServiceMethod) => METHODS.includes(m));
     if (method === 'execution.release') valid = !!s && s.released === true;
-    if (method.startsWith('execution.') && !['execution.release', 'execution.batchBegin', 'execution.batchCheck'].includes(method)) valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0 && (s.executed === undefined || integer(s.executed)) && (s.debug_stop === undefined || validStop(s.debug_stop)) && (s.memory_verification === undefined || validMemoryVerification(s.memory_verification)) && (s.rsp === undefined || validRspProgress(s.rsp)) && (s.call === undefined || s.kind === 'call_function' && validCallProgress(s.call));
+    if (method.startsWith('execution.') && !['execution.release', 'execution.batchBegin', 'execution.batchCheck'].includes(method)) valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0 && (s.executed === undefined || integer(s.executed)) && (s.debug_stop === undefined || validStop(s.debug_stop)) && (s.completion_registers === undefined || validRegisters(s.completion_registers)) && (s.memory_verification === undefined || validMemoryVerification(s.memory_verification)) && (s.rsp === undefined || validRspProgress(s.rsp)) && (s.call === undefined || s.kind === 'call_function' && validCallProgress(s.call));
     if (VIEWER_METHODS.includes(method as typeof VIEWER_METHODS[number])) valid = validViewer(method, s) && (s.epoch === undefined || s.epoch === r.epoch);
     if (method === 'n64.cpu.callRecover') valid = validCallRecovery(s) && s.epoch === r.epoch;
     if (method === 'n64.cpu.call') { decodeReply(line, 'execution.status'); valid = s.kind === 'call_function' && validCallProgress(s.call); }
@@ -207,6 +207,7 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
       if (valid && (method === 'n64.rsp.step' || method === 'n64.rsp.run')) decodeReply(JSON.stringify(r), 'execution.status');
     }
     if (MACHINE_METHODS.includes(method as MachineMethod)) valid = validMachine(method as MachineMethod, s) && (s.epoch === undefined || s.epoch === r.epoch);
+    if (method === 'experiment.cancelBatch') valid = !!s && typeof s.cancelled === 'boolean';
     if (method === 'experiment.batch') valid = validBatchResult(s) && s.epoch === r.epoch;
     if (method === 'execution.batchBegin') valid = !!s && integer(s.batch_id) && s.batch_id > 0;
     if (method === 'execution.batchCheck') valid = !!s && s.active === true;

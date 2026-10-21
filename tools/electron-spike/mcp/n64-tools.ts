@@ -45,12 +45,40 @@ export function conditions(value: unknown): Predicate[] {
     return { field: field as Predicate['field'], index, op: op as Predicate['op'], value: lossless(n.toString()), mask: lossless((c.mask ?? '0xffffffffffffffff') as string | number) };
   });
 }
-export function formatRegisters(s: Registers, fpr = false, cop0 = false, verbose = false) {
-  return { pc: s.pc, next_pc: s.next_pc, delay_slot: s.delay_slot, lo: s.lo, hi: s.hi,
-    gpr: Object.fromEntries(names.map((name, i) => [name, s.gpr[i]])),
-    ...(verbose ? { gpr_array: s.gpr } : {}), ...(cop0 ? { cop0: s.cop0 } : {}),
-    ...(fpr ? { fpr: s.fpr, fcr0: s.fcr0, fcr31: s.fcr31, fpr_format: 'raw64' } : {}) };
+const cop0Names = ['Index','Random','EntryLo0','EntryLo1','Context','PageMask','Wired','Reserved7','BadVAddr','Count','EntryHi','Compare','Status','Cause','EPC','PRId','Config','LLAddr','WatchLo','WatchHi','XContext','Reserved21','Reserved22','Reserved23','Reserved24','Reserved25','ParityError','CacheError','TagLo','TagHi','ErrorEPC','Reserved31'];
+const hex = (n: bigint | number) => `0x${BigInt(n).toString(16)}`;
+function floatValue(value: number, single: boolean) {
+  const classification = Number.isNaN(value) ? 'nan' : value === Infinity ? '+inf' : value === -Infinity ? '-inf' : value === 0 ? Object.is(value,-0) ? '-zero' : '+zero' : Math.abs(value) < (single ? 2**-126 : 2**-1022) ? 'subnormal' : 'normal';
+  return {value:Number.isFinite(value) ? value : null,classification};
 }
+export function formatRegisters(s: Registers, fpr = false, cop0 = false, verbose = false) {
+  const status = BigInt(s.cop0[12] ?? '0x0'), cause = BigInt(s.cop0[13] ?? '0x0');
+  const bit = (v: bigint, shift: number, mask=1) => Number(v >> BigInt(shift) & BigInt(mask));
+  const fr = bit(status,26) === 1;
+  const fcr = BigInt(s.fcr31);
+  const flags = (start: number, extra=false) => Object.fromEntries((extra ? ['I','U','O','Z','V','E'] : ['I','U','O','Z','V']).map((n,i)=>[n,bit(fcr,start+i)]));
+  return { pc: s.pc, next_pc: s.next_pc, delay_slot: s.delay_slot, lo: s.lo, hi: s.hi,
+    gpr_named: Object.fromEntries(names.map((name, i) => [name, s.gpr[i]])),
+    ...(verbose ? { gpr: s.gpr } : {}),
+    ...(cop0 || verbose ? {
+      cop0:Object.fromEntries(cop0Names.map((name,i)=>[name,s.cop0[i]])),
+      status:{IE:bit(status,0),EXL:bit(status,1),ERL:bit(status,2),KSU:bit(status,3,3),UX:bit(status,5),SX:bit(status,6),KX:bit(status,7),IM:hex(bit(status,8,255)),DS:hex(bit(status,16,511)),RE:bit(status,25),FR:bit(status,26),RP:bit(status,27),CU:hex(bit(status,28,15))},
+      cause:{ExcCode:bit(cause,2,31),IP:hex(bit(cause,8,255)),CE:bit(cause,28,3),BD:bit(cause,31)}
+    } : {}),
+    ...(fpr || verbose ? {fpr:s.fpr.map((raw,i)=>{
+      const n=BigInt(raw), even=BigInt(s.fpr[i&~1]);
+      const word=fr ? n & 0xffffffffn : i&1 ? even>>32n : n&0xffffffffn;
+      const dual=fr ? n : even, bytes=Buffer.alloc(8);bytes.writeBigUInt64LE(dual);
+      const d=floatValue(bytes.readDoubleLE(),false);bytes.writeUInt32LE(Number(word),0);const f=floatValue(bytes.readFloatLE(),true);
+      return {raw,hi32:hex(n>>32n),lo32:hex(n&0xffffffffn),word:hex(word),f32:f.value,f32_class:f.classification,dword:hex(dual),f64:d.value,f64_class:d.classification};
+    }),fpr_mode:fr ? 'FR=1 (32 x 64-bit)' : 'FR=0 (16 even/odd pairs)',fcr0:s.fcr0,
+    fcr31:{raw:s.fcr31,RM:bit(fcr,0,3),flags:flags(2),enables:flags(7),cause:flags(12,true),C:bit(fcr,23),FS:bit(fcr,24)}} : {}) };
+}
+export function formatOperation<T extends ExecutionOperation>(result: T, fpr=false, cop0=false, verbose=false) {
+  return {...result,...(result.completion_registers ? {completion_registers:formatRegisters(result.completion_registers,fpr,cop0,verbose)} : {}),
+    ...(result.debug_stop ? {debug_stop:formatStop(result.debug_stop,fpr,cop0,verbose)} : {})};
+}
+
 export function formatStop(s: Stop, fpr = false, cop0 = false, verbose = false) {
   return { ...s, ...(s.registers ? { registers: formatRegisters(s.registers, fpr, cop0, verbose) } : {}) };
 }
@@ -72,17 +100,17 @@ export function registerN64Tools(server: McpServer, client: SessionClient, statu
     return all;
   }
   const display = (d: Definition) => ({ ...d, ...(d.kind === undefined ? {} : { kind: ['', 'read', 'write', 'access'][d.kind] }), condition: { all: d.condition.map(c => ({ field: c.field === 1 ? `gpr.${names[c.index]}` : fields[c.field], op: ops[c.op], value: c.value, mask: c.mask })) } });
-  server.registerTool('cpu_registers', { description: 'N64 architectural registers at a native safe point. FPR values are raw 64-bit hex; COP0 Random is null.', inputSchema: z.object(flags).strict(), annotations: { readOnlyHint: true } }, async ({ fpr, cop0, verbose }) => call(async () => formatRegisters(unwrap(await client.request('n64.debug.registers', await status())), fpr, cop0, verbose)));
+  server.registerTool('cpu_registers', { description: 'N64 safe-point registers. Compact named GPRs; optional classified IEEE FPR views and named COP0/status/cause. Verbose includes all groups. Random is null to avoid RNG mutation.', inputSchema: z.object(flags).strict(), annotations: { readOnlyHint: true } }, async ({ fpr, cop0, verbose }) => call(async () => formatRegisters(unwrap(await client.request('n64.debug.registers', await status())), fpr, cop0, verbose)));
   server.registerTool('last_stop', { description: 'Immutable most recent N64 CPU stop. Watchpoints stop after the accessing instruction; breakpoints stop before fetch.', inputSchema: z.object(flags).strict(), annotations: { readOnlyHint: true } }, async ({ fpr, cop0, verbose }) => call(async () => formatStop(unwrap(await client.request('n64.debug.lastStop', await status())), fpr, cop0, verbose)));
   server.registerTool('step_instructions', { description: 'Execute 1–1000000 N64 CPU instructions with the interpreter. Delay slots count separately; debug hits and deadlines can stop early.', inputSchema: z.object({ n: z.number().int().min(1).max(1000000).default(1), max_seconds: deadline, ...flags }).strict() }, async ({ n, max_seconds, fpr, cop0, verbose }) => call(async () => {
     const result = await operation('execution.stepInstructions', n, max_seconds);
     const stop = result.debug_stop;
-    return { ...result, ...(stop ? { debug_stop: formatStop(stop, fpr, cop0, verbose), ...(stop.registers ? { registers: formatRegisters(stop.registers, fpr, cop0, verbose) } : {}), ...(stop.hit ? { hit: stop.hit } : {}) } : {}) };
+    return { ...formatOperation(result,fpr,cop0,verbose), ...(stop ? { debug_stop: formatStop(stop, fpr, cop0, verbose), ...(stop.registers ? { registers: formatRegisters(stop.registers, fpr, cop0, verbose) } : {}), ...(stop.hit ? { hit: stop.hit } : {}) } : {}) };
   }));
   server.registerTool('run_until_hit', { description: 'Run N64 until a CPU break/watch hit, max_frames VI boundaries, or the deadline. Hit snapshots omit stack unwinding.', inputSchema: z.object({ max_frames: z.number().int().min(1).max(1000000).default(600), max_seconds: deadline, ...flags }).strict() }, async ({ max_frames, max_seconds, fpr, cop0, verbose }) => call(async () => {
     await client.request('n64.debug.registers', await status()).then(unwrap);
     const result = await operation('execution.runFrames', max_frames, max_seconds);
-    return { ...result, ...(result.debug_stop ? { debug_stop: formatStop(result.debug_stop, fpr, cop0, verbose), ...(result.debug_stop.hit ? { hit: result.debug_stop.hit } : {}) } : {}) };
+    return { ...formatOperation(result,fpr,cop0,verbose), ...(result.debug_stop ? { debug_stop: formatStop(result.debug_stop, fpr, cop0, verbose), ...(result.debug_stop.hit ? { hit: result.debug_stop.hit } : {}) } : {}) };
   }));
   server.registerTool('break_add', { description: 'Add a before-instruction N64 RDRAM breakpoint. Physical, KSEG0 and KSEG1 aliases match; up to 8 unsigned predicates.', inputSchema: z.object({ addr, condition: z.unknown().nullable().default(null) }).strict() }, async ({ addr, condition }) => call(async () => {
     const identity = await status();

@@ -39,7 +39,7 @@ static void steps(unsigned count) {
   for(unsigned i = 0; i <= count && !d.halted; ++i) cpu.instruction();
   check(d.halted, "bounded instruction stop");
 }
-int main() {
+int main(int argc, char** argv) {
   {
     RecordingService video;
     std::vector<uint8_t> rgba{255,0,0,255, 0,255,0,255, 0,0,255,255, 255,255,255,255};
@@ -809,6 +809,77 @@ int main() {
       viewer.releaseOwner("viewer"); check(!c.rspEnabled && !c.rdpEnabled, "disconnect disables owned viewer channels");
       viewer.reset(); rsp.unload(); rdp.unload();
     }
+  }
+  {
+    CaptureConfig config;
+    check(config.loadQueue(CaptureConfig::Builtin), "embedded RSPQ descriptors parse with strict bounds");
+    check(config.overlays.size() > 2, "builtin overlays retained");
+    auto prior = config.queue.cmdsOffset;
+    check(!config.loadQueue("{\"imem\":{}}") && config.queue.cmdsOffset == prior, "invalid config preserves previous descriptor atomically");
+    check(!config.loadDisplay("{\"mode\":\"displaylist\",\"dispatch\":{\"signature\":[\"0x1\"],\"word0Reg\":256}}"), "display register overflow is rejected before narrowing");
+    for(auto literal : {"n","nu","nul","t","tru","f","fals"}) {
+      bool rejected=false;try {CaptureConfig::json(std::string("{\"field\":")+literal+"}");} catch(const std::exception&) {rejected=true;}
+      check(rejected,"truncated JSON literal rejected before parser");
+    }
+    check(!config.loadDisplay(std::string(100,'[')), "descriptor nesting bounded");
+    auto cmd = CaptureConfig::command(CaptureConfig::json(R"({"name":"format","fmt":"{s} {full} {e} {e:d} {f:f} {x:x} {missing}","args":[{"name":"s","word":0,"bits":[15,0],"signed":true,"mul":3,"div":2,"add":1},{"name":"full","word":1,"signed":true},{"name":"e","word":0,"bits":[16,16],"enum":{"1":"yes"}},{"name":"f","word":0,"bits":[7,0],"fdiv":2},{"name":"x","word":1}]})"));
+    CommandCapture::RspRecord record; record.wordCount=2;record.words[0]=0x1fffe;record.words[1]=0xffffffff;
+    check(config.format(cmd,record)=="-2 -1 yes 1 127 0xFFFFFFFF {missing}", "semantic signed full32 bits enums decimal fixedpoint hex and visible unknown tokens");
+    auto convert = CaptureConfig::command(CaptureConfig::json(R"({"name":"convert","fmt":"{rdp:2c}"})"));
+    check(config.format(convert,record).find("K0=") == 0, "RSPQ nested RDP semantic decoder");
+  }
+  if(argc == 2) for(bool jit : {true,false}) {
+    rsp.load(root);rsp.power(false);rsp.recompiler.enabled=jit;
+    ViewerService viewer; viewer.loadRom(argv[1]);
+    check(viewer.config.queue.loaded && viewer.config.ucodes.size()==1, "companion ELF queue and runtime ucode discovery");
+    check(viewer.config.labels.size()==1 && viewer.config.labels[0].name=="counter" && viewer.config.labels[0].offset==32, "companion DWARF shared-DMEM labels");
+    auto labelCommand=CaptureConfig::command(CaptureConfig::json(R"({"name":"label","fmt":"{addr:dmem}","args":[{"name":"addr","word":0}]})"));
+    CommandCapture::RspRecord labelRecord;labelRecord.wordCount=1;labelRecord.words[0]=32;
+    check(viewer.config.format(labelCommand,labelRecord)=="counter", "semantic DMEM labels use bounded DWARF fields");
+    auto elfBytes=CaptureConfig::read(std::filesystem::path(argv[1]).replace_extension(".elf"),65536);
+    for(unsigned length=0;length<elfBytes.size();length+=17) {
+      nall::Decode::ELF truncated((const u8*)elfBytes.data(),length);
+      if(truncated) {auto syms=truncated.symbols();nall::Decode::DWARF dwarf(truncated);dwarf.flattenStruct("rsp_queue_s");}
+    }
+    for(unsigned offset : {32u,46u,48u,50u,0x100u+40u+16u,0x100u+40u+20u,0xc00u,0xc04u,0xc0bu,0xd00u}) {
+      auto malformed=elfBytes;for(unsigned i=0;i<4;++i)malformed[offset+i]=char(0xff);
+      nall::Decode::ELF elf((const u8*)malformed.data(),malformed.size());
+      if(elf) {auto syms=elf.symbols();nall::Decode::DWARF dwarf(elf);dwarf.flattenStruct("rsp_queue_s");}
+    }
+
+    auto code=CaptureConfig::read(std::filesystem::path(argv[1]).parent_path()/"queue.bin",4096);
+    check(!code.empty(), "original queue fixture present");
+    for(unsigned i=0;i<code.size();++i) rsp.imem.write<Byte>(i,uint8_t(code[i]));
+    rsp.dmem.write<Word>(0x0c,0x3000);rsp.dmem.write<Byte>(0x49,4);rsp.dmem.write<Byte>(0x4a,4);
+    rsp.dmem.write<Word>(0xa0,0x1100fffe);rsp.dmem.write<Word>(0xa4,0x12345678);
+    check(viewer.execute("n64.capture.control",{"1","0"},"queue",11,true,false).error.empty() && commandCapture.queueMode, "ELF validated RSPQ hooks enabled");
+    rsp.ipu.pc=0;rsp.branch.setPc(0);rsp.writeWord(0x04040010,1,cpu);
+    for(unsigned i=0;i<100&&!rsp.status.halted;++i) rsp.instruction();
+    auto& c=commandCapture;
+    check(rsp.status.halted && c.rspLive.size()==2, "actual JIT and interpreter RSPQ segments");
+    auto command=std::find_if(c.rspLive.begin(),c.rspLive.end(),[](auto& r){return !r.overhead;});
+    check(command!=c.rspLive.end() && command->overlay=="fixture" && command->command=="Fixture Signed" && command->args=="n=-2 addr=0x12345678" && command->words[1]==0x12345678 && rsp.dmem.read<Word>(0xa4)==1, "semantic RSPQ command captured before DMEM reuse");
+    auto snapshot=*command;
+    rsp.dmem.write<Word>(0xa0,0x21000000);rsp.dmem.write<Word>(0xa4,7);rsp.ipu.r[28].u32=0;rsp.ipu.r[14].u32=0x800;
+    c.rspInstruction(0x3c);c.rspInstruction(0x80);c.rspFlush();
+    check(c.rspLive.back().command=="Second Slot", "multi-ID overlay command offset");
+    rsp.dmem.write<Word>(0x0c,0);c.rspInstruction(0x3c);c.rspInstruction(0x80);c.rspFlush();
+    check(c.rspLive.back().overlay=="Overlay 2" && c.rspLive.back().command=="Command 1", "overlay unregister cannot inherit stale labels");
+    check(snapshot.command=="Fixture Signed" && snapshot.args=="n=-2 addr=0x12345678", "frozen metadata remains immutable after overlay changes");
+    rsp.ipu.r[28].u32=0xfc;rsp.ipu.r[14].u32=0xfc00;c.rspInstruction(0x3c);c.rspInstruction(0x80);c.rspFlush();
+    check(c.rspLive.back().wordCount==1 && c.rspLive.back().wordsTruncated, "command descriptor clamps at buffer end");
+    vi.io.dramAddress=0xb000;c.afterRun();
+    auto page=viewer.execute("n64.capture.rsp",{"0","0","64"},"queue",11,true,false);
+    check(page.error.empty(),"RSPQ native page");
+    if(jit) std::printf("VIEWER_RSPQ %s\n",page.json.c_str());
+    auto large=snapshot;large.overlay=std::string(64,'"');large.command=std::string(64,'"');large.args=std::string(256,'"');large.wordCount=16;
+    c.rspLatest.assign(64,large);c.rspCommitted=64;
+    auto bounded=viewer.execute("n64.capture.rsp",{"0","0","64"},"queue",11,true,false);
+    check(bounded.error.empty() && bounded.json.size()<50000 && bounded.json.find("\"next_offset\":null")==std::string::npos,"semantic viewer pages stay below native reply byte limit");
+    rsp.imem.write<Word>(0x80,0);c.rspInstruction(0x80);
+    check(c.sigPc==-1 && !c.segmentOpen,"replacement microcode invalidates queue hooks");
+    check(rsp.recompiler.enabled==jit,"RSPQ capture preserves configured JIT");
+    viewer.reset();rsp.unload();
   }
   pi.detach(cartridge.romDevice); cartridge.rom.reset();
   rdram.ram.reset();

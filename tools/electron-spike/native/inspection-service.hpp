@@ -11,6 +11,8 @@ struct InspectionService {
   std::optional<Pin> pin;
   std::unordered_map<std::string, Baseline> baselines;
   uint64_t nextId = 1;
+  std::function<uint64_t()> presentedFrame;
+  std::function<double()> vps;
   void reset() { pin.reset(); baselines.clear(); }
   void releaseOwner(const std::string& owner) { if(pin && pin->owner == owner) pin.reset(); baselines.erase(owner); }
   ControlResult execute(const std::string& method, const std::vector<std::string>& args, const std::string& owner, uint64_t epoch, uint64_t frame, bool available, bool busy, bool paused) {
@@ -28,7 +30,7 @@ struct InspectionService {
       MachineService::Object out;
       out.add("viActive", active ? "true" : "false"); out.hex("viOrigin", now.origin); out.hex("dpcClock", now.dpc);
       out.number("epoch", epoch); out.number("frame", frame); out.add("paused", paused ? "true" : "false");
-      out.add("presented_frame", "null"); out.add("vps", "null");
+      out.add("presented_frame", presentedFrame ? std::to_string(presentedFrame()) : "null"); out.add("vps", vps ? std::to_string(vps()) : "null");
       out.add("originChanged", !have ? "null" : origin ? "true" : "false");
       out.add("dpcAdvanced", !have ? "null" : dpc ? "true" : "false");
       out.add("frameAdvanced", !have ? "null" : advanced ? "true" : "false");

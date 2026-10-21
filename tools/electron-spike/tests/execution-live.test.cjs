@@ -97,6 +97,15 @@ test('owned exact-frame runs through native, local endpoint and real MCP stdio',
     assert.equal(mcpCancel.stop_reason, 'cancelled');
     assert.deepEqual(await pending, mcpCancel);
     assert.equal((await peer.tool('run_frames', { n: 0, fpr: true })).error, 'unavailable');
+    const cancelledRequest=peer.id+1;
+    const cancelledTool=peer.request('tools/call',{name:'run_frames',arguments:{n:1000000,max_seconds:10}},2000).catch(()=>undefined);
+    let signalId;
+    for(let i=0;i<100&&!signalId;++i){signalId=(await router.request('session.status')).result.operation_id;if(!signalId)await sleep(10);}
+    assert.ok(signalId);
+    peer.child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/cancelled',params:{requestId:cancelledRequest,reason:'migration regression'}})+'\n');
+    const signalled=await finish(b,{operation_id:signalId});
+    assert.equal(signalled.stop_reason,'cancelled','MCP request abort cancels its native operation');
+    await cancelledTool;
     const abandoned = peer.tool('run_frames', { n: 1000000, max_seconds: 10 }).catch(() => undefined);
     let abandonedId;
     for (let i = 0; i < 100 && !abandonedId; i++) { abandonedId = (await router.request('session.status')).result.operation_id; if (!abandonedId) await sleep(10); }

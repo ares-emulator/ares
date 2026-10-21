@@ -65,13 +65,16 @@ export class SessionRouter {
     if (method === 'execution.release') { this.memoryDumps.release(owner); this.rdpArtifacts.release(owner); this.batches.release(owner); this.artifacts.release(owner); this.screenshots.release(owner); this.audio.release(owner); this.recording.release(owner); this.states.release(owner); this.stateArtifacts.release(owner); this.stateLoading.release(owner); }
     if (!this.client) throw new ServiceError('native_host_disconnected');
     const client = this.client;
-    if (method.startsWith('artifact.') || method.startsWith('state.') || method === 'experiment.batch') {
+    if (method.startsWith('artifact.') || method.startsWith('state.') || method.startsWith('experiment.')) {
       const startingIdentity = { ...(identity ?? client.identity) };
       encodeRequest('validation', startingIdentity, method, params, owner);
       const envelope = { protocol: PROTOCOL, id: `artifact${++this.nextArtifactId}`, ...startingIdentity };
       try {
         let result;
-        if (method === 'experiment.batch') result = await this.batches.run(client, this, startingIdentity, params as BatchParams, owner, () => this.client === client, child => { this.stateLoading.release(child); this.screenshots.release(child); });
+        if (method === 'experiment.cancelBatch') {
+          if(startingIdentity.session !== client.identity.session) throw new ServiceError('wrong_session');
+          result={cancelled:this.batches.cancel(owner,(params as {token:string}).token)};
+        } else if (method === 'experiment.batch') result = await this.batches.run(client, this, startingIdentity, params as BatchParams, owner, () => this.client === client, child => { this.stateLoading.release(child); this.screenshots.release(child); });
         else if (method === 'state.load') result = await this.stateLoading.load(client, startingIdentity, params as { path: string; resume: boolean; keepOverrides: boolean }, owner, () => this.client === client);
         else if (method === 'state.save') result = await this.stateArtifacts.save(client, startingIdentity, params as { path: string; overwrite: boolean; metadata: boolean }, owner, () => this.client === client);
         else if (method === 'state.info' || method === 'state.list' || method === 'state.peek') result = await this.states.inspect(client, startingIdentity, method, params, owner, () => this.client === client);

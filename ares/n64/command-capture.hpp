@@ -2,6 +2,8 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include <functional>
+#include <string>
 namespace ares::Nintendo64 {
 // Host-only command viewer state. Adapted from ares-64 RSPCapture/RDPCapture and
 // Program::n64AfterRun at 1c9b9637476a83f7b80d3db1115a0f71529820d9.
@@ -14,6 +16,10 @@ struct CommandCapture {
     uint32_t word0 = 0, word1 = 0;
     uint8_t opcode = 0;
     bool overhead = false;
+    uint8_t overlayId = 0, wordCount = 0, segmentType = 0;
+    std::array<uint32_t, 16> words{};
+    std::string overlay, command, args;
+    bool wordsTruncated = false;
   };
   struct RdpRecord { uint64_t seq, frame, word0, word1; uint8_t opcode, wordCount; };
   static constexpr uint8_t RdpWords[64] = {
@@ -24,6 +30,19 @@ struct CommandCapture {
   };
   bool rspEnabled = false, rdpEnabled = false, segmentOpen = false;
   int32_t sigPc = -1, loopPc = -1, dispatchPc = -1;
+  struct QueueConfig {
+    bool loaded = false;
+    std::array<uint32_t, 5> hooks{}; // command, loop, overlay-load, fetch, fetch-with-ptr
+    std::array<std::array<uint32_t, 2>, 5> signature{};
+    uint32_t cmdsOffset = 0xa0, cmdsSize = 0x100;
+  } queue;
+  struct DisplayConfig {
+    std::array<uint32_t, 4> signature{0x00196603, 0x000c5840};
+    uint8_t count = 2, word0Reg = 25, word1Reg = 24, opcodeShift = 24;
+    int32_t loopOffset = -12, dispatchOffset = 20;
+  } display;
+  bool queueMode = false;
+  std::function<void(RspRecord&)> annotate;
   uint32_t lastOrigin = 0;
   uint64_t sequence = 0, presentedFrame = 0, generation = 1, segmentStart = 0;
   uint64_t rspObserved = 0, rdpObserved = 0, rspCommitted = 0, rdpCommitted = 0;

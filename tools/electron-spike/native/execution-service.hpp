@@ -51,6 +51,7 @@ struct ExecutionService {
   std::function<void()> onStart;
   std::function<void(const std::string&)> onFinish;
   std::function<std::string()> debugSnapshot;
+  std::function<std::string()> registerSnapshot;
   uint64_t nextId = 1;
   std::deque<std::pair<uint64_t, std::string>> finished;
   static constexpr uint64_t maxInteger = 9007199254740991ull;
@@ -84,6 +85,7 @@ struct ExecutionService {
       + (op.callProgress ? ",\"call\":" + op.callProgress() : "")
       + (op.rspProgress ? ",\"rsp\":" + op.rspProgress(reason) : "")
       + (!reason.empty() && op.memoryVerification ? ",\"memory_verification\":" + op.memoryVerification() : "")
+      + (!reason.empty() && registerSnapshot ? ",\"completion_registers\":" + registerSnapshot() : "")
       + (!reason.empty() && debugSnapshot ? ",\"debug_stop\":" + debugSnapshot() : "") + tap + "}";
   }
   std::string complete(const std::string& reason, bool& paused) {
@@ -113,7 +115,7 @@ struct ExecutionService {
                         const std::string& owner, uint64_t epoch, bool& paused) {
     if(method == "execution.batchBegin") {
       uint64_t ms;
-      if(args.size() != 1 || !number(args[0], ms) || ms < 1 || ms > 20000) return {"invalid_request", {}};
+      if(args.size() != 1 || !number(args[0], ms) || ms < 1 || ms > 600000) return {"invalid_request", {}};
       if(!supported) return {"unavailable", {}};
       if(active || reservation) return {"busy", {}};
       reservation = Reservation{nextId++, owner, Clock::now() + std::chrono::milliseconds(ms)};

@@ -422,7 +422,7 @@ mutation and require an operation-free pause. PC edits canonicalize 32-bit KSEG
 addresses, reset delay-slot/pipeline and stale stop state, and drop JIT translations.
 Non-PC edits preserve immutable stops. Read-only snapshots copy direct fields
 without invoking MMIO side effects. Disassembly observes CPU D-cache or physical
-RDRAM (1–128 instructions); it does not claim I-cache fetch coherence. RSP debugger control now uses an owned cooperative instruction gate; exact RDP interval and task capture are implemented; bounded F3DEX2/viewer streams are implemented, with RSPQ/config parity still pending. See
+RDRAM (1–128 instructions); it does not claim I-cache fetch coherence. RSP debugger control now uses an owned cooperative instruction gate; exact RDP interval and task capture are implemented; bounded F3DEX2/viewer streams are implemented, with RSPQ/config/custom descriptor and semantic decoding support. See
 [task 9 machine services](mcp/README.md#machine-services-task-9-in-progress).
 
 
@@ -458,12 +458,15 @@ a private before-fetch return gate. Successful calls restore the documented CPU
 caller context and return v0/v1; interruptions preserve the actual stop until
 explicit recovery/discard. Memory, device, other COP0 and time effects remain.
 See [bounded calls](mcp/README.md#experimental-bounded-calls) for preconditions,
-limits and recovery ownership. Bounded F3DEX2/viewer command capture/control is implemented; RSPQ/config and semantic decoding remain pending.
+limits and recovery ownership. Bounded RSPQ/F3DEX2/custom display-list viewer capture, ELF/DWARF/config discovery and semantic decoding are implemented.
 
 
-All 68 MCP tool names are registered. The final two registrations add bounded
-`rsp_capture` (live F3DEX2 dispatch segments) and `capture_control`, plus legacy
-`rdp_capture(next_frame=false)`. Native interpreter/traced-JIT and software/Vulkan
-decoder hooks feed immutable origin-swap buffers. This is still partial parity:
-RSPQ ELF/config/custom descriptors, semantic decoding and the documented runtime/
-manual/schema acceptance gates remain required. Task 9 is not marked complete.
+All 68 MCP tool names have successful actual stdio runtime evidence. Generated
+FastMCP comparison verifies all names, parameter signatures, defaults and
+nullability. RSPQ/F3DEX2/custom descriptor dispatch hooks preserve immutable
+command words and semantic metadata; software/Vulkan RDP hooks cover exact and
+origin-swap viewer captures. Compact/verbose CPU groups, immutable completion
+registers and request-scoped cancellation are verified. See
+[MCP-PARITY-LEDGER.md](MCP-PARITY-LEDGER.md) and the final task 9 execution-log entry
+for bounds, intentional adapter result/validation differences and acceptance.
+Separate task 6 physical-input/audible manual checks remain recorded.

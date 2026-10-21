@@ -181,7 +181,7 @@ app.whenReady().then(async () => {
   assert.ok(['unsafe_context', 'unaligned_address'].includes((await mcp.tool('call_function', { addr: 1, max_seconds: 0.01 })).error));
   const initialCpu = await mcp.tool('cpu_registers');
   assert.equal((await mcp.tool('cpu_set_registers', { gpr: { t0: '0x123456789abcdef0' } })).changed.gpr.t0, '0x123456789abcdef0');
-  await mcp.tool('cpu_set_registers', { gpr: { t0: initialCpu.gpr.t0 } });
+  await mcp.tool('cpu_set_registers', { gpr: { t0: initialCpu.gpr_named.t0 } });
   assert.equal((await mcp.tool('rsp_registers')).vu.length, 32);
   assert.equal(typeof (await mcp.tool('peripheral_registers')).vi.VI_WIDTH, 'number');
   assert.equal(typeof (await mcp.tool('rdp_state')).DPC_START, 'string');

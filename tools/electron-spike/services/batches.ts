@@ -6,8 +6,9 @@ const unwrap = <T>(r: SessionReply<T>): T => { if (!r.ok || r.result === undefin
 const sleep = () => new Promise(resolve => setTimeout(resolve, 5));
 /** Main orchestrates file work; the native reservation owns guest exclusivity. */
 export class Batches {
-  private jobs = new Map<string, { child: string; cancel: (reason: string) => void }>();
+  private jobs = new Map<string, { child: string; token?: string; cancel: (reason: string) => void }>();
   release(owner: string) { this.interrupt(owner, 'disconnected'); }
+  cancel(owner:string,token:string) { const job=this.jobs.get(owner);if(!job || job.token!==token)return false;job.cancel('cancelled');return true; }
   child(owner: string) { return this.jobs.get(owner)?.child; }
   interrupt(owner: string, reason: string) { this.jobs.get(owner)?.cancel(reason); }
   close() { for (const job of this.jobs.values()) job.cancel('native_host_disconnected'); }
@@ -17,7 +18,7 @@ export class Batches {
     const child = `batch-${randomUUID()}`, deadline = performance.now() + p.timeoutMs;
     let cancelled = '', release: Promise<unknown> | undefined;
     const revoke = () => { releaseArtifacts(child); release ??= native.request('execution.release', undefined, undefined, child).catch(() => {}); };
-    const job = { child, cancel: (reason: string) => { cancelled ||= reason; revoke(); } };
+    const job = { child, token:p.cancellationToken, cancel: (reason: string) => { cancelled ||= reason; revoke(); } };
     this.jobs.set(owner, job);
     const timer = setTimeout(() => job.cancel('timeout'), p.timeoutMs);
     let identity = { ...starting }, frame = 0, batchId: number | undefined;

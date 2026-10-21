@@ -9,7 +9,7 @@
       "Address": "Union[int, str]"
     }
   },
-  "extraction": "AST annotations, required flags, default expressions and docstrings; FastMCP generated JSON Schema has not been executed or verified. Task 4 adapts minimum native VI/scheduler semantics from the same fork; source hashes are recorded in EXECUTION-LOG.md.",
+  "extraction": "Reference AST inventory frozen from the recorded source. Real FastMCP 1.30.0 schemas now compared against actual stdio: 68 names and parameter signatures match. Full validation differences and bounded result contracts are explicit in tests/reference and MCP-PARITY-LEDGER.md.",
   "tools": [
     {
       "name": "emu_status",
@@ -27,8 +27,8 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 1,
-      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
-      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded execution slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
@@ -46,9 +46,14 @@
           "scope": "task 4 execution port",
           "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Native VI frame, frame kind, boundary, executor and active operation ID added. Register/input/full reference status groups remain pending."
+      "knownLimits": "Native safe-point PC, stopped state, debug executor/counts/renderer/configuration, input ownership, EEPROM/RAM/Flash type/size/resolved path/loaded metadata, recovery state and operation. Native video callback VPS is independent of canvas credits; presented_frame is the reference VI-origin-swap counter. New internal protocol_version is 1; no legacy telemetry wire compatibility claim."
     },
     {
       "name": "cpu_registers",
@@ -78,16 +83,21 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "N64 only; named GPR/HI/LO/PC and delay slots, optional raw64 FPR/COP0 groups. Random is null. Classified floats and legacy verbose diagnostics remain pending."
+      "knownLimits": "Compact gpr_named/HI/LO/PC/delay slots; verbose includes GPR array, named COP0/status/cause and architectural FR=0/1 FPR views. IEEE classes preserve NaN/infinity/signed zero/subnormal using JSON-safe values. Random is null to avoid RNG mutation. Completed operation snapshots remain immutable across later CPU changes."
     },
     {
       "name": "rsp_registers",
@@ -98,14 +108,19 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 9,
-      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
-      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 9 machine foundations",
           "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
           "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Direct safe-point scalar32/vector32x8/accumulator/status/DMA and current instruction snapshots. No semaphore/MMIO side effects. DMA clock is signed decimal string for precision; debug.available:true with direct cooperative gate metadata, instruction counts and breakpoint table. No command capture claim. DMA origin PC retains full64 rather than reference helper truncation."
@@ -119,17 +134,22 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 9,
-      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
-      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 9 machine foundations",
           "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
           "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Direct safe-point DPC register/flag/source fields. No MMIO read side effects; no command capture reconstruction. Exact interval capture remains pending."
+      "knownLimits": "Direct safe-point DPC register/flag/source fields. No MMIO read side effects; no command capture reconstruction. Exact interval/task/submission capture is exposed by rdp_capture."
     },
     {
       "name": "peripheral_registers",
@@ -140,14 +160,19 @@
       "family": "Status/register inspection",
       "requiredBackend": "Structured native state, capabilities, effective executor, compact/verbose groups.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
-      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 9 machine foundations",
           "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
           "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Direct safe-point VI/AI/PI/SI/RI fields using reference names. No MMIO reads, guest execution, semaphore/DMA/counter side effects."
@@ -198,16 +223,21 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 4,
-      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
-      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded execution slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 4 execution port",
           "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "N64/synthetic VI boundaries only; relative limit 1000000, deadline 0.001\u2013600 seconds. screenshot_after supports bounded host-file PNG output after every stop reason; capture failure preserves the run result. A native paused/frame check rejects competing advancement; epoch is anchored to the operation. fpr/cop0 remain unavailable; verbose adds no register groups."
+      "knownLimits": "N64/synthetic VI boundaries only; relative limit 1000000, deadline 0.001\u2013600 seconds. screenshot_after supports bounded host-file PNG output after every stop reason; capture failure preserves the run result. A native paused/frame check rejects competing advancement; epoch is anchored to the operation. Optional FPR/COP0/verbose groups format the immutable native completion snapshot."
     },
     {
       "name": "run_until_frame",
@@ -231,13 +261,18 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 4,
-      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
-      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded execution slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 4 execution port",
           "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "N64/synthetic current-epoch absolute VI target; past targets reject. Deadline 0.001\u2013600 seconds. CPU debug/input fields remain later tasks."
@@ -282,16 +317,21 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "N64 only; 1..1000000 instructions, 0.001..600-second deadline. Actual delay-slot count and interpreter restoration verified. Result includes frozen debug_stop; full legacy output enrichment remains pending."
+      "knownLimits": "N64 only; 1..1000000 instructions, 0.001..600-second deadline. Actual delay-slot count and interpreter restoration verified. Result includes frozen debug_stop; completion groups use immutable native register snapshots."
     },
     {
       "name": "run_until_hit",
@@ -333,13 +373,18 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Uses owned frame run with break/watch early stops. Frozen hit/register snapshot; no code windows, byte-mask enrichment or heuristic stack yet."
@@ -353,8 +398,8 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 1,
-      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
-      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded execution slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
@@ -372,6 +417,11 @@
           "scope": "task 4 execution port",
           "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Native slice-boundary pause finishes the same-owner operation; UI pause can interrupt any owner. CPU breakpoint/instruction stop details remain task 5."
@@ -392,8 +442,8 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 1,
-      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
-      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
+      "implementationStatus": "MCP implemented (bounded generic slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "native service only; MCP adapter not implemented",
@@ -406,6 +456,11 @@
           "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Default external resume releases only the caller's N64 holds; UI resume can release all. keep_overrides=true preserves N64 holds and remains unavailable elsewhere. Busy during owned operations."
@@ -419,13 +474,18 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
-      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded execution slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 4 execution port",
           "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Alias for exactly one VI boundary, not a CPU instruction. N64/synthetic only."
@@ -464,16 +524,21 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 4,
-      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
-      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded execution slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 4 execution port",
           "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Live state or immutable final snapshot; retains latest 16. Session/epoch required. fpr/cop0 return unavailable; verbose has no extra register groups."
+      "knownLimits": "Live state or immutable final snapshot; retains latest 16. Session/epoch required. Optional FPR/COP0/verbose groups format the retained completion snapshot; later mutations cannot change it."
     },
     {
       "name": "cancel_operation",
@@ -491,13 +556,18 @@
       "family": "Execution/operations",
       "requiredBackend": "One bounded execution scheduler; exact VI-frame and instruction semantics; async completion/cancel.",
       "plannedTask": 4,
-      "implementationStatus": "MCP implemented (bounded execution slice; full reference parity pending)",
-      "mcpSchemaParity": "Source names/defaults preserved; bounded numeric ranges and unavailable advanced options documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded execution slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 4 execution port",
           "check": "tests/execution-fixture.cpp, tests/execution-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: 21 service tests, sandboxed Electron UI and real Electron/MCP ownership/reload/cancel tests after task 4.5 ESM migration."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Cancels owning connection operation, or UI can interrupt any owner. Null ID selects active operation; no active operation returns unknown_operation. Repeating an explicit completed ID returns its immutable result."
@@ -524,16 +594,21 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "RDRAM aliases, alignment, up to 256 definitions and eight masked unsigned predicates. Native listing is paged; MCP aggregates pages. Full legacy error/result equality pending."
+      "knownLimits": "RDRAM aliases, alignment, up to 256 definitions and eight masked unsigned predicates. Native listing is paged; MCP aggregates pages. Errors use the new bounded service contract and session identity."
     },
     {
       "name": "break_remove",
@@ -551,13 +626,18 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Explicit unknown_definition on missing ID. Mutations reject during any active execution operation."
@@ -571,13 +651,18 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "IDs, supplied/physical addresses, predicates and hit counts; native pages of 32, bounded MCP aggregation."
@@ -616,16 +701,21 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "CPU read/write/access ranges up to 65536 bytes, max 64 definitions and eight predicates. CPU-only; no DMA/fetch/debugger hits. Overlap-summary enrichment pending."
+      "knownLimits": "CPU read/write/access ranges up to 65536 bytes, max 64 definitions and eight predicates. CPU-only; no DMA/fetch/debugger hits. Reports the immutable full access range, old/new/read values and matching IDs; byte-overlap summaries can be derived from definitions."
     },
     {
       "name": "watch_remove",
@@ -643,13 +733,18 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Explicit unknown_definition on missing ID; busy while any operation owns execution."
@@ -663,13 +758,18 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Definitions, conditions, kinds, ranges and hit counts; native pages of 32."
@@ -702,13 +802,18 @@
       "family": "Break/watch/stops",
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Immutable core hit snapshot and access record; raw optional register groups. No heuristic stack/code-window enrichment."
@@ -730,15 +835,20 @@
       "requiredBackend": "CPU debug engine, immutable snapshots, structured conditions, heuristic unwind diagnostics.",
       "plannedTask": 5,
       "implementationStatus": "MCP implemented (bounded task 9 inspection/artifact slice)",
-      "mcpSchemaParity": "Reference names/defaults retained. Explicit bounds and counter gaps documented; full generated schema/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/inspection.test.cjs, tests/inspection-live.test.cjs; Electron/package gates in execution log",
           "result": "Passed: native stack/prologue/epilogue/cache/snapshot/owner/expiry/probe fixture, actual MCP full installed-RDRAM file/hash and range/stack/probe, streamed export cancellation and atomic file preservation; full suite 59/59.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Native current safe-point snapshot, up to 8 frames, 256 backward instructions per frame and 256 raw stack bytes. RDRAM-backed KSEG only; CPU D-cache-aware byte reads with KSEG1 bypass, no MMIO/guest execution/cache allocation. Saved SW RA sign-extension and SD, pre-prologue and executed epilogue rules from reference. Optional aligned function_start must be readable within 1024 bytes before current PC. Reports heuristic/confidence/assumptions and stop reason; no symbols or unwind metadata. Full reference result/schema equality and real-game acceptance pending."
+      "knownLimits": "Native current safe-point snapshot, up to 8 frames, 256 backward instructions per frame and 256 raw stack bytes. RDRAM-backed KSEG only; CPU D-cache-aware byte reads with KSEG1 bypass, no MMIO/guest execution/cache allocation. Saved SW RA sign-extension and SD, pre-prologue and executed epilogue rules from reference. Optional aligned function_start must be readable within 1024 bytes before current PC. Reports heuristic/confidence/assumptions and stop reason; no symbols or unwind metadata. Generated signature, native contract, real stdio and isolated real-game checks pass; result metadata uses the new bounded service contract."
     },
     {
       "name": "state_save",
@@ -769,9 +879,14 @@
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
       "implementationStatus": "MCP implemented (bounded task 8 state slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit bounds documented; full generated source schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
+        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "N64 only. Pauses at a native safe point; active execution/GDB or an existing native state pin returns busy. Up to 64 MiB; one connection-owned immutable snapshot with 30-second lease, main streaming export deadline 25 seconds. Atomic state file and separately atomic hash/ROM/layout sidecar (metadata=true); sidecar failure returns metadata_error alongside the saved file. No-overwrite by default. Native state field order/version unchanged (v153); Separate load preflight and a cross-binary default-configuration round trip now pass; bounded baseline/load/write/active-VI-run/crop experiments now pass."
     },
@@ -804,9 +919,14 @@
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
       "implementationStatus": "MCP implemented (bounded task 8 restore slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit upload, sidecar and ownership adaptations documented; full generated schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native/MCP save/load: exact restored CPU registers, epochs, pause/resume, neutral leases, rejection and cancellation; reference binary round trip in both directions and 4 MiB incompatibility gate"
+        "Native/MCP save/load: exact restored CPU registers, epochs, pause/resume, neutral leases, rejection and cancellation; reference binary round trip in both directions and 4 MiB incompatibility gate",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "N64 only. Reserves native mutation dispatch during a connection-owned upload; normal UI pause/resume/reset and human takeover cancel it. 64 MiB files, 1800-byte upload chunks/four in flight, 30-second native lease and 25-second main deadline. Preflights signature/version, exact current serializer size, and present hash/ROM/layout metadata; stale sidecars reject. Legacy states without sidecars still require native version/size checks. Success starts a new epoch at frame 0, paused by default, clearing old captures/history. keep_overrides retains only this owner's neutral input leases. Restored VI phase is conservatively not an observed frame boundary. Cross-binary v153 round trip passed for default 8 MiB N64; actual 4 MiB machine rejected that state without guest mutation. Restore rollback/failure branch is implemented but not fault-injected; no claim for every peripheral configuration."
     },
@@ -838,16 +958,21 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 debug slice; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded ranges; raw FPR/result enrichment limits documented. Full generated FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 debug slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/client.test.cjs",
           "result": "Passed: 25 service tests, real MIPS fixture and real isolated N64/MCP stdio; final Electron/package gates tracked in execution log."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "1..1024 bytes; strict physical/KSEG0/KSEG1 installed-RDRAM bounds, Vulkan synchronization and side-effect-free CPU cache view. No TLB/MMIO. Full legacy metadata shape pending."
+      "knownLimits": "1..1024 bytes; strict physical/KSEG0/KSEG1 installed-RDRAM bounds, Vulkan synchronization and side-effect-free CPU cache view. No TLB/MMIO. Metadata uses the new bounded service contract and session identity."
     },
     {
       "name": "write_memory_va",
@@ -889,8 +1014,8 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded N64 memory experiments; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained; multiwrite reduced to 32 writes/1024 bytes total for the native 4 KiB request protocol. Full FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 memory experiments; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 5 CPU and N64 services",
@@ -902,6 +1027,11 @@
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/state-loading-live.test.cjs; Electron MCP and copied package gates",
           "result": "Passed: 44 tests; full-list rejection before writes, overlapping readbacks, immutable native stop verification, actual stdio delayed timeout after restore, 48-tool Electron registry and copied app checkout-denied smoke.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "1..1024 bytes total; many accepts 1..32 ordered writes, all prevalidated. Optional 0..100000 VI verification freezes readbacks at the actual owned stop. CPU/physical cache hazards retained; no rollback. Renderer backing must be available; restore prepares it without CPU execution."
@@ -935,12 +1065,17 @@
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
       "implementationStatus": "MCP implemented (bounded task 9 inspection/artifact slice)",
-      "mcpSchemaParity": "Reference names/defaults retained. Explicit bounds and counter gaps documented; full generated schema/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/inspection.test.cjs, tests/inspection-live.test.cjs; Electron/package gates in execution log",
           "result": "Passed: native stack/prologue/epilogue/cache/snapshot/owner/expiry/probe fixture, actual MCP full installed-RDRAM file/hash and range/stack/probe, streamed export cancellation and atomic file preservation; full suite 59/59.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "One connection-owned immutable native safe-point snapshot of all installed RDRAM, up to 8 MiB, physical guest big-endian bytes without header. Optional expected size prevalidated. No guest execution or pause change. Exclusive with active operations/uploads/batches/RSP gate/GDB; one native pin, fixed 30-second lease. Main streams 16 KiB pages, four at a time, to atomic publication with SHA-256 and capture coordinates; 25-second deadline, two global/one owner jobs. Reset/state load/disconnect revoke; errors preserve existing file and release the pin. No renderer host pointers/filesystem in MCP adapter."
@@ -954,8 +1089,8 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 2,
-      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
-      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
+      "implementationStatus": "MCP implemented (bounded generic slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "native region service and temporary inspector only; MCP not exposed",
@@ -968,6 +1103,11 @@
           "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Opaque session-scoped region IDs/access metadata. Raw DCache remains unavailable and mapped RDRAM read-only; explicit N64 CPU/physical services are separate."
@@ -1000,8 +1140,8 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 2,
-      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
-      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
+      "implementationStatus": "MCP implemented (bounded generic slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "native region service and temporary inspector only; MCP not exposed",
@@ -1014,6 +1154,11 @@
           "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Exact name or opaque ID; addr integer/hex-decimal string and length=64 retained. 1\u20131024-byte limit; no VA/cache semantics; extra identity fields. Raw mapped N64 RDRAM reads do not add renderer-flush guarantees."
@@ -1046,8 +1191,8 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 2,
-      "implementationStatus": "MCP implemented (bounded generic slice; full reference parity pending)",
-      "mcpSchemaParity": "Passed source parameter names, required fields and defaults via real tools/list; complete generated FastMCP JSON Schema equality not run; documented bounded constraints differ.",
+      "implementationStatus": "MCP implemented (bounded generic slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "native region service and temporary inspector only; MCP not exposed",
@@ -1060,6 +1205,11 @@
           "check": "tests/electron-mcp.mjs, tests/local-endpoint.test.cjs, tests/package-live.cjs",
           "result": "passed",
           "date": "2026-10-18"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "1..1024 region-relative bytes with no retry. N64 mapped RDRAM remains read-only; use write_memory_va after initialization for explicit CPU/physical semantics."
@@ -1111,12 +1261,17 @@
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 7,
       "implementationStatus": "MCP implemented (bounded task 7 image slice)",
-      "mcpSchemaParity": "Source tool/defaults retained; bounded pixels/PNG/chunk transport and source metadata explicit. Reset returns no_frame after clearing cache. Full generated-schema/result equality pending.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 7 image slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/screenshots.test.cjs, tests/screenshots-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: real RDRAM pixel formats and immutable pins, delayed old refresh rejection, worker PNG decoded by sips/Electron, crop/scale pixels, real MCP image content without video credits, reset/owner revocation and file overwrite failure. Copied package passed native capture, bundled worker PNG encoding, inline MCP image and identical atomic PNG output with repository reads denied for loader/adapter."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "N64 pre-VI RGBA5551/RGBA8888 RDRAM framebuffer, or native presented output (post-VI on N64) across cores. Crop then nearest-neighbor scale 0.125..8, up to 4194304 source/output pixels and 8 MiB PNG. Two connection-owned native snapshots and two inline images; 30-second leases, 25-second job deadline. Reset clears old frames (no_frame); first raw-host query only enables future presented capture. No canvas readback. run_frames screenshot_after supports host-file output with operation-epoch and native stopped-frame checks."
@@ -1173,16 +1328,21 @@
       "family": "Images/render captures",
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 9,
-      "implementationStatus": "MCP implemented (bounded exact and viewer captures; full parity pending)",
-      "mcpSchemaParity": "Reference parameter names/defaults retained; max_commands request clamped to 65536 stored words, inline limit to 1024. Legacy next_frame=false reads immutable origin-swap viewer snapshots (1024 inline cap). Full generated schema/result equality not run.",
+      "implementationStatus": "MCP implemented (bounded exact and viewer captures)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/rdp-capture-live.test.cjs, tests/rdp-artifacts.test.cjs; Electron/package gates in execution log",
           "result": "Passed: actual software/Vulkan submissions, exact interval/buffer reuse, real HALT-clear task hashes/DMEM, bounded drop/association handling, atomic export and cancellation; full suite 56/56.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Exact next-VI interval requires an observed frame boundary and uses existing owned run/cancel/deadline semantics (0.001..600 seconds). Submission hook runs before software/Vulkan dispatch; HALT-clear snapshots task header/XXH64 hashes and optional 4 KiB DMEM. Full 64-bit words, DPC batch/source/task associations; 65536 words, 512 batches, 64 tasks, explicit truncation/drop counts and unknown task after overflow. Inline words cap at 1024; optional atomic JSON export contains all retained words/batches/tasks (25-second job deadline). Native pages are operation/epoch scoped and reject superseded capture. next_frame=false reads the last immutable nonzero VI-origin-swap decoder buffer (4096 stored/1024 inline); decoded command grouping and full reference result/schema equality remain pending. XBUS range follows reference clamp to DMEM 4 KiB."
+      "knownLimits": "Exact next-VI interval requires an observed frame boundary and uses existing owned run/cancel/deadline semantics (0.001..600 seconds). Submission hook runs before software/Vulkan dispatch; HALT-clear snapshots task header/XXH64 hashes and optional 4 KiB DMEM. Full 64-bit words, DPC batch/source/task associations; 65536 words, 512 batches, 64 tasks, explicit truncation/drop counts and unknown task after overflow. Inline words cap at 1024; optional atomic JSON export contains all retained words/batches/tasks (25-second job deadline). Native pages are operation/epoch scoped and reject superseded capture. next_frame=false reads the last immutable nonzero VI-origin-swap decoder buffer (4096 stored/1024 inline); legacy command names and semantic descriptions are decoded at the actual backend command hooks. XBUS range follows reference clamp to DMEM 4 KiB."
     },
     {
       "name": "rsp_capture",
@@ -1200,16 +1360,21 @@
       "family": "Images/render captures",
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 9,
-      "implementationStatus": "MCP implemented (bounded F3DEX2/viewer slice; RSPQ parity pending)",
-      "mcpSchemaParity": "Reference tool names/defaults retained; explicit 4096 stored/1024 inline rows and generation checks. RSPQ/config/semantic argument parity not implemented; full generated schema/result equality not run.",
+      "implementationStatus": "MCP implemented (bounded RSPQ/F3DEX2/custom display-list capture)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/viewer.test.cjs, tests/viewer-live.test.cjs; Electron/package in execution log",
           "result": "Passed: real RSP JIT/interpreter dispatch/handler overwrite, software/Vulkan decoder records, immutable origin-swap commits, bounded drops/clock wrap, owner/atomic controls, stale pages and disconnect; full suite 64/64.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Bounded live F3DEX2 dispatch capture only: signature-validated RSP hooks preserve two raw command words before handler reuse; command/loop timing, shared sequence and open-segment DMA bytes. Actual interpreter and traced JIT supported without changing configured flags. Nonzero VI-origin changes commit immutable double buffers; 4096 rows/frame, 64/native page and 1024/MCP inline, explicit drops/limit truncation. Generation/epoch checks prevent mixed frames. Unsupported microcode produces no fabricated commands; rspq_supported:false. RSPQ ELF/config/custom descriptor/overlay-name and semantic argument decoding are still required parity work; no scope removal accepted."
+      "knownLimits": "Live F3DEX2/custom display-list and ELF-validated RSPQ hooks preserve dispatch words before reuse, cycle/DMA counts and immutable semantic metadata. Companion ELF/config discovery, runtime overlay table/idmap names, multi-ID offsets, 16-word bounded descriptors, signed/fixed-point/enum/DMEM-DWARF/nested-RDP formatting are implemented. Interpreter and traced JIT retain configured flags. Origin-swap double buffers: 4096 stored rows, at most 64 rows/48000 bytes per native page and 1024 MCP inline; explicit truncation/drops and generation checks. Unknown/replaced microcode produces no fabricated commands."
     },
     {
       "name": "capture_control",
@@ -1233,16 +1398,21 @@
       "family": "Images/render captures",
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 9,
-      "implementationStatus": "MCP implemented (bounded F3DEX2/viewer slice; RSPQ parity pending)",
-      "mcpSchemaParity": "Reference tool names/defaults retained; explicit 4096 stored/1024 inline rows and generation checks. RSPQ/config/semantic argument parity not implemented; full generated schema/result equality not run.",
+      "implementationStatus": "MCP implemented (owned native viewer control)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/viewer.test.cjs, tests/viewer-live.test.cjs; Electron/package in execution log",
           "result": "Passed: real RSP JIT/interpreter dispatch/handler overwrite, software/Vulkan decoder records, immutable origin-swap commits, bounded drops/clock wrap, owner/atomic controls, stale pages and disconnect; full suite 64/64.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Both viewer channels disabled by default. Per-channel connection ownership; both requested owner changes prevalidated atomically. Null queries read-only; mutations require idle execution/no batch/upload/GDB. RSP interpreter/traced-JIT F3DEX2 hooks; RDP software/Vulkan decoder hooks including buffered complete commands. Nonzero VI-origin changes commit double buffers (not exact VI intervals/pixel proof). Disconnect disables owned channels, reset/state load clears. RSPQ configuration/ELF and semantic viewer parity remain pending."
+      "knownLimits": "Both viewer channels disabled by default. Per-channel owner/UI control is prevalidated atomically; mutation requires idle execution/no reservation/upload/GDB. RSPQ ELF/config and F3DEX2/custom descriptor hooks are validated against live IMEM. RDP software/Vulkan decoder hooks include buffered complete commands and semantic descriptions. Origin swaps commit immutable buffers; disconnect disables owned channels; reset/state load clear them."
     },
     {
       "name": "render_probe",
@@ -1254,15 +1424,20 @@
       "requiredBackend": "Native frame snapshots and exact capture hooks, crop/scale, bounded inline image transfer.",
       "plannedTask": 9,
       "implementationStatus": "MCP implemented (bounded task 9 inspection/artifact slice)",
-      "mcpSchemaParity": "Reference names/defaults retained. Explicit bounds and counter gaps documented; full generated schema/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/inspection.test.cjs, tests/inspection-live.test.cjs; Electron/package gates in execution log",
           "result": "Passed: native stack/prologue/epilogue/cache/snapshot/owner/expiry/probe fixture, actual MCP full installed-RDRAM file/hash and range/stack/probe, streamed export cancellation and atomic file preservation; full suite 59/59.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Per-connection native baseline (at most 16), reset on epoch/reset/disconnect. First observation returns null deltas. VI active/origin, DPC clock and native VI frame are direct observations; rendering requires all three changes and is heuristic. Uses actual VI active() predicate. Presented-frame and VPS are explicitly null because the legacy viewer counters are not ported. No guest execution or MMIO."
+      "knownLimits": "Per-connection safe-point VI/DPC/frame deltas, at most 16 baselines, reset on epoch/reset/disconnect. First deltas are null. Presented-frame uses nonzero VI-origin swaps; VPS measures native video callbacks. Rendering is explicitly heuristic and does not prove visible pixels."
     },
     {
       "name": "controller_set",
@@ -1389,12 +1564,17 @@
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded N64 input slice; task 6 incomplete)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded frame/millisecond leases. Full generated FastMCP/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 input slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
           "result": "Passed in 25-test service suite: actual controller nodes, port owners, frame/wall lease expiry, stale epoch, disconnect, preserve-on-resume and emulated keyboard takeover."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "N64 only; four per-connection port owners, complete-state replacement, VI/operation-start latch and frame/wall leases. Wall deadline uses millisecond precision (0.001..3600 seconds). Human takeover and disconnect revoke holds."
@@ -1416,12 +1596,17 @@
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded N64 input slice; task 6 incomplete)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded frame/millisecond leases. Full generated FastMCP/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 input slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
           "result": "Passed in 25-test service suite: actual controller nodes, port owners, frame/wall lease expiry, stale epoch, disconnect, preserve-on-resume and emulated keyboard takeover."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Null releases only this connection's ports; a specific foreign port returns busy. UI can revoke every port. Revocation is immediate, including while paused."
@@ -1436,15 +1621,20 @@
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded N64 input slice; task 6 incomplete)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded frame/millisecond leases. Full generated FastMCP/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 input slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
           "result": "Passed in 25-test service suite: actual controller nodes, port owners, frame/wall lease expiry, stale epoch, disconnect, preserve-on-resume and emulated keyboard takeover."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Pending/latched masks, axes, owner tokens, frame lease targets, native epoch/frame, neutral mode and takeover count. Remaining wall-time/result-key parity pending."
+      "knownLimits": "Pending/latched masks, axes, owner tokens, frame lease targets, native epoch/frame, neutral mode and takeover count. Wall expiry is verified while paused; host monotonic lease timestamps are not stable snapshot coordinates."
     },
     {
       "name": "controller_host_mode",
@@ -1463,12 +1653,17 @@
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded N64 input slice; task 6 incomplete)",
-      "mcpSchemaParity": "Reference names/defaults retained with bounded frame/millisecond leases. Full generated FastMCP/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 input slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
           "result": "Passed in 25-test service suite: actual controller nodes, port owners, frame/wall lease expiry, stale epoch, disconnect, preserve-on-resume and emulated keyboard takeover."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Neutral host input during operations by default. Only UI or the active operation owner can change mode while running."
@@ -1514,12 +1709,17 @@
       "requiredBackend": "Four-port VI-latched ownership, leases, neutral isolation and human takeover.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded task 6 slice; manual acceptance pending)",
-      "mcpSchemaParity": "Source names/defaults retained; bounded ranges/effective limits and semantic adaptations documented. Full generated-schema/result equality pending.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 profiler/tap slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: original MIPS call/exception/JIT accounting and bounded maps, exact VI tap target and every cleanup path, native reply decoding, real N64/MCP ownership, Electron tool calls and copied package 35-tool registry. Physical keyboard/gamepad acceptance pending."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "N64 single native owned VI run, 1..100000 frames, deadline 0.001..600s; partial starting frame counts toward next boundary. Tapped port is stable while running. Every stop releases the button; keep_override retains neutral isolation except disconnect/reset/shutdown/human takeover revoke ownership. Physical-device gate pending."
@@ -1589,7 +1789,7 @@
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded N64 trace slice; task 6 incomplete)",
-      "mcpSchemaParity": "Source names/defaults retained; numeric/storage/response limits bounded. File paths explicitly unavailable. Full generated FastMCP/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 trace slice",
@@ -1600,6 +1800,11 @@
           "scope": "task 7 trace export slice",
           "check": "tests/artifacts.test.cjs, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: real native PC export and fixture call argument/f12 export, whole-file hash, JSON shape, overwrite races, failed/oversized/revoked/stale jobs, real MCP path export and Electron main publication."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Owned N64 interpreter interval with sorted per-frame PCs, filters and counters. Up to 262144 stored records; outside-RDRAM map bounded and counters saturate with explicit overflow. MCP inline/page responses cap at 1024 entries with next_offset. Optional atomic JSON export through Electron main: bounded 64 MiB, 25-second export deadline, two concurrent jobs and one per owner. Relative paths resolve against the app working directory. Failed exports return file_error and preserve an existing destination."
@@ -1693,7 +1898,7 @@
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded N64 trace slice; task 6 incomplete)",
-      "mcpSchemaParity": "Source names/defaults retained; numeric/storage/response limits bounded. File paths explicitly unavailable. Full generated FastMCP/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 trace slice",
@@ -1704,6 +1909,11 @@
           "scope": "task 7 trace export slice",
           "check": "tests/artifacts.test.cjs, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: real native PC export and fixture call argument/f12 export, whole-file hash, JSON shape, overwrite races, failed/oversized/revoked/stale jobs, real MCP path export and Electron main publication."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Owned N64 JAL/JALR/taken branch-link capture before execution; target/callsite filters, selected GPRs and raw f12/FR. Up to 65536 stored calls and 1024 entries per MCP response. Optional atomic JSON export through Electron main: bounded 64 MiB, 25-second export deadline, two concurrent jobs and one per owner. Relative paths resolve against the app working directory. Failed exports return file_error and preserve an existing destination."
@@ -1737,12 +1947,17 @@
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded N64 trace slice; task 6 incomplete)",
-      "mcpSchemaParity": "Source names/defaults retained; numeric/storage/response limits bounded. File paths explicitly unavailable. Full generated FastMCP/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 trace slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs",
           "result": "Passed in 25-test service suite: actual MIPS PC/call capture, JALR rd=rs, filters, caps/overflow, native call serialization, freed buffers and real JIT restoration; real MCP paging, timeout, future intervals and disconnect cleanup."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Most recent completed trace only, operation/session/epoch scoped. Native pages 64 PCs or 32 calls; MCP aggregates up to 1024 entries and reports effective limit/next_offset. Superseded captures return stale_trace."
@@ -1782,12 +1997,17 @@
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded N64 PI provenance; task 6 incomplete)",
-      "mcpSchemaParity": "Source tool/defaults retained; native pages capped at 16 and MCP responses at 128 with next_since_id. Unconfirmed writes/history loss are explicit; full generated/result parity pending.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 DMA slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: real CPU SW starts PI DMA, aligned and short misaligned ranges match RAM, DMA excludes CPU watches, 4097 real transfer loops verify overwrite metadata, native/JS serialization, reset and real Electron/N64 startup opt-in."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "PI cartridge-to-RDRAM only, opt-in from services-enabled startup or first query. 4096-record/64-range ring, dropped/truncation markers. Confirmed linear writes clipped to installed RAM; unknown mappings return bytes_written=null. Code candidates are heuristic, not overlays/decompressed-code proof."
@@ -1815,12 +2035,17 @@
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded task 6 slice; manual acceptance pending)",
-      "mcpSchemaParity": "Source names/defaults retained; bounded ranges/effective limits and semantic adaptations documented. Full generated-schema/result equality pending.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 profiler/tap slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: original MIPS call/exception/JIT accounting and bounded maps, exact VI tap target and every cleanup path, native reply decoding, real N64/MCP ownership, Electron tool calls and copied package 35-tool registry. Physical keyboard/gamepad acceptance pending."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "N64 raw-address top costs, up to 64 entries; master ticks at 187.5 MHz. Frame means last observed VI-origin swap. Open calls commit on return/swap/disable; continuous accumulation freezes at 1000 swaps. Maps cap at 65536 functions, stack depth 1024 and parked stacks 16, with drop counters. ELF names/wait classification and UI cache/timeline rings are deferred."
@@ -1842,12 +2067,17 @@
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded task 6 slice; manual acceptance pending)",
-      "mcpSchemaParity": "Source names/defaults retained; bounded ranges/effective limits and semantic adaptations documented. Full generated-schema/result equality pending.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 profiler/tap slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: original MIPS call/exception/JIT accounting and bounded maps, exact VI tap target and every cleanup path, native reply decoding, real N64/MCP ownership, Electron tool calls and copied package 35-tool registry. Physical keyboard/gamepad acceptance pending."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Disabled by default; connection-owned capture runs with interpreter or recompiler. Foreign toggles/clear and mutations during operations return busy. Disconnect disables capture retaining statistics; reset disables and clears. Debug tracer and profiler share the JIT prologue gate."
@@ -1862,12 +2092,17 @@
       "requiredBackend": "Core traces, callsite/target filters and arguments, pagination/counters, DMA ring, profiler.",
       "plannedTask": 6,
       "implementationStatus": "MCP implemented (bounded task 6 slice; manual acceptance pending)",
-      "mcpSchemaParity": "Source names/defaults retained; bounded ranges/effective limits and semantic adaptations documented. Full generated-schema/result equality pending.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 6 profiler/tap slice",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: original MIPS call/exception/JIT accounting and bounded maps, exact VI tap target and every cleanup path, native reply decoding, real N64/MCP ownership, Electron tool calls and copied package 35-tool registry. Physical keyboard/gamepad acceptance pending."
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Owner-only while capture enabled; rebases open and parked calls and clears maps, frame count and drop counters. Symbolication/wait classification remain unavailable."
@@ -1889,9 +2124,14 @@
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
       "implementationStatus": "MCP implemented (bounded task 7 audio slice)",
-      "mcpSchemaParity": "Names/defaults retained; bounded runtime adaptation documented; full generated reference schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native PCM clamp/endian/cap/owner/pin fixture; atomic WAV unit tests; real GB muted host + MCP file/status/retry/reset/disconnect; Electron 39-tool integration passed"
+        "Native PCM clamp/endian/cap/owner/pin fixture; atomic WAV unit tests; real GB muted host + MCP file/status/retry/reset/disconnect; Electron 39-tool integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "Post-mix stereo PCM at fixed host rate 48000 Hz, clamped to 192000 sample frames (four seconds). Disabled until capture; freezes at cap instead of reference ring wrapping. Per-connection owner; reset/disconnect revoke. Status is read-only across owners. Partial/zero-frame saves supported. Main publishes 16-bit WAV atomically and replaces existing paths (reference audio_save behavior); failed saves retain capture. One immutable native save pin, 30-second lease and 25-second main job deadline; at most 768044 WAV bytes. GB nonzero audio with host output muted verified; audible N64/gamepad acceptance remains not run."
     },
@@ -1905,9 +2145,14 @@
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
       "implementationStatus": "MCP implemented (bounded task 7 audio slice)",
-      "mcpSchemaParity": "Names/defaults retained; bounded runtime adaptation documented; full generated reference schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native PCM clamp/endian/cap/owner/pin fixture; atomic WAV unit tests; real GB muted host + MCP file/status/retry/reset/disconnect; Electron 39-tool integration passed"
+        "Native PCM clamp/endian/cap/owner/pin fixture; atomic WAV unit tests; real GB muted host + MCP file/status/retry/reset/disconnect; Electron 39-tool integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "Post-mix stereo PCM at fixed host rate 48000 Hz, clamped to 192000 sample frames (four seconds). Disabled until capture; freezes at cap instead of reference ring wrapping. Per-connection owner; reset/disconnect revoke. Status is read-only across owners. Partial/zero-frame saves supported. Main publishes 16-bit WAV atomically and replaces existing paths (reference audio_save behavior); failed saves retain capture. One immutable native save pin, 30-second lease and 25-second main job deadline; at most 768044 WAV bytes. GB nonzero audio with host output muted verified; audible N64/gamepad acceptance remains not run."
     },
@@ -1928,9 +2173,14 @@
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
       "implementationStatus": "MCP implemented (bounded task 7 audio slice)",
-      "mcpSchemaParity": "Names/defaults retained; bounded runtime adaptation documented; full generated reference schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native PCM clamp/endian/cap/owner/pin fixture; atomic WAV unit tests; real GB muted host + MCP file/status/retry/reset/disconnect; Electron 39-tool integration passed"
+        "Native PCM clamp/endian/cap/owner/pin fixture; atomic WAV unit tests; real GB muted host + MCP file/status/retry/reset/disconnect; Electron 39-tool integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "Post-mix stereo PCM at fixed host rate 48000 Hz, clamped to 192000 sample frames (four seconds). Disabled until capture; freezes at cap instead of reference ring wrapping. Per-connection owner; reset/disconnect revoke. Status is read-only across owners. Partial/zero-frame saves supported. Main publishes 16-bit WAV atomically and replaces existing paths (reference audio_save behavior); failed saves retain capture. One immutable native save pin, 30-second lease and 25-second main job deadline; at most 768044 WAV bytes. GB nonzero audio with host output muted verified; audible N64/gamepad acceptance remains not run."
     },
@@ -1951,15 +2201,20 @@
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
       "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Native instruction/DMA/ownership fixtures and actual MCP runtime paths pass. Physical controller acceptance remains the separate task 6 gate."
     },
     {
       "name": "rsp_break",
@@ -1984,15 +2239,20 @@
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
       "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Native instruction/DMA/ownership fixtures and actual MCP runtime paths pass. Physical controller acceptance remains the separate task 6 gate."
     },
     {
       "name": "rsp_step",
@@ -2011,15 +2271,20 @@
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
       "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Native instruction/DMA/ownership fixtures and actual MCP runtime paths pass. Physical controller acceptance remains the separate task 6 gate."
     },
     {
       "name": "rsp_run",
@@ -2031,15 +2296,20 @@
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
       "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Native instruction/DMA/ownership fixtures and actual MCP runtime paths pass. Physical controller acceptance remains the separate task 6 gate."
     },
     {
       "name": "rsp_stop",
@@ -2051,15 +2321,20 @@
       "requiredBackend": "Existing RSP gate and DMA progress handling, mutually exclusive execution ownership.",
       "plannedTask": 9,
       "implementationStatus": "MCP implemented (bounded task 9 RSP debugger slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit bounded grants, table, lease and deadline. Cooperative native owned operation handles replace legacy pump; full generated schema equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/rsp-live.test.cjs, tests/electron-mcp.mjs",
           "result": "Passed: real interpreter/delay slots/before-breakpoint/hardware BREAK, maximum queued DMA, lease/owner cleanup, real stdio and Electron. Copied-package evidence in EXECUTION-LOG.md.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Full reference schema/result equality and physical/game acceptance remain pending."
+      "knownLimits": "Native safe-point cooperative interpreter gate; configured CPU/RSP JIT flags preserved. Exclusive owner, 30-second renewable lease; step/run return existing operation handles with immutable RSP counts and 5-second deadlines. Hardware HALT is preserved; CPU/devices use the ordinary scheduler. At most 16 aligned IMEM breakpoints, 1..1000000 instruction grants; dual issue disabled. Debug DMA synchronously drains at most two 256-row slots. Disable/disconnect/pause/resume/reset/human takeover/lease expiry/GDB attach release the gate. Native instruction/DMA/ownership fixtures and actual MCP runtime paths pass. Physical controller acceptance remains the separate task 6 gate."
     },
     {
       "name": "disassemble",
@@ -2089,14 +2364,19 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
-      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
-      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 9 machine foundations",
           "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
           "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "1..128 instructions versus reference 1024; aligned installed-RDRAM physical/KSEG ranges only. CPU view reads non-filling D-cache (not I-cache fetch state), KSEG1/physical view bypass. Explicit branch targets and current-register provenance for indirect jumps. No MMIO/TLB or cache-counter changes."
@@ -2142,15 +2422,20 @@
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 5,
       "implementationStatus": "MCP implemented (bounded task 9 inspection/artifact slice)",
-      "mcpSchemaParity": "Reference names/defaults retained. Explicit bounds and counter gaps documented; full generated schema/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/inspection.test.cjs, tests/inspection-live.test.cjs; Electron/package gates in execution log",
           "result": "Passed: native stack/prologue/epilogue/cache/snapshot/owner/expiry/probe fixture, actual MCP full installed-RDRAM file/hash and range/stack/probe, streamed export cancellation and atomic file preservation; full suite 59/59.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Same immutable snapshot/atomic streaming path as dump_rdram, reduced to 1..1048576 bytes per range. Physical/KSEG aliases; CPU view observes resident dirty D-cache, KSEG1 bypasses. Complete range validated before snapshot; no wrap/MMIO/TLB access or guest execution/pause change. One native 30-second pin and main 25-second job; no mixed-frame pagination. SHA-256 and snapshot epoch/frame/address/view reported. Full reference schema/result equality pending."
+      "knownLimits": "Same immutable snapshot/atomic streaming path as dump_rdram, reduced to 1..1048576 bytes per range. Physical/KSEG aliases; CPU view observes resident dirty D-cache, KSEG1 bypasses. Complete range validated before snapshot; no wrap/MMIO/TLB access or guest execution/pause change. One native 30-second pin and main 25-second job; no mixed-frame pagination. SHA-256 and snapshot epoch/frame/address/view reported. Generated signatures and typed native/result contracts are verified; metadata uses the new bounded service contract."
     },
     {
       "name": "video_start",
@@ -2193,9 +2478,14 @@
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
       "implementationStatus": "MCP implemented (bounded task 7 recording slice)",
-      "mcpSchemaParity": "Names/defaults retained; explicit ownership/generic-core adaptations documented; full reference generated schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native byte/frame/time/dimension/epoch/owner fixture; AVI ffprobe/ffmpeg decode; real MCP stalled-video capture/export/retry/reset/disconnect; Electron 42-tool integration passed"
+        "Native byte/frame/time/dimension/epoch/owner fixture; AVI ffprobe/ffmpeg decode; real MCP stalled-video capture/export/retry/reset/disconnect; Electron 42-tool integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "Native presented frames, raw bottom-up BGR24 AVI without audio. Source defaults and bounds retained: 1..36000 frames, 1..256 MiB capture bytes, 0.001..3600 seconds, 1..120 fps; fps sets playback only. Supports N64 and other native cores plus isolated synthetic fixture; frame_kind labels unavailable generic coordinates. Per-connection ownership; reset/disconnect discard frames. Dimension change/epoch/frame/byte/time limits stop capture. Failed atomic export retains frames; overwrite defaults false. One immutable 30-second export pin, 25-second main deadline; streamed AVI at most 270000000 bytes. Captures independently of video acknowledgements. Native tap shares screenshot limit of 4194304 source pixels."
     },
@@ -2209,9 +2499,14 @@
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
       "implementationStatus": "MCP implemented (bounded task 7 recording slice)",
-      "mcpSchemaParity": "Names/defaults retained; explicit ownership/generic-core adaptations documented; full reference generated schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native byte/frame/time/dimension/epoch/owner fixture; AVI ffprobe/ffmpeg decode; real MCP stalled-video capture/export/retry/reset/disconnect; Electron 42-tool integration passed"
+        "Native byte/frame/time/dimension/epoch/owner fixture; AVI ffprobe/ffmpeg decode; real MCP stalled-video capture/export/retry/reset/disconnect; Electron 42-tool integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "Native presented frames, raw bottom-up BGR24 AVI without audio. Source defaults and bounds retained: 1..36000 frames, 1..256 MiB capture bytes, 0.001..3600 seconds, 1..120 fps; fps sets playback only. Supports N64 and other native cores plus isolated synthetic fixture; frame_kind labels unavailable generic coordinates. Per-connection ownership; reset/disconnect discard frames. Dimension change/epoch/frame/byte/time limits stop capture. Failed atomic export retains frames; overwrite defaults false. One immutable 30-second export pin, 25-second main deadline; streamed AVI at most 270000000 bytes. Captures independently of video acknowledgements. Native tap shares screenshot limit of 4194304 source pixels."
     },
@@ -2238,9 +2533,14 @@
       "requiredBackend": "Native audio/frame taps, bounded buffers and artifact writers; AVI is currently uncompressed BGR24 without audio.",
       "plannedTask": 7,
       "implementationStatus": "MCP implemented (bounded task 7 recording slice)",
-      "mcpSchemaParity": "Names/defaults retained; explicit ownership/generic-core adaptations documented; full reference generated schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native byte/frame/time/dimension/epoch/owner fixture; AVI ffprobe/ffmpeg decode; real MCP stalled-video capture/export/retry/reset/disconnect; Electron 42-tool integration passed"
+        "Native byte/frame/time/dimension/epoch/owner fixture; AVI ffprobe/ffmpeg decode; real MCP stalled-video capture/export/retry/reset/disconnect; Electron 42-tool integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "Native presented frames, raw bottom-up BGR24 AVI without audio. Source defaults and bounds retained: 1..36000 frames, 1..256 MiB capture bytes, 0.001..3600 seconds, 1..120 fps; fps sets playback only. Supports N64 and other native cores plus isolated synthetic fixture; frame_kind labels unavailable generic coordinates. Per-connection ownership; reset/disconnect discard frames. Dimension change/epoch/frame/byte/time limits stop capture. Failed atomic export retains frames; overwrite defaults false. One immutable 30-second export pin, 25-second main deadline; streamed AVI at most 270000000 bytes. Captures independently of video acknowledgements. Native tap shares screenshot limit of 4194304 source pixels."
     },
@@ -2290,14 +2590,19 @@
       "family": "Composites/calls",
       "requiredBackend": "Validated mutation, owned sequential operations, experimental bounded calls and retained recovery context.",
       "plannedTask": 9,
-      "implementationStatus": "MCP implemented (bounded task 9 machine slice; full reference parity pending)",
-      "mcpSchemaParity": "Source top-level names/defaults retained. Bounded types/ranges and partial metadata differences documented. Full generated FastMCP equality not run.",
+      "implementationStatus": "MCP implemented (bounded task 9 machine slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 9 machine foundations",
           "check": "tests/cpu-debug-fixture.cpp, tests/machine-live.test.cjs, tests/electron-mcp.mjs; execution log records final package checks",
           "result": "Passed: 51 full-suite tests, final affected task 9 tests 2/2, real MIPS/cache/register fixtures and isolated N64/MCP ownership gates; 54-tool Electron and checkout-denied copied package.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Paused, operation-free N64 only; all keys/values prevalidated. GPR 1..31 aliases, full64 values, aligned canonical PC, HI/LO, LLbit0/1 and architectural Status32. PC resets pipeline/stops; all valid sets drop JIT translations. Duplicate aliases reject; changed fields use normalized ABI names. Existing upload/batch/GDB exclusion and immutable completed results retained."
@@ -2319,9 +2624,14 @@
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
       "implementationStatus": "MCP implemented (bounded task 8 state slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit bounds documented; full generated source schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
+        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "Header-only regular-file inspection, up to 64 MiB and 533-byte header. Returns compiled N64 version support separately from hardware/configuration compatibility. Does not pause, serialize CPU or restore the active emulator; capture coordinates remain unknown and metadata unchecked in this header-only API."
     },
@@ -2354,9 +2664,14 @@
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
       "implementationStatus": "MCP implemented (bounded task 8 state slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit bounds documented; full generated source schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
+        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "Nonrecursive regular directory entries only (does not follow directory-entry symlinks), max 4096 scanned entries. Null directory resolves configured slots 1\u20139 without creating directories. Up to 1000 requested entries but 48 KiB actual response pages; explicit next_offset. Hash/layout sidecar validation shares a 64 MiB content budget per request. Header support does not verify hardware compatibility."
     },
@@ -2401,9 +2716,14 @@
       "requiredBackend": "Native serializer/path services, compatibility validation, metadata/layout sidecars, offline nonmutation.",
       "plannedTask": 8,
       "implementationStatus": "MCP implemented (bounded task 8 state slice)",
-      "mcpSchemaParity": "Source names/defaults retained; explicit bounds documented; full generated source schema comparison not run",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
-        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed"
+        "Native prefix/reference-order/nonmutation fixture; real N64/MCP native state-save and offline peek; bounded header/inventory/sidecar/paging tests; Electron integration passed",
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
+        }
       ],
       "knownLimits": "Offline v153 RDRAM backing-store only, 1\u20131024 bytes through physical/KSEG aliases (sign-extended lossless addresses). Hash-validated size/layout sidecar required by default; explicit assume_current_configuration visits only native serializer prefix observations with a loaded N64. Validates offset/size/storage and rejects CPU-cache view, bad headers, stale sidecars and wrapped/outside ranges. No pause, state load/restore, CPU serialization or guest execution. Two global/one per-owner inspection jobs, 25-second deadline; reset/disconnect revoke."
     },
@@ -2435,14 +2755,19 @@
       "family": "Memory/disassembly",
       "requiredBackend": "Generic regions plus N64 address/cache services, bounds, batch prevalidation and optional owned verification.",
       "plannedTask": 8,
-      "implementationStatus": "MCP implemented (bounded N64 memory experiments; full reference parity pending)",
-      "mcpSchemaParity": "Reference names/defaults retained; multiwrite reduced to 32 writes/1024 bytes total for the native 4 KiB request protocol. Full FastMCP schema equality not run.",
+      "implementationStatus": "MCP implemented (bounded N64 memory experiments; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 8 bounded memory experiments",
           "check": "tests/cpu-debug-fixture.cpp, tests/n64-live.test.cjs, tests/state-loading-live.test.cjs; Electron MCP and copied package gates",
           "result": "Passed: 44 tests; full-list rejection before writes, overlapping readbacks, immutable native stop verification, actual stdio delayed timeout after restore, 48-tool Electron registry and copied app checkout-denied smoke.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "1..1024 bytes total; many accepts 1..32 ordered writes, all prevalidated. Optional 0..100000 VI verification freezes readbacks at the actual owned stop. CPU/physical cache hazards retained; no rollback. Renderer backing must be available; restore prepares it without CPU execution."
@@ -2475,14 +2800,19 @@
       "family": "Composites/calls",
       "requiredBackend": "Validated mutation, owned sequential operations, experimental bounded calls and retained recovery context.",
       "plannedTask": 8,
-      "implementationStatus": "MCP implemented (bounded native-reserved batch slice; full reference parity pending)",
-      "mcpSchemaParity": "Source name/step kinds/stop_on_error default retained. Reduced to 32 steps, 16 KiB memory, 8 artifacts, 20-second maximum/default, 48 KiB result to fit existing transport. No async parent execution handle.",
+      "implementationStatus": "MCP implemented (bounded native-reserved batch slice; new bounded service result contract)",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "scope": "task 8 native-reserved experiments",
           "check": "tests/batch-live.test.cjs, tests/batches.test.cjs, tests/execution-fixture.cpp, tests/electron-mcp.mjs, tests/package-live.cjs",
           "result": "Passed: 49-suite tests; final affected batch tests 5/5; actual baseline/load/write/two-VI/crop/read red-green sweep, ownership/expiry/cancel/partial effects; 49-tool Electron and checkout-denied copied package. Physical input acceptance remains separate.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
       "knownLimits": "Main sequences existing services under a native 20-second reservation; own state loads update epochs. Competing writes excluded, UI/parent pause, active child cancel, human takeover and disconnect revoke. Actual child run progress and committed files retained; no rollback. Syntax/aggregate prevalidation; ranges/files checked per step. Result limits stop further effects. Physical input acceptance remains separate."
@@ -2528,15 +2858,20 @@
       "requiredBackend": "Validated mutation, owned sequential operations, experimental bounded calls and retained recovery context.",
       "plannedTask": 9,
       "implementationStatus": "MCP implemented (bounded task 9 experimental calls)",
-      "mcpSchemaParity": "Reference parameter names/defaults retained; instruction bound reduced from 10M to 1M and wall limit from 3600 to 600 seconds. Existing native operation handles/polling replace legacy session pump. Full generated schema/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/calls.test.cjs, tests/call-live.test.cjs; Electron/package in execution log",
           "result": "Passed: valid/exact-limit return, all GPR/FPR restoration across FR toggle, memory/time retained, wrong-SP/direct sentinel jumps, breakpoint/return-delay watchpoint, syscall/interrupt/NMI, all limit/cleanup paths and reconnect recovery; full suite 61/61.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Experimental native private before-fetch return gate, no instruction patch. Paused operation-free aligned RDRAM stack, no delay/EXL/ERL context; physical/KSEG entry, at most four lossless raw integer args, t9=entry. Bounds reduced to 1M instructions/10000 VI/600s; defaults 100000/60/5s retained. Valid JR or JALR rd=0 return must complete delay slot at original SP; return-delay watchpoints retain interruption. Success restores GPR/HI/LO/PC, Status then raw FPR/FCR31 and clears LLbit; memory/devices/time/other COP0 remain. Exceptions/interrupt/NMI, limits, cancel/pause/disconnect retain actual stop and one caller snapshot for explicit recovery. Native start is an owned operation; MCP polls it. Full schema/result equality and game acceptance pending."
+      "knownLimits": "Experimental native private before-fetch return gate, no instruction patch. Paused operation-free aligned RDRAM stack, no delay/EXL/ERL context; physical/KSEG entry, at most four lossless raw integer args, t9=entry. Bounds reduced to 1M instructions/10000 VI/600s; defaults 100000/60/5s retained. Valid JR or JALR rd=0 return must complete delay slot at original SP; return-delay watchpoints retain interruption. Success restores GPR/HI/LO/PC, Status then raw FPR/FCR31 and clears LLbit; memory/devices/time/other COP0 remain. Exceptions/interrupt/NMI, limits, cancel/pause/disconnect retain actual stop and one caller snapshot for explicit recovery. Native start is an owned operation; MCP polls it. Generated signatures, real-game bounded calls/recovery and native exception/limit/return-gate cases pass."
     },
     {
       "name": "call_recover",
@@ -2555,15 +2890,20 @@
       "requiredBackend": "Validated mutation, owned sequential operations, experimental bounded calls and retained recovery context.",
       "plannedTask": 9,
       "implementationStatus": "MCP implemented (bounded task 9 experimental calls)",
-      "mcpSchemaParity": "Reference parameter names/defaults retained; instruction bound reduced from 10M to 1M and wall limit from 3600 to 600 seconds. Existing native operation handles/polling replace legacy session pump. Full generated schema/result equality not run.",
+      "mcpSchemaParity": "68/68 names/parameter signatures/defaults/nullability verified by real FastMCP and actual stdio tools/list. Intentional bounds/validation differences are recorded in tests/reference/schema-parity-report.json.",
       "testEvidence": [
         {
           "check": "tests/cpu-debug-fixture.cpp, tests/calls.test.cjs, tests/call-live.test.cjs; Electron/package in execution log",
           "result": "Passed: valid/exact-limit return, all GPR/FPR restoration across FR toggle, memory/time retained, wrong-SP/direct sentinel jumps, breakpoint/return-delay watchpoint, syscall/interrupt/NMI, all limit/cleanup paths and reconnect recovery; full suite 61/61.",
           "date": "2026-10-20"
+        },
+        {
+          "scope": "task 9 actual new-host stdio runtime coverage",
+          "check": "tests/reference/task-9-tool-coverage.json and EXECUTION-LOG.md task 9 final validation",
+          "result": "successful tools/call path recorded; native semantics validated separately"
         }
       ],
-      "knownLimits": "Paused operation-free same-epoch restore/discard of one retained caller context. Connected owner/UI only; disconnect relinquishes the recovery claim to a new authenticated connection. Restore reinstates GPR/HI/LO/PC, Status then raw FPR/FCR31, clears LLbit and stale stop/JIT state; retains memory/device/time/other COP0 including Cause/EPC. Discard leaves actual callee stop unchanged. New calls reject recovery_pending; reset/state load invalidate context. Completed operation payloads remain immutable after recovery. Full generated schema/result equality and game/fault acceptance pending."
+      "knownLimits": "Paused operation-free same-epoch restore/discard of one retained caller context. Connected owner/UI only; disconnect relinquishes the recovery claim to a new authenticated connection. Restore reinstates GPR/HI/LO/PC, Status then raw FPR/FCR31, clears LLbit and stale stop/JIT state; retains memory/device/time/other COP0 including Cause/EPC. Discard leaves actual callee stop unchanged. New calls reject recovery_pending; reset/state load invalidate context. Completed operation payloads remain immutable after recovery. Generated signatures, real-game call/recovery and native exception/interrupt/NMI/cancel/deadline/reconnect cases pass."
     }
   ]
 }

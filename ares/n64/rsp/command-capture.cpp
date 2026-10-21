@@ -1,12 +1,21 @@
 // F3DEX2 dispatch signature/layout from ares-64 desktop-ui/ui/rsp-overlays/f3dex2.json.
-// RSPQ ELF/config and semantic argument decoding remain separate port work.
+// Bounded RSPQ/config hooks and display-list dispatch; metadata is frozen at dispatch.
 auto CommandCapture::detectRsp() -> void {
   if(!rspEnabled) return;
   segmentOpen = false; sigPc = loopPc = dispatchPc = -1;
-  for(uint32_t pc = 12; pc + 24 <= 4096; pc += 4) {
-    if(rsp.imem.read<Word>(pc) == 0x00196603 && rsp.imem.read<Word>(pc + 4) == 0x000c5840) {
-      sigPc = pc; loopPc = pc - 12; dispatchPc = pc + 20; break;
-    }
+  queueMode = false;
+  if(queue.loaded) {
+    bool match = true;
+    for(unsigned h = 0; h < 5; ++h) for(unsigned w = 0; w < 2; ++w)
+      if(rsp.imem.read<Word>(queue.hooks[h] + w * 4) != queue.signature[h][w]) match = false;
+    if(match) { queueMode = true; sigPc = 0; return; }
+  }
+  for(int32_t pc = 0; pc + display.count * 4 <= 4096; pc += 4) {
+    if(pc + display.loopOffset < 0 || pc + display.loopOffset > 4092 ||
+       pc + display.dispatchOffset < 0 || pc + display.dispatchOffset > 4092) continue;
+    bool match = true;
+    for(unsigned w = 0; w < display.count; ++w) if(rsp.imem.read<Word>(pc + w * 4) != display.signature[w]) match = false;
+    if(match) { sigPc = pc; loopPc = pc + display.loopOffset; dispatchPc = pc + display.dispatchOffset; break; }
   }
 }
 auto CommandCapture::rspFlush() -> void {
@@ -17,13 +26,41 @@ auto CommandCapture::rspFlush() -> void {
   segmentOpen = false;
 }
 auto CommandCapture::rspInstruction(uint32_t pc) -> void {
-  if(!rspEnabled || sigPc < 0 || (pc != loopPc && pc != dispatchPc)) return;
-  // Different (e.g. audio) microcode may execute the same address: revalidate.
-  if(rsp.imem.read<Word>(sigPc) != 0x00196603 || rsp.imem.read<Word>(sigPc + 4) != 0x000c5840) { segmentOpen = false; return; }
+  if(!rspEnabled || sigPc < 0) return;
+  uint8_t type = 0;
+  if(queueMode) {
+    for(unsigned h = 0; h < 5; ++h) if(pc == queue.hooks[h]) type = h == 0 ? 1 : h == 1 ? 2 : h == 2 ? 3 : 4;
+    if(!type) return;
+    // A task may replace microcode without another HALT-clear. Never reuse its labels.
+    for(unsigned h = 0; h < 5; ++h) for(unsigned w = 0; w < 2; ++w)
+      if(rsp.imem.read<Word>(queue.hooks[h] + w * 4) != queue.signature[h][w]) { segmentOpen = false; sigPc = -1; return; }
+    if(segmentOpen && segment.segmentType == type) return;
+  } else {
+    if(pc != loopPc && pc != dispatchPc) return;
+    for(unsigned w = 0; w < display.count; ++w)
+      if(rsp.imem.read<Word>(sigPc + w * 4) != display.signature[w]) { segmentOpen = false; sigPc = -1; return; }
+    type = pc == loopPc ? 2 : 1;
+  }
   rspFlush();
   segment = {}; segment.seq = sequence++; segment.frame = presentedFrame;
-  segment.overhead = pc == loopPc;
-  if(!segment.overhead) { segment.word0 = rsp.ipu.r[25].u32; segment.word1 = rsp.ipu.r[24].u32; segment.opcode = segment.word0 >> 24; }
+  segment.segmentType = type; segment.overhead = type != 1;
+  if(!segment.overhead && queueMode) {
+    uint32_t gp = rsp.ipu.r[28].u32;
+    if(gp >= queue.cmdsSize || gp & 3 || queue.cmdsOffset + gp > 4092) return;
+    uint32_t requested = ((rsp.ipu.r[14].u32 >> 8) & 0xfc) / 4;
+    if(!requested) requested = 1;
+    uint32_t available = std::min(queue.cmdsSize - gp, 4096 - queue.cmdsOffset - gp) / 4;
+    segment.wordCount = std::min<uint32_t>(16, std::min(requested, available));
+    segment.wordsTruncated = segment.wordCount < requested;
+    for(unsigned i = 0; i < segment.wordCount; ++i) segment.words[i] = rsp.dmem.read<Word>(queue.cmdsOffset + gp + i * 4);
+    segment.word0 = segment.words[0]; segment.word1 = segment.wordCount > 1 ? segment.words[1] : 0;
+    segment.overlayId = segment.word0 >> 28; segment.opcode = (segment.word0 >> 24) & 15;
+  } else if(!segment.overhead) {
+    segment.word0 = rsp.ipu.r[display.word0Reg].u32; segment.word1 = rsp.ipu.r[display.word1Reg].u32;
+    segment.opcode = segment.word0 >> display.opcodeShift;
+    segment.wordCount = 2; segment.words[0] = segment.word0; segment.words[1] = segment.word1;
+  }
+  if(annotate) annotate(segment);
   segmentStart = rsp.pipeline.clocksTotal; segmentOpen = true;
 }
 auto CommandCapture::rspDma(uint32_t bytes, bool toRdram) -> void {

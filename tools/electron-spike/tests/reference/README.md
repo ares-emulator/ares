@@ -27,11 +27,11 @@ nested structures and tuple order. The separate signature projection compares
 parameter names, required fields, primitive types, nullability and defaults; it
 intentionally excludes bounds and nested validation.
 
-Current evidence: 68 names in both registries; no missing/extra tools. 67 signatures
-match. `batch.max_seconds` defaults to 20 in Electron versus 60 in the reference;
-Electron's bounded batch implementation currently caps at 20 seconds. All 68 full
-schemas differ, including Electron's strict unknown-field rejection. Further
-validation differences are explicit in the report, including resource limits and
-more specific object/enum schemas. These remain visible task 9 compatibility
-limitations, not an assertion of full schema parity. The report says nothing
-about result shapes or game/manual acceptance.
+Current evidence: 68 names in both registries; no missing/extra tools, and all
+**68 parameter signatures match**, including `batch.max_seconds=60`. Batch accepts
+0.001–600 seconds; the local transport allows its bounded deadline plus cleanup
+margin. Full schemas retain intentional adapter validation differences: strict
+unknown-field rejection, bounded resources, specific enums and structured inputs.
+These differences are visible in the report and covered by contract rejection
+checks; signature parity does not establish behavior or result parity by itself.
+The task 9 runtime/acceptance evidence is recorded in `EXECUTION-LOG.md`.

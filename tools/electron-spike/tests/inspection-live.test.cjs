@@ -50,7 +50,7 @@ test('real N64 inspection: guest-order full/range dumps, stack heuristics and re
     assert.equal(full.sha256, require('node:crypto').createHash('sha256').update(bytes).digest('hex'));
     assert.deepEqual(await peer.tool('cpu_registers', { cop0: true }), before, 'dumps never advance CPU');
     assert.equal((await peer.tool('emu_status')).paused, true);
-    const probe = await peer.tool('render_probe'); assert.equal(probe.originChanged, null); assert.equal(probe.vps, null);
+    const probe = await peer.tool('render_probe'); assert.equal(probe.originChanged, null); assert.ok(Number.isFinite(probe.vps)); assert.ok(Number.isSafeInteger(probe.presented_frame));
     const again = await peer.tool('render_probe'); assert.equal(again.originChanged, false); assert.equal(again.dpcAdvanced, false); assert.equal(again.frameAdvanced, false);
     const cpuProgram = Buffer.alloc(16); [0x27bdffe0, 0xffbf0018, 0, 0].forEach((w, i) => cpuProgram.writeUInt32BE(w, i * 4));
     await peer.tool('write_memory_va', { addr: '0x30000', hex_bytes: cpuProgram.toString('hex'), view: 'rdram' });

@@ -70,7 +70,7 @@ This is incremental compatibility, not full reference-result parity:
   boundary. Relative runs cap at one million frames; deadlines are 0.001–600
   seconds. Zero frames advances nothing; past absolute targets reject. These
   calls poll internally while permitting concurrent status/cancel requests.
-  Requested register/capture options return `unavailable` until their backends land.
+  N64 FPR/COP0/verbose options format immutable completion registers; screenshot_after uses the stopped operation identity. Non-N64 register options return unavailable.
 - `operation_status(operation_id)` returns live progress or an immutable final
   result (last 16 retained). `cancel_operation(operation_id=null)` cancels this
   connection’s operation; UI pause can interrupt any owner. Recent handles keep
@@ -154,9 +154,13 @@ configured recompiler. Main observes stopped state independently of video.
 
 Addresses can be decimal/hex strings through 64 bits; unsafe numeric JS values
 reject. Predicates support unsigned masked PC/HI/LO/GPR/value comparisons and
-`all` groups of up to eight. CPU snapshots return named GPRs; optional FPR values
-are raw bits, and COP0 Random is null. Hit code windows, heuristic stacks and
-classified FPR views remain parity work.
+`all` groups of up to eight. Compact CPU snapshots return `gpr_named`; verbose
+adds the `gpr` array and all optional groups. FPR rows retain raw bits plus FR=0/1
+architectural single/double views and IEEE classes; nonfinite values are JSON null
+with an explicit class. COP0 uses named registers and decoded Status/Cause;
+Random is null. `stack` and `disassemble` provide bounded separate diagnostics
+rather than embedding mutable code/unwind reads into an immutable old hit.
+Completed runs retain register snapshots for later `operation_status` formatting.
 
 VA memory transfers are bounded to 1024 bytes within installed RDRAM. Physical,
 KSEG0/KSEG1 and sign-extended spellings work; TLB/MMIO/wrapped ranges reject.
@@ -388,7 +392,7 @@ The reference executable's hash and measurements are written to
 
 ### Bounded batch experiments
 
-`batch(steps, max_seconds=20, stop_on_error=true)` accepts ordered strict steps:
+`batch(steps, max_seconds=60, stop_on_error=true)` accepts ordered strict steps:
 
 ```json
 {
@@ -431,7 +435,7 @@ final report; mutations are never replayed. The reservation ID is not a retained
 parent execution-operation handle; child runs retain the normal native results.
 
 Bounds are 1–32 steps, 1M total requested VI frames, 16 KiB read/write bytes,
-8 screenshots, 20 seconds and 48 KiB final result (48,000-byte request parameters).
+8 screenshots, 600 seconds and 48 KiB final result (48,000-byte request parameters).
 The smaller deadline/default keeps the call within the 30-second local transport
 deadline; reference defaults/limits are 60 seconds, 256 steps, 16 MiB and 64
 artifacts. Syntax/aggregate bounds validate before acquiring the reservation;
@@ -477,18 +481,14 @@ promote DMA or change DPC counters. RSP includes 32 scalar registers, 32x8 raw
 state/origin and the instruction at PC with text. DMA clock is a signed decimal
 string to preserve 64-bit precision (reference uses a JSON number). DMA origin PC
 also preserves all 64 bits rather than truncating to 32. The debug
-object currently says `available:false`; it does not invent stopped/stepping
-state before the RSP debugger is ported. RDP reports DPC registers/flags/source;
+object reports the implemented cooperative debugger’s ownership, grants and stopped state. RDP reports DPC registers/flags/source;
 peripherals expose the reference VI/AI/PI/SI/RI fields. These observations remain
 available during other owned operations/uploads. They are not command captures.
 
-All five tools are N64-only; other cores return unavailable. Task 9 still needs
-cooperative RSP debugger progress, command/task/submission hooks, exact RDP
-interval capture and experimental bounded calls/recovery. The 68-tool milestone
-and physical/game acceptance gates are not complete.
+All five tools are N64-only; other cores return unavailable. Cooperative RSP debugging, command/task/submission capture, exact RDP intervals and experimental bounded calls/recovery are implemented and validated below. Task 6 physical-device acceptance remains a separate manual gate.
 
 
-### RSP debugger (task 9 in progress)
+### RSP debugger
 
 `rsp_debug(enable=true)` acquires an exclusive native RSP gate and pauses. It never
 clears hardware HALT. `rsp_break` manages 16 aligned IMEM PCs (0..0xFFC).
@@ -606,10 +606,25 @@ last nonzero VI-origin-swap buffer. A validated signature locates the live loop
 and dispatch PCs. Words are copied from the dispatcher registers before handler
 reuse, with cycle deltas, shared ordering and open-segment DMA byte counts. Both
 interpreter and traced JIT use the actual hooks; unknown microcode cannot emit
-fabricated command rows. `configured` reports detection; `rspq_supported:false`
-explicitly reports the remaining RSPQ ELF/config/custom descriptor port. Command
-names come from the reference F3DEX2 descriptor; args are raw words, not semantic
-argument decoding. Those gaps remain preservation work, not accepted removals.
+fabricated command rows. `configured` reports currently detected microcode; `rspq_supported:true`
+reports the available RSPQ implementation. Unknown or replaced microcode produces
+no fabricated command rows. A companion ELF is found at the ROM's `.elf`,
+`<rom-base>/build/<name>.elf` or `<rom-directory>/build/<name>.elf`. RSPQ requires
+file-backed `rsp_queue_text_start`: every configured hook's instruction signature
+must match live IMEM. `rspq-libdragon.json` next to that ELF overrides the embedded
+bounded libdragon descriptors. `f3dex2.json` next to the ELF (or ROM) can override
+the display-list signature, offsets, register layout, names and argument fields.
+
+RSPQ copies up to 16 command words from live DMEM, bounded by the dispatcher size
+and command-buffer end. Truncated words are explicit. Loop/load/fetch overhead is
+coalesced by segment type. Runtime overlays resolve through ELF ucode data ranges
+and the live table/idmap, including multi-ID command offsets; unregistered IDs
+cannot retain stale labels. Names and arguments are frozen into each captured row.
+Semantic fields support bit ranges, signed values, integer/floating transforms,
+enums, decimal/hex formats, DWARF shared-DMEM labels and nested RDP descriptions.
+Missing words remain visible as `<missing>`. Descriptors, ELF/DWARF work, strings,
+rows and native reply bytes are bounded. No blocking debugger pump is imported.
+
 
 `rdp_capture(next_frame=false)` reads legacy word0 snapshots from the software or
 Vulkan command decoder, including complete buffered commands. It does not run
@@ -621,3 +636,19 @@ Each channel stores at most 4096 rows per frame; native pages cap at 64 and MCP
 inline output at 1024. Drops/truncation are explicit. A newer committed generation
 returns stale_capture during pagination, never mixed-frame output. Long RSP
 segments are emitted on the next dispatch/halt, as in the reference.
+
+### Request cancellation and compatibility evidence
+
+MCP request cancellation aborts only the native operation started by that tool
+call, retaining its exact ID/session/epoch. Cancelling an operation-status read
+cannot cancel the polled operation. Batches use a private per-call cancellation
+token so a late cancellation cannot pause another job. Cancellation/timeout and
+disconnect retain completed effects; they do not roll back guest memory/files.
+
+All 68 preserved names have successful actual stdio runtime evidence in
+`tests/reference/task-9-tool-coverage.json`. The generated FastMCP comparison
+verifies all 68 parameter signatures/defaults/nullability. Intentional adapter
+changes include scoped identity/region/operation handles, explicit native error
+codes, bounded pages/resource limits and separate diagnostic tools; strict input
+validation and result contracts are tested. This is the new internal protocol v1,
+not the fork’s TCP telemetry protocol. The Python bridge is a reference only.

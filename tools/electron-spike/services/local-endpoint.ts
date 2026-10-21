@@ -215,7 +215,8 @@ export class LocalServiceClient implements SessionClient {
     if (!socket || !connection || socket.destroyed) throw new ServiceError('app_disconnected');
     const id = `local${++this.nextId}`;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => this.drop(new ServiceError('request_timeout')), this.timeoutMs);
+      const timeout = method === 'experiment.batch' ? Math.max(this.timeoutMs, (params as {timeoutMs:number}).timeoutMs + 5000) : this.timeoutMs;
+      const timer = setTimeout(() => this.drop(new ServiceError('request_timeout')), timeout);
       this.pending.set(id, { method, resolve, reject, timer });
       send(socket, { protocol: 1, type: 'request', connection, id, method, identity, params });
     });

@@ -49,7 +49,7 @@ test('real N64 calls: private returns, bounded interruptions, explicit recovery 
     assert.equal(success.error, undefined, JSON.stringify(success)); assert.equal(success.stop_reason, 'function_return');
     assert.equal(success.executed, 4); assert.equal(success.v0, '0x1234567890000007'); assert.equal(success.v1, '0x55'); assert.equal(success.caller_context_restored, true);
     const after = await peer.tool('cpu_registers', { fpr: true, cop0: true });
-    for (const key of ['pc', 'next_pc', 'delay_slot', 'gpr', 'hi', 'lo', 'fpr', 'fcr31']) assert.deepEqual(after[key], baseline[key], key);
+    for (const key of ['pc', 'next_pc', 'delay_slot', 'gpr_named', 'hi', 'lo', 'fpr', 'fcr31']) assert.deepEqual(after[key], baseline[key], key);
     assert.equal((await peer.tool('read_memory_va', { addr: '0x35000', length: 8, view: 'cpu' })).hex, '1234567890000007', 'function memory effects retained');
     assert.equal((await peer.tool('call_recover')).error, 'no_recovery');
     assert.equal((await peer.tool('call_function', { addr: '0x33001' })).error, 'unaligned_address');
@@ -64,9 +64,9 @@ test('real N64 calls: private returns, bounded interruptions, explicit recovery 
     await restore([0x0000000c]);
     const trapped = await peer.tool('call_function', { addr: '0x33000' });
     assert.equal(trapped.stop_reason, 'exception', JSON.stringify(trapped)); assert.equal(trapped.exception_code, 8); assert.equal(trapped.recovery_available, true);
-    const exceptionCause = (await peer.tool('cpu_registers', { cop0: true })).cop0[13];
+    const exceptionCause = (await peer.tool('cpu_registers', { cop0: true })).cop0.Cause;
     await peer.tool('call_recover');
-    assert.equal((await peer.tool('cpu_registers', { cop0: true })).cop0[13], exceptionCause, 'Cause is retained after recovery');
+    assert.equal((await peer.tool('cpu_registers', { cop0: true })).cop0.Cause, exceptionCause, 'Cause is retained after recovery');
     await restore([0x27bdfff8, 0x03e00008, 0]);
     const invalid = await peer.tool('call_function', { addr: '0x33000', max_instructions: 100 });
     assert.equal(invalid.stop_reason, 'invalid_return', JSON.stringify(invalid));

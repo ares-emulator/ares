@@ -1,3 +1,4 @@
+import { installCancellation } from './cancellation.js';
 import { registerViewerTools } from './viewer-tools.js';
 import { registerCallTools } from './call-tools.js';
 import { registerInspectionTools } from './inspection-tools.js';
@@ -14,7 +15,7 @@ import { registerProfilerTools } from './profiler-tools.js';
 import { registerDmaTools } from './dma-tools.js';
 import { registerTraceTools } from './trace-tools.js';
 import { registerInputTools } from './input-tools.js';
-import { registerN64Tools } from './n64-tools.js';
+import { registerN64Tools, formatOperation, formatStop } from './n64-tools.js';
 import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
@@ -52,9 +53,15 @@ const output = (value: unknown) => ({ content: [{ type: 'text' as const, text: J
 const failure = (error: unknown) => ({ ...output({ error: error instanceof ServiceError ? error.code : 'request_failed', message: error instanceof Error ? error.message : String(error) }), isError: true });
 function createServer(): McpServer {
   const server = new McpServer({ name: 'ares', version: '0.2.0' });
+  installCancellation(server,local);
   const status = async () => { const reply = await local.request('session.status'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch }; };
   const call = (fn: () => Promise<unknown>) => fn().then(output, failure);
-  server.registerTool('emu_status', { description: 'Emulator status, native VI coordinates and current execution operation.', inputSchema: z.object({ verbose: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true } }, async ({ verbose }) => call(async () => ({ ...await status(), ...(verbose ? { limits: ['Advanced captures and symbolication remain pending; VI runs support N64 and the synthetic fixture only.'] } : {}) })));
+  server.registerTool('emu_status', { description: 'Native safe-point status: system, VI/epoch/PC, execution/debug ownership, input, save metadata and presentation counters. Verbose retains renderer/configuration details.', inputSchema: z.object({ verbose: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true } }, async ({verbose}) => call(async()=>{
+    const result=await status() as Awaited<ReturnType<typeof status>> & {last_stop?:import('../services/n64-contracts.js').Stop;debug_mode?:Record<string,unknown>};
+    if(result.last_stop) result.last_stop=formatStop(result.last_stop) as any;
+    if(result.debug_mode && !verbose) {const {renderer,expansion_pak,rdram_size,rsp_debugger_active,run_ahead_during_operations,rewind_during_operations,...mode}=result.debug_mode;result.debug_mode=mode;}
+    return result;
+  }));
   server.registerTool('pause', { description: 'Pause at a native slice boundary and finish an owned operation with reason paused.', inputSchema: z.object({}).strict() }, async () => call(async () => {
     if (!local.identity) await status(); const reply = await local.request('session.pause'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch };
   }));
@@ -95,18 +102,19 @@ function createServer(): McpServer {
     }
     return result;
   }
-  server.registerTool('run_frames', { description: 'Run exactly n active VI boundaries and stop; zero advances nothing. A partial starting frame counts toward the next boundary. N64 only (plus synthetic fixture).', inputSchema: z.object({ n: z.number().int().min(0).max(1000000), max_seconds: maxSeconds, screenshot_after: z.record(z.string(), z.unknown()).nullable().default(null), ...flags }).strict() }, async ({ n, max_seconds, screenshot_after, fpr, cop0 }) => call(async () => {
-    if (fpr || cop0) throw new ServiceError('unavailable');
+  server.registerTool('run_frames', { description: 'Run exactly n active VI boundaries and stop; zero advances nothing. A partial starting frame counts toward the next boundary. N64 only (plus synthetic fixture).', inputSchema: z.object({ n: z.number().int().min(0).max(1000000), max_seconds: maxSeconds, screenshot_after: z.record(z.string(), z.unknown()).nullable().default(null), ...flags }).strict() }, async ({ n, max_seconds, screenshot_after, fpr, cop0, verbose }) => call(async () => {
+    if ((fpr || cop0) && (await status()).system !== 'Nintendo 64') throw new ServiceError('unavailable');
     const capture = screenshot_after === null ? null : screenshotSchema.parse(screenshot_after);
     if (capture?.inline) throw new ServiceError('invalid_request');
-    return runFramesWithScreenshot(local, () => operation('execution.runFrames', n, max_seconds), capture, id => operationIdentities.get(id)!);
+    const result = await runFramesWithScreenshot(local, () => operation('execution.runFrames', n, max_seconds), capture, id => operationIdentities.get(id)!);
+    return formatOperation(result,fpr,cop0,verbose);
   }));
   server.registerTool('run_until_frame', { description: 'Run to absolute VI frame k in this epoch; past targets reject.', inputSchema: z.object({ k: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER), max_seconds: maxSeconds }).strict() }, async ({ k, max_seconds }) => call(() => operation('execution.runUntilFrame', k, max_seconds)));
   server.registerTool('step', { description: 'Alias for run_frames(1), advancing to the next VI boundary.', inputSchema: z.object({}).strict() }, async () => call(() => operation('execution.runFrames', 1, 60)));
-  server.registerTool('operation_status', { description: 'Poll running state or the immutable final result. The last 16 completed operations are retained.', inputSchema: z.object({ operation_id: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER), ...flags }).strict(), annotations: { readOnlyHint: true } }, async ({ operation_id, fpr, cop0 }) => call(async () => {
-    if (fpr || cop0) throw new ServiceError('unavailable');
+  server.registerTool('operation_status', { description: 'Poll running state or the immutable final result. The last 16 completed operations are retained.', inputSchema: z.object({ operation_id: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER), ...flags }).strict(), annotations: { readOnlyHint: true } }, async ({ operation_id, fpr, cop0, verbose }) => call(async () => {
+    if ((fpr || cop0) && (await status()).system !== 'Nintendo 64') throw new ServiceError('unavailable');
     if (!local.identity) await status();
-    return unwrap(await local.request('execution.status', operationIdentities.get(operation_id), { operationId: operation_id }));
+    return formatOperation(unwrap(await local.request('execution.status', operationIdentities.get(operation_id), { operationId: operation_id })),fpr,cop0,verbose);
   }));
   server.registerTool('cancel_operation', { description: 'Cancel this connection’s current operation, or a specific ID. UI pause can interrupt any owner.', inputSchema: z.object({ operation_id: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).nullable().default(null) }).strict() }, async ({ operation_id }) => call(async () => {
     if (operation_id === null || !local.identity) await status();

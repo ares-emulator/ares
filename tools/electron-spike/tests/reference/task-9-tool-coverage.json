@@ -1,0 +1,511 @@
+{
+  "reference_commit": "1c9b9637476a83f7b80d3db1115a0f71529820d9",
+  "registered": 68,
+  "successful_stdio_tools": 68,
+  "missing": [],
+  "tools": [
+    {
+      "name": "audio_capture",
+      "tests": [
+        "audio-live.test.cjs",
+        "electron-mcp.mjs"
+      ]
+    },
+    {
+      "name": "audio_save",
+      "tests": [
+        "audio-live.test.cjs",
+        "electron-mcp.mjs"
+      ]
+    },
+    {
+      "name": "audio_status",
+      "tests": [
+        "audio-live.test.cjs",
+        "electron-mcp.mjs"
+      ]
+    },
+    {
+      "name": "batch",
+      "tests": [
+        "batch-live.test.cjs",
+        "electron-mcp.mjs"
+      ]
+    },
+    {
+      "name": "break_add",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "break_list",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "break_remove",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "call_function",
+      "tests": [
+        "call-live.test.cjs"
+      ]
+    },
+    {
+      "name": "call_recover",
+      "tests": [
+        "call-live.test.cjs"
+      ]
+    },
+    {
+      "name": "cancel_operation",
+      "tests": [
+        "batch-live.test.cjs",
+        "electron-mcp.mjs",
+        "execution-live.test.cjs"
+      ]
+    },
+    {
+      "name": "capture_control",
+      "tests": [
+        "electron-mcp.mjs",
+        "viewer-live.test.cjs"
+      ]
+    },
+    {
+      "name": "controller_host_mode",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "controller_release",
+      "tests": [
+        "n64-live.test.cjs",
+        "state-loading-live.test.cjs"
+      ]
+    },
+    {
+      "name": "controller_set",
+      "tests": [
+        "n64-live.test.cjs",
+        "state-loading-live.test.cjs"
+      ]
+    },
+    {
+      "name": "controller_state",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "controller_tap",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "cpu_profiler_top",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "cpu_registers",
+      "tests": [
+        "call-live.test.cjs",
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs",
+        "machine-live.test.cjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "cpu_set_registers",
+      "tests": [
+        "call-live.test.cjs",
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs",
+        "machine-live.test.cjs",
+        "rdp-capture-live.test.cjs",
+        "rsp-live.test.cjs",
+        "viewer-live.test.cjs"
+      ]
+    },
+    {
+      "name": "disassemble",
+      "tests": [
+        "electron-mcp.mjs",
+        "machine-live.test.cjs"
+      ]
+    },
+    {
+      "name": "dump_range",
+      "tests": [
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs"
+      ]
+    },
+    {
+      "name": "dump_rdram",
+      "tests": [
+        "inspection-live.test.cjs"
+      ]
+    },
+    {
+      "name": "emu_status",
+      "tests": [
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs",
+        "machine-live.test.cjs"
+      ]
+    },
+    {
+      "name": "last_stop",
+      "tests": [
+        "machine-live.test.cjs"
+      ]
+    },
+    {
+      "name": "memory_regions",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "operation_status",
+      "tests": [
+        "call-live.test.cjs",
+        "electron-mcp.mjs",
+        "execution-live.test.cjs",
+        "machine-live.test.cjs",
+        "rsp-live.test.cjs",
+        "state-loading-live.test.cjs"
+      ]
+    },
+    {
+      "name": "overlay_log",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "pause",
+      "tests": [
+        "audio-live.test.cjs",
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs",
+        "machine-live.test.cjs",
+        "rsp-live.test.cjs",
+        "state-loading-live.test.cjs"
+      ]
+    },
+    {
+      "name": "peripheral_registers",
+      "tests": [
+        "electron-mcp.mjs",
+        "machine-live.test.cjs"
+      ]
+    },
+    {
+      "name": "profiler_clear",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "profiler_control",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "rdp_capture",
+      "tests": [
+        "electron-mcp.mjs",
+        "rdp-capture-live.test.cjs",
+        "viewer-live.test.cjs"
+      ]
+    },
+    {
+      "name": "rdp_state",
+      "tests": [
+        "electron-mcp.mjs",
+        "machine-live.test.cjs"
+      ]
+    },
+    {
+      "name": "read_memory",
+      "tests": [
+        "electron-mcp.mjs",
+        "viewer-live.test.cjs"
+      ]
+    },
+    {
+      "name": "read_memory_va",
+      "tests": [
+        "batch-live.test.cjs",
+        "call-live.test.cjs",
+        "n64-live.test.cjs",
+        "state-loading-live.test.cjs"
+      ]
+    },
+    {
+      "name": "render_probe",
+      "tests": [
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs"
+      ]
+    },
+    {
+      "name": "resume",
+      "tests": [
+        "audio-live.test.cjs",
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs",
+        "machine-live.test.cjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "rsp_break",
+      "tests": [
+        "electron-mcp.mjs",
+        "rsp-live.test.cjs"
+      ]
+    },
+    {
+      "name": "rsp_capture",
+      "tests": [
+        "electron-mcp.mjs",
+        "viewer-live.test.cjs"
+      ]
+    },
+    {
+      "name": "rsp_debug",
+      "tests": [
+        "electron-mcp.mjs",
+        "rsp-live.test.cjs"
+      ]
+    },
+    {
+      "name": "rsp_registers",
+      "tests": [
+        "electron-mcp.mjs",
+        "machine-live.test.cjs",
+        "rsp-live.test.cjs"
+      ]
+    },
+    {
+      "name": "rsp_run",
+      "tests": [
+        "electron-mcp.mjs",
+        "rsp-live.test.cjs"
+      ]
+    },
+    {
+      "name": "rsp_step",
+      "tests": [
+        "electron-mcp.mjs",
+        "rsp-live.test.cjs"
+      ]
+    },
+    {
+      "name": "rsp_stop",
+      "tests": [
+        "electron-mcp.mjs",
+        "rsp-live.test.cjs"
+      ]
+    },
+    {
+      "name": "run_frames",
+      "tests": [
+        "electron-mcp.mjs",
+        "execution-live.test.cjs",
+        "machine-live.test.cjs",
+        "rdp-capture-live.test.cjs",
+        "screenshots-live.test.cjs",
+        "viewer-live.test.cjs"
+      ]
+    },
+    {
+      "name": "run_until_frame",
+      "tests": [
+        "execution-live.test.cjs"
+      ]
+    },
+    {
+      "name": "run_until_hit",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "screenshot",
+      "tests": [
+        "electron-mcp.mjs",
+        "screenshots-live.test.cjs"
+      ]
+    },
+    {
+      "name": "stack",
+      "tests": [
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs"
+      ]
+    },
+    {
+      "name": "state_info",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "state_list",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "state_load",
+      "tests": [
+        "batch-live.test.cjs",
+        "call-live.test.cjs",
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs",
+        "state-loading-live.test.cjs"
+      ]
+    },
+    {
+      "name": "state_peek",
+      "tests": [
+        "batch-live.test.cjs",
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "state_save",
+      "tests": [
+        "batch-live.test.cjs",
+        "call-live.test.cjs",
+        "electron-mcp.mjs",
+        "inspection-live.test.cjs",
+        "n64-live.test.cjs",
+        "state-loading-live.test.cjs"
+      ]
+    },
+    {
+      "name": "step",
+      "tests": [
+        "execution-live.test.cjs"
+      ]
+    },
+    {
+      "name": "step_instructions",
+      "tests": [
+        "batch-live.test.cjs",
+        "electron-mcp.mjs",
+        "machine-live.test.cjs",
+        "n64-live.test.cjs",
+        "rdp-capture-live.test.cjs"
+      ]
+    },
+    {
+      "name": "trace_calls",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "trace_page",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "trace_pc",
+      "tests": [
+        "electron-mcp.mjs",
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "video_start",
+      "tests": [
+        "electron-mcp.mjs",
+        "screenshots-live.test.cjs"
+      ]
+    },
+    {
+      "name": "video_status",
+      "tests": [
+        "electron-mcp.mjs",
+        "screenshots-live.test.cjs"
+      ]
+    },
+    {
+      "name": "video_stop",
+      "tests": [
+        "electron-mcp.mjs",
+        "screenshots-live.test.cjs"
+      ]
+    },
+    {
+      "name": "watch_add",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "watch_list",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "watch_remove",
+      "tests": [
+        "n64-live.test.cjs"
+      ]
+    },
+    {
+      "name": "write_memory",
+      "tests": [
+        "electron-mcp.mjs",
+        "machine-live.test.cjs",
+        "rdp-capture-live.test.cjs",
+        "rsp-live.test.cjs",
+        "viewer-live.test.cjs"
+      ]
+    },
+    {
+      "name": "write_memory_many",
+      "tests": [
+        "state-loading-live.test.cjs"
+      ]
+    },
+    {
+      "name": "write_memory_va",
+      "tests": [
+        "call-live.test.cjs",
+        "inspection-live.test.cjs",
+        "state-loading-live.test.cjs"
+      ]
+    }
+  ]
+}

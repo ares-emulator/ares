@@ -3,6 +3,8 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
+const fs = require('node:fs');
+const {queueText,elfImage,queueConfig} = require('./rspq-fixture.cjs');
 const { encodeRequest, decodeReply } = require('../dist/services/contracts.js');
 const { readViewerCapture } = require('../dist/mcp/viewer-tools.js');
 const identity = { session: 'viewer-fixture', epoch: 9 };
@@ -33,4 +35,19 @@ test('viewer MCP aggregation bounds inline rows and refuses mixed committed gene
   assert.equal((await readViewerCapture(client, identity, 'rdp', 0)).count, 0);
   const partial = await readViewerCapture(client, identity, 'rdp', 64); assert.equal(partial.count, 64); assert.equal(partial.truncated, true);
   swapped = true; await assert.rejects(readViewerCapture(client, identity, 'rdp', 130), { code: 'stale_capture' });
+});
+
+test('RSPQ original ELF/config fixture validates live JIT/interpreter semantics and immutable metadata', () => {
+  const dir=fs.mkdtempSync('/tmp/ares-rspq-fixture-');
+  try {
+    const rom=path.join(dir,'fixture.z64');fs.writeFileSync(path.join(dir,'fixture.elf'),elfImage());
+    fs.writeFileSync(path.join(dir,'queue.bin'),queueText());fs.writeFileSync(path.join(dir,'rspq-libdragon.json'),JSON.stringify(queueConfig()));
+    const output=execFileSync(fixture,[rom],{encoding:'utf8',timeout:10000});
+    const result=JSON.parse(output.split('\n').find(l=>l.startsWith('VIEWER_RSPQ ')).slice(12));
+    decodeReply(JSON.stringify({protocol:1,id:'fixture',session:'rspq-fixture',epoch:11,ok:true,result}),'n64.capture.rsp');
+    assert.equal(result.entries.find(r=>r.command==='Fixture Signed').args,'n=-2 addr=0x12345678');
+    assert.equal(result.entries.at(-1).words_truncated,true);
+    result.entries[0].words=Array(17).fill('0x0');
+    assert.throws(()=>decodeReply(JSON.stringify({protocol:1,id:'fixture',session:'rspq-fixture',epoch:11,ok:true,result}),'n64.capture.rsp'),/invalid_reply/);
+  } finally {fs.rmSync(dir,{recursive:true,force:true});}
 });

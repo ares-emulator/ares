@@ -1603,3 +1603,98 @@ Validation: strict TypeScript builds and the complete sequential suite passed
 existing native/live viewer, CPU/RSP/RDP, state, transport, audio and recording
 fixtures. `git diff --check` passed. No production/native changes in this slice;
 the existing Electron/copied-package evidence is not claimed as a new run.
+
+## Task 9 remaining implementation and final acceptance (2026-10-20)
+
+Closes the remaining RSPQ/config/semantic capture backend and adapter gaps after
+`ddabc6d67`. Source is selectively adapted from `ares-64`
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`; the legacy Python/TCP server and
+blocking debug pumps are not shipped. No tool was removed.
+
+RSPQ capture now discovers bounded companion ELF files using the reference ROM,
+ROM-base/build and parent/build candidates. The queue symbol must be file-backed;
+all five hook signatures are validated against actual live IMEM, including on
+subsequent hook entries. F3DEX2/custom display-list signatures support 1–4 words,
+signed loop/dispatch offsets, register layout and command descriptors. The RSP
+interpreter and traced JIT preserve configured flags. RSPQ command/loop/overlay-
+load/fetch segments share sequence/timing/DMA attribution with the existing viewer.
+Same-type transitions coalesce. Commands copy at dispatch from live DMEM using
+the actual dispatcher size, command-buffer bounds and a 16-word cap; missing or
+truncated words remain explicit. Unknown/replaced microcode is not fabricated.
+
+A bounded embedded libdragon descriptor ships in the binary, with an optional
+JSON override beside the ELF; a display-list descriptor can live beside the ELF
+or ROM. Runtime ucode names come from ELF data ranges and the live table/idmap,
+including multi-ID command offsets and stale-name removal after unregister.
+DWARF shared-DMEM labels and rsp_ucode_t member offsets are optional, with safe
+fallbacks for stripped metadata. ELF section/symbol/string bounds, DWARF depth/
+work/string bounds, descriptor recursion/counts/transforms, missing words and
+native reply byte limits are checked. Names and semantic arguments are frozen
+at dispatch, so runtime re-registration cannot relabel an immutable old frame.
+Formatting supports bit ranges, sign extension through 32 bits, integer and
+floating transforms, enums, decimal/hex, DMEM labels and nested RDP descriptions.
+Legacy RDP rows now include the reference semantic command descriptions.
+
+CPU adapter results now preserve the reference compact/verbose register groups:
+`gpr_named`, verbose GPR arrays, named COP0/Status/Cause and classified architectural
+FR=0/1 FPR values (JSON-safe NaN/infinity/zero/subnormal classes). The native
+scheduler retains immutable completion registers for later FPR/COP0 formatting;
+`run_frames` and `operation_status` no longer reject those N64 flags. Native
+safe-point status supplies PC/debug/input/save/recovery/operation metadata and
+native presentation-rate observations. Render probes expose the actual origin-
+swap counter and native video-callback VPS, independent of canvas credits.
+
+Batch restores the reference 60-second default (bounded at 600 seconds); local
+transport includes its bounded deadline plus cleanup margin. Generated FastMCP
+comparison now verifies **68/68 names and parameter signatures**, including
+required fields, primitive types, nullability and defaults. Strict unknown-field
+policy, resource limits and structured validation differences are intentional
+adapter changes recorded in the checked-in report. Result contracts use native
+protocol v1 scoped identity/handles, bounded pages and explicit errors/truncation;
+no legacy telemetry wire/result-byte equality is advertised. Separate stack and
+disassembly tools provide diagnostics rather than mutating an old hit snapshot.
+
+MCP cancellation is scoped per concurrent tool request. A cancellation aborts
+only an operation started by that call, using its original ID/session/epoch;
+read-only status cancellation cannot cancel the polled handle. Batch abort uses
+a private token checked against the owning job, so stale/foreign cancellation
+cannot pause a later operation. Migrated bridge checks cover mismatched IDs,
+wrong sessions, fragmentation/coalescing, limits, error propagation, disconnect,
+no replay, stdio cancellation and batch cleanup without following mutations.
+
+Original generated ELF/DWARF/microcode fixtures validate RSPQ through actual JIT
+and interpreter dispatch, command reuse, semantic fields, overlay remapping,
+multi-ID offsets, signature replacement, command-buffer truncation, immutable
+metadata and byte-bounded pages. Live native/MCP tests cover F3DEX2, a custom
+three-word display-list descriptor and ELF/config-backed RSPQ; no user binary
+serves as the instruction fixture. Existing calls tests cover Status/FPR restore,
+private JR/JALR return/delay/SP rules, exceptions/interrupt/NMI, limits, disconnect,
+cancel, recovery/discard and immutable completed results.
+
+Final native/TypeScript validation passed **77/77** sequential tests in **83.71 s**
+on the final native build, including all new bounds/config/metadata/cancellation
+checks and existing CPU/RSP/RDP/cache/state/image/audio/recording/ownership tests.
+The actual stdio coverage recorder reports **68/68 successful tool paths**, no
+missing names; `tests/reference/task-9-tool-coverage.json` links each name to its
+successful runtime test(s). Actual sandboxed Electron/MCP integration also passed
+on its bundled runtime, including GB/N64, shared UI/service behavior, reload,
+68-tool registry and expected disconnect/stale-instance failures.
+
+The migrated isolated real-game runner passed **17/17** checks against the final
+new host: copied EEPROM metadata, real-game boot/render, nonadvancing compact/
+verbose groups, atomic invalid mutation, state/run/dump determinism, offline
+nonmutation, disassembly/heuristic stack, legacy/exact RDP capture, bad-state pause,
+wall lease expiry and bounded original function call/interruption/recovery.
+Artifacts are under `artifacts/task-9-game-acceptance/`; `game.png` was visually
+inspected (rendered Kirby title/intro scene, not claimed as an active-gameplay
+manual test). Original ROM and EEPROM SHA-256 checks remained unchanged. The
+runner verified its report's host hash matches the final native binary:
+`e33dfc20a5ccaa0bf95555508796b7831bc3cc4178ba8092a57012d22203a954`.
+
+These are migrated assertion families on the new binary, not claims that the
+unchanged legacy TCP/Python tests ran against a compatible telemetry server.
+Physical keyboard/gamepad takeover and audible output remain the separate
+previous task 6/7 manual gates; they were not simulated and called physical tests.
+Task 8's serializer rollback-failure branch remains a separately recorded
+fault-injection case. No Windows/Linux, signing/notarization or universal
+microcode decoding claim is added.

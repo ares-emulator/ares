@@ -158,8 +158,11 @@ test('isolated N64 host and real MCP stdio share instruction operations, registe
     const tools = (await peer.request('tools/list', {})).result.tools;
     assert.equal(tools.find(t => t.name === 'step_instructions').inputSchema.properties.n.default, 1);
     assert.equal(tools.find(t => t.name === 'watch_add').inputSchema.properties.kind.default, 'write');
+    assert.ok((await peer.tool('memory_regions')).regions.length>0);
+    const hitDeadline=await peer.tool('run_until_hit',{max_frames:1,max_seconds:0.001,fpr:true,cop0:true});
+    assert.equal(hitDeadline.stop_reason,'timeout');assert.equal(hitDeadline.completion_registers.fpr.length,32);
     const mcpRegisters = await peer.tool('cpu_registers', { cop0: true, fpr: true });
-    assert.equal(mcpRegisters.gpr.zero, '0x0'); assert.equal(mcpRegisters.cop0[1], null); assert.equal(mcpRegisters.fpr_format, 'raw64');
+    assert.equal(mcpRegisters.gpr_named.zero, '0x0'); assert.equal(mcpRegisters.cop0.Random, null); assert.equal(mcpRegisters.fpr.length, 32); assert.ok(mcpRegisters.fpr[0].f32_class);
     const mcpStep = await peer.tool('step_instructions');
     assert.equal(mcpStep.executed, 1); assert.equal(mcpStep.stop_reason, 'instructions_done');
     const added = await peer.tool('break_add', { addr: '0x80001000', condition: { field: 'gpr.t0', value: '0x0' } });

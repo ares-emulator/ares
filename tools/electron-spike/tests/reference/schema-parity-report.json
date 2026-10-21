@@ -4,60 +4,8 @@
     "sha256": "28db87365993793d6844bf05894372fe3f19b30a64a856f06aaabd249ed0465c",
     "mcp_version": "1.30.0"
   },
-  "signature_matching": 67,
-  "signature_differences": [
-    {
-      "name": "batch",
-      "reference": {
-        "properties": {
-          "max_seconds": {
-            "default": 60,
-            "types": [
-              "number"
-            ]
-          },
-          "steps": {
-            "types": [
-              "array"
-            ]
-          },
-          "stop_on_error": {
-            "default": true,
-            "types": [
-              "boolean"
-            ]
-          }
-        },
-        "required": [
-          "steps"
-        ]
-      },
-      "current": {
-        "properties": {
-          "max_seconds": {
-            "default": 20,
-            "types": [
-              "number"
-            ]
-          },
-          "steps": {
-            "types": [
-              "array"
-            ]
-          },
-          "stop_on_error": {
-            "default": true,
-            "types": [
-              "boolean"
-            ]
-          }
-        },
-        "required": [
-          "steps"
-        ]
-      }
-    }
-  ],
+  "signature_matching": 68,
+  "signature_differences": [],
   "reference_count": 68,
   "current_count": 68,
   "missing": [],
@@ -160,8 +108,8 @@
             "type": "number"
           },
           "current": {
-            "default": 20,
-            "maximum": 20,
+            "default": 60,
+            "maximum": 600,
             "minimum": 0.001,
             "type": "number"
           }

@@ -83,7 +83,10 @@ struct Host : ares::Platform {
   std::condition_variable wake;
   bool credit = false, available = false;
   std::vector<uint8_t> latest;
-  uint32_t sequence = 0;
+  uint32_t sequence = 0, rateFrames = 0;
+  double recentVps = 0;
+  Clock::time_point rateStarted = Clock::now();
+  double framesPerSecond() { std::lock_guard guard(mutex); return Clock::now()-captured > std::chrono::seconds(1) ? 0 : recentVps; }
   Clock::time_point started = Clock::now(), captured;
 
   static void put32(uint8_t* p, uint32_t v) {
@@ -169,6 +172,9 @@ struct Host : ares::Platform {
   auto video(ares::Node::Video::Screen screen, const u32* data, u32 pitch, u32 width, u32 height) -> void override {
     auto now = Clock::now();
     std::lock_guard lock(mutex);
+    ++rateFrames;
+    auto interval = std::chrono::duration<double>(now-rateStarted).count();
+    if(interval >= 1) { recentVps=rateFrames/interval;rateFrames=0;rateStarted=now; }
     latest.resize(48 + size_t(width) * height * 4);
     auto p = latest.data();
     std::memcpy(p, "AEF2", 4);
@@ -428,6 +434,39 @@ int main(int argc, char** argv) {
   InspectionService inspectionService;
   CallService callService;
   ViewerService viewerService;
+  if(n64) viewerService.loadRom(rom);
+  host.service.statusFields = [&] {
+    MachineService::Object status;
+    status.add("loaded", host.root ? "true" : "false");status.number("protocol_version",1);
+    status.add("vps",std::to_string(host.framesPerSecond()));
+    status.add("gdbHalted",nall::GDB::server.isHalted() ? "true" : "false");status.add("gdb_client",nall::GDB::server.hasClient() ? "true" : "false");
+    if(n64) {
+      using namespace ares::Nintendo64;
+      auto& debug=cpu.debugControl;
+      status.hex("pc",cpu.ipu.pc);status.number("presented_frame",commandCapture.presentedFrame);
+      status.add("cpu_halted",debug.halted ? "true" : "false");status.add("stopped",host.service.paused || debug.halted ? "true" : "false");
+      MachineService::Object mode;mode.add("executor",controlQuote(N64Service::executor()));mode.add("recompiler_enabled",cpu.recompiler.enabled ? "true" : "false");
+      mode.number("breakpoints",debug.breakpoints.size());mode.number("watchpoints",debug.watchpoints.size());mode.add("interpreter_forced",debug.active || rsp.debugControl.active ? "true" : "false");
+      mode.add("renderer",controlQuote(vulkan.enable ? "Vulkan" : "software"));mode.add("expansion_pak",ares::Nintendo64::system.expansionPak ? "true" : "false");mode.number("rdram_size",rdram.ram.size);
+      mode.add("rsp_debugger_active",rsp.debugControl.active ? "true" : "false");mode.add("run_ahead_during_operations","false");mode.add("rewind_during_operations","false");
+      status.add("debug_mode",mode.end());status.add("input",host.injectedInput.state());status.add("last_stop",N64Service::stop(host.service.epoch));status.add("call_recovery_pending",callService.savedValid ? "true" : "false");
+      MachineService::Object save;
+      const char* type=cartridge.eeprom.size ? "EEPROM" : cartridge.ram.size ? "RAM" : cartridge.flash.size ? "Flash" : "None";
+      const char* extension=cartridge.eeprom.size ? ".eeprom" : cartridge.ram.size ? ".ram" : ".flash";
+      const char* filename=cartridge.eeprom.size ? "save.eeprom" : cartridge.ram.size ? "save.ram" : "save.flash";
+      save.add("type",controlQuote(type));save.number("size",cartridge.eeprom.size ? cartridge.eeprom.size : cartridge.ram.size ? cartridge.ram.size : cartridge.flash.size);
+      if(emulator && emulator->game) {
+        auto game=emulator->game;auto file=game->pak->read(filename);
+        save.add("loaded_from_file",file && file->attribute("loaded").boolean() ? "true" : "false");
+        save.add("resolved_path",std::string(type)=="None" ? "null" : controlQuote(string{settings.paths.saves,game->saveName(),"/",Location::prefix(game->location),extension}.data()));
+      }
+      status.add("save",save.end());
+      status.add("operation",execution.active ? "{\"operation_id\":"+std::to_string(execution.active->id)+",\"kind\":"+controlQuote(execution.active->kind)+",\"state\":\"running\"}" : "null");
+    }
+    auto result=status.end();return ","+result.substr(1,result.size()-2);
+  };
+  inspectionService.presentedFrame = [] {return ares::Nintendo64::commandCapture.presentedFrame;};
+  inspectionService.vps = [&] {return host.framesPerSecond();};
   ProfilerService profilerService; profilerService.available = n64;
   DmaService dmaService; dmaService.available = n64;
   execution.cpuSupported = n64;
@@ -568,6 +607,7 @@ int main(int argc, char** argv) {
       execution.executor = N64Service::executor();
     };
     execution.onFinish = [&](const std::string& reason) { rspDebugService.finish(reason); rdpCaptureService.finish(reason); traceService.finish(reason); tapService.finish(reason, host.injectedInput, host.service.epoch, execution.frame); host.injectedInput.finish(host.service.epoch, execution.frame); debug.stepping = false; debug.stepRemaining = 0; debug.updateActive(); };
+    execution.registerSnapshot = [&] { return N64Service::registers(debug.snapshot()); };
     execution.debugSnapshot = [&] { return debug.halted && execution.active && execution.active->slices ? N64Service::stop(host.service.epoch) : "{\"valid\":false}"; };
   }
   execution.supported = synthetic || n64;

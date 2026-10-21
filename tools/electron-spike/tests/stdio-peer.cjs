@@ -1,6 +1,8 @@
 'use strict';
 const { spawn } = require('node:child_process');
 const { once } = require('node:events');
+const fs=require('node:fs');
+const path=require('node:path');
 class StdioPeer {
   constructor(command, args, options = {}) {
     this.child = spawn(command, args, { stdio: ['pipe', 'pipe', 'pipe'], ...options });
@@ -17,7 +19,9 @@ class StdioPeer {
         if (message.jsonrpc !== '2.0') { this.fail(new Error(`Invalid MCP envelope: ${line}`)); return; }
         this.messages.push(message);
         const pending = this.pending.get(message.id);
-        if (pending) { clearTimeout(pending.timer); this.pending.delete(message.id); pending.resolve(message); }
+        if (pending) {
+          if(process.env.ARES_TOOL_COVERAGE_PATH && pending.tool) fs.appendFileSync(process.env.ARES_TOOL_COVERAGE_PATH,JSON.stringify({name:pending.tool,success:!message.error && Array.isArray(message.result?.content) && !message.result.isError,test:path.basename(process.argv[1])})+'\n');
+          clearTimeout(pending.timer); this.pending.delete(message.id); pending.resolve(message); }
       }
     });
     this.child.once('error', error => this.fail(error));
@@ -28,7 +32,7 @@ class StdioPeer {
     const id = ++this.id;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`MCP timeout ${method}: ${this.stderr}`)); }, timeoutMs);
-      this.pending.set(id, { resolve, reject, timer }); this.child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n');
+      this.pending.set(id, { resolve, reject, timer, tool:method==='tools/call' ? params.name : undefined }); this.child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n');
     });
   }
   async initialize() {

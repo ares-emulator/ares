@@ -9,8 +9,8 @@ test('actual stdio registry matches the recorded FastMCP comparison, including p
   assert.deepEqual(await report(),expected,'Schema drift: inspect and regenerate the report; a recorded difference is not parity approval.');
   assert.deepEqual(expected.missing,[]); assert.deepEqual(expected.added,[]);
   assert.equal(expected.reference_count,68);
-  assert.equal(expected.signature_matching,67);
-  assert.deepEqual(expected.signature_differences.map(d => d.name),['batch']);
+  assert.equal(expected.signature_matching,68);
+  assert.deepEqual(expected.signature_differences,[]);
 });
 test('schema comparison ignores documentation but preserves validation and tuple order', () => {
   const tool = inputSchema => [{name:'fixture',inputSchema}];

@@ -103,6 +103,13 @@ test('real N64 batch: baseline/load/write/active-VI-run/crop sweep, partial effe
     await waitRun(native);
     const cancel = await peer.tool('cancel_operation'); assert.equal(cancel.stop_reason, 'cancelled', JSON.stringify(cancel));
     const cancelled = await cancelledBatch; assert.equal(cancelled.stop_reason, 'cancelled'); assert.equal(cancelled.results.length, 3);
+    const requestId=peer.id+1;
+    const abortBatch=peer.request('tools/call',{name:'batch',arguments:{steps:[{kind:'run',n:1000000},{kind:'write',addr:'0x2000',hex:'bb',view:'rdram'}]}},2000).catch(()=>undefined);
+    await waitRun(native);
+    peer.child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/cancelled',params:{requestId,reason:'batch abort regression'}})+'\n');
+    for(let i=0;i<200;++i){const status=unwrap(await native.request('session.status'));if(!status.batch_id&&!status.operation_id)break;await sleep(5);}
+    const afterAbort=unwrap(await native.request('session.status'));assert.equal(afterAbort.batch_id,null);assert.equal(afterAbort.operation_id,null);assert.equal(afterAbort.paused,true);
+    await abortBatch;assert.equal((await peer.tool('read_memory_va',{addr:'0x2000',length:1})).hex,'aa','MCP batch abort prevents following mutations');
     // Human takeover revokes reservation even without an input override.
     const human = peer.tool('batch', { steps: [{ kind: 'run', n: 1000000 }, { kind: 'write', addr: '0x2000', hex: 'bb', view: 'rdram' }] });
     await waitRun(native);

@@ -1,0 +1,10 @@
+'use strict';
+const fs=require('node:fs');const path=require('node:path');
+const reference=require('../tests/reference/fastmcp-input-schemas.json');
+const events=fs.readFileSync(process.argv[2],'utf8').trim().split('\n').filter(Boolean).map(line=>JSON.parse(line));
+const tools=reference.tools.map(({name})=>({name,tests:[...new Set(events.filter(e=>e.name===name&&e.success).map(e=>e.test))].sort()}));
+const missing=tools.filter(t=>!t.tests.length).map(t=>t.name);
+const report={reference_commit:reference.commit,registered:tools.length,successful_stdio_tools:tools.length-missing.length,missing,tools};
+if(process.argv[3]) fs.writeFileSync(path.resolve(process.argv[3]),JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify({successful_stdio_tools:report.successful_stdio_tools,missing}));
+if(missing.length)process.exitCode=1;
