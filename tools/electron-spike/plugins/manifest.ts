@@ -97,7 +97,7 @@ export function validateManifest(value: unknown): PluginManifest {
   if (!object(m.contributes, ['panels', 'commands'])) fail('contributes')
   for (const [kind, max] of [
     ['panels', 8],
-    ['commands', 32],
+    ['commands', 64],
   ] as const)
     if (m.contributes[kind] !== undefined) {
       const list = m.contributes[kind]

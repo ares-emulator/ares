@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' ares-plugin:; style-src 'self' ares-plugin:; connect-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' ares-plugin:; style-src 'self' ares-plugin:; img-src 'self' ares-plugin:; connect-src 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ares · Native canvas spike</title>
   <link rel="stylesheet" href="style.css">
@@ -22,16 +22,6 @@
       <label><input type="checkbox" id="scanlines"> Scanlines</label>
       <label><input type="checkbox" id="left"> Panel on left</label>
       <button id="stress">Block UI for 250 ms</button>
-      <h2>Memory inspector</h2>
-      <button id="memory-refresh">Refresh regions</button>
-      <label>Region<select id="memory-region" aria-label="Memory region"></select></label>
-      <p id="memory-info">No regions loaded.</p>
-      <label>Region offset<input id="memory-offset" value="0x0" spellcheck="false"></label>
-      <label>Byte count<input id="memory-length" type="number" min="1" max="1024" value="64"></label>
-      <button id="memory-read" disabled>Read bytes</button>
-      <label>Hex bytes to write<textarea id="memory-bytes" maxlength="3072" spellcheck="false" rows="2"></textarea></label>
-      <button id="memory-write" disabled>Write bytes</button>
-      <pre id="memory-output" aria-live="polite"></pre>
       <h2>Live measurements</h2><pre id="metrics">Waiting for frames…</pre>
       <p id="controls">Open a ROM to see its controls.</p>
       <p>Audio runs in the native host. This canvas receives raw pixels.</p>
@@ -39,7 +29,6 @@
   </main>
   <footer id="status">Starting native host…</footer>
   <script type="module" src="dist/browser/renderer.js"></script>
-  <script type="module" src="dist/browser/services/inspector.js"></script>
   <script type="module" src="dist/browser/plugins/runtime.js"></script>
 </body>
 </html>

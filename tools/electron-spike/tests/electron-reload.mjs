@@ -58,6 +58,7 @@ function plugin(version, extra = '', prepare = '') {
 }
 const entry = path.join(source, 'plugin.js')
 fs.writeFileSync(entry, plugin(1))
+process.env.ARES_DEFAULT_PLUGINS = '0'
 let peer
 const { sessions, plugins, serviceHost, stopNative } =
   await import('../dist/main.js')
@@ -111,7 +112,7 @@ app.whenReady().then(async () => {
     await version(1)
     const baseline = await sessions.request('session.pause')
     const identity = { session: baseline.session, epoch: baseline.epoch }
-    const oldCatalog=plugins.catalog()
+    const oldCatalog = plugins.catalog()
     const regions = (await sessions.request('memory.regions')).result.regions,
       region = regions.find((r) => r.writable && r.readable)
     const read = async () =>
@@ -155,9 +156,18 @@ app.whenReady().then(async () => {
     )
     assert.equal(await read(), original)
     enter('late catalog snapshots cannot revive the old scope')
-    await js("window.currentPanel=document.querySelector('[data-plugin-panel]')")
-    window.webContents.send('plugin-catalog',oldCatalog);await sleep(100)
-    assert.equal(await js("window.currentPanel===document.querySelector('[data-plugin-panel]')"),true);assert.deepEqual(await counts(),before)
+    await js(
+      "window.currentPanel=document.querySelector('[data-plugin-panel]')",
+    )
+    window.webContents.send('plugin-catalog', oldCatalog)
+    await sleep(100)
+    assert.equal(
+      await js(
+        "window.currentPanel===document.querySelector('[data-plugin-panel]')",
+      ),
+      true,
+    )
+    assert.deepEqual(await counts(), before)
     enter('failed candidate preparation')
     await js(
       "window.originalPanel=document.querySelector('[data-plugin-panel]')",

@@ -6,8 +6,8 @@ video output in a WebGL2 canvas. It does not compile emulation code to WebAssemb
 Start with [EXECUTION-ROADMAP.md](EXECUTION-ROADMAP.md) for the implementation
 sequence, bounded tasks and completion gates across the plans below.
 
-The proposed next steps for memory access, agent-authored plugins, hot reload,
-game matching, UI customization, and bundled settings are in [PLUGIN-PLAN.md](PLUGIN-PLAN.md).
+The design for memory access, agent-authored plugins, hot reload, game matching,
+UI customization and bundled settings is in [PLUGIN-PLAN.md](PLUGIN-PLAN.md).
 The ares-64 debugging audit and preservation plan for the existing MCP tools are
 in [MCP-PORT-PLAN.md](MCP-PORT-PLAN.md).
 
@@ -88,7 +88,7 @@ backpressure while native audio/emulation continue.
 - `native/session-service.hpp` queues versioned control requests and dispatches
   status/pause/resume/reset on the emulation thread, including while paused.
 - `native/memory-service.hpp` provides bounded debugger-region access through the
-  same dispatcher. The temporary memory inspector uses the shared browser/Node
+  same dispatcher. The bundled memory explorer uses the shared browser/Node
   `MemoryClient`; offsets are region-relative and byte order is explicit in helpers.
 - `host.cpp` supplies an `ares::Platform` adapter, native SDL audio, virtual HID
   input, and the emulator loop. System loading, firmware, peripherals, and saves
@@ -266,7 +266,7 @@ these outputs automatically; `build:services` remains an alias for compatibility
 | Source | Output / runtime |
 | --- | --- |
 | `main.ts`, `protocol.ts`, `services/`, `mcp/server.ts` | Native Node ESM in `dist/` |
-| `renderer.ts`, `services/inspector.ts` | Browser ESM in `dist/browser/` |
+| `renderer.ts`, `plugins/runtime.ts`, `plugins/scope.ts` | Browser ESM in `dist/browser/` |
 | `preload.cts` | Single `dist/preload.cjs` for Electron’s sandboxed preload |
 | `bridge.ts`, `renderer-globals.d.ts` | Shared IPC, frame data and window types |
 
@@ -475,7 +475,8 @@ Separate task 6 physical-input/audible manual checks remain recorded.
 
 Task 10 adds the sidebar **Plugins** manager, explicitly enabled local directories,
 namespaced panels/commands and a left/right/bottom dock. Bundled generic memory and
-verified Kirby identity examples start disabled. Plain JS needs no build; a TS/TSX
+Kirby powers examples use the shared SDK. Fresh profiles enable the bundled tools;
+existing enable/disable preferences are preserved. Plain JS needs no build; a TS/TSX
 template is included. See [plugin authoring and lifecycle](plugins/README.md).
 Plugins are trusted renderer code. Main pins SDK capabilities to a revocable
 generation/session/epoch; game profiles match normalized content hashes.
@@ -485,3 +486,17 @@ state handoff and rollback to the previous working artifact. Mutations stay bloc
 during activation/restoration; patches run through explicit commands.
 `npm run test:reload` exercises failure recovery, repeated effect cleanup and real
 MCP ownership across replacement. The copied app includes the compiler.
+
+### Task 12: bundled tools and Kirby powers
+
+The memory inspector now lives in the generic `ares.examples.memory` plugin.
+N64's `ares.tools.debugger` shows the same frozen stop/register snapshot as MCP.
+`ares.examples.kirby` provides the verified US revision's 36 power choices with
+existing HUD icons and cache-aware, readback-verified batches. Selecting a power
+preserves run/pause/input state; the documented route does not update hat/body
+palette. All original save/ROM data stays outside committed artifacts.
+
+The [agent CLI](plugins/README.md#bundled-tools-and-agent-commands) scaffolds, builds,
+enables, opens, invokes and hot-reloads tools through the private local endpoint,
+without UI scraping. Copied apps include an `ares-plugin` launcher and templates.
+The preserved MCP tool count remains 68.

@@ -225,12 +225,12 @@ Done when: repeated reloads do not accumulate listeners/timers/requests; stale
 async work cannot write; an invalid edit keeps the previous working UI; recovery
 behavior is demonstrated rather than merely described.
 
-### Task 12 — the first actual agent-authored game tool
+### Task 12 — the first actual agent-authored game tool (complete)
 
 Move the temporary inspector into a bundled plugin. Add shared stop/register views,
-then a small Kirby panel using verified structures. An animation selector is useful
-once addresses are established; unknown addresses are a research task, not a reason
-to invent them or declare the architecture blocked. Ship scaffold/build/reload/open
+then a small Kirby panel using verified structures. The chosen game tool is the
+user-requested power selector, using the existing ability IDs, memory addresses
+and HUD icons from the Kirby viewer repository. Ship scaffold/build/reload/open
 commands and SDK examples that an agent can use without UI scraping.
 
 **Milestone gate:** MCP stops on a watch, the panel displays the same immutable hit,
@@ -302,7 +302,17 @@ and demonstrated activation rollback/recovery. Twelve repeated reloads retain
 constant SDK effect counts, stale writes reject, and real MCP ownership survives.
 The copied app builds/reloads a source TSX plugin with its bundled compiler.
 
-The immediate next action is **task 12 — the first actual agent-authored game
-tool**. Tasks 1–5, 4.5 and 7–11 are implemented. Earlier physical keyboard/gamepad takeover,
-audible-output acceptance and task 8 rollback-failure fault injection remain
-recorded follow-ups for later verification; they are not claimed as passes.
+Task 12 is complete: the generic memory explorer and immutable stop/register view
+are bundled plugins; the verified Kirby power selector provides all 36 choices
+using the existing researched mappings/icons; and the agent CLI scaffolds, builds,
+enables, opens, invokes and hot-reloads tools without UI scraping. The MCP watch
+hit/panel equality and same-session agent edit/reload milestone passed. The user
+also played the selector and confirmed it works. All 84 sequential regression
+tests, additional bounded CLI paging coverage, plugin/reload/MCP integration and
+copied-app CLI/TSX runtime validation passed.
+
+The immediate next action is **task 13 — settings service and bundled settings
+plugins**. Tasks 1–5, 4.5 and 7–12 are implemented. Earlier physical keyboard/gamepad
+takeover, audible-output acceptance and task 8 rollback-failure fault injection
+remain recorded follow-ups; the selector playtest does not silently close those
+separate acceptance gates.

@@ -291,3 +291,20 @@ function update(next: PluginCatalog) {
 }
 bridge.changed(update)
 void bridge.catalog().then(update).catch(showError)
+
+bridge.actions((action) => {
+  const scope = [...scopes.values()].find(
+    (scope) => scope.token === action.token,
+  )
+  void (async () => {
+    try {
+      if (!scope) throw new Error('stale_plugin_scope')
+      await scope.action(action.kind, action.name)
+      await bridge.result(action.id, action.token)
+    } catch (error) {
+      await bridge
+        .result(action.id, action.token, String(error))
+        .catch(() => {})
+    }
+  })()
+})

@@ -1,6 +1,6 @@
 {
   "id": "ares.examples.kirby",
-  "name": "Kirby 64 verified profile",
+  "name": "Kirby 64 Powers",
   "version": "1.0.0",
   "apiVersion": 1,
   "entry": "plugin.js",
@@ -14,9 +14,164 @@
       }
     ]
   },
-  "capabilities": ["session.read"],
+  "capabilities": ["session.read", "memory.read", "memory.write"],
   "contributes": {
-    "panels": [{ "id": "profile", "title": "Kirby profile" }],
-    "commands": [{ "id": "open", "title": "Open Kirby profile" }]
-  }
+    "panels": [
+      {
+        "id": "powers",
+        "title": "Kirby powers"
+      }
+    ],
+    "commands": [
+      {
+        "id": "open",
+        "title": "Open Kirby powers"
+      },
+      {
+        "id": "power-0",
+        "title": "Select Kirby power 0"
+      },
+      {
+        "id": "power-1",
+        "title": "Select Kirby power 1"
+      },
+      {
+        "id": "power-2",
+        "title": "Select Kirby power 2"
+      },
+      {
+        "id": "power-3",
+        "title": "Select Kirby power 3"
+      },
+      {
+        "id": "power-4",
+        "title": "Select Kirby power 4"
+      },
+      {
+        "id": "power-5",
+        "title": "Select Kirby power 5"
+      },
+      {
+        "id": "power-6",
+        "title": "Select Kirby power 6"
+      },
+      {
+        "id": "power-7",
+        "title": "Select Kirby power 7"
+      },
+      {
+        "id": "power-8",
+        "title": "Select Kirby power 8"
+      },
+      {
+        "id": "power-9",
+        "title": "Select Kirby power 9"
+      },
+      {
+        "id": "power-10",
+        "title": "Select Kirby power 10"
+      },
+      {
+        "id": "power-11",
+        "title": "Select Kirby power 11"
+      },
+      {
+        "id": "power-12",
+        "title": "Select Kirby power 12"
+      },
+      {
+        "id": "power-13",
+        "title": "Select Kirby power 13"
+      },
+      {
+        "id": "power-14",
+        "title": "Select Kirby power 14"
+      },
+      {
+        "id": "power-15",
+        "title": "Select Kirby power 15"
+      },
+      {
+        "id": "power-16",
+        "title": "Select Kirby power 16"
+      },
+      {
+        "id": "power-17",
+        "title": "Select Kirby power 17"
+      },
+      {
+        "id": "power-18",
+        "title": "Select Kirby power 18"
+      },
+      {
+        "id": "power-19",
+        "title": "Select Kirby power 19"
+      },
+      {
+        "id": "power-20",
+        "title": "Select Kirby power 20"
+      },
+      {
+        "id": "power-21",
+        "title": "Select Kirby power 21"
+      },
+      {
+        "id": "power-22",
+        "title": "Select Kirby power 22"
+      },
+      {
+        "id": "power-23",
+        "title": "Select Kirby power 23"
+      },
+      {
+        "id": "power-24",
+        "title": "Select Kirby power 24"
+      },
+      {
+        "id": "power-25",
+        "title": "Select Kirby power 25"
+      },
+      {
+        "id": "power-26",
+        "title": "Select Kirby power 26"
+      },
+      {
+        "id": "power-27",
+        "title": "Select Kirby power 27"
+      },
+      {
+        "id": "power-28",
+        "title": "Select Kirby power 28"
+      },
+      {
+        "id": "power-29",
+        "title": "Select Kirby power 29"
+      },
+      {
+        "id": "power-30",
+        "title": "Select Kirby power 30"
+      },
+      {
+        "id": "power-31",
+        "title": "Select Kirby power 31"
+      },
+      {
+        "id": "power-32",
+        "title": "Select Kirby power 32"
+      },
+      {
+        "id": "power-33",
+        "title": "Select Kirby power 33"
+      },
+      {
+        "id": "power-34",
+        "title": "Select Kirby power 34"
+      },
+      {
+        "id": "power-35",
+        "title": "Select Kirby power 35"
+      }
+    ]
+  },
+  "styles": "style.css"
 }

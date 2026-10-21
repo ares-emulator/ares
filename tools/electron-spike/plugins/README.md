@@ -1,7 +1,10 @@
 # Local plugins (API 1)
 
 Open **Plugins** in the sidebar. Add a directory containing `manifest.json`, then
-explicitly enable it. Bundled examples are disabled until enabled. Enabled roots
+explicitly enable it. Fresh profiles enable the bundled memory explorer, N64
+stop/register view and verified Kirby powers tool. Existing enable/disable choices
+are preserved; use Plugins or the CLI to enable a new bundled tool in an older
+profile. `ARES_DEFAULT_PLUGINS=0` suppresses these first-profile defaults for tests. Enabled roots
 and IDs persist under Electron's userData/plugins; `ARES_PLUGIN_DIRS` (platform
 path delimiter) explicitly enables development directories at startup. Refresh
 re-reads manifests using the same replacement transaction as each plugin’s Reload
@@ -27,7 +30,9 @@ module side effects are the author's responsibility. Tabs toggle visibility;
 `onVisibility` lets panels suspend their work. Select left/right/bottom to dock.
 
 Capabilities: `session.read` (status), `session.control` (pause/resume and bounded
-execution), `memory.read` (regions/read), `memory.write` (write). No filesystem or
+execution), `debug.read` (N64 frozen stop/register snapshots), `memory.read`
+(regions/read and N64 CPU/RDRAM reads), `memory.write` (region writes and N64
+single/batched writes). No filesystem or
 arbitrary service methods are exposed through the SDK. Service replies preserve
 native errors; check `reply.ok`. Stale scopes reject with `stale_plugin_scope`.
 Logs retain the latest 128 messages (2 KiB each). Activation/command failures show
@@ -38,8 +43,9 @@ Activation systems use exact native system names. Game profiles require a verifi
 SHA-256 of the normalized MIA `program.rom` content, reported as `session.status`
 `game`. Filename and directory never participate. Unsupported revisions stay
 waiting. Disc/multifile games without program.rom have no content profile yet.
-The Kirby example matches the verified US revision 0 hash; it only displays the
-identity. Gameplay tools belong to task 12. Overlay/page/shell modes are reserved
+The Kirby powers tool matches the verified US revision 0 hash and offers None,
+seven singles and all 28 pairs using the previously researched addresses and HUD
+icons. See [power mappings and provenance](../bundled-plugins/kirby/README.md). Overlay/page/shell modes are reserved
 and produce an actionable unsupported-mode message.
 
 For plain JS copy `bundled-plugins/memory`. For TS/TSX copy
@@ -107,3 +113,51 @@ plugin-owned operation release, rapid edits and a session switch during preparat
 Artifact pruning retains current/previous/candidate snapshots, rather than every
 edit. Chromium caches imported ESM modules until renderer teardown; the checks here
 prove SDK effect/request cleanup, not that Chromium unloads individual modules.
+
+## Bundled tools and agent commands
+
+The former renderer-owned inspector is now `ares.examples.memory`, using the same
+scoped SDK as other plugins. It supports generic debugger regions on N64/GBA,
+validated offsets/lengths, whitespace-tolerant hex writes and hot-reload UI state.
+`ares.tools.debugger` displays the native immutable last stop and its captured
+registers; live registers are used only when no stop exists. Neither tool writes
+or changes emulation while opening/restoring a panel.
+
+Build the checkout, start the app with services enabled, and explicitly select its
+connection file and instance ID (reported by main). In a copied macOS app use
+`Ares.app/Contents/Resources/ares-plugin` instead of `node dist/plugins/cli.js`.
+The launcher uses bundled Node/compiler/templates and needs no developer runtime.
+
+```sh
+node dist/plugins/cli.js scaffold /tmp/my-tool --id local.my-tool
+node dist/plugins/cli.js build /tmp/my-tool
+node dist/plugins/cli.js list --connection "$CONNECTION_FILE" --instance "$INSTANCE_ID"
+node dist/plugins/cli.js add /tmp/my-tool --connection "$CONNECTION_FILE" --instance "$INSTANCE_ID"
+node dist/plugins/cli.js enable local.my-tool --connection "$CONNECTION_FILE" --instance "$INSTANCE_ID"
+node dist/plugins/cli.js open local.my-tool hello --connection "$CONNECTION_FILE" --instance "$INSTANCE_ID"
+node dist/plugins/cli.js reload local.my-tool --connection "$CONNECTION_FILE" --instance "$INSTANCE_ID"
+node dist/plugins/cli.js command ares.examples.kirby power-14 --connection "$CONNECTION_FILE" --instance "$INSTANCE_ID"
+```
+
+`enable ID --disabled` disables a plugin. `open` may omit the panel name to select
+the first declared panel. `command` requires a declared command ID. `--token`
+allows explicitly pinning an existing generation; otherwise the CLI obtains the
+current token immediately before sending an action. Stale tokens reject rather
+than binding to a replacement/game. Reload waits for the new active generation
+and reports build/activation errors; it never retries a command. `build --output`
+selects the artifact cache; the default `.ares-plugin-build` is ignored by watchers.
+The list is paged without log bodies; `--page-size 1` reduces response size and the
+CLI automatically reduces oversized pages.
+
+Management shares the authenticated, private local endpoint's instance selection,
+replay protection, bounded requests and no-replay reconnect behavior. Commands
+invoke registered SDK handlers directly, with main-frame acknowledgement; no UI
+scraping/eval is used. Timeouts mean the action was not replayed, not proof that an
+already accepted effect was undone. The existing MCP registry remains 68 tools.
+
+`npm run test:plugin-tools` demonstrates an MCP watch stop matching the panel,
+CLI scaffold/build/add/enable/open/reload, the loaded session surviving edits,
+external-run busy exclusion and human pause. `npm run test:kirby` requires
+`ARES_PLUGIN_TEST_ROM`; it verifies all 36 buttons/icons/readbacks using disposable
+ROM/settings/saves, and leaves originals unchanged. `ARES_BACKGROUND_TEST=1`
+hides test windows while retaining unthrottled rendering.

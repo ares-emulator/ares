@@ -21,7 +21,10 @@
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "test:state-reference": "npm run build && node tests/state-reference.cjs",
     "test:plugins": "npm run build && electron tests/electron-plugins.mjs",
-    "test:reload": "npm run build && electron tests/electron-reload.mjs"
+    "test:reload": "npm run build && electron tests/electron-reload.mjs",
+    "test:plugin-tools": "npm run build && electron tests/electron-plugin-tools.mjs",
+    "test:kirby": "npm run build && electron tests/electron-kirby.mjs",
+    "plugin": "node dist/plugins/cli.js"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

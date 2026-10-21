@@ -1,0 +1,13 @@
+{
+  "id": "ares.tools.debugger",
+  "name": "CPU stop and registers",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "entry": "plugin.js",
+  "activation": { "systems": ["Nintendo 64"] },
+  "capabilities": ["session.read", "debug.read"],
+  "contributes": {
+    "panels": [{ "id": "stop", "title": "Stop and registers" }],
+    "commands": [{ "id": "open", "title": "Open stop and registers" }]
+  }
+}

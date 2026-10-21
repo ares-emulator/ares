@@ -401,7 +401,7 @@ export class PluginRegistry {
   private configFile() {
     return path.join(this.dataRoot, 'enabled.json')
   }
-  async initialize(extra: string[] = []) {
+  async initialize(extra: string[] = [], defaults: string[] = []) {
     await fs.mkdir(this.dataRoot, { recursive: true })
     this.dataRoot = await fs.realpath(this.dataRoot)
     try {
@@ -419,6 +419,7 @@ export class PluginRegistry {
         )
     } catch (e: any) {
       if (e.code !== 'ENOENT') this.configurationError = String(e)
+      else for (const id of defaults) this.enabled.add(id)
     }
     for (const dir of extra)
       if (!this.directories.includes(dir)) this.directories.push(dir)
@@ -738,13 +739,25 @@ export class PluginRegistry {
       throw new ServiceError('stale_plugin_scope')
     return r
   }
+  authorize(token: string) {
+    const r = this.lease(token)
+    if (r.phase !== 'active') throw new ServiceError('plugin_not_ready')
+    return this.info(r)
+  }
   async request(token: string, method: ServiceMethod, params: any) {
     const r = this.lease(token)
     let capability: Capability | undefined
+    if (['n64.debug.lastStop', 'n64.debug.registers'].includes(method))
+      capability = 'debug.read'
     if (method === 'session.status') capability = 'session.read'
-    if (['memory.regions', 'memory.read'].includes(method))
+    if (['memory.regions', 'memory.read', 'n64.memory.read'].includes(method))
       capability = 'memory.read'
-    if (method === 'memory.write') capability = 'memory.write'
+    if (
+      ['memory.write', 'n64.memory.write', 'n64.memory.writeMany'].includes(
+        method,
+      )
+    )
+      capability = 'memory.write'
     if (
       [
         'session.pause',
@@ -765,6 +778,9 @@ export class PluginRegistry {
         'session.status',
         'memory.regions',
         'memory.read',
+        'n64.memory.read',
+        'n64.debug.lastStop',
+        'n64.debug.registers',
         'execution.status',
       ].includes(method)
     )

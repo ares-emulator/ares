@@ -52,7 +52,7 @@ export class PluginScope {
       setVisible: (value: boolean) => void
     }
   >()
-  private commands = new Set<string>()
+  private commands = new Map<string, () => void | Promise<void>>()
   private links: HTMLLinkElement[] = []
   private ready = false
   private published = false
@@ -122,6 +122,9 @@ export class PluginScope {
               'session.status',
               'memory.regions',
               'memory.read',
+              'n64.memory.read',
+              'n64.debug.lastStop',
+              'n64.debug.registers',
               'execution.status',
             ].includes(method)
           )
@@ -309,7 +312,7 @@ export class PluginScope {
           const contribution = m.contributes.commands?.find((c) => c.id === id)
           if (!contribution || this.commands.has(id))
             throw new Error('Undeclared or duplicate command: ' + id)
-          this.commands.add(id)
+          this.commands.set(id, run)
           const button = document.createElement('button')
           button.textContent = contribution.title
           button.dataset.pluginCommand = m.id + ':' + id
@@ -336,6 +339,20 @@ export class PluginScope {
         },
       },
     }
+  }
+  async action(kind: 'open' | 'command', name: string) {
+    if (!this.ready || this.abort.signal.aborted)
+      throw new Error('stale_plugin_scope')
+    if (kind === 'open') {
+      const panel = this.panels.get(name)
+      if (!panel) throw new Error('Unknown panel')
+      panel.open()
+    } else {
+      const run = this.commands.get(name)
+      if (!run) throw new Error('Unknown command')
+      await run()
+    }
+    if (this.abort.signal.aborted) throw new Error('stale_plugin_scope')
   }
   visible() {
     return [...this.panels]

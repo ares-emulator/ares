@@ -17,12 +17,10 @@
   },
   "include": [
     "main.ts",
+    "plugins/cli.ts",
     "protocol.ts",
     "bridge.ts",
     "services/**/*.ts",
     "mcp/**/*.ts"
-  ],
-  "exclude": [
-    "services/inspector.ts"
   ]
 }

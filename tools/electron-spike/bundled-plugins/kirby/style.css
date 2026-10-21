@@ -1,0 +1,50 @@
+.kirby-powers {
+  max-width: 1100px;
+}
+.kirby-powers h2 {
+  margin: 0 0 6px;
+}
+.kirby-powers .power-current {
+  color: var(--text);
+  font-weight: 600;
+}
+.kirby-powers .power-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+  gap: 7px;
+}
+.kirby-powers .power-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 95px;
+  gap: 7px;
+  padding: 9px 6px;
+  font-size: 12px;
+}
+.kirby-powers .power-grid button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.kirby-powers .power-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  gap: 3px;
+  font-size: 28px;
+}
+.kirby-powers img {
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+.kirby-powers button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+[data-plugin-command^='ares.examples.kirby:power-'] {
+  display: none;
+}

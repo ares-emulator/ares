@@ -17,8 +17,7 @@
     "renderer-globals.d.ts",
     "bridge.ts",
     "services/contracts.ts",
-    "services/memory.ts",
-    "services/inspector.ts"
+    "services/memory.ts"
   ],
   "exclude": []
 }

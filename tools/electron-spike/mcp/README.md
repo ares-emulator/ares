@@ -652,3 +652,12 @@ changes include scoped identity/region/operation handles, explicit native error
 codes, bounded pages/resource limits and separate diagnostic tools; strict input
 validation and result contracts are tested. This is the new internal protocol v1,
 not the fork’s TCP telemetry protocol. The Python bridge is a reference only.
+
+### Plugin authoring commands
+
+Task 12 exposes plugin management through the same authenticated private local
+endpoint, with a separate `ares-plugin` CLI rather than extra MCP tool names.
+The 68-tool reference inventory is unchanged. See
+[scaffold/build/open/reload and explicit command examples](../plugins/README.md#bundled-tools-and-agent-commands).
+The stop/register panel consumes the same native immutable stop used by
+`last_stop`; it does not reconstruct a hit from later live register reads.

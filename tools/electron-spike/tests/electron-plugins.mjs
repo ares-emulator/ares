@@ -55,6 +55,7 @@ fs.writeFileSync(
   'export async function activate(){window.pluginActivationStarted=true;await new Promise(r=>setTimeout(r,500));return ()=>{window.pluginLateCleanup=true;};}',
 )
 process.env.ARES_PLUGIN_DIRS = [template, failing, delayed].join(path.delimiter)
+process.env.ARES_DEFAULT_PLUGINS = '0'
 const { sessions, plugins, stopNative } = await import('../dist/main.js')
 const timeout = setTimeout(() => {
   console.error('plugin UI timeout')
@@ -95,8 +96,10 @@ app.whenReady().then(async () => {
       'waiting',
     )
     assert.equal(
-      await js("document.querySelector('[data-plugin-panel]')?.hidden"),
-      true,
+      await js(
+        'document.querySelector(\'[data-plugin-panel="ares.examples.memory:memory"]\')?.hidden',
+      ),
+      false,
     )
     await js(
       'document.querySelector(\'[data-plugin-command="ares.examples.memory:open"]\').click()',
@@ -106,10 +109,10 @@ app.whenReady().then(async () => {
         "document.querySelector('[data-plugin-panel] select').options.length>0",
       ),
     )
-    await js("document.querySelector('[data-plugin-panel] button').click()")
+    await js("document.getElementById('memory-read').click()")
     await until(() =>
       js(
-        "document.querySelector('[data-plugin-panel] pre').textContent.includes('hex')",
+        "document.querySelector('[data-plugin-panel] pre').textContent.includes('Offset')",
       ),
     )
     const token = plugins

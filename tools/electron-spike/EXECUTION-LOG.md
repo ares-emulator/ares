@@ -1862,3 +1862,88 @@ compiler or resource is required. Original ROMs/saves were not modified.
 **Task 11 complete.** Implementation, failure recovery and cleanup acceptance are
 recorded above. Task 12 (actual agent-authored game tool and agent-facing plugin
 commands) is next. Separate earlier manual/fault-injection checks remain pending.
+
+## Task 12 — bundled tools, agent commands and Kirby power selector
+
+Moved the temporary renderer-owned inspector into `ares.examples.memory` using
+only the scoped plugin SDK. Region selection, offset/length validation, hex reads
+and whitespace-tolerant writes remain available across the existing N64/GBA
+backends; compatible UI state survives reload. Removed `services/inspector.ts` and
+its separate page controls/script. `ares.tools.debugger` displays the native
+immutable last stop and captured registers; live registers are read only when no
+stop exists. A new read-only `debug.read` capability routes those two methods.
+
+The user chose a power selector instead of the roadmap's possible animation tool.
+`ares.examples.kirby` now offers None, seven singles and 28 combinations (IDs 0–35)
+with the seven existing `gameplay/elements` PNGs copied unchanged from the Kirby
+repository. Mappings/addresses come from `docs/kirby64-ability-ids.md` and
+`docs/ares-power-cheat-and-tracing.md`; source/provenance and limits are recorded in
+`bundled-plugins/kirby/README.md`. Activation still requires the verified US rev 0
+normalized content hash, independent of filename.
+
+Each explicit selection sends one prevalidated CPU/cache-aware big-endian batch:
+`0x8012E850` = power ID, `0x800D6E90` = HUD ID, and `0x800D6EA8` = a different valid
+ID to trigger the documented HUD redraw comparison. Immediate readbacks verify
+all words. It requests no frames, resume/pause or controller overrides. Selection
+is never replayed on activate/open/reload; other owners' operations return busy.
+The UI explains use while Kirby is controllable and the known hat/body-palette
+limitation. The user played a separate interactive instance with copied ROM/EEPROM
+and confirmed that the selector works perfectly.
+
+Added `dist/plugins/cli.js` and packaged `ares-plugin`: scaffold/build/list/add/
+enable/open/reload/command, with JSON output and explicit connection/instance
+selection. Scaffolding supplies the TSX SDK example; builds use bundled esbuild;
+reload waits for the replacement generation. Agent open/command actions invoke
+registered handlers directly and acknowledge through main-frame IPC. Main and
+renderer validate the exact generation token, so stale requests never bind to a
+new game or replacement. Commands are not retried after uncertain completion.
+The authenticated private local endpoint retains shared replay/in-flight bounds;
+plugin catalog responses omit log bodies and use bounded pages. The CLI reduces
+oversized pages. The preserved MCP registry remains **68 tools**.
+
+Fresh profiles enable the bundled tools; existing preferences remain respected.
+Tests may suppress defaults with `ARES_DEFAULT_PLUGINS=0`; `ARES_BACKGROUND_TEST=1`
+hides test windows without throttling rendering. No local plugin Node/filesystem
+privilege or untrusted-code sandbox claim is added.
+
+Validation:
+
+- Strict main/browser/preload builds pass. The sequential regression suite passed
+  **84/84**, no skips, in **58.66 seconds**, including isolated Kirby identity,
+  N64/GBA memory behavior, native ownership and existing schemas. An additional
+  real CLI/private-endpoint paging regression passes after the final paging fix.
+- The original-API power test checks verified IDs, icons, CPU-view word batches,
+  redraw invalidation, invalid IDs, wrong revision denial and busy propagation.
+- Real isolated Kirby Electron test: all **36** buttons and icon loads pass; every
+  power/HUD write is read back through the CPU view, detector words differ, and
+  frame/session/epoch/paused state remain unchanged during selections. Reload
+  does not replay a write; stale command tokens reject; explicit command power-14
+  uses the same selector. Original RAM words are restored and ROM hash unchanged.
+  Screenshot: `artifacts/kirby-powers.png`. The automated run boots normally to
+  initialize RDRAM and verifies memory/panel behavior, not 36 visual attacks.
+- Existing Kirby repository states are v152 and are rejected by the v153 loader;
+  they were not rewritten. No serializer conversion was added. Optional compatible
+  state support remains in the test harness. The original ROM, EEPROM and states
+  were not modified by testing; interactive play uses separate copied save data.
+- Real task-12 milestone test passes: MCP triggers a watchpoint in an original
+  instruction fixture; its native stop equals the panel's full immutable stop;
+  CLI scaffold/build/add/enable/open/reload edits TSX while the same game/session/
+  epoch and watch snapshot remain loaded. Conflicting writes/runs return busy;
+  human pause cancels the external run; stale agent commands reject.
+- Existing Electron session/inspector integration passed with the migrated panel.
+  Plugin UI/TSX/delayed cleanup, repeated reload/failure recovery and full 68-tool
+  Electron/MCP integration also pass. Final GUI checks run in hidden windows from
+  an isolated build so the user's play files, focus and watched sources are not
+  rebuilt/reloaded underneath the play session.
+- Fresh `artifacts/task-12-complete/Ares.app` was built from that isolated snapshot
+  and copied outside both checkouts. **PACKAGE_MCP_PASS**: **872 GB frames**,
+  Electron **44.9.0**, bundled Node **24.22.0**, same-session TSX 1→2 hot reload.
+  Bundled CLI scaffold/build/list/add/enable/open/reload/command all pass with no
+  developer Node/npm. Both checkout roots are denied to native loader, MCP adapter
+  and plugin CLI. Bundled Kirby icons and templates are present. Result record:
+  `artifacts/task-12-complete/package-mcp.json`.
+
+**Task 12 complete.** The source, SDK examples, CLI usage, provenance and runtime
+acceptance are documented. Task 13 (settings service/bundled settings plugins) is
+next. Earlier physical takeover, audible-output and task 8 rollback-failure checks
+remain explicitly pending; selector success does not claim those separate passes.

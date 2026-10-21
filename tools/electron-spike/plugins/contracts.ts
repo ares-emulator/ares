@@ -9,6 +9,7 @@ import type {
 export const PLUGIN_API_VERSION = 1
 export const CAPABILITIES = [
   'session.read',
+  'debug.read',
   'session.control',
   'memory.read',
   'memory.write',
@@ -72,7 +73,15 @@ export interface PluginCatalog {
   apiVersion: 1
   plugins: PluginInfo[]
 }
+export interface PluginAction {
+  id: string
+  token: string
+  kind: 'open' | 'command'
+  name: string
+}
 export interface PluginBridge {
+  actions(callback: (action: PluginAction) => void): () => void
+  result(id: string, token: string, error?: string): Promise<void>
   catalog(): Promise<PluginCatalog>
   enable(id: string, enabled: boolean): Promise<PluginCatalog>
   add(): Promise<PluginCatalog>
