@@ -8,7 +8,8 @@ UI and validation. It is a source/documentation audit, not a new runtime test or
 proof that every possible defect has been discovered.
 
 **Task 13 is paused for this triage.** No relocation or runtime behavior was changed
-by this audit. Proposed ordering below is a recommendation awaiting user triage.
+by this audit. The user approved the triage order on 2026-10-21; implementation is authorized.
+See RESUME.md for the concise approved sequence.
 Effort: S = bounded local change; M = several interacting modules; L = separate
 project/multiple reviewable changes. Estimates are relative, not time promises.
 
@@ -131,8 +132,8 @@ from a speculative later refactor to an explicit retirement prerequisite.
 | Later hardening | Lifecycle failures, sustained performance/reload memory, supported game/peripheral matrix and GL recovery | D04/D05, P04/P05, V04/V05, GL part of R05 | Address measured failures and chosen supported workflows rather than claiming universal support. |
 | Later design/release choices | Wider module/schema cleanup, richer plugin commands/media identity, public distribution, extra platforms and asset notices | Remaining F04/F05, P06/P07, R01/R02/R04/R06 | Separate scoped decisions; minimal product branding/developer-controls cleanup from R04 can accompany promotion. |
 
-No batch is approved merely by being listed here. The principal triage decision is
-whether to complete native dependency extraction before task 13 (recommended),
-or do settings first while preserving the current desktop coupling temporarily.
+The user approved this order on 2026-10-21, including native dependency extraction
+before task 13. Deferred items remain deferred; listing a finding does not make
+it an immediate implementation prerequisite.
 There is no proposal to rewrite the emulator cores, introduce multiple JS packages,
 generate all protocols, or optimize video copies as a prerequisite.

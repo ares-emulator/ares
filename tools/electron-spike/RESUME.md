@@ -5,16 +5,41 @@ Updated 2026-10-21. Read this before building, testing or changing runtime files
 ## Current objective
 
 Tasks 1–12 (including 4.5) are implemented. Task 12 landed in `539755659`.
-**Task 13 is on hold at the user's request.** The current work is auditing the
-validated Electron frontend's temporary decisions and triaging them with the user.
-Read [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md); its proposals are not approval to
-implement every item. The user explicitly does not require preserving existing development data: do not
-build a data migration/compatibility layer. Desktop UI is superseded as the intended
-product, but its loader/config/input/resource code is still compiled and used by
-the Electron host; extract those live dependencies before deleting it.
+**The user approved the promotion/cleanup triage on 2026-10-21.** Task 13 stays
+on hold until the foundation work below is complete. Begin implementation; no
+further triage approval is needed. Full findings and acceptance criteria are in
+[TECHNICAL-DEBT.md](TECHNICAL-DEBT.md).
 
-The user wants a permanent home instead of
-`tools/electron-spike`; the destination and migration scope remain to be agreed.
+Approved order:
+
+1. Promote `tools/electron-spike/` to **`electron-ui/`**. Normalize product/build
+   names, versioning and data locations; remove spike branding.
+2. Make development independent of active play: separate build outputs/test
+   profiles and define per-profile ownership so instances cannot overwrite each
+   other's data.
+3. Extract live loader/firmware/save/config/input/resource functionality from
+   `desktop-ui/`; inventory remaining desktop features, remove Electron's desktop
+   and Hiro dependencies, and retire the superseded frontend after that inventory.
+   Git history can preserve the reference. Preserve working native services,
+   compiled system support and emulator cores; this is not a core rewrite.
+4. Establish one repeatable acceptance command, macOS CI, startup recovery with
+   plugins disabled, and explicit dispositions for outstanding manual/fault checks.
+5. Resume task 13: real settings, configurable input and complete plugin SDK types.
+
+The user explicitly does **not** require preserving existing development data.
+Do not build migration/compatibility machinery for old profiles, settings or saves.
+This does not authorize disrupting the user's active play session; see below.
+
+Deferred: public-release packaging/notarization/updates, Windows/Linux, richer
+plugin commands/media matching, broad protocol/module rewrites, optimizations
+without measurements, multiplayer/rumble and wider peripheral support. Preserve
+intentional contracts: TS/ESM with sandbox CJS preload, bounded captures, explicit
+instance selection, trusted plugins and copied video with backpressure.
+
+Continue autonomously through the approved scope with sensible intermediate
+commits. Update this handoff, roadmap and evidence as work lands, and preserve a
+clear new entry point when moving this file. The documentation/audit baseline is
+`2d4c27dfb`; task 12 implementation is `539755659`.
 
 ## Read order and sources of truth
 
@@ -92,5 +117,5 @@ The CJS preload is required by Electron's sandbox; application sources use TS/ES
 Plugins are trusted same-renderer code, not sandboxed extensions.
 
 User authorizes sensible intermediate commits and autonomous completion of agreed
-work. For this detour, first present/agree triage; do not silently resume task 13 or
-turn every audit observation into an implementation requirement.
+work. Triage is approved in the order above. Finish that foundation before task 13;
+do not turn deferred audit observations into additional prerequisites.

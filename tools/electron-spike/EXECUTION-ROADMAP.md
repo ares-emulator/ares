@@ -5,12 +5,12 @@ Task 12 landed in `539755659`. All 68 MCP tools have actual stdio runtime eviden
 plugin, agent CLI and copied-package gates passed. Earlier physical-input,
 audible-output and serializer rollback-failure checks remain pending.
 
-**Current work: promotion/technical-debt audit and user triage. Task 13 is on hold.**
+**Current work: approved promotion/foundation cleanup. Task 13 is on hold.**
 Start with [RESUME.md](RESUME.md) for fresh-agent context, active-play precautions
 and reproduction. Read [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md) for the audit and
 suggested priorities. The frontend is considered validated; its permanent location
-and cleanup scope await triage. Do not begin the relocation or resume task 13
-merely because they are proposed in these documents.
+and cleanup order were approved on 2026-10-21. Begin the sequence in RESUME.md;
+complete foundation cleanup before resuming task 13.
 
 Runtime evidence and historical checkpoints are in
 [EXECUTION-LOG.md](EXECUTION-LOG.md).

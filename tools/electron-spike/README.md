@@ -4,9 +4,9 @@ This frontend runs ares as native C++ in a separate process and displays its raw
 video output in a WebGL2 canvas. It does not compile emulation code to WebAssembly.
 
 Fresh agents: read [RESUME.md](RESUME.md) first. Tasks 1–12 are implemented;
-task 13 is paused while we triage [promotion and technical debt](TECHNICAL-DEBT.md).
-The architecture is validated; the historical spike name/location remains pending
-that triage.
+task 13 is paused for the approved [promotion and foundation cleanup](TECHNICAL-DEBT.md).
+The architecture is validated; the approved move to electron-ui/ and cleanup
+sequence are recorded in the handoff.
 
 Use [EXECUTION-ROADMAP.md](EXECUTION-ROADMAP.md) for the implementation
 sequence, bounded tasks and completion gates across the plans below.

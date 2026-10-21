@@ -1982,3 +1982,15 @@ superseded, but verified that the Electron target still compiles desktop sources
 and uses their loader/registry, settings, input mappings, resources and program
 helpers. Those are live dependencies, not merely a feature reference. No runtime
 changes or deletion performed; extraction/retirement scope remains for triage.
+
+
+### 2026-10-21 — promotion triage approved
+
+The user approved the full recommended sequence: permanent electron-ui home and
+identity; development/play build and profile isolation; desktop dependency
+extraction/retirement before settings; repeatable acceptance/CI and plugin recovery;
+then task 13. Existing development data needs no migration. Deferred release,
+platform, broader API/peripheral and speculative optimization work stays deferred.
+RESUME.md is the single fresh-agent entry point and authorizes implementation of
+this sequence without re-requesting triage approval. Documentation-only change;
+checked with git diff --check, no runtime/session changes.
