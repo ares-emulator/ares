@@ -79,3 +79,16 @@ auto SPU::fifoWriteBlock() -> void {
     }
   }
 }
+
+auto SPU::fifoWriteManual() -> void {
+  if(transfer.type == 2) {
+    while(!fifo.empty()) {
+      writeRAM(transfer.current, fifo.read(0));
+      transfer.current += 2;
+    }
+    return;
+  }
+
+  while(fifo.size() >= 8) fifoWriteBlock();
+  if(!fifo.empty()) debug(unhandled, "SPU::fifoWriteManual: FIFO not empty");
+}

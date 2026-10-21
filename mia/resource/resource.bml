@@ -46,3 +46,5 @@ namespace name=Resource
   namespace name=ZXSpectrum128
     binary name=BIOS file="../Firmware/ZX Spectrum 128/bios.rom"
     binary name=Sub file="../Firmware/ZX Spectrum 128/sub.rom"
+  namespace name=PlayStation
+    binary name=DiscLogo file="../Firmware/PlayStation/disc-logo.tmd"

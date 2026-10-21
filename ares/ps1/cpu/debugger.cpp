@@ -92,13 +92,10 @@ auto CPU::Debugger::interrupt(u8 mask) -> void {
 }
 
 auto CPU::Debugger::messageChar(char c) -> void {
-  if(!tracer.message->enabled()) return;
   tracer.message->notify(c);
 }
 
 auto CPU::Debugger::messageText(u32 address) -> void {
-  if(!tracer.message->enabled()) return;
-
   for(u32 index : range(512)) {
     char data = bus.read<Byte>(address + index);
     if(!data) break;
@@ -107,7 +104,8 @@ auto CPU::Debugger::messageText(u32 address) -> void {
 }
 
 auto CPU::Debugger::message() -> void {
-  if(!tracer.message->enabled()) return;
+  u32 pc = cpu.ipu.pc;
+  if(pc != 0xa0 && pc != 0xb0) return;
 
   if(cpu.ipu.pc == 0xa0 && cpu.ipu.r[9] == 0x3c) messageChar((char)cpu.ipu.r[4]);
   if(cpu.ipu.pc == 0xb0 && cpu.ipu.r[9] == 0x3d) messageChar((char)cpu.ipu.r[4]);
@@ -116,9 +114,9 @@ auto CPU::Debugger::message() -> void {
 }
 
 auto CPU::Debugger::function() -> void {
-  if(!tracer.function->enabled()) return;
-
   u32 pc = cpu.ipu.pc & 0x1fff'ffff;
+  if(pc != 0x80 && pc != 0xa0 && pc != 0xb0 && pc != 0xc0) return;
+
   u32 p0 = cpu.ipu.r[4];
   u32 p1 = cpu.ipu.r[5];
   u32 p2 = cpu.ipu.r[6];

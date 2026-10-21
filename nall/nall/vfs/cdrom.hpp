@@ -9,6 +9,8 @@
 #endif
 #include <nall/decode/wav.hpp>
 #include <nall/decode/zip.hpp>
+#include <condition_variable>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -16,6 +18,11 @@ namespace nall::vfs {
 
 struct cdrom : file {
   ~cdrom() {
+    {
+      lock_guard<mutex> lk(_mutex);
+      _cancelled = true;
+    }
+    _cv.notify_all();
     _thread.join();
   }
 
@@ -81,11 +88,25 @@ struct cdrom : file {
     }
     //subchannel data is always loaded
     if(offset % 2448 < 2352 || force) {
-      while(offset + 1 > _loadOffset) usleep(1);
+      if(_loadOffset.load(std::memory_order_acquire) > offset) return;
+      _wantNotify.store(true, std::memory_order_relaxed);
+      unique_lock<mutex> lk(_mutex);
+      _cv.wait(lk, [&]{
+        return _cancelled || _loadOffset.load(std::memory_order_relaxed) > offset;
+      });
+      _wantNotify.store(false, std::memory_order_relaxed);
     }
   }
 
 private:
+  auto advanceLoadOffset(u64 newOffset) -> bool {
+    if(_cancelled) return false;
+    _loadOffset.store(newOffset, std::memory_order_release);
+    if(_wantNotify.load(std::memory_order_acquire))
+      _cv.notify_one();
+    return true;
+  }
+
   auto loadCue(const string& cueLocation, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
     auto cuesheet = std::make_shared<Decode::CUE>();
     if(!cuesheet->load(cueLocation, archive, compressedFile)) return false;
@@ -148,13 +169,21 @@ private:
     //preload subchannel data
     if (compressedFile != nullptr) {
       auto subFile = archive->findFile({ Location::notsuffix(compressedFile->name), ".sub" });
-      if (subFile) {
-        loadSub(cueLocation, archive, &subFile.get(), session);
-      } else {
-        loadSub({ Location::notsuffix(cueLocation), ".sub" }, nullptr, nullptr, session);
-      }
+      auto sbiFile = archive->findFile({ Location::notsuffix(compressedFile->name), ".sbi" });
+      loadSub(
+        { Location::notsuffix(cueLocation), ".sub" },
+        { Location::notsuffix(cueLocation), ".sbi" },
+        archive,
+        subFile ? &subFile.get() : nullptr,
+        sbiFile ? &sbiFile.get() : nullptr,
+        session
+      );
     } else {
-      loadSub({ Location::notsuffix(cueLocation), ".sub" }, archive, compressedFile, session);
+      loadSub(
+        { Location::notsuffix(cueLocation), ".sub" },
+        { Location::notsuffix(cueLocation), ".sbi" },
+        nullptr, nullptr, nullptr, session
+      );
     }
 
     //load user data on separate thread
@@ -224,14 +253,15 @@ private:
                 fileDataReadPos += length;
               }
             }
-            _loadOffset = offset + 2448;
+            if(!advanceLoadOffset(offset + 2448)) return;
           }
         }
         if(track.postgap) lbaFileBase += track.postgap();
       }
       lbaFileBase += file.sectorCount();
     }
-    _loadOffset = _image.size();
+    _loadOffset.store(_image.size(), std::memory_order_release);
+    _cv.notify_all();
 
     });
 
@@ -280,7 +310,11 @@ private:
     _image.resize(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lbaIndex) + CD::LeadOutSectors));
 
     //preload subchannel data
-    loadSub({Location::notsuffix(location), ".sub"}, nullptr, nullptr, session);
+    loadSub(
+      {Location::notsuffix(location), ".sub"},
+      {Location::notsuffix(location), ".sbi"},
+      nullptr, nullptr, nullptr, session
+    );
 
     //load user data on separate thread
     _thread = thread::create(
@@ -309,11 +343,12 @@ private:
             memory::copy(target, 2352, sectorData.data(), sectorData.size());
           }
           lbaFileBase++;
-          _loadOffset = offset + 2448;
+          if(!advanceLoadOffset(offset + 2448)) return;
         }
       }
     }
-    _loadOffset = _image.size();
+    _loadOffset.store(_image.size(), std::memory_order_release);
+    _cv.notify_all();
 
     });
 
@@ -321,12 +356,19 @@ private:
   }
 #endif
 
-  void loadSub(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile, CD::Session& session) {
+  void loadSub(
+    const string& subLocation,
+    const string& sbiLocation,
+    const Decode::ZIP* archive,
+    const Decode::ZIP::File* subFile,
+    const Decode::ZIP::File* sbiFile,
+    CD::Session& session
+  ) {
     auto subchannel = session.encode((u32)abs(session.leadIn.lba) + (u32)session.leadOut.end + 1);
     const u64 overlayStartSectors = (u64)CD::LeadInSectors + (u64)CD::Track1Pregap;
     const u64 overlayStartBytes   = overlayStartSectors * 96;
-    if(archive != nullptr && compressedFile != nullptr) {
-      auto rawDataBuffer = archive->extract(*compressedFile);
+    if(archive != nullptr && subFile != nullptr) {
+      auto rawDataBuffer = archive->extract(*subFile);
       if(!rawDataBuffer.empty() && overlayStartBytes < subchannel.size()) {
         auto target = subchannel.data() + overlayStartBytes;
         auto maxLen = subchannel.size() - overlayStartBytes;
@@ -334,7 +376,7 @@ private:
         memory::copy(target, (s64)length, rawDataBuffer.data(), length);
       }
     } else {
-      auto overlay = nall::file::read(location);
+      auto overlay = nall::file::read(subLocation);
       if(!overlay.empty() && overlayStartBytes < subchannel.size()) {
         auto target = subchannel.data() + overlayStartBytes;
         auto maxLen = subchannel.size() - overlayStartBytes;
@@ -343,6 +385,11 @@ private:
       }
     }
 
+    auto sbi = archive != nullptr && sbiFile != nullptr
+      ? archive->extract(*sbiFile)
+      : nall::file::read(sbiLocation);
+    patchSbi(subchannel, sbi);
+
     const u64 sectorCount = subchannel.size() / 96;
     for(u64 sector : range(sectorCount)) {
       auto* source = subchannel.data() + sector * 96;
@@ -350,15 +397,47 @@ private:
       memory::copy(target, 96, source, 96);
     }
 
-    // Diagnostic: decode what we generated and dump it
-    CD::Session finalSession;
-    finalSession.decode(subchannel, 96);
-    print(finalSession.serialize());
+  }
+
+  void patchSbi(std::vector<u8>& subchannel, const std::vector<u8>& sbi) {
+    if(sbi.size() < 4) return;
+    if(sbi[0] != 'S' || sbi[1] != 'B' || sbi[2] != 'I' || sbi[3] != 0x00) return;
+
+    u64 offset = 4;
+    while(offset + 4 <= sbi.size()) {
+      auto msf = CD::MSF::fromBCD(sbi[offset + 0], sbi[offset + 1], sbi[offset + 2]);
+      auto format = sbi[offset + 3];
+      offset += 4;
+
+      u32 payloadSize = format == 1 ? 10 : format == 2 || format == 3 ? 3 : 0;
+      if(!payloadSize || offset + payloadSize > sbi.size()) return;
+
+      if(msf) {
+        s64 sector = (s64)CD::LeadInSectors + msf.toABA();
+        if(sector >= 0 && (u64)sector < subchannel.size() / 96) {
+          auto* q = subchannel.data() + (u64)sector * 96 + 12;
+          auto crc16 = CD::CRC16({q, 10}) ^ 0x8001;
+
+          if(format == 1) memory::copy(q,      10, sbi.data() + offset, 10);
+          if(format == 2) memory::copy(q + 3,  3, sbi.data() + offset,  3);
+          if(format == 3) memory::copy(q + 7,  3, sbi.data() + offset,  3);
+
+          q[10] = (u8)(crc16 >> 8);
+          q[11] = (u8)(crc16 >> 0);
+        }
+      }
+
+      offset += payloadSize;
+    }
   }
 
   std::vector<u8> _image;
   u64 _offset = 0;
-  atomic<u64> _loadOffset = 0;
+  atomic<u64>  _loadOffset = 0;
+  mutable atomic<bool> _wantNotify = false;
+  bool _cancelled = false;
+  mutable mutex _mutex;
+  mutable condition_variable _cv;
   thread _thread;
   std::unique_ptr<Decode::ZIP> _archive;
 };

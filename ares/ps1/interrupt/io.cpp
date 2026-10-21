@@ -1,9 +1,13 @@
 auto Interrupt::readByte(u32 address) -> u32 {
-  return readWord(address & ~3) >> 8 * (address & 3);
+  n32 data;
+  debug(unhandled, "Interrupt::readByte(", hex(address, 8L), ") -> ", hex(data, 2L));
+  return data;
 }
 
 auto Interrupt::readHalf(u32 address) -> u32 {
-  return readWord(address & ~3) >> 8 * (address & 3);
+  n32 data;
+  debug(unhandled, "Interrupt::readHalf(", hex(address, 8L), ") -> ", hex(data, 4L));
+  return data;
 }
 
 auto Interrupt::readWord(u32 address) -> u32 {
@@ -46,11 +50,11 @@ auto Interrupt::readWord(u32 address) -> u32 {
 }
 
 auto Interrupt::writeByte(u32 address, u32 data) -> void {
-  return writeWord(address & ~3, data << 8 * (address & 3));
+  debug(unhandled, "Interrupt::writeByte(", hex(address, 8L), ", ", hex(data, 2L), ")");
 }
 
 auto Interrupt::writeHalf(u32 address, u32 data) -> void {
-  return writeWord(address & ~3, data << 8 * (address & 3));
+  debug(unhandled, "Interrupt::writeHalf(", hex(address, 8L), ", ", hex(data, 4L), ")");
 }
 
 auto Interrupt::writeWord(u32 address, u32 value) -> void {

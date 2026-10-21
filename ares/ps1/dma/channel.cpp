@@ -4,7 +4,7 @@ auto DMA::sortChannelsByPriority() -> void {
     u32 id = 8, lowest = 8;
     for(u32 search : range(7)) {
       if(selected[search]) continue;
-      if(channels[search].priority < lowest) {
+      if(channels[search].priority <= lowest) {
         lowest = channels[search].priority;
         id = search;
       }
@@ -14,38 +14,36 @@ auto DMA::sortChannelsByPriority() -> void {
   }
 }
 
+auto DMA::Channel::dmaRequest() const -> bool {
+  if(trigger) return true;
+  if(direction == 0) {
+    switch(id) {
+    case 1: return mdec.canReadDMA();
+    case 2: return gpu.canReadDMA();
+    case 3: return disc.canReadDMA();
+    case 4: return spu.canReadDMA();
+    }
+  } else {
+    switch(id) {
+    case 0: return mdec.canWriteDMA();
+    case 2: return gpu.canWriteDMA();
+    case 4: return spu.canWriteDMA();
+    }
+  }
+  return false;
+}
+
 auto DMA::Channel::kick() -> bool {
+  if(cpu.busAccess) return false;
   if(!masterEnable) return false;
   if(!enable) return false;
 
   if(state == Idle) {
-    static bool (* const canRead[7])() = {
-      []() { return false; },
-      []() { return mdec.canReadDMA(); },
-      []() { return gpu.canReadDMA(); },
-      []() { return disc.canReadDMA(); },
-      []() { return spu.canReadDMA(); },
-      []() { return false; },
-      []() { return false; }
-    };
+    if(!dmaRequest()) return false;
 
-    static bool (* const canWrite[7])() = {
-      []() { return mdec.canWriteDMA(); },
-      []() { return false; },
-      []() { return gpu.canWriteDMA(); },
-      []() { return false; },
-      []() { return spu.canWriteDMA(); },
-      []() { return false; },
-      []() { return false; }
-    };
-
-    auto dmaReq = trigger;
-    if(direction == 0 && canRead[id]()) dmaReq = true;
-    if(direction == 1 && canWrite[id]()) dmaReq = true;
-    if(!dmaReq) return false;
-
-    trigger = 0;
+    if(synchronization != 0) trigger = 0;
     state = Running;
+    dma.runningMask |= 1 << id;
     return true;
   }
 
@@ -53,37 +51,27 @@ auto DMA::Channel::kick() -> bool {
 }
 
 auto DMA::Channel::step() -> bool {
-  if(!masterEnable) return false;
-  if(!enable) return false;
+  if(!masterEnable || !enable) {
+    if(state == Running) {
+      state = Idle;
+      dma.runningMask &= ~(1 << id);
+    }
+    return false;
+  }
+  if(state == Idle && cpu.busAccess) {
+    dma.blocked = true;
+    return false;
+  }
 
   if(state == Idle) {
-    static bool (* const canRead[7])() = {
-      []() { return false; },
-      []() { return mdec.canReadDMA(); },
-      []() { return gpu.canReadDMA(); },
-      []() { return disc.canReadDMA(); },
-      []() { return spu.canReadDMA(); },
-      []() { return false; },
-      []() { return false; }
-    };
+    if(!dmaRequest()) {
+      dma.blocked = true;
+      return false;
+    }
 
-    static bool (* const canWrite[7])() = {
-      []() { return mdec.canWriteDMA(); },
-      []() { return false; },
-      []() { return gpu.canWriteDMA(); },
-      []() { return false; },
-      []() { return spu.canWriteDMA(); },
-      []() { return false; },
-      []() { return false; }
-    };
-
-    auto dmaReq = trigger;
-    if(direction == 0 && canRead[id]()) dmaReq = true;
-    if(direction == 1 && canWrite[id]()) dmaReq = true;
-    if(!dmaReq) return false;
-
-    trigger = 0;
+    if(synchronization != 0) trigger = 0;
     state = Running;
+    dma.runningMask |= 1 << id;
   }
 
   switch(synchronization) {
@@ -100,6 +88,7 @@ auto DMA::Channel::step() -> bool {
   }
 
   state = Idle;
+  dma.runningMask &= ~(1 << id);
   if(synchronization == 0 && chopping.enable == 1) {
     dma.counter = 1 << chopping.cpuWindow;
     dma.step(dma.counter);
@@ -119,39 +108,86 @@ auto DMA::Channel::transferBlock() -> void {
   u32 clocks  = 0;
   u32 wordsTransferred = 0;
 
-  do {
-    //DMA -> CPU
-    if(direction == 0) {
-      u32 data = 0;
-      switch(id) {
-      case 0: debug(unimplemented, "DMA MDECin read"); break;
-      case 1: data = mdec.readDMA(); break;
-      case 2: data = gpu.readDMA(); break;
-      case 3: data = disc.readDMA(); break;
-      case 4: data = spu.readDMA(); break;
-      case 5: debug(unimplemented, "DMA PIO read"); break;
-      case 6: data = address - 4 & 0xfffffc; if(length == 1) data = 0xffffff; break;
-      }
-      bus.write<Word>(address, data);
-    }
+  auto readWord = [&](u32 address) -> u32 {
+    if((address & 0x1fff'ffff) <= 0x007f'ffff) return cpu.ram.readWord(address);
+    return bus.read<Word>(address);
+  };
 
-    //CPU -> DMA
-    if(direction == 1) {
-      u32 data = bus.read<Word>(address);
-      switch(id) {
-      case 0: mdec.writeDMA(data); break;
-      case 1: debug(unimplemented, "DMA MDECout write"); break;
-      case 2: gpu.writeDMA(data); break;
-      case 3: debug(unimplemented, "DMA CDROM write"); break;
-      case 4: spu.writeDMA(data); break;
-      case 5: debug(unimplemented, "DMA PIO write"); break;
-      case 6: debug(unimplemented, "DMA OTC write"); break;
-      }
-    }
+  auto writeWord = [&](u32 address, u32 data) -> void {
+    if((address & 0x1fff'ffff) <= 0x007f'ffff) return cpu.ram.writeWord(address, data);
+    bus.write<Word>(address, data);
+  };
 
-    address += step;
-    wordsTransferred++;
-  } while(--length && --timeout);
+  if(direction == 0) {
+    switch(id) {
+    case 1:
+      do {
+        u32 destination = mdec.dmaAddress(address);
+        writeWord(destination, mdec.readDMA());
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
+    case 2:
+      do {
+        writeWord(address, gpu.readDMA());
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
+    case 3:
+      do {
+        writeWord(address, disc.readDMA());
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
+    case 4:
+      do {
+        writeWord(address, spu.readDMA());
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
+    case 6:
+      do {
+        u32 data = (address - 4) & 0xfffffc;
+        if(length == 1) data = 0xffffff;
+        writeWord(address, data);
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
+    default:
+      break;
+    }
+  } else {
+    switch(id) {
+    case 0:
+      do {
+        mdec.writeDMA(readWord(address));
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
+    case 2:
+      do {
+        gpu.writeDMA(readWord(address));
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
+    case 4:
+      do {
+        spu.writeDMA(readWord(address));
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
+    default:
+      break;
+    }
+  }
 
   u32 bytes = wordsTransferred * 4;
 
@@ -184,8 +220,9 @@ auto DMA::Channel::transferBlock() -> void {
       clocks += bus.calcAccessTime<true,true>(0x1f801820, bytes);
       break;
     case 2: // GPU
-      clocks += bus.calcAccessTime<false,true>(startingAddress, bytes);
-      clocks += bus.calcAccessTime<true,true>(0x1f801810, bytes);
+      clocks += max(bus.calcAccessTime<false,true>(startingAddress, bytes),
+                    bus.calcAccessTime<true,true>(0x1f801810, bytes));
+      clocks += bus.calcAccessTime<true,true>(0x1f801810, 4);
       break;
     case 4: // SPU
       clocks += bus.calcAccessTime<false,true>(startingAddress, bytes);
@@ -203,70 +240,77 @@ auto DMA::Channel::transferBlock() -> void {
       this->address = address;
     }
 
-    if(length == 0) enable = 0;
+    if(length == 0) {
+      enable = 0;
+      trigger = 0;
+      dma.enabledMask &= ~(1 << id);
+    }
     return;
   }
 
   this->address = address;
   if(length == 0) {
     this->blocks--;
-    if(blocks == 0) enable = 0;
+    if(blocks == 0) {
+      enable = 0;
+      trigger = 0;
+      dma.enabledMask &= ~(1 << id);
+    }
   }
 }
+
 
 auto DMA::Channel::transferChain() -> void {
   dma.debugger.transfer(id);
 
   u32 address = this->address & ~3;
   u32 startingAddress = address;
-  u32 wordsTransferred  = 0;
-  u32 timeout = 0x1000;
+  u32 clocks = 0;
+
+  u32 clocksPerWord = 0;
+  switch(id) {
+    case 0: clocksPerWord = bus.calcAccessTime<false,true>(startingAddress, 4)
+                          + bus.calcAccessTime<true,true>(0x1f801820, 4); break;
+    case 2: clocksPerWord = bus.calcAccessTime<false,true>(startingAddress, 4)
+                          + bus.calcAccessTime<true,true>(0x1f801810, 4); break;
+    case 4: clocksPerWord = bus.calcAccessTime<false,true>(startingAddress, 4)
+                          + bus.calcAccessTime<true,true>(0x1f801c00, 4); break;
+  }
 
   do {
-    n32 data = bus.read<Word>(address & 0xfffffc);
+    n32 data = cpu.ram.readWord(address & 0xfffffc);
     address += 4;
-    wordsTransferred  += 1;
 
     if(!chain.length) {
       chain.address = data >>  0;
       chain.length  = data >> 24;
     } else if(chain.length--) {
-      switch(id) {
-      case 0: mdec.writeDMA(data); break;
-      case 1: debug(unimplemented, "DMA MDECout chain"); break;
-      case 2: gpu.writeDMA(data); break;
-      case 3: debug(unimplemented, "DMA CDROM chain"); break;
-      case 4: spu.writeDMA(data); break;
-      case 5: debug(unimplemented, "DMA PIO chain"); break;
-      case 6: debug(unimplemented, "DMA OTC chain"); break;
+      if(likely(id == 2)) {
+        gpu.writeDMA(data);
+      } else {
+        switch(id) {
+        case 0: mdec.writeDMA(data); break;
+        case 1: debug(unimplemented, "DMA MDECout chain"); break;
+        case 3: debug(unimplemented, "DMA CDROM chain"); break;
+        case 4: spu.writeDMA(data); break;
+        case 5: debug(unimplemented, "DMA PIO chain"); break;
+        case 6: debug(unimplemented, "DMA OTC chain"); break;
+        }
       }
     }
-    if(!chain.length) {
-      address = chain.address;
-      if(address & 1 << 23) break;
-      if(wordsTransferred >= timeout) break;
-    }
 
-    u32 clocks = 0;
-    switch(id) {
-      case 0: // MDECin
-        clocks += bus.calcAccessTime<false,true>(startingAddress, 4);
-        clocks += bus.calcAccessTime<true,true>(0x1f801820, 4);
-        break;
-      case 2: // GPU
-        clocks += bus.calcAccessTime<false,true>(startingAddress, 4);
-        clocks += bus.calcAccessTime<true,true>(0x1f801810, 4);
-        break;
-      case 4: // SPU
-        clocks += bus.calcAccessTime<false,true>(startingAddress, 4);
-        clocks += bus.calcAccessTime<true,true>(0x1f801c00, 4);
-        break;
-    }
+    clocks += clocksPerWord;
 
-    dma.counter = clocks;
-    dma.step(dma.counter);
+    if(!chain.length) { address = chain.address; break; }
   } while(true);
 
+  dma.counter = clocks;
+  dma.step(clocks);
+
   this->address = address;
-  if(address & 0x800000) enable = 0;
+  if(address & 0x800000) {
+    enable = 0;
+    trigger = 0;
+    dma.enabledMask &= ~(1 << id);
+  }
 }

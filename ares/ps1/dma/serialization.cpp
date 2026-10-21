@@ -5,12 +5,16 @@ auto DMA::serialize(serializer& s) -> void {
   s(irq.enable);
   s(irq.flag);
   s(irq.unknown);
+  s(controlUnknown);
 
   for(auto& channel : channels) {
     s(channel);
   }
   s(channelsByPriority);
   s(counter);
+  s(runningMask);
+  s(enabledMask);
+  if(s.reading()) sortChannelsByPriority();
 }
 
 auto DMA::Channel::serialize(serializer& s) -> void {

@@ -19,6 +19,7 @@ auto load(Node::System& node, string name) -> bool {
 
 auto option(string name, string value) -> bool {
   if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
+  if(name == "Pixel Accuracy") gpu.pixelAccuracy = value.boolean();
   return true;
 }
 
@@ -56,7 +57,7 @@ auto System::load(Node::System& root, string name) -> bool {
   }
   if(name.find("PAL")) {
     information.region = Region::PAL;
-    information.gpuFrequency = 53'693'175;
+    information.gpuFrequency = 53'222'400;
   }
 
   node = std::make_shared<Core::System>(information.name);
@@ -93,6 +94,7 @@ auto System::load(Node::System& root, string name) -> bool {
     bios.load(fp);
   }
 
+  expansion.load(node);
   return true;
 }
 
@@ -100,6 +102,7 @@ auto System::unload() -> void {
   if(!node) return;
   save();
   if(gpu.screen) gpu.screen->quit(); //stop video thread
+  expansion.unload();
   memory.unload();
   cpu.unload();
   gpu.unload();
@@ -121,6 +124,7 @@ auto System::unload() -> void {
 
 auto System::save() -> void {
   if(!node) return;
+  expansion.save();
   memoryCardPort1.save();
   memoryCardPort2.save();
 }
@@ -133,6 +137,7 @@ auto System::power(bool reset) -> void {
     random.seed(Random::Default);
   }
 
+  expansion.power(reset);
   memory.power(reset);
   cpu.power(reset);
   gpu.power(reset);
@@ -143,14 +148,6 @@ auto System::power(bool reset) -> void {
   peripheral.power(reset);
   dma.power(reset);
   timer.power(reset);
-
-  cpu.exe.reset();
-  if(disc.executable()) {
-    if(auto fp = disc.pak->read("program.exe")) {
-      cpu.exe.allocate(fp->size());
-      cpu.exe.load(fp);
-    }
-  }
 
   scheduler.power(cpu);
 }

@@ -22,6 +22,7 @@ struct MDEC : Thread, Memory::Interface {
   auto canReadDMA() -> bool;
   auto canWriteDMA() -> bool;
   auto readDMA() -> u32;
+  auto dmaAddress(u32 address) const -> u32;
   auto writeDMA(u32 data) -> void;
 
   auto readByte(u32 address) -> u32;
@@ -30,6 +31,7 @@ struct MDEC : Thread, Memory::Interface {
   auto writeByte(u32 address, u32 data) -> void;
   auto writeHalf(u32 address, u32 data) -> void;
   auto writeWord(u32 address, u32 data) -> void;
+  auto processInput() -> void;
 
   auto readInputFifo() -> maybe<u16>;
   auto writeOutputFifo(u32 data) -> void;
@@ -59,6 +61,7 @@ struct MDEC : Thread, Memory::Interface {
   struct IO {
     Mode mode;
     n32  offset;
+    n32  outputWord;
   } io;
 
   struct Block {

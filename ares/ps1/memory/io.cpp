@@ -3,7 +3,6 @@
 
 auto MemoryControl::readByte(u32 address) -> u32 {
   n32 data;
-  if((address & ~3) == 0x1f80'1060) return data = readWord(address & ~3) >> 8 * (address & 3);
   if(address == 0xfffe'0130) return data = readWord(address);  //must be word-aligned
   debug(unhandled, "MemoryControl::readByte(", hex(address, 8L), ")");
   return data;
@@ -11,7 +10,6 @@ auto MemoryControl::readByte(u32 address) -> u32 {
 
 auto MemoryControl::readHalf(u32 address) -> u32 {
   n32 data;
-  if((address & ~3) == 0x1f80'1060) return data = readWord(address & ~3) >> 8 * (address & 3);
   if(address == 0xfffe'0130) return data = readWord(address);  //must be word-aligned
   debug(unhandled, "MemoryControl::readHalf(", hex(address, 8L), ")");
   return data;
@@ -19,6 +17,9 @@ auto MemoryControl::readHalf(u32 address) -> u32 {
 
 auto MemoryControl::readWord(u32 address) -> u32 {
   n32 data;
+
+  if(address == 0x1f80'1000) return data = 0x1f00'0000 | exp1Base.value.bit(0,23);
+  if(address == 0x1f80'1004) return data = 0x1f00'0000 | exp2Base.value.bit(0,23);
 
   if(address == 0x1f80'1060) {
     return data = ram.value;
@@ -47,7 +48,7 @@ auto MemoryControl::readWord(u32 address) -> u32 {
     return data;
   }
 
-  auto readPort = [&](const MemPort& port) -> n32 {
+  auto readPort = [&](const MemPort& port, bool exp1 = false) -> n32 {
     n32 value = 0;
     value.bit( 0, 3) = port.writeDelay;
     value.bit( 4, 7) = port.readDelay;
@@ -59,16 +60,13 @@ auto MemoryControl::readWord(u32 address) -> u32 {
     value.bit(13)     = port.autoIncrement;
     value.bit(14,15) = port.unknown14_15;
     value.bit(16,20) = port.addrBits;
-    value.bit(21,23) = port.reserved21_23;
     value.bit(24,27) = port.dmaTiming;
-    value.bit(28)     = port.addrError;
     value.bit(29)     = port.dmaSelect;
-    value.bit(30)     = port.wideDMA;
-    value.bit(31)     = port.wait;
+    if(exp1) value.bit(31) = port.wait;
     return value;
   };
 
-  if(address == 0x1f80'1008) return data = readPort(exp1);
+  if(address == 0x1f80'1008) return data = readPort(exp1, true);
   if(address == 0x1f80'100c) return data = readPort(exp3);
   if(address == 0x1f80'1010) return data = readPort(bios);
   if(address == 0x1f80'1014) return data = readPort(spu);
@@ -80,7 +78,7 @@ auto MemoryControl::readWord(u32 address) -> u32 {
     data.bit( 4, 7)  = common.com1;
     data.bit( 8,11)  = common.com2;
     data.bit(12,15)  = common.com3;
-    data.bit(16,31)  = common.unused;
+    data.bit(16,17)  = common.unused.bit(0,1);
     return data;
   }
 
@@ -89,23 +87,32 @@ auto MemoryControl::readWord(u32 address) -> u32 {
 }
 
 auto MemoryControl::writeByte(u32 address, u32 data) -> void {
-  if((address & ~3) == 0x1f80'1060) writeWord(address & ~3, data << 8 * (address & 3));
-  if(address == 0xfffe'0130) writeWord(address, data);  //must be word-aligned
+  if(address == 0xfffe'0130) return writeWord(address, data);
+  debug(unhandled, "MemoryControl::writeByte(", hex(address, 8L), ", ", hex(data, 2L), ")");
 }
 
 auto MemoryControl::writeHalf(u32 address, u32 data) -> void {
-  if((address & ~3) == 0x1f80'1060) writeWord(address & ~3, data << 8 * (address & 3));
-  if(address == 0xfffe'0130) writeWord(address, data);  //must be word-aligned
+  if(address == 0xfffe'0130) return writeWord(address, data);
+  debug(unhandled, "MemoryControl::writeHalf(", hex(address, 8L), ", ", hex(data, 4L), ")");
 }
 
 auto MemoryControl::writeWord(u32 address, u32 value) -> void {
   n32 data = value;
 
+  if(address == 0x1f80'1000) {
+    exp1Base.value = 0x1f00'0000 | data.bit(0,23);
+    updateConfiguration();
+    return;
+  }
+
+  if(address == 0x1f80'1004) {
+    exp2Base.value = 0x1f00'0000 | data.bit(0,23);
+    updateConfiguration();
+    return;
+  }
+
   if(address == 0x1f80'1060) {
     ram.value = data;
-
-    ram.delay  = ram.value.bit(7);
-    ram.window = ram.value.bit(9,11);
     return;
   }
 
@@ -145,12 +152,10 @@ auto MemoryControl::writeWord(u32 address, u32 value) -> void {
     port.autoIncrement  = data.bit(13);
     port.unknown14_15   = data.bit(14,15);
     port.addrBits       = data.bit(16,20);
-    port.reserved21_23  = data.bit(21,23);
     port.dmaTiming      = data.bit(24,27);
-    port.addrError      = data.bit(28);
     port.dmaSelect      = data.bit(29);
-    port.wideDMA        = data.bit(30);
     port.wait           = data.bit(31);
+    updateConfiguration();
   };
 
   if(address == 0x1f80'1008) return writePort(exp1);
@@ -165,7 +170,8 @@ auto MemoryControl::writeWord(u32 address, u32 value) -> void {
     common.com1   = data.bit(4,7);
     common.com2   = data.bit(8,11);
     common.com3   = data.bit(12,15);
-    common.unused = data.bit(16,31);
+    common.unused = data.bit(16,17);
+    updateConfiguration();
     return;
   }
 

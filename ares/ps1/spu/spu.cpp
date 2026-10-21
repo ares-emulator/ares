@@ -44,7 +44,15 @@ auto SPU::unload() -> void {
 }
 
 auto SPU::main() -> void {
-  sample();
+  if(transfer.mode == 2 && !fifo.empty()) {
+    if(fifo.size() >= 8) fifoWriteBlock();
+    else if(transfer.type == 2) fifoWriteManual();
+  }
+  if(transfer.mode == 3 && fifo.size() <= 24) fifoReadBlock();
+  if(transfer.mode == 2 && fifo.size() < 8) transfer.request = 1;
+  if(transfer.mode == 3 && fifo.full()) transfer.request = 1;
+  if(transfer.samplePhase == 0) sample();
+  transfer.samplePhase = (transfer.samplePhase + 1) % 3;
   step(1);
 }
 
@@ -103,7 +111,7 @@ auto SPU::step(u32 clocks) -> void {
 }
 
 auto SPU::power(bool reset) -> void {
-  Thread::create(44'100, std::bind_front(&SPU::main, this));
+  Thread::create(44'100 * 3, std::bind_front(&SPU::main, this));
   random.array({ram.data, ram.size});
 
   master = {};
@@ -187,6 +195,8 @@ auto SPU::power(bool reset) -> void {
     v.endx = 0;
   }
   capture = {};
+  for(auto& half : unknown1dbc) half = 0;
+  for(auto& half : unknown1e60) half = 0;
   fifo.flush();
 }
 

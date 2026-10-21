@@ -17,7 +17,7 @@ auto Disc::readByte(u32 address) -> u32 {
   if(address == 0x1f80'1800) {
     data.bit(0) = io.index.bit(0);
     data.bit(1) = io.index.bit(1);
-    data.bit(2) = 0;  //XA-ADPCM FIFO (0 = empty)
+    data.bit(2) = !cdxa.samples.empty();
     data.bit(3) = fifo.parameter.empty();  //1 when empty
     data.bit(4) = !fifo.parameter.full();  //0 when full
     data.bit(5) = !fifo.response.empty();  //0 when empty
@@ -28,7 +28,9 @@ auto Disc::readByte(u32 address) -> u32 {
 
   //response FIFO
   if(address == 0x1f80'1801 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
-    return data = fifo.response.read(data);
+    data = fifo.response.read(data);
+    if(fifo.response.empty()) flushDeferredResponse();
+    return data;
   }
 
   //data FIFO
@@ -58,8 +60,6 @@ auto Disc::readByte(u32 address) -> u32 {
     if(irq.complete.flag   ) flags = 2;
     if(irq.ready.flag      ) flags = 1;
     data.bit(0,2) = flags;
-    data.bit(3) = irq.end.flag;
-    data.bit(4) = irq.error.flag;
     data.bit(5) = 1;
     data.bit(6) = 1;
     data.bit(7) = 1;
@@ -71,15 +71,15 @@ auto Disc::readByte(u32 address) -> u32 {
 }
 
 auto Disc::readHalf(u32 address) -> u32 {
-  debug(unverified, "Disc::readHalf(", hex(address, 8L), ")");
-  n16    data = readByte(address & ~1 | 0) <<  0;
-  return data | readByte(address & ~1 | 1) <<  8;
+  n32 data;
+  debug(unhandled, "Disc::readHalf(", hex(address, 8L), ") -> ", hex(data, 4L));
+  return data;
 }
 
 auto Disc::readWord(u32 address) -> u32 {
-  debug(unverified, "Disc::readWord(", hex(address, 8L), ")");
-  n32    data = readHalf(address & ~3 | 0) <<  0;
-  return data | readHalf(address & ~3 | 2) << 16;
+  n32 data;
+  debug(unhandled, "Disc::readWord(", hex(address, 8L), ") -> ", hex(data, 8L));
+  return data;
 }
 
 auto Disc::writeByte(u32 address, u32 value) -> void {
@@ -164,17 +164,21 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //interrupt flag
   if(address == 0x1f80'1803 && io.index == 1) {
-    if(data.bit(0,2) == 7) {
-           if(irq.ready.flag      ) irq.ready.flag       = 0;
-      else if(irq.complete.flag   ) irq.complete.flag    = 0;
-      else if(irq.acknowledge.flag) irq.acknowledge.flag = 0;
-      else if(irq.end.flag        ) irq.end.flag         = 0;
-      else if(irq.error.flag      ) irq.error.flag       = 0;
-    }
-    if(data.bit(3)) irq.end.flag   = 0;
-    if(data.bit(4)) irq.error.flag = 0;
+    u8 flags = irq.error.flag ? 5 : irq.end.flag ? 4 : irq.acknowledge.flag ? 3 : irq.complete.flag ? 2 : irq.ready.flag ? 1 : 0;
+    u8 remaining = flags & ~data.bit(0,2);
+    bool acknowledged = flags != 0 && remaining == 0;
+    irq.ready.flag       = remaining == 1;
+    irq.complete.flag    = remaining == 2;
+    irq.acknowledge.flag = remaining == 3;
+    irq.end.flag         = remaining == 4;
+    irq.error.flag       = remaining == 5;
     if(data.bit(6)) fifo.parameter.flush();
     irq.poll();
+    if(acknowledged && (fifo.deferred.acknowledge.type != ResponseType::None
+    || fifo.deferred.complete.type != ResponseType::None
+    || fifo.deferred.ready.type != ResponseType::None)) {
+      fifo.deferred.counter = 20'000;
+    }
     flushDeferredResponse();
     return;
   }
@@ -202,13 +206,9 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 }
 
 auto Disc::writeHalf(u32 address, u32 data) -> void {
-  debug(unverified, "Disc::writeHalf(", hex(address, 8L), ")");
-  writeByte(address & ~1 | 0, data >>  0);
-  writeByte(address & ~1 | 1, data >>  8);
+  debug(unhandled, "Disc::writeHalf(", hex(address, 8L), ", ", hex(data, 4L), ")");
 }
 
 auto Disc::writeWord(u32 address, u32 data) -> void {
-  debug(unverified, "Disc::writeWord(", hex(address, 8L), ")");
-  writeHalf(address & ~3 | 0, data >>  0);
-  writeHalf(address & ~3 | 2, data >> 16);
+  debug(unhandled, "Disc::writeWord(", hex(address, 8L), ", ", hex(data, 8L), ")");
 }

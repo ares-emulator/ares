@@ -284,6 +284,28 @@ inline auto CUE::File::scan(const string& pathname, const string& archiveFolderP
     }
   }
 
+  for(auto& track : tracks) {
+    if(track.number == 1 || track.pregap) continue;
+
+    auto hasIndex0 = false;
+    auto first = -1;
+
+    for(auto& index : track.indices) {
+      if(index.lba < 0) continue;
+      if(index.number == 0) hasIndex0 = true;
+      if(first < 0 || index.lba < first) first = index.lba;
+    }
+
+    if(hasIndex0 || first <= 0) continue;
+
+    for(auto& index : track.indices) {
+      if(index.lba < 0) continue;
+      index.lba -= first;
+      if(index.end >= 0) index.end -= first;
+      if(index.end < index.lba) index.end = index.lba - 1;
+    }
+  }
+
   return true;
 }
 

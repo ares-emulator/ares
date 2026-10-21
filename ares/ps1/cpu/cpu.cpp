@@ -1,10 +1,11 @@
 #include <ps1/ps1.hpp>
-#include <map>
+#include <bit>
 
 namespace ares::PlayStation {
 
 CPU cpu;
 #include "delay-slots.cpp"
+#include "write-queue.cpp"
 #include "memory.cpp"
 #include "icache.cpp"
 #include "exceptions.cpp"
@@ -32,126 +33,132 @@ auto CPU::unload() -> void {
   node.reset();
 }
 
-auto CPU::main() -> void {
-  //we need to return periodically to allow save states/exit/etc to function
-  //re-entering has high function call overhead; but we can batch instructions
-  while (true) {
-    instruction();
-    if(ipu.pb + 4 != ipu.pc) {
-       if(accruedCycles >= branchCooldownCycles) {
-        synchronize();
-        break;
-      }
-    }
-  }
-}
-
-auto CPU::step(u32 clocks) -> void {
-  if(clocks == 0) return;
-
-  accruedCycles += clocks;
-
-  if(cyclesUntilForcedSync <= 0) {
-    cyclesUntilForcedSync = forceSyncInterval;
-  }
-
-  cyclesUntilForcedSync -= (s32)clocks;
-
-  if(cyclesUntilForcedSync > 0) return;
-  synchronize();
-}
-
-auto CPU::synchronize() -> void {
-  if(accruedCycles == 0) return;
-  timer.step(accruedCycles);
-  disc.step(accruedCycles);
-  peripheral.step(accruedCycles);
-  Thread::step(accruedCycles);
-  Thread::synchronize();
-
-  accruedCycles = 0;
-  cyclesUntilForcedSync = 0;
-}
-
-auto CPU::ioSynchronize() -> void {
-  if(accruedCycles >= ioCooldownCycles) synchronize();
-}
-
-auto CPU::waitDMA() -> void {
-  while(dma.active()) step(16);
-}
-
-auto CPU::instruction() -> void {
-  if constexpr(Accuracy::CPU::Breakpoints) {
-    if(unlikely(breakpoint.testCode(ipu.pc))) {
-        return (void)instructionEpilogue();
-    }
-  }
-
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(ipu.pc & 3)) {
-      exception.address<Read>(ipu.pc);
-        return (void)instructionEpilogue();
-    }
-  }
-
-  u32 instruction = fetch(ipu.pc);
-  if(exception()) return (void)instructionEpilogue();
-
-  instructionPrologue(instruction);
-  decoderEXECUTE();
-  instructionEpilogue();
-}
-
-auto CPU::instructionPrologue(u32 instruction) -> void {
+alwaysinline auto CPU::instructionPrologue(u32 instruction) -> void {
   pipeline.address = ipu.pc;
   pipeline.instruction = instruction;
-  debugger.instruction();
+  if(unlikely(ipu.pc == 0xa0 || ipu.pc == 0xb0)) {
+    if(unlikely(debugger.tracer.message->enabled())) debugger.message();
+  }
+  if(unlikely(debugger.tracer.instruction->enabled())) debugger.instruction();
 }
 
-auto CPU::instructionEpilogue() -> void {
+alwaysinline auto CPU::instructionEpilogue() -> void {
   ipu.pb = ipu.pc;
   ipu.pc = ipu.pd;
   ipu.pd = ipu.pd + 4;
 
-  processDelayLoad();
-  processDelayBranch();
-  ipu.r[0] = 0;  //it's faster to allow assigning to r0 and then clearing it later
+  if(unlikely(delay.loadPending)) processDelayLoad();
+  if(unlikely(delay.branchPending)) processDelayBranch();
+  ipu.r[0] = 0;
 
-  if(auto interrupts = exception.interruptsPending()) {
+  if(unlikely(exception.interruptsPending())) {
     debugger.interrupt(scc.cause.interruptPending);
     exception.interrupt();
   }
-  exception.triggered = 0;
+  if(unlikely(exception.triggered)) exception.triggered = 0;
+}
 
-  //When a branch is detected, check if we need to hook a  bios call
-  if(ipu.pb + 4 != ipu.pc) {
-    debugger.message();
-    debugger.function();
+auto CPU::main() -> void {
+  //we need to return periodically to allow save states/exit/etc to function
+  //re-entering has high function call overhead; but we can batch instructions
+  while(true) {
+    if constexpr(Accuracy::CPU::Breakpoints) {
+      if(unlikely(breakpoint.active) && unlikely(breakpoint.testCode(ipu.pc))) {
+        return (void)instructionEpilogue();
+      }
+    }
+
+    if constexpr(Accuracy::CPU::AddressErrors) {
+      if(unlikely(ipu.pc & 3)) {
+        exception.address<Read>(ipu.pc);
+        return (void)instructionEpilogue();
+      }
+    }
+
+    u32 instruction = fetch(ipu.pc);
+    if(unlikely(exception())) return (void)instructionEpilogue();
+
+    instructionPrologue(instruction);
+    decoderEXECUTE();
+    instructionEpilogue();
+
+    if constexpr(lockstep) {
+      if(unlikely(++instructionsSinceYield >= 512 || ipu.pb + 4 != ipu.pc)) {
+        instructionsSinceYield = 0;
+        synchronize();
+        break;
+      }
+    } else if(unlikely(++instructionsSinceYield >= 512)) {
+      instructionsSinceYield = 0;
+      synchronize();
+      break;
+    }
   }
 }
 
-auto CPU::instructionHook() -> void {
-  //fast-boot or executable side-loading
-  if(ipu.pd == 0x8003'0000 && !exeLoaded) {
-    exeLoaded = 1;
-    if(!disc.cd || disc.audioCD()) {
-      //todo: is it possible to fast boot into the BIOS menu here?
-    } else if(exe.size > 0) {
-        u32 pc     = exe.readWord(0x10);
-        u32 gp     = exe.readWord(0x14);
-        u32 target = exe.readWord(0x18) & ram.size - 1;
-        u32 source = 2048;
+auto CPU::stepSlow(u32 clocks) -> void {
+  if(clocks == 0) return;
 
-        ipu.pd = pc;
-        ipu.r[28] = gp;
-        for(u32 address : range(exe.size - source)) {
-          ram.writeByte(target + address, exe.readByte(source + address));
-        }
-    } else if(system.fastBoot->value()) {
-      ipu.pd = ipu.r[31];
-    }
+  if(cyclesUntilForcedSync <= 0) resetNextEvent();
+
+  while(clocks > 0) {
+    u32 stepClocks = clocks;
+    if constexpr(!lockstep) stepClocks = min<u32>(stepClocks, cyclesUntilForcedSync);
+    if(writeQueue.count | writeQueue.remaining) stepClocks = writeQueueWindow(stepClocks);
+
+    mulDivRemaining -= min(mulDivRemaining, stepClocks);
+    accruedCycles += stepClocks;
+    clocks -= stepClocks;
+    cyclesUntilForcedSync -= stepClocks;
+
+    if(writeQueue.remaining) writeQueueAdvance(stepClocks);
+    if(lockstep || writeQueue.stalled || cyclesUntilForcedSync <= 0) synchronize();
   }
+}
+
+auto CPU::synchronize() -> void {
+  if(accruedCycles == 0) return;
+  resetNextEvent();
+  timer.step(accruedCycles);
+  disc.step(accruedCycles);
+  peripheral.step(accruedCycles);
+  if(u32 clocks = disc.nextEvent()) setNextEvent(clocks);
+  if(u32 clocks = peripheral.nextEvent()) setNextEvent(clocks);
+  if(unlikely(expansion.connected())) expansion.step(accruedCycles);
+  Thread::step(accruedCycles);
+  accruedCycles = 0;
+  Thread::synchronize();
+}
+
+auto CPU::resetNextEvent() -> void {
+  cyclesUntilForcedSync = gpu.pixelAccuracySetting->value() ? forceSyncInterval : relaxedSyncInterval;
+}
+
+auto CPU::setNextEvent(u32 clocks) -> void {
+  if(cyclesUntilForcedSync <= 0) resetNextEvent();
+  cyclesUntilForcedSync = min<s32>(cyclesUntilForcedSync, (s32)max<u32>(1, clocks));
+}
+
+auto CPU::ioSynchronize() -> void {
+  synchronize();
+}
+
+auto CPU::waitDMA() -> void {
+  while(dma.active()) {
+    step(min<u32>(dmaStallGranularity, dma.cpuReleaseWindow()));
+    synchronize();
+  }
+}
+
+auto CPU::idle(u32 clocks) -> void {
+  while(writeQueue.count | writeQueue.remaining) {
+    step(writeQueue.remaining ? writeQueue.remaining : 1);
+  }
+  if(clocks == 0) {
+    clocks = cyclesUntilForcedSync > 0 ? (u32)cyclesUntilForcedSync : (u32)(gpu.pixelAccuracySetting->value() ? forceSyncInterval : relaxedSyncInterval);
+  }
+  step(clocks);
+  synchronize();
 }
 
 auto CPU::power(bool reset) -> void {
@@ -160,14 +167,20 @@ auto CPU::power(bool reset) -> void {
   random.array({scratchpad.data, scratchpad.size});
 
   accruedCycles = 0;
-  cyclesUntilForcedSync = 0;
+  resetNextEvent();
+  instructionsSinceYield = 0;
+  mulDivRemaining = 0;
+  writeQueue = {};
+  busAccess = false;
+  ioPoll = {};
 
   pipeline = {};
   delay = {};
   icache.power(reset);
-  exeLoaded = 0;
+  fastBooted = 0;
   exception.triggered = 0;
   breakpoint.lastPC = 0;
+  breakpoint.active = false;
   for(auto& r : ipu.r) r = 0;
   ipu.lo = 0;
   ipu.hi = 0;

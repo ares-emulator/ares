@@ -1,7 +1,5 @@
 auto MemoryControl::serialize(serializer& s) -> void {
   s(ram.value);
-  s(ram.delay);
-  s(ram.window);
 
   s(cache.lock);
   s(cache.invalidate);
@@ -25,6 +23,9 @@ auto MemoryControl::serialize(serializer& s) -> void {
   s(common.com3);
   s(common.unused);
 
+  s(exp1Base.value);
+  s(exp2Base.value);
+
   auto port = [&](MemPort& p) {
     s(p.writeDelay);
     s(p.readDelay);
@@ -36,11 +37,8 @@ auto MemoryControl::serialize(serializer& s) -> void {
     s(p.autoIncrement);
     s(p.unknown14_15);
     s(p.addrBits);
-    s(p.reserved21_23);
     s(p.dmaTiming);
-    s(p.addrError);
     s(p.dmaSelect);
-    s(p.wideDMA);
     s(p.wait);
   };
 
@@ -50,4 +48,5 @@ auto MemoryControl::serialize(serializer& s) -> void {
   port(bios);
   port(spu);
   port(cdrom);
+  if(s.reading()) updateConfiguration();
 }

@@ -5,6 +5,7 @@ auto Timer::serialize(serializer& s) -> void {
     s(t.counter);
     s(t.target);
     s(t.synchronize);
+    s(t.syncFreeRun);
     s(t.mode);
     s(t.resetMode);
     s(t.irqOnTarget);
@@ -19,6 +20,7 @@ auto Timer::serialize(serializer& s) -> void {
     s(t.unknown);
     s(t.paused);
     s(t.irqTriggered);
+    s(t.resetPending);
     s(t.wait);
   }
 }

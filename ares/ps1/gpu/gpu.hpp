@@ -19,26 +19,38 @@ struct GPU : Thread, Memory::Interface {
     } graphics;
   } debugger;
 
-  auto vtotal() const -> u32 { return io.videoMode ? 314 : 263; }
+  auto vtotal() const -> u32 {
+    if(io.interlace) return io.videoMode ? 313 : 263;
+    return io.videoMode ? 314 : 263;
+  }
+  auto halfLine() const -> bool { return io.interlace && io.vcounter + 1 == vtotal(); }
   auto vstart() const -> u32 { return io.displayRangeY1; }
   auto vend() const -> u32 { return io.displayRangeY2; }
+  auto hblank() const -> bool { return io.hcounter >= hblankStart(); }
   auto vblank() const -> bool { return io.vcounter < vstart() || io.vcounter >= vend(); }
   auto interlace() const -> bool { return io.verticalResolution && io.interlace; }
-  auto htotal() const -> u32 { return io.videoMode ? 3406 : 3413; }
+  auto htotalNumerator() const -> u64 { return io.videoMode ? 6'812 : 6'825; }
+  auto htotalDenominator() const -> u32 { return 2; }
+  auto htotal() const -> u32 { return htotalNumerator() / htotalDenominator(); }
   auto hblankStart() const -> u32 { return io.displayRangeX2; }
   auto displayWidth() const -> u32 { return io.horizontalResolution < 4 ? displayWidths[io.horizontalResolution] : displayWidths[4]; }
-  auto dotclockDivider() const -> u32 { return io.horizontalResolution < 4 ? dotclockDividers[io.horizontalResolution] : dotclockDividers[4]; }
+  auto rawDotclockDivider() const -> u32 { return io.horizontalResolution < 4 ? dotclockDividers[io.horizontalResolution] : dotclockDividers[4]; }
+  auto dotclockDivider() const -> u32 { return io.dividerPipeline[2]; }
 
   //gpu.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;
+  auto nextHtotal() -> u32;
   auto frame() -> void;
   auto step(u32 clocks) -> void;
+  auto advanceDivider() -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
+  auto writeFifoEmpty() const -> bool;
+  auto dmaRequest() const -> bool;
   auto canReadDMA() -> bool;
   auto canWriteDMA() -> bool;
   auto readDMA() -> u32;
@@ -53,7 +65,12 @@ struct GPU : Thread, Memory::Interface {
 
   //gp0.cpp
   auto readGP0() -> u32;
-  auto writeGP0(u32 data, bool isThread = false) -> void;
+  auto writeGP0(u32 data, bool isThread = false, bool isDMA = false) -> void;
+  auto executeGP0(u32 data, bool isThread = false) -> void;
+  auto commandLength(u32 word) -> u32;
+  auto executeLatch() -> void;
+  auto stepFifo() -> void;
+  auto stepFill(u32 clocks) -> void;
 
   //gp1.cpp
   auto readGP1() -> u32;
@@ -98,11 +115,18 @@ struct GPU : Thread, Memory::Interface {
   struct IO {
     Mode mode = Mode::Normal;
 
+    u32 dividerPipeline[3] = {10, 10, 10};
+    u32 dividerClocks = 0;
     n1  field;      //even or odd scanline
+    n1  displayField;
     n16 hcounter;   //horizontal counter
     n16 vcounter;   //vertical counter
-    i32 pcounter;   //pixel drawing counter
-    i32 dotcounter; //dotclocks since the last timer update
+    u32 htotalRemainder;
+    i32 pcounter;
+    i32 dotcounter;
+    i32 timerDotcounter;
+    u32 hblankClock;
+    n1  hblankFired;
 
     //GP0(a0): copy rectangle (CPU to VRAM)
     //GP0(c0): copy rectangle (VRAM to CPU)
@@ -123,7 +147,8 @@ struct GPU : Thread, Memory::Interface {
     n2 textureDepth;
     n1 dithering;
     n1 drawToDisplay;
-    n1 textureDisable;
+    n1 texturePageBaseY2;
+    n1 texturePageBaseY2Enable;
     n1 textureFlipX;
     n1 textureFlipY;
 
@@ -142,8 +167,8 @@ struct GPU : Thread, Memory::Interface {
     n10 drawingAreaOriginY2;
 
     //GP0(e5): set drawing offset
-    i11 drawingAreaOffsetX;
-    i11 drawingAreaOffsetY;
+    n11 drawingAreaOffsetX;
+    n11 drawingAreaOffsetY;
 
     //GP0(e6): mask bit
     n1 forceMaskBit;
@@ -178,13 +203,71 @@ struct GPU : Thread, Memory::Interface {
     n1 interlace;
     n1 reverseFlag;
 
-    //GP1(10): get GPU information
-    n24 status;
+    n32 dataReadBuffer;
+    n32 vramReadWord;
+    n1 vramReadWordValid;
+    n1 vramReadLatchValid;
+
+    n32 readTransferFifo[64];
+    n7 readTransferFifoLength;
 
     //internal:
     n6 texturePaletteX;
     n9 texturePaletteY;
+    n1 polylineActive;
   } io;
+
+  struct FillState {
+    bool active = false;
+    bool restricted = false;
+    u32 parity = 0;
+    u32 x = 0, y = 0, width = 0, height = 0, color = 0;
+    u32 clocks = 0, elapsed = 0, written = 0;
+  } fill;
+
+  struct Fifo {
+    static constexpr u32 Depth = 16;
+    static constexpr u32 PtrMask = 31;
+    u32 buffer[Depth] = {};
+    u8 writePointer = 0;
+    u8 readPointer = 0;
+
+    auto empty() const -> bool { return writePointer == readPointer; }
+    auto size() const -> u32 { return (writePointer - readPointer) & PtrMask; }
+    auto full() const -> bool { return size() >= Depth; }
+
+    auto write(u32 word) -> void {
+      if(full()) readPointer = (readPointer + 1) & PtrMask;
+      buffer[writePointer & (Depth - 1)] = word;
+      writePointer = (writePointer + 1) & PtrMask;
+    }
+
+    auto read() -> u32 {
+      u32 word = buffer[readPointer & (Depth - 1)];
+      readPointer = (readPointer + 1) & PtrMask;
+      return word;
+    }
+
+    auto reset() -> void {
+      writePointer = readPointer = 0;
+    }
+  } fifo;
+
+  struct FifoIngress {
+    u8   length = 0;
+    u8   target = 0;
+
+    auto reset() -> void { length = target = 0; }
+  } ingress;
+
+  struct CommandLatch {
+    n32 data[256];
+    n8 length;
+    n8 target;
+    n1 ready;
+
+    auto reset() -> void { length = target = ready = 0; }
+  } latch;
 
   struct Queue {
     auto reset() -> void { length = counterX = counterY = 0; }
@@ -203,7 +286,7 @@ struct GPU : Thread, Memory::Interface {
     Queue gp1;
   } queue;
 
-  struct Delta { f32 x, y; };
+  struct Delta { s32 x, y; };
   struct Point { s32 x, y; };
   struct Texel { s32 u, v; };
 
@@ -235,8 +318,8 @@ struct GPU : Thread, Memory::Interface {
 
   struct Vertex : Point, Texel, Color {
     auto setPoint(u32 data) -> Vertex& {
-      x = i11(data >>  0);
-      y = i11(data >> 16);
+      x = i11(i12(data >>  0));
+      y = i11(i12(data >> 16));
       return *this;
     }
 
@@ -275,8 +358,8 @@ struct GPU : Thread, Memory::Interface {
 
   struct Size {
     auto setSize(u32 data) -> Size& {
-      w = u16(data >>  0);
-      h = u16(data >> 16);
+      w = data >>  0 & 0x3ff;
+      h = data >> 16 & 0x1ff;
       return *this;
     }
 
@@ -304,16 +387,22 @@ struct GPU : Thread, Memory::Interface {
 
   //renderer.cpp
   auto generateTables() -> void;
+  auto invalidateTextureCache() -> void;
+  auto invalidateCLUTCache() -> void;
+  auto invalidateCache() -> void;
+  auto queueTextureCacheInvalidation() -> void;
+  auto queueCacheInvalidation() -> void;
 
   struct Render {
     auto weight(Point a, Point b, Point c) const -> s32;
-    auto origin(Point a, Point b, Point c, s32 d[3], f32 area, s32 bias[3]) const -> f32;
-    auto delta(Point a, Point b, Point c, s32 d[3], f32 area) const -> Delta;
+    auto delta(Point a, Point b, Point c, s32 d[3], s32 area) const -> Delta;
+    auto loadCLUTCache() const -> void;
     auto texel(Point p) const -> u16;
     auto dither(Point p, Color c) const -> Color;
     auto modulate(Color above, Color below) const -> Color;
-    auto alpha(Color above, Color below) const -> Color;
-    template<u32 Flags> auto pixel(Point, Color, Point = {}) -> void;
+    auto alpha(u16 above, u16 below) const -> u16;
+    template<u32 Flags> auto pixel(Point, Color, Point = {}, u16* = nullptr) -> void;
+    template<typename Draw> auto writeSpan(s32 x, s32 y, s32 width, Draw&& draw) -> void;
     template<u32 Flags> auto line() -> void;
     template<u32 Flags> auto triangle() -> void;
     template<u32 Flags> auto quadrilateral() -> void;
@@ -325,6 +414,8 @@ struct GPU : Thread, Memory::Interface {
     u32  command;
     u32  flags;
     bool dithering;
+    bool interlacedRendering;
+    bool activeLineLSB;
     u32  semiTransparency;
     bool checkMaskBit;
     bool forceMaskBit;
@@ -332,8 +423,8 @@ struct GPU : Thread, Memory::Interface {
     s32  drawingAreaOriginY1;
     s32  drawingAreaOriginX2;
     s32  drawingAreaOriginY2;
-    u32  drawingAreaOffsetX;
-    u32  drawingAreaOffsetY;
+    s32  drawingAreaOffsetX;
+    s32  drawingAreaOffsetY;
     u32  textureDepth;
     u32  texturePageBaseX;
     u32  texturePageBaseY;
@@ -343,6 +434,9 @@ struct GPU : Thread, Memory::Interface {
     u32  texelMaskY;
     u32  texelOffsetX;
     u32  texelOffsetY;
+    u32  texelErrorMask = 0;
+    bool textureFlipX;
+    bool textureFlipY;
 
     Vertex v0;
     Vertex v1;
@@ -351,6 +445,9 @@ struct GPU : Thread, Memory::Interface {
     Size size;
   };
 
+  auto drawCycles(const Render& render) const -> u32;
+  auto drawBusy() const -> bool { return io.pcounter > 0; }
+
 //unserialized:
   //renderer.cpp
   struct Renderer {
@@ -358,35 +455,77 @@ struct GPU : Thread, Memory::Interface {
     Renderer(GPU& self) : self(self) {}
 
     auto queue(Render& render) -> void;
+    auto synchronize() -> void;
     auto main(uintptr_t) -> void;
     auto kill() -> void;
     auto power() -> void;
 
     nall::thread handle;
     queue_spsc<Render[65536]> fifo;
+    std::atomic<bool> synchronized = true;
+    std::atomic<u32> workSequence = 0;
   } renderer{*this};
 
-  //blitter.cpp
-  struct Blitter {
+  struct TextureCache {
+    u32 tag;
+    u16 data[4];
+  };
+
+  TextureCache textureCache[256];
+  u16 clutCache[256];
+  u32 clutCacheTag4;
+  u32 clutCacheTag8;
+
+  struct Scanout {
     GPU& self;
-    Blitter(GPU& self) : self(self) {}
+    Scanout(GPU& self) : self(self) {}
 
     auto queue() -> void;
-    auto refresh() -> void;
+    auto lineStart() -> void;
+    auto clock(u32 hclock) -> void;
+    auto flushPixel(u32 hclock) -> void;
+    auto pixel(u32 hclock) -> void;
+    auto readRGB24(u32 sourceX) -> u32;
+    auto lineEnd() -> void;
+    auto renderLine() -> void;
     auto power() -> void;
 
-    bool blank;
+    static constexpr u32 ClockScale = 4;
+    static constexpr u32 OutputPitch = 2812 / ClockScale;
+    static constexpr u32 OutputHeight = 576;
+    static constexpr u32 LineScale = 2;
+
     u32  depth;
-    u32  width;
-    u32  height;
-    s32  sx;
-    s32  sy;
-    s32  tx;
-    s32  ty;
-    s32  tw;
-    s32  th;
-    Memory::Writable vram; // Copy of vram for thread queued blit
-  } blitter{*this};
+    u32  dotclock;
+    u32  rangeY1;
+    u32  rangeY2;
+    bool interlace;
+    bool interleaved;
+    bool pal;
+    bool accurate;
+    bool disabled;
+    u32 rangeX1;
+    u32 divider;
+
+    bool lineVisible;
+    u32  targetY;
+    u32  sourceBase;
+    u32  sourceStartX;
+    u32  srcPixelX;
+    u32* outputPtr;
+
+    bool displayCountLatched;
+    bool displayOutputActive;
+    u32 displayPixelsRemaining;
+
+    bool  hasPrevPixel;
+    u32   prevPixelStart;
+    u32   prevPixelColor;
+
+  } scanout{*this};
+
+  Node::Setting::Boolean pixelAccuracySetting;
+  bool pixelAccuracy = false;
 
   u16* vram2D[512];
   u8   ditherTable[4][4][256];

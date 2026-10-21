@@ -497,3 +497,9 @@ component_sources(
     video/v9938/sprite.cpp
     video/v9938/v9938.hpp
 )
+
+component_sources(
+  COMPONENT parallel-flash
+  PRIMARY eeprom/parallel-flash/parallel-flash.cpp
+  INCLUDED eeprom/parallel-flash/parallel-flash.hpp
+)

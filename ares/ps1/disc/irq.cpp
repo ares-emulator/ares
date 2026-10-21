@@ -1,11 +1,7 @@
 auto Disc::IRQ::poll() -> void {
-  bool pending = 0;
-  pending |= ready.flag & ready.enable;
-  pending |= complete.flag & complete.enable;
-  pending |= acknowledge.flag & acknowledge.enable;
-  pending |= end.flag & end.enable;
-  pending |= error.flag & error.enable;
-  interrupt.drive(Interrupt::CDROM, pending);
+  u8 flags = error.flag ? 5 : end.flag ? 4 : acknowledge.flag ? 3 : complete.flag ? 2 : ready.flag ? 1 : 0;
+  u8 mask = ready.enable | complete.enable << 1 | acknowledge.enable << 2;
+  interrupt.drive(Interrupt::CDROM, (flags & mask) != 0);
 }
 
 auto Disc::IRQ::pending() -> bool {

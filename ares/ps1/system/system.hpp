@@ -8,7 +8,7 @@ struct System {
 
   auto name() const -> string { return information.name; }
   auto region() const -> Region { return information.region; }
-  auto frequency() const -> u32 { return 33'868'500; }
+  auto frequency() const -> u32 { return 33'868'800; }
   auto gpuFrequency() const -> u32 { return information.gpuFrequency; }
 
   //system.cpp
@@ -27,7 +27,7 @@ private:
   struct Information {
     string name = "PlayStation";
     Region region = Region::NTSCJ;
-    u32 gpuFrequency = 53'690'000;
+    u32 gpuFrequency = 53'693'175;
   } information;
 
   //serialization.cpp

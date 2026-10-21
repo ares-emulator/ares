@@ -1,4 +1,4 @@
-ares_components(m68hc05)
+ares_components(m68hc05 parallel-flash)
 
 ares_add_sources(
   CORE #
@@ -8,6 +8,7 @@ ares_add_sources(
   PRIMARY #
     memory/memory.cpp
     system/system.cpp
+    expansion/expansion.cpp
     disc/disc.cpp
     cpu/cpu.cpp
     gpu/gpu.cpp
@@ -50,6 +51,7 @@ ares_add_sources(
     cpu/interpreter-scc.cpp
     cpu/interpreter.cpp
     cpu/memory.cpp
+    cpu/write-queue.cpp
     cpu/serialization.cpp
 )
 
@@ -84,7 +86,7 @@ ares_add_sources(
   CORE #
     ps1
   INCLUDED #
-    gpu/blitter.cpp
+    gpu/scanout.cpp
     gpu/debugger.cpp
     gpu/gp0.cpp
     gpu/gp1.cpp
@@ -179,4 +181,15 @@ ares_add_sources(
     timer/io.cpp
     timer/serialization.cpp
     timer/timer.hpp
+)
+
+ares_add_sources(
+  CORE #
+    ps1
+  INCLUDED #
+    expansion/expansion.hpp
+    expansion/datel/datel.cpp
+    expansion/datel/datel.hpp
+    expansion/xplorer/xplorer.cpp
+    expansion/xplorer/xplorer.hpp
 )

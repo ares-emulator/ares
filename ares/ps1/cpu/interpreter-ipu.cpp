@@ -69,6 +69,7 @@ auto CPU::BREAK() -> void {
 }
 
 auto CPU::DIV(cs32& rs, cs32& rt) -> void {
+  mulDivRemaining = 36;
   if(rt) {
     //cast to s64 to prevent exception on INT32_MIN / -1
     LO = s64(rs) / s64(rt);
@@ -80,6 +81,7 @@ auto CPU::DIV(cs32& rs, cs32& rt) -> void {
 }
 
 auto CPU::DIVU(cu32& rs, cu32& rt) -> void {
+  mulDivRemaining = 36;
   if(rt) {
     LO = rs / rt;
     HI = rs % rt;
@@ -107,25 +109,25 @@ auto CPU::JR(cu32& rs) -> void {
   branch(rs);
 }
 
-auto CPU::LB(u32& rt, cu32& rs, s16 imm) -> void {
+alwaysinline auto CPU::LB(u32& rt, cu32& rs, s16 imm) -> void {
   auto data = read<Byte>(rs + imm);
   load(rt, s8(data));
 }
 
-auto CPU::LBU(u32& rt, cu32& rs, s16 imm) -> void {
+alwaysinline auto CPU::LBU(u32& rt, cu32& rs, s16 imm) -> void {
   auto data = read<Byte>(rs + imm);
   load(rt, u8(data));
 }
 
-auto CPU::LH(u32& rt, cu32& rs, s16 imm) -> void {
+alwaysinline auto CPU::LH(u32& rt, cu32& rs, s16 imm) -> void {
   auto data = read<Half>(rs + imm);
-  if(exception()) return;
+  if(unlikely(exception())) return;
   load(rt, s16(data));
 }
 
-auto CPU::LHU(u32& rt, cu32& rs, s16 imm) -> void {
+alwaysinline auto CPU::LHU(u32& rt, cu32& rs, s16 imm) -> void {
   auto data = read<Half>(rs + imm);
-  if(exception()) return;
+  if(unlikely(exception())) return;
   load(rt, u16(data));
 }
 
@@ -133,67 +135,69 @@ auto CPU::LUI(u32& rt, u16 imm) -> void {
   store(rt, imm << 16);
 }
 
-auto CPU::LW(u32& rt, cu32& rs, s16 imm) -> void {
+alwaysinline auto CPU::LW(u32& rt, cu32& rs, s16 imm) -> void {
   auto data = read<Word>(rs + imm);
-  if(exception()) return;
+  if(unlikely(exception())) return;
   load(rt, s32(data));
 }
 
 auto CPU::LWL(u32& rt, cu32& rs, s16 imm) -> void {
   u32 address = rs + imm;
-  u32 data = load(rt);
-  switch(address & 3) {
-  case 0:
-    data &= 0x00ffffff;
-    data |= read<Byte>(address & ~3 | 0) << 24; if(exception()) return;
-    break;
-  case 1:
-    data &= 0x0000ffff;
-    data |= read<Half>(address & ~3 | 0) << 16; if(exception()) return;
-    break;
-  case 2:
-    data &= 0x000000ff;
-    data |= read<Half>(address & ~3 | 0) <<  8; if(exception()) return;
-    data |= read<Byte>(address & ~3 | 2) << 24; if(exception()) return;
-    break;
-  case 3:
-    data &= 0x00000000;
-    data |= read<Word>(address & ~3 | 0) <<  0; if(exception()) return;
-    break;
-  }
-  load(rt, data);
+  u32 offset = address & 3;
+
+  static constexpr u32 lanes[4] = {
+    0b0001,
+    0b0011,
+    0b0111,
+    0b1111,
+  };
+
+  static constexpr u32 mask[4] = {
+    0x00ffffff,
+    0x0000ffff,
+    0x000000ff,
+    0x00000000,
+  };
+
+  static constexpr u32 shift[4] = {24, 16, 8, 0};
+
+  u32 mem = readWordPartial(address, lanes[offset]);
+  if(unlikely(exception())) return;
+  load(rt, (load(rt) & mask[offset]) | (mem << shift[offset]));
 }
 
 auto CPU::LWR(u32& rt, cu32& rs, s16 imm) -> void {
   u32 address = rs + imm;
-  u32 data = load(rt);
-  switch(address & 3) {
-  case 0:
-    data &= 0x00000000;
-    data |= read<Word>(address & ~3 | 0) <<  0; if(exception()) break;
-    break;
-  case 1:
-    data &= 0xff000000;
-    data |= read<Byte>(address & ~3 | 1) <<  0; if(exception()) break;
-    data |= read<Half>(address & ~3 | 2) <<  8; if(exception()) break;
-    break;
-  case 2:
-    data &= 0xffff0000;
-    data |= read<Half>(address & ~3 | 2) <<  0; if(exception()) break;
-    break;
-  case 3:
-    data &= 0xffffff00;
-    data |= read<Byte>(address & ~3 | 3) <<  0; if(exception()) break;
-    break;
-  }
-  load(rt, data);
+  u32 offset = address & 3;
+
+  static constexpr u32 lanes[4] = {
+    0b1111,
+    0b1110,
+    0b1100,
+    0b1000,
+  };
+
+  static constexpr u32 mask[4] = {
+    0x00000000,
+    0xff000000,
+    0xffff0000,
+    0xffffff00,
+  };
+
+  static constexpr u32 shift[4] = {0, 8, 16, 24};
+
+  u32 mem = readWordPartial(address, lanes[offset]);
+  if(unlikely(exception())) return;
+  load(rt, (load(rt) & mask[offset]) | (mem >> shift[offset]));
 }
 
 auto CPU::MFHI(u32& rd) -> void {
+  mulDivStall();
   store(rd, HI);
 }
 
 auto CPU::MFLO(u32& rd) -> void {
+  mulDivStall();
   store(rd, LO);
 }
 
@@ -206,12 +210,15 @@ auto CPU::MTLO(cu32& rs) -> void {
 }
 
 auto CPU::MULT(cs32& rs, cs32& rt) -> void {
+  u32 timing = rs < 0 ? ~rs : rs;
+  mulDivRemaining = (timing >> 11 == 0 ? 6 : timing >> 20 == 0 ? 9 : 13);
   u64 result = s64(rs) * s64(rt);
   LO = result >>  0;
   HI = result >> 32;
 }
 
 auto CPU::MULTU(cu32& rs, cu32& rt) -> void {
+  mulDivRemaining = (rs >> 11 == 0 ? 6 : rs >> 20 == 0 ? 9 : 13);
   u64 result = u64(rs) * u64(rt);
   LO = result >>  0;
   HI = result >> 32;
@@ -229,11 +236,11 @@ auto CPU::ORI(u32& rt, cu32& rs, u16 imm) -> void {
   store(rt, rs | imm);
 }
 
-auto CPU::SB(cu32& rt, cu32& rs, s16 imm) -> void {
+alwaysinline auto CPU::SB(cu32& rt, cu32& rs, s16 imm) -> void {
   write<Byte>(rs + imm, rt);
 }
 
-auto CPU::SH(cu32& rt, cu32& rs, s16 imm) -> void {
+alwaysinline auto CPU::SH(cu32& rt, cu32& rs, s16 imm) -> void {
   write<Half>(rs + imm, rt);
 }
 
@@ -286,50 +293,21 @@ auto CPU::SUBU(u32& rd, cu32& rs, cu32& rt) -> void {
   store(rd, rs - rt);
 }
 
-auto CPU::SW(cu32& rt, cu32& rs, s16 imm) -> void {
+alwaysinline auto CPU::SW(cu32& rt, cu32& rs, s16 imm) -> void {
   write<Word>(rs + imm, rt);
 }
 
 auto CPU::SWL(cu32& rt, cu32& rs, s16 imm) -> void {
   u32 address = rs + imm;
-  u32 data = rt;
-  switch(address & 3) {
-  case 0:
-    write<Byte>(address & ~3 | 0, data >> 24); if(exception()) return;
-    break;
-  case 1:
-    write<Half>(address & ~3 | 0, data >> 16); if(exception()) return;
-    break;
-  case 2:
-    write<Half>(address & ~3 | 0, data >>  8); if(exception()) return;
-    write<Byte>(address & ~3 | 2, data >> 24); if(exception()) return;
-    break;
-  case 3:
-    write<Word>(address & ~3 | 0, data >>  0); if(exception()) return;
-    break;
-  }
+  u32 offset = address & 3;
+  writeWordPartial(address, rt >> (24 - offset * 8), (1u << (offset + 1)) - 1);
 }
 
 auto CPU::SWR(cu32& rt, cu32& rs, s16 imm) -> void {
   u32 address = rs + imm;
-  u32 data = rt;
-  switch(address & 3) {
-  case 0:
-    write<Word>(address & ~3 | 0, data >>  0); if(exception()) return;
-    break;
-  case 1:
-    write<Byte>(address & ~3 | 1, data >>  0); if(exception()) return;
-    write<Half>(address & ~3 | 2, data >>  8); if(exception()) return;
-    break;
-  case 2:
-    write<Half>(address & ~3 | 2, data >>  0); if(exception()) return;
-    break;
-  case 3:
-    write<Byte>(address & ~3 | 3, data >>  0); if(exception()) return;
-    break;
-  }
+  u32 offset = address & 3;
+  writeWordPartial(address, rt << (offset * 8), (15u << offset) & 15);
 }
-
 auto CPU::SYSCALL() -> void {
   exception.systemCall();
 }

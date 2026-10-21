@@ -16,10 +16,14 @@ struct DMA : Thread, Memory::Interface {
   auto unload() -> void;
 
   auto main() -> void;
+  auto canSkipWait() const -> bool;
+  auto skipBusWait(u64 time) -> void;
+  auto skipBusWait(u64 time, bool allowed) -> void;
   auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
-  auto active() -> bool;
+  auto active() const -> bool { return runningMask != 0; }
+  auto cpuReleaseWindow() const -> u32;
 
   //io.cpp
   auto readByte(u32 address) -> u32;
@@ -59,6 +63,7 @@ struct DMA : Thread, Memory::Interface {
     auto transferBlock() -> void;
     auto transferChain() -> void;
     auto kick() -> bool;
+    auto dmaRequest() const -> bool;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -91,8 +96,13 @@ struct DMA : Thread, Memory::Interface {
     n8  state;
   } channels[7] = {{0}, {1}, {2}, {3}, {4}, {5}, {6}};
 
+  n4 controlUnknown;
+  u8 runningMask = 0;
+  u8 enabledMask = 0;
   u32 channelsByPriority[7];
   i32 counter;
+  static constexpr u32 busReleaseCycles = 8;
+  bool blocked = false;
 };
 
 extern DMA dma;

@@ -121,6 +121,10 @@ struct Settings : Markup::Node {
     bool weaveDeinterlacing = true;
   } nintendo64;
 
+  struct PlayStation {
+    string expansionDevice = "None";
+  } playstation;
+
   struct GameBoyAdvance {
     bool player = false;
   } gameBoyAdvance;
@@ -408,6 +412,15 @@ struct CoreSettings : VerticalLayout {
     HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 5};
       CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
       Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, layoutVertSize}};
+
+  Label playstationSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout playstationExpansionLayout{this, Size{~0, 0}, 5};
+      Label playstationExpansionLabel{&playstationExpansionLayout, Size{0, layoutVertSize}};
+      ComboButton playstationExpansionOption{&playstationExpansionLayout, Size{130_sx, 0}};
+      Label playstationFirmwareHint{&playstationExpansionLayout, Size{0, layoutVertSize}};
+    VerticalLayout playstationExpansionNotesLayout{this, Size{~0, 0}, 5};
+      Label playstationEEPROMHint{&playstationExpansionNotesLayout, Size{~0, 0}};
+      Label playstationCompatibilityHint{&playstationExpansionNotesLayout, Size{~0, 0}};
 
   Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};

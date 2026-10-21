@@ -111,6 +111,31 @@ auto CoreSettings::construct() -> void {
   weaveDeinterlacingLayout.setCollapsible(true).setVisible(false);
   #endif
 
+  playstationSettingsLabel.setText("Sony PlayStation Settings").setFont(Font().setBold());
+  playstationExpansionLabel.setText("Parallel Port:");
+  playstationExpansionLayout.setAlignment(0.5).setPadding(12_sx, 0);
+  playstationExpansionNotesLayout.setPadding(12_sx, 0);
+  { ComboButtonItem item{&playstationExpansionOption};
+    item.setText("None");
+    item.setAttribute<string>("device", "None");
+    if(settings.playstation.expansionDevice == "None") item.setSelected(); }
+  for(auto& emulator : emulators) {
+    if(emulator->name != "PlayStation") continue;
+    for(auto& entry : emulator->firmware) {
+      if(entry.type == "BIOS") continue;
+      ComboButtonItem item{&playstationExpansionOption};
+      item.setText({entry.type, " *"});
+      item.setAttribute<string>("device", entry.type);
+      if(entry.type == settings.playstation.expansionDevice) item.setSelected();
+    }
+  }
+  playstationExpansionOption.onChange([&] {
+    if(auto item = playstationExpansionOption.selected()) settings.playstation.expansionDevice = item.attribute<string>("device");
+  });
+  playstationFirmwareHint.setText("* Requires firmware in Firmware settings.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  playstationEEPROMHint.setText("EEPROM changes are stored in save data.\nChanging the assigned firmware resets saved EEPROM changes.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  playstationCompatibilityHint.setText("Warning: Some copy-protected games may not boot with a cheat device connected,\neven when its switch is off.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
   gameBoyAdvanceSettingsLabel.setText("Game Boy Advance Settings").setFont(Font().setBold());
   gameBoyPlayerOption.setText("Game Boy Player").setChecked(settings.gameBoyAdvance.player).onToggle([&] {
     settings.gameBoyAdvance.player = gameBoyPlayerOption.checked();

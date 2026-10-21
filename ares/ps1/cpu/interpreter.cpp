@@ -15,7 +15,7 @@
 #define IMMu16 u16(OPCODE)
 #define IMMu26 (OPCODE & 0x03ff'ffff)
 
-auto CPU::decoderEXECUTE() -> void {
+alwaysinline auto CPU::decoderEXECUTE() -> void {
   switch(OPCODE >> 26) {
   jp(0x00, SPECIAL);
   jp(0x01, REGIMM);
@@ -84,7 +84,7 @@ auto CPU::decoderEXECUTE() -> void {
   }
 }
 
-auto CPU::decoderSPECIAL() -> void {
+alwaysinline auto CPU::decoderSPECIAL() -> void {
   switch(OPCODE & 0x3f) {
   op(0x00, SLL, RD, RT, SA);
   op(0x01, INVALID);
@@ -200,7 +200,7 @@ auto CPU::decoderSCC() -> void {
   op(0x05, INVALID);
   op(0x06, INVALID);
   op(0x07, INVALID);
-  op(0x08, INVALID);
+  br(0x08, branchCoprocessor, false, IMMi16);
   op(0x09, INVALID);
   op(0x0a, INVALID);
   op(0x0b, INVALID);
@@ -225,7 +225,7 @@ auto CPU::decoderGTE() -> void {
   op(0x05, INVALID);
   op(0x06, CTC2, RT, RDn);
   op(0x07, INVALID);
-  op(0x08, INVALID);
+  br(0x08, branchCoprocessor, false, IMMi16);
   op(0x09, INVALID);
   op(0x0a, INVALID);
   op(0x0b, INVALID);
@@ -275,10 +275,12 @@ auto CPU::decoderGTE() -> void {
 
 auto CPU::COP1() -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor();
+  if((OPCODE >> 21 & 0x1f) == 0x08) return branchCoprocessor(false, IMMi16);
 }
 
 auto CPU::COP3() -> void {
   if(!scc.status.enable.coprocessor3) return exception.coprocessor();
+  if((OPCODE >> 21 & 0x1f) == 0x08) return branchCoprocessor(false, IMMi16);
 }
 
 auto CPU::LWC0(u8 rt, cu32& rs, s16 imm) -> void {
@@ -298,17 +300,17 @@ auto CPU::LWC3(u8 rt, cu32& rs, s16 imm) -> void {
 
 auto CPU::SWC0(u8 rt, cu32& rs, s16 imm) -> void {
   if(!scc.status.enable.coprocessor0) return exception.coprocessor();
-  write<Word>(rs + imm, 0);  //read source unknown
+  write<Word>(rs + imm, peek(pipeline.address + 4));
 }
 
 auto CPU::SWC1(u8 rt, cu32& rs, s16 imm) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor();
-  write<Word>(rs + imm, 0);  //read source unknown
+  write<Word>(rs + imm, peek(pipeline.address + 4));
 }
 
 auto CPU::SWC3(u8 rt, cu32& rs, s16 imm) -> void {
   if(!scc.status.enable.coprocessor3) return exception.coprocessor();
-  write<Word>(rs + imm, 0);  //read source unknown
+  write<Word>(rs + imm, peek(pipeline.address + 4));
 }
 
 auto CPU::INVALID() -> void {

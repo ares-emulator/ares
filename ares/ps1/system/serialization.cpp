@@ -1,6 +1,7 @@
-static const string SerializerVersion = "v148";
+static const string SerializerVersion = "v149";
 
 auto System::serialize(bool synchronize) -> serializer {
+  if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
   serializer s;
 
   u32  signature = SerializerSignature;
@@ -12,6 +13,8 @@ auto System::serialize(bool synchronize) -> serializer {
   s(synchronize);
   s(version);
   s(description);
+  u32 device = expansion.type();
+  s(device);
 
   serialize(s, synchronize);
   return s;
@@ -30,6 +33,9 @@ auto System::unserialize(serializer& s) -> bool {
 
   if(signature != SerializerSignature) return false;
   if(string{version} != SerializerVersion) return false;
+  u32 device = 0;
+  s(device);
+  if(device != expansion.type()) return false;
 
   if(synchronize) power(/* reset = */ false);
   serialize(s, synchronize);
@@ -52,4 +58,5 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(peripheral);
   s(dma);
   s(timer);
+  s(expansion);
 }

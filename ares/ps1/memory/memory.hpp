@@ -6,12 +6,23 @@ namespace Memory {
 }
 
 //System Bus
+struct BusConfiguration {
+  u32 width = 0;
+  bool autoIncrement = false;
+};
+
 struct Bus {
+  static constexpr u32 internalRegisterAccessTime = 4;
+
+  static constexpr u32 devicePortAccessTime = 2;
+
   //bus.hpp
   auto mmio(u32 address) -> Memory::Interface&;
+  auto busConfiguration(u32 address) const -> BusConfiguration;
   template<bool isWrite, bool isDMA> auto calcAccessTime(u32 address, u32 bytesCount = 0) -> u32 const;
   template<u32 Size> auto read(u32 address) -> u32;
   template<u32 Size> auto write(u32 address, u32 data) -> void;
+  n32 readLatch;
 };
 
 struct MemoryControl : Memory::Interface {
@@ -21,6 +32,7 @@ struct MemoryControl : Memory::Interface {
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto power(bool reset) -> void;
+  auto updateConfiguration() -> void;
 
   //io.cpp
   auto readByte(u32 address) -> u32;
@@ -35,9 +47,11 @@ struct MemoryControl : Memory::Interface {
 
   struct RAM {
     n32 value;
-    n1  delay;   //1 = add one cycle on simultaneous code+data fetches
-    n3  window;  //size and mirroring/access control
   } ram;
+
+  struct ExpansionBase {
+    n32 value;
+  };
 
   struct Cache {
     n1  lock;               //not emulated
@@ -68,15 +82,19 @@ struct MemoryControl : Memory::Interface {
     n1  autoIncrement;    // auto-increment address on multi-word ops
     n2  unknown14_15;
     n5  addrBits;         // number of address bits (window size = 1<<N)
-    n3  reserved21_23;    // always zero
     n4  dmaTiming;        // DMA override cycles
-    n1  addrError;        // write 1 to clear
     n1  dmaSelect;        // 0=normal, 1=use dmaTiming
-    n1  wideDMA;          // 0=use dataWidth, 1=force 32-bit
     n1  wait;             // wait for external device
 
 
     template<bool isWrite, bool isDMA> auto calcAccessTime(u32 bytesCount = 0) -> u32 const;
+    auto updateTiming() -> void;
+
+    struct Timing {
+      u32 first = 0;
+      u32 sequential = 0;
+      u32 widthShift = 0;
+    } timing[4];
   };
 
   // Global COM delay register
@@ -88,12 +106,20 @@ struct MemoryControl : Memory::Interface {
     n16 unused;
   } common;
 
+  ExpansionBase exp1Base;
+  ExpansionBase exp2Base;
+
   MemPort exp1;
   MemPort exp2;
   MemPort exp3;
   MemPort bios;
   MemPort spu;
   MemPort cdrom;
+
+  u32 exp1Mask = 0;
+  u32 exp1Address = 0;
+  u32 exp2Mask = 0;
+  bool exp2Enabled = false;
 };
 
 struct MemoryExpansion : Memory::Interface {

@@ -19,10 +19,10 @@ struct Thread {
 
   explicit operator bool() const { return _handle; }
   auto active() const -> bool;
-  auto handle() const -> cothread_t;
-  auto frequency() const -> u64;
-  auto scalar() const -> u64;
-  auto clock() const -> u64;
+  auto handle() const -> cothread_t { return _handle; }
+  auto frequency() const -> u64 { return _frequency; }
+  auto scalar() const -> u64 { return _scalar; }
+  auto clock() const -> u64 { return _clock; }
 
   auto setHandle(cothread_t handle) -> void;
   auto setFrequency(double frequency) -> void;

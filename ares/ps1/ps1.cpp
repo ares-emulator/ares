@@ -2,6 +2,7 @@
 
 #include <ps1/memory/memory.cpp>
 #include <ps1/system/system.cpp>
+#include <ps1/expansion/expansion.cpp>
 #include <ps1/disc/disc.cpp>
 #include <ps1/cpu/cpu.cpp>
 #include <ps1/gpu/gpu.cpp>

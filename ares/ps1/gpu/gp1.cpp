@@ -1,6 +1,8 @@
 //GPUSTAT
 auto GPU::readGP1() -> u32 {
   n32 data;
+  bool readReady = io.mode == Mode::CopyFromVRAM
+    && (io.vramReadWordValid || (u32)(cpu.cycleCount() - io.vramReadWord) >= 256);
   data.bit( 0, 3) = io.texturePageBaseX;
   data.bit( 4)    = io.texturePageBaseY;
   data.bit( 5, 6) = io.semiTransparency;
@@ -9,9 +11,9 @@ auto GPU::readGP1() -> u32 {
   data.bit(10)    = io.drawToDisplay;
   data.bit(11)    = io.forceMaskBit;
   data.bit(12)    = io.checkMaskBit;
-  data.bit(13)    = !io.field || !io.interlace;
+  data.bit(13)    = !io.interlace || !io.displayField;
   data.bit(14)    = io.reverseFlag;
-  data.bit(15)    = 0; // io.textureDisable only when 2MB VRAM installed?
+  data.bit(15)    = io.texturePageBaseY2;
   data.bit(16)    = io.horizontalResolution.bit(2);
   data.bit(17,18) = io.horizontalResolution.bit(0,1);
   data.bit(19)    = io.verticalResolution;
@@ -20,19 +22,13 @@ auto GPU::readGP1() -> u32 {
   data.bit(22)    = io.interlace;
   data.bit(23)    = io.displayDisable;
   data.bit(24)    = io.interrupt;
-  data.bit(25)    = 0;
-  data.bit(26)    = io.pcounter == 0;  //ready to receive command
-  data.bit(27)    = io.mode == Mode::CopyFromVRAM;
-  data.bit(28)    = io.pcounter == 0;  //ready to receive DMA block
+  data.bit(25)    = dmaRequest();
+  data.bit(26)    = io.mode == Mode::Normal && !io.polylineActive
+                 && queue.gp0.empty() && !drawBusy() && !fifo.full();
+  data.bit(27)    = readReady;
+  data.bit(28)    = writeFifoEmpty();
   data.bit(29,30) = io.dmaDirection;
-  data.bit(31)    = !vblank() && (interlace() ? !io.field : io.vcounter & 1);
-
-  switch(io.dmaDirection) {
-    case 0: data.bit(25) = 0; break;
-    case 1: data.bit(25) = queue.gp0.length < 16; break;
-    case 2: data.bit(25) = data.bit(28); break;
-    case 3: data.bit(25) = data.bit(27); break;
-  }
+  data.bit(31)    = interlace() ? ((io.displayStartY + (vblank() ? 0u : (u32)io.displayField)) & 1) : (!vblank() && (io.vcounter & 1));
 
   return data;
 }
@@ -40,10 +36,8 @@ auto GPU::readGP1() -> u32 {
 auto GPU::writeGP1(u32 value) -> void {
 //thread.fifo.await_empty();
 
-  n8  command = value >> 24;
+  n8  command = value >> 24 & 0x3f;
   n24 data    = value >>  0;
-
-//print("* GP1(", hex(command, 2L), ") = ", hex(data, 6L), "\n");
 
   //soft reset
   if(command == 0x00) {
@@ -54,7 +48,7 @@ auto GPU::writeGP1(u32 value) -> void {
     io.textureDepth = 0;
     io.dithering = 0;
     io.drawToDisplay = 0;
-    io.textureDisable = 0;
+    io.texturePageBaseY2 = 0;
     io.textureFlipX = 0;
     io.textureFlipY = 0;
 
@@ -81,7 +75,17 @@ auto GPU::writeGP1(u32 value) -> void {
     io.checkMaskBit = 0;
 
     //GP1(01)
+    fifo.reset();
+    ingress.reset();
+    latch.reset();
     queue.gp0.reset();
+    io.polylineActive = 0;
+    io.copy.px = 0;
+    io.copy.py = 0;
+    io.readTransferFifoLength = 0;
+    io.mode = Mode::Normal;
+    if(fill.active) { fill.active = false; io.pcounter = 0; }
+    io.pcounter = max(0, (s32)io.pcounter);
 
     //GP1(02)
     io.interrupt = 0;
@@ -107,18 +111,31 @@ auto GPU::writeGP1(u32 value) -> void {
 
     //GP1(08)
     io.horizontalResolution = 0;
+    for(auto& divider : io.dividerPipeline) divider = 10;
+    io.dividerClocks = 0;
     io.verticalResolution = 0;
     io.videoMode = 0;
     io.colorDepth = 0;
     io.interlace = 0;
     io.reverseFlag = 0;
 
+    queueCacheInvalidation();
     return;
   }
 
   //reset command buffer
   if(command == 0x01) {
+    fifo.reset();
+    ingress.reset();
+    latch.reset();
     queue.gp0.reset();
+    io.polylineActive = 0;
+    io.copy.px = 0;
+    io.copy.py = 0;
+    io.readTransferFifoLength = 0;
+    io.mode = Mode::Normal;
+    if(fill.active) { fill.active = false; io.pcounter = 0; }
+    io.pcounter = max(0, (s32)io.pcounter);
     return;
   }
 
@@ -131,6 +148,7 @@ auto GPU::writeGP1(u32 value) -> void {
 
   //display disable
   if(command == 0x03) {
+    if(scanout.accurate) scanout.flushPixel(io.hcounter);
     io.displayDisable = data.bit(0);
     return;
   }
@@ -150,7 +168,7 @@ auto GPU::writeGP1(u32 value) -> void {
 
   //horizontal display range
   if(command == 0x06) {
-    io.displayRangeX1 = data.bit( 0,11);
+    io.displayRangeX1 = data.bit(0,11);
     io.displayRangeX2 = data.bit(12,23);
     return;
   }
@@ -171,6 +189,16 @@ auto GPU::writeGP1(u32 value) -> void {
     io.interlace                     = data.bit(5);
     io.horizontalResolution.bit(2)   = data.bit(6);
     io.reverseFlag                   = data.bit(7);
+    io.dividerClocks = 3;
+    return;
+  }
+
+  if(command == 0x09) {
+    io.texturePageBaseY2Enable = data.bit(0);
+    return;
+  }
+
+  if(command == 0x20) {
     return;
   }
 
@@ -180,47 +208,46 @@ auto GPU::writeGP1(u32 value) -> void {
 
     //GP1(e2)
     if(data == 0x2) {
-      io.status.bit( 0, 4) = io.textureWindowMaskX;
-      io.status.bit( 5, 9) = io.textureWindowMaskY;
-      io.status.bit(10,14) = io.textureWindowOffsetX;
-      io.status.bit(15,19) = io.textureWindowOffsetY;
-      io.status.bit(20,23) = 0;
+      io.dataReadBuffer = (io.vramReadWordValid ? io.vramReadWord : io.dataReadBuffer) & 0xfff0'0000;
+      io.dataReadBuffer.bit( 0, 4) = io.textureWindowMaskX;
+      io.dataReadBuffer.bit( 5, 9) = io.textureWindowMaskY;
+      io.dataReadBuffer.bit(10,14) = io.textureWindowOffsetX;
+      io.dataReadBuffer.bit(15,19) = io.textureWindowOffsetY;
       return;
     }
 
     //GP1(e3)
     if(data == 0x3) {
-      io.status.bit( 0, 9) = io.drawingAreaOriginX1;
-      io.status.bit(10,19) = io.drawingAreaOriginY1;
-      io.status.bit(20,23) = 0;
+      io.dataReadBuffer = (io.vramReadWordValid ? io.vramReadWord : io.dataReadBuffer) & 0xfff0'0000;
+      io.dataReadBuffer.bit( 0, 9) = io.drawingAreaOriginX1;
+      io.dataReadBuffer.bit(10,19) = io.drawingAreaOriginY1;
       return;
     }
 
     //GP1(e4)
     if(data == 0x4) {
-      io.status.bit( 0, 9) = io.drawingAreaOriginX2;
-      io.status.bit(10,19) = io.drawingAreaOriginY2;
-      io.status.bit(20,23) = 0;
+      io.dataReadBuffer = (io.vramReadWordValid ? io.vramReadWord : io.dataReadBuffer) & 0xfff0'0000;
+      io.dataReadBuffer.bit( 0, 9) = io.drawingAreaOriginX2;
+      io.dataReadBuffer.bit(10,19) = io.drawingAreaOriginY2;
       return;
     }
 
     //GP1(e5)
     if(data == 0x5) {
-      io.status.bit(0, 10) = io.drawingAreaOffsetX;
-      io.status.bit(11,21) = io.drawingAreaOffsetY;
-      io.status.bit(22,23) = 0;
+      io.dataReadBuffer = (io.vramReadWordValid ? io.vramReadWord : io.dataReadBuffer) & 0xffc0'0000;
+      io.dataReadBuffer.bit( 0,10) = io.drawingAreaOffsetX;
+      io.dataReadBuffer.bit(11,21) = io.drawingAreaOffsetY;
       return;
     }
 
     //GP1(e7): GPU type
     if(data == 0x7) {
-      io.status.bit(0,23) = 2;
+      io.dataReadBuffer = 2;
       return;
     }
 
-    //GP1(e8): unknown
     if(data == 0x8) {
-      io.status.bit(0,23) = 0;
+      io.dataReadBuffer = 0;
       return;
     }
 

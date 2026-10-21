@@ -1,42 +1,50 @@
 auto SPU::canReadDMA() -> bool {
-  return transfer.mode == 3;
+  return transfer.mode == 3 && transfer.request && !fifo.empty();
 }
 
 auto SPU::canWriteDMA() -> bool {
-  return transfer.mode == 2;
+  return transfer.mode == 2 && transfer.request && !fifo.full();
 }
 
-auto SPU::readRAM(u32 address) -> u16 {
+auto SPU::testIRQ(u32 address) -> void {
   if(irq.enable && irq.address == u16(address >> 3)) {
+    if(irq.flag) return;
     irq.flag = 1;
     interrupt.raise(Interrupt::SPU);
   }
+}
+
+auto SPU::readRAM(u32 address) -> u16 {
+  testIRQ(address);
   return ram.readHalf(address);
 }
 
 auto SPU::writeRAM(u32 address, u16 data) -> void {
-  if(irq.enable && irq.address == u16(address >> 3)) {
-    irq.flag = 1;
-    interrupt.raise(Interrupt::SPU);
-  }
+  testIRQ(address);
   return ram.writeHalf(address, data);
 }
 
 auto SPU::readDMA() -> u32 {
+  while(fifo.empty() && transfer.mode == 3) dma.step(16);
   if(fifo.empty()) fifoReadBlock();
   n32    data = fifo.read(0) <<  0;
-  return data | fifo.read(0) << 16;
+  data |= fifo.read(0) << 16;
+  if(fifo.empty()) transfer.request = 0;
+  return data;
 }
 
 auto SPU::writeDMA(u32 data) -> void {
+  while(fifo.full() && transfer.mode == 2) dma.step(16);
+  if(fifo.full()) fifoWriteBlock();
   fifo.write(data >>  0);
   fifo.write(data >> 16);
-  if(fifo.size() >= 8) fifoWriteBlock();
+  if(fifo.full()) transfer.request = 0;
 }
 
 auto SPU::readByte(u32 address) -> u32 {
-  n16    data = readHalf(address & ~1);
-  return data >> 8 * (address & 1) & 0xff;
+  n32 data;
+  debug(unhandled, "SPU::readByte(", hex(address, 8L), ") -> ", hex(data, 2L));
+  return data;
 }
 
 auto SPU::readHalf(u32 address) -> u32 {
@@ -244,10 +252,11 @@ auto SPU::readHalf(u32 address) -> u32 {
     data.bit( 3)    = external.reverb;
     data.bit( 4, 5) = transfer.mode;
     data.bit( 6)    = irq.flag;
-    data.bit( 7)    = transfer.mode.bit(1);
-    data.bit( 8)    = transfer.mode == 2;
-    data.bit( 9)    = transfer.mode == 3;
-    data.bit(10)    = 0;  //transfer busy
+    data.bit( 7)    = canReadDMA() || canWriteDMA();
+    data.bit( 8)    = canWriteDMA();
+    data.bit( 9)    = canReadDMA();
+    data.bit(10)    = (transfer.mode == 2 && !fifo.empty())
+                   || (transfer.mode == 3 && !fifo.full());
     data.bit(11)    = capture.address.bit(9);  //in second-half of capture buffer
     return data;
   }
@@ -287,6 +296,8 @@ auto SPU::readHalf(u32 address) -> u32 {
     data.bit(0,15) = current.volume[1];
     return data;
   }
+
+  if(address >= 0x1f80'1dbc && address <= 0x1f80'1dbf) return unknown1dbc[address - 0x1f80'1dbc >> 1];
 
   //dAPF1
   if(address == 0x1f80'1dc0) {
@@ -483,29 +494,40 @@ auto SPU::readHalf(u32 address) -> u32 {
   v = address >> 2 & 31;
 
   //current volume left
-  if((address & 0x1fff'ff83) == 0x1f80'1e00) {
+  if((address & 0x1fff'ff83) == 0x1f80'1e00 && v < 24) {
     data.bit(0,15) = voice[v].current.volume[0];
     return data;
   }
 
   //current volume right
-  if((address & 0x1fff'ff83) == 0x1f80'1e02) {
+  if((address & 0x1fff'ff83) == 0x1f80'1e02 && v < 24) {
     data.bit(0,15) = voice[v].current.volume[1];
     return data;
   }
+
+  if(address >= 0x1f80'1e60 && address <= 0x1f80'1e7f) return unknown1e60[address - 0x1f80'1e60 >> 1];
+
+  if(address >= 0x1f80'1e80 && address <= 0x1f80'1fff) return 0xffff;
 
   debug(unhandled, "SPU::readHalf(", hex(address, 8L), ") -> ", hex(data, 4L));
   return data;
 }
 
 auto SPU::readWord(u32 address) -> u32 {
-  n32    data = readHalf(address & ~3 | 0) <<  0;
-  return data | readHalf(address & ~3 | 2) << 16;
+  n32 data;
+  debug(unhandled, "SPU::readWord(", hex(address, 8L), ") -> ", hex(data, 8L));
+  return data;
 }
 
 auto SPU::writeByte(u32 address, u32 value) -> void {
-  if(address & 1) return;  //odd address writes are ignored
-  writeHalf(address & ~1, value);
+  debug(unhandled, "SPU::writeByte(", hex(address, 8L), ", ", hex(value, 2L), ")");
+}
+
+auto SPU::writeCycle(const Memory::Interface::Cycle& cycle) -> void {
+  if(cycle.size != Half) return Memory::Interface::writeCycle(cycle);
+
+  if(cycle.byteEnable == 0b10) return;
+  writeHalf(cycle.address, cycle.data);
 }
 
 auto SPU::writeHalf(u32 address, u32 value) -> void {
@@ -730,6 +752,9 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
     external.enable = data.bit( 1);
     cdaudio.reverb  = data.bit( 2);
     external.reverb = data.bit( 3);
+    if(transfer.mode != data.bit(4,5)) {
+      transfer.request = data.bit(4,5) == 2 && fifo.empty();
+    }
     transfer.mode   = data.bit( 4, 5);
     irq.enable      = data.bit( 6);
     reverb.enable   = data.bit( 7);
@@ -743,8 +768,7 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
     }
 
     if(transfer.mode == 1) {
-      while(fifo.size() >= 8) fifoWriteBlock();
-      if(!fifo.empty()) debug(unhandled, "SPU::writeHalf: FIFO not empty");
+      fifoWriteManual();
     }
 
     if(irq.enable == 0) {
@@ -801,6 +825,11 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
   //current volume right
   if(address == 0x1f80'1dba) {
     current.volume[1] = data.bit(0,15);
+    return;
+  }
+
+  if(address >= 0x1f80'1dbc && address <= 0x1f80'1dbf) {
+    unknown1dbc[address - 0x1f80'1dbc >> 1] = data;
     return;
   }
 
@@ -1010,10 +1039,16 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
     return;
   }
 
+  if(address >= 0x1f80'1e60 && address <= 0x1f80'1e7f) {
+    unknown1e60[address - 0x1f80'1e60 >> 1] = data;
+    return;
+  }
+
+  if(address >= 0x1f80'1e80 && address <= 0x1f80'1fff) return;
+
   debug(unhandled, "SPU::writeHalf(", hex(address, 8L), ", ", hex(data, 4L), ")");
 }
 
 auto SPU::writeWord(u32 address, u32 data) -> void {
-  writeHalf(address & ~3 | 0, data >>  0);
-  writeHalf(address & ~3 | 2, data >> 16);
+  debug(unhandled, "SPU::writeWord(", hex(address, 8L), ", ", hex(data, 8L), ")");
 }

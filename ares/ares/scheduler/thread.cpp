@@ -23,10 +23,6 @@ inline Thread::~Thread() {
 }
 
 inline auto Thread::active() const -> bool { return co_active() == _handle; }
-inline auto Thread::handle() const -> cothread_t { return _handle; }
-inline auto Thread::frequency() const -> u64 { return _frequency; }
-inline auto Thread::scalar() const -> u64 { return _scalar; }
-inline auto Thread::clock() const -> u64 { return _clock; }
 
 inline auto Thread::setHandle(cothread_t handle) -> void {
   _handle = handle;

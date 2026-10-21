@@ -94,10 +94,10 @@ auto SPU::Reverb::address(u32 address) -> u32 {
 
 auto SPU::Reverb::read(u32 virtualAddress, s32 offset) -> s16 {
   u32 realAddress = address((virtualAddress << 2) + offset);
-  return spu.ram.readHalf(realAddress);
+  return self.readRAM(realAddress);
 }
 
 auto SPU::Reverb::write(u32 virtualAddress, s16 data) -> void {
   u32 realAddress = address(virtualAddress << 2);
-  return spu.ram.writeHalf(realAddress, data);
+  return self.writeRAM(realAddress, data);
 }

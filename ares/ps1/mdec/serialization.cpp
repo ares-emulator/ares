@@ -14,6 +14,7 @@ auto MDEC::serialize(serializer& s) -> void {
 
   s((u32&)io.mode);
   s(io.offset);
+  s(io.outputWord);
 
   s(block.luma);
   s(block.chroma);

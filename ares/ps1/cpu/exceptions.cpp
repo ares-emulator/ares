@@ -1,7 +1,4 @@
 //used to determine if a function call (eg CPU::fetch) triggered an exception
-auto CPU::Exception::operator()() -> bool {
-  return triggered;
-}
 
 auto CPU::Exception::trigger(u32 code, n1 hardwareBreakpoint) -> void {
   triggered = true;
@@ -42,14 +39,9 @@ auto CPU::Exception::trigger(u32 code, n1 hardwareBreakpoint) -> void {
   //exceptions and interrupts discard the execution of delay slots
   self.delay.branch[0] = {};
   self.delay.branch[1] = {};
+  self.delay.branchPending = 0;
   self.ipu.pc = !self.scc.status.vectorLocation ? 0x8000'0080 : 0xbfc0'0180;
   self.ipu.pd = self.ipu.pc;
-}
-
-auto CPU::Exception::interruptsPending() -> u8 {
-  if(!self.scc.status.frame[0].interruptEnable) return 0x00;
-  if(self.delay.interrupt && --self.delay.interrupt) return 0x00;
-  return self.scc.cause.interruptPending & self.scc.status.interruptMask;
 }
 
 auto CPU::Exception::interrupt() -> void {

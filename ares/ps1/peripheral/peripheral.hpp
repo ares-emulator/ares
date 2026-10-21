@@ -18,6 +18,13 @@ struct Peripheral : Memory::Interface {
 
   auto main() -> void;
   auto step(u32 clocks) -> void;
+  auto nextEvent() const -> u32;
+  auto baudrateReload() const -> u32;
+  auto stepBaudrateTimer(u32 clocks) -> u32;
+
+  static constexpr s32 controllerAckDelay = 338;
+  static constexpr s32 memoryCardAckDelay = 1500;
+  static constexpr s32 ackPulseWidth = 96;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -38,9 +45,6 @@ struct Peripheral : Memory::Interface {
     n64 receiveData;
     n8  receiveSize;
 
-    //JOY_TX_DATA
-    n8 transmitData;
-
     //JOY_STAT
     n1 transmitStarted;
     n1 transmitFinished;
@@ -53,32 +57,33 @@ struct Peripheral : Memory::Interface {
     n2 characterLength;
     n1 parityEnable;
     n1 parityType;
-    n2 unknownMode_6_7;
     n1 clockOutputPolarity;
-    n7 unknownMode_9_15;
 
     //JOY_CTRL
     n1 transmitEnable;
     n1 joyOutput;
     n1 receiveEnable;
     n1 unknownCtrl_3;
-    n1 acknowledge;
     n1 unknownCtrl_5;
-    n1 reset;
-    n1 unknownCtrl_7;
     n2 receiveInterruptMode;
     n1 transmitInterruptEnable;
     n1 receiveInterruptEnable;
     n1 acknowledgeInterruptEnable;
     n1 slotNumber;
-    n2 unknownCtrl_14_15;
 
     //JOY_BAUD
     n16 baudrateReloadValue;
 
+    n16 sioMode;
+    n16 sioControl;
+    n16 sioInternal;
+    n16 sioBaudrateReloadValue;
+
     //internal
-    i32 transferCounter;
-    i32 ackCounter;
+    u32 baudrateTimer;
+    u32 transferElapses;
+    i32 ackDelayCounter;
+    i32 ackAssertCounter;
   } io;
 };
 

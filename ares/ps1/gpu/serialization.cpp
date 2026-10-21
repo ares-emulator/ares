@@ -14,10 +14,37 @@ auto GPU::serialize(serializer& s) -> void {
 
   s((u32&)io.mode);
   s(io.field);
+  s(io.displayField);
   s(io.hcounter);
   s(io.vcounter);
+  s(io.htotalRemainder);
   s(io.pcounter);
+  s(fill.active);
+  s(fill.restricted);
+  s(fill.parity);
+  s(fill.x);
+  s(fill.y);
+  s(fill.width);
+  s(fill.height);
+  s(fill.color);
+  s(fill.clocks);
+  s(fill.elapsed);
+  s(fill.written);
+  s(fifo.buffer);
+  s(fifo.writePointer);
+  s(fifo.readPointer);
+  s(ingress.length);
+  s(ingress.target);
+  s(latch.data);
+  s(latch.length);
+  s(latch.target);
+  s(latch.ready);
+  s(io.dividerPipeline);
+  s(io.dividerClocks);
   s(io.dotcounter);
+  s(io.timerDotcounter);
+  s(io.hblankClock);
+  s(io.hblankFired);
   s(io.copy.x);
   s(io.copy.y);
   s(io.copy.width);
@@ -30,7 +57,8 @@ auto GPU::serialize(serializer& s) -> void {
   s(io.textureDepth);
   s(io.dithering);
   s(io.drawToDisplay);
-  s(io.textureDisable);
+  s(io.texturePageBaseY2);
+  s(io.texturePageBaseY2Enable);
   s(io.textureFlipX);
   s(io.textureFlipY);
   s(io.textureWindowMaskX);
@@ -60,9 +88,15 @@ auto GPU::serialize(serializer& s) -> void {
   s(io.colorDepth);
   s(io.interlace);
   s(io.reverseFlag);
-  s(io.status);
+  s(io.dataReadBuffer);
+  s(io.vramReadWord);
+  s(io.vramReadWordValid);
+  s(io.vramReadLatchValid);
+  s(io.readTransferFifo);
+  s(io.readTransferFifoLength);
   s(io.texturePaletteX);
   s(io.texturePaletteY);
+  s(io.polylineActive);
 
   s(queue.gp0.command);
   s(queue.gp0.length);
@@ -74,6 +108,42 @@ auto GPU::serialize(serializer& s) -> void {
   s(queue.gp1.data);
   s(queue.gp1.counterX);
   s(queue.gp1.counterY);
+
+  s(scanout.depth);
+  s(scanout.dotclock);
+  s(scanout.rangeY1);
+  s(scanout.rangeY2);
+  s(scanout.interlace);
+  s(scanout.interleaved);
+  s(scanout.pal);
+  s(scanout.lineVisible);
+  s(scanout.targetY);
+  s(scanout.sourceBase);
+  s(scanout.sourceStartX);
+  s(scanout.srcPixelX);
+  s(scanout.displayCountLatched);
+  s(scanout.displayOutputActive);
+  s(scanout.displayPixelsRemaining);
+  s(scanout.hasPrevPixel);
+  s(scanout.prevPixelStart);
+  s(scanout.prevPixelColor);
+  if(s.reading()) {
+    scanout.accurate = pixelAccuracySetting->value();
+    scanout.disabled = io.displayDisable;
+    scanout.rangeX1 = io.displayRangeX1;
+    scanout.divider = dotclockDivider();
+    scanout.outputPtr = screen->pixels(0).data();
+    if(scanout.targetY < Scanout::OutputHeight)
+      scanout.outputPtr += scanout.targetY * Scanout::OutputPitch;
+  }
+
+  for(auto& entry : textureCache) {
+    s(entry.tag);
+    s(entry.data);
+  }
+  s(clutCache);
+  s(clutCacheTag4);
+  s(clutCacheTag8);
 
   renderer.power();
 }

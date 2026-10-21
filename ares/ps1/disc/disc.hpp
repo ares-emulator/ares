@@ -34,8 +34,7 @@ struct Disc : Memory::Interface {
   auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
   auto audioCD() const -> bool { return information.audio; }
-  auto executable() const -> bool { return information.executable; }
-  auto noDisc() const -> bool { return !title(); }
+  auto noDisc() const -> bool { return !fd; }
 
   //disc.cpp
   auto load(Node::Object) -> void;
@@ -45,8 +44,8 @@ struct Disc : Memory::Interface {
   auto connect() -> void;
   auto disconnect() -> void;
 
-  auto main() -> void;
   auto step(u32 clocks) -> void;
+  auto nextEvent() const -> u32;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -77,6 +76,7 @@ struct Disc : Memory::Interface {
   auto flushDeferredResponse() -> void;
 
   auto executeCommand(u8 operation) -> void;
+  auto executeSecondResponse(u8 operation) -> void;
   auto commandTest() -> void;
   auto commandInvalid() -> void;
   auto commandNop() -> void;
@@ -156,7 +156,8 @@ struct Disc : Memory::Interface {
       n1 speed;
     } mode;
 
-    u32 recentlyReset;
+    n1 headerValid;
+    n1 standby;
     u32 seeking;
     u32 seekDelay;
     u16 seekRetries;
@@ -229,17 +230,11 @@ struct Disc : Memory::Interface {
   } cdxa{*this};
 
   struct Command {
-    struct Current {
+    struct SecondResponse {
       u8  command;
-      u8  invocation;
       n1  pending;
       s32 counter;
-    } current;
-
-    struct Pending {
-      u8 command;
-      n1 pending;
-    } queued;
+    } secondResponse;
 
     struct Transfer {
       s32 counter;
@@ -286,6 +281,7 @@ struct Disc : Memory::Interface {
       DeferredData ready;       //INT1
       DeferredData complete;    //INT2
       DeferredData acknowledge; //INT3,4,5
+      s32 counter;
     } deferred;
   } fifo;
 
@@ -321,7 +317,6 @@ struct Disc : Memory::Interface {
     string title;
     string region;
     boolean audio;
-    boolean executable;
   } information;
 };
 

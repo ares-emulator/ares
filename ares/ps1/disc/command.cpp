@@ -36,40 +36,40 @@ auto Disc::ack() -> void {
 }
 
 auto Disc::queueResponse(ResponseType type, std::initializer_list<u8> response) -> void {
-  if(!irq.pending()) {
-    fifo.response.flush();
-    for (auto n : response) fifo.response.write(n);
-
-    switch(type) {
-    case ResponseType::Ready:       irq.ready.flag       = 1; break;
-    case ResponseType::Complete:    irq.complete.flag    = 1; break;
-    case ResponseType::Acknowledge: irq.acknowledge.flag = 1; break;
-    case ResponseType::End:         irq.end.flag         = 1; break;
-    case ResponseType::Error:       irq.error.flag       = 1; break;
-    default: break;
-    }
-
-    irq.poll();
-    return;
-  }
-
   auto defer = [&](FIFO::DeferredData& slot) {
     slot.type = type;
     slot.data.flush();
     for(auto n : response) slot.data.write(n);
   };
 
+  if(irq.pending()) {
+    switch(type) {
+    case ResponseType::Ready: if(fifo.deferred.ready.type == ResponseType::None) defer(fifo.deferred.ready); break;
+    case ResponseType::Complete: defer(fifo.deferred.complete); break;
+    case ResponseType::Acknowledge: case ResponseType::End: case ResponseType::Error: defer(fifo.deferred.acknowledge); break;
+    default: break;
+    }
+    return;
+  }
+
+  fifo.response.flush();
+  for(auto n : response) fifo.response.write(n);
 
   switch(type) {
-  case ResponseType::Ready: if(fifo.deferred.ready.type == ResponseType::None) defer(fifo.deferred.ready); break;
-  case ResponseType::Complete: defer(fifo.deferred.complete); break;
-  case ResponseType::Acknowledge: case ResponseType::End: case ResponseType::Error: defer(fifo.deferred.acknowledge); break;
+  case ResponseType::Ready:       irq.ready.flag       = 1; break;
+  case ResponseType::Complete:    irq.complete.flag    = 1; break;
+  case ResponseType::Acknowledge: irq.acknowledge.flag = 1; break;
+  case ResponseType::End:         irq.end.flag         = 1; break;
+  case ResponseType::Error:       irq.error.flag       = 1; break;
   default: break;
   }
+
+  irq.poll();
 }
 
 auto Disc::flushDeferredResponse() -> void {
   if(irq.pending()) return;
+  if(fifo.deferred.counter > 0) return;
 
   auto deliver = [&](FIFO::DeferredData& slot) -> bool {
     if(slot.type == ResponseType::None) return false;
@@ -143,17 +143,83 @@ auto Disc::executeCommand(u8 operation) -> void {
   debugger.commandEpilogue(operation);
 }
 
+auto Disc::executeSecondResponse(u8 operation) -> void {
+  switch(operation) {
+  case 0x07:
+    queueResponse(ResponseType::Complete, {status()});
+    break;
+
+  case 0x08:
+    ssr.playingCDDA = 0;
+    queueResponse(ResponseType::Complete, {status()});
+    break;
+
+  case 0x09:
+    queueResponse(ResponseType::Complete, {status()});
+    break;
+
+  case 0x0a:
+    queueResponse(ResponseType::Complete, {status()});
+    break;
+
+  case 0x12:
+    ack();
+    break;
+
+  case 0x1a:
+    if(noDisc()) {
+      ssr.idError = 1;
+      queueResponse(ResponseType::Error, {0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+    } else if(region().find("NTSC-J") && Region::NTSCJ()) {
+      ssr.idError = 0;
+      queueResponse(ResponseType::Complete, {status(), 0x00, 0x20, 0x00, 'S', 'C', 'E', 'I'});
+    } else if(region().find("NTSC-U") && Region::NTSCU()) {
+      ssr.idError = 0;
+      queueResponse(ResponseType::Complete, {status(), 0x00, 0x20, 0x00, 'S', 'C', 'E', 'A'});
+    } else if(region().find("PAL") && Region::PAL()) {
+      ssr.idError = 0;
+      queueResponse(ResponseType::Complete, {status(), 0x00, 0x20, 0x00, 'S', 'C', 'E', 'E'});
+    } else if(audioCD()) {
+      ssr.idError = 1;
+      queueResponse(ResponseType::Error, {0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+    } else {
+      ssr.idError = 1;
+      queueResponse(ResponseType::Error, {0x80, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+    }
+    break;
+
+  case 0x1e:
+    ack();
+    break;
+  }
+}
+
 //0x19
 auto Disc::commandTest() -> void {
   u8 operation = 0x19;
+  if(fifo.parameter.empty()) {
+    error(ErrorCode_InvalidParameterCount);
+    return;
+  }
+
   u8 suboperation = fifo.parameter.read(0);
   debugger.commandPrologue(operation, suboperation);
 
   switch(suboperation) {
+  case 0x00:
+    if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); break; }
+    ssr.motorOn = 1;
+    ack();
+    break;
   case 0x04: commandTestStartReadSCEX(); break;
   case 0x05: commandTestStopReadSCEX(); break;
-  case 0x20: commandTestControllerDate(); break;
-  default: commandUnimplemented(operation, suboperation); break;
+  case 0x20:
+    if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); break; }
+    commandTestControllerDate();
+    break;
+  default:
+    error(fifo.parameter.empty() ? ErrorCode_InvalidParameterValue : ErrorCode_InvalidParameterCount);
+    break;
   }
 
   debugger.commandEpilogue(operation, suboperation);
@@ -240,7 +306,7 @@ auto Disc::commandPlay() -> void {
     drive.pendingOperation = Disc::Drive::PendingOperation::Play;
     drive.seekRetries = 0;
     drive.seeking = drive.distance();
-    drive.seekDelay = 3 << drive.mode.speed;
+    drive.seekDelay = max<u32>(drive.seekDelay, 3 << drive.mode.speed);
 
     ack();
     return;
@@ -254,7 +320,7 @@ auto Disc::commandPlay() -> void {
     drive.pendingOperation = Disc::Drive::PendingOperation::Play;
     drive.seekRetries = 0;
     drive.seeking = drive.distance();
-    drive.seekDelay = 3 << drive.mode.speed;
+    drive.seekDelay = max<u32>(drive.seekDelay, 3 << drive.mode.speed);
     drive.lba.pending = 0;
 
     ack();
@@ -286,113 +352,89 @@ auto Disc::commandBackward() -> void {
 
 //0x06
 auto Disc::commandReadN() -> void {
-  if(drive.lba.pending) {
-    ssr.reading = 0;
-    ssr.playingCDDA = 0;
-
-    drive.seekType = Drive::SeekType::SeekL;
-    drive.pendingOperation = Drive::PendingOperation::Read;
-    drive.seekRetries = 0;
-    drive.seeking = drive.distance();
-    drive.seekDelay = 3 << drive.mode.speed;
-    drive.lba.pending = 0;
-
-    ack();
-    return;
-  }
-
-  ssr.reading = 1;
-  ssr.playingCDDA = 0;
   ack();
+  if(!drive.lba.pending && ((!ssr.playingCDDA && ssr.reading)
+  || drive.pendingOperation == Drive::PendingOperation::Read)) return;
+
+  if(!drive.lba.pending) drive.lba.request = drive.lba.current;
+  ssr.reading = 0;
+  ssr.playingCDDA = 0;
+  drive.seekType = Drive::SeekType::SeekL;
+  drive.pendingOperation = Drive::PendingOperation::Read;
+  drive.seekRetries = 0;
+  drive.seeking = drive.distance();
+  drive.seekDelay = max<u32>(drive.seekDelay, 3 << drive.mode.speed);
+  drive.lba.pending = 0;
 }
 
 //0x07
 auto Disc::commandStandby() -> void {
-  if(command.current.invocation == 0) {
-    command.current.invocation = 1;
-    command.current.counter = 50'000;
-
-    ack();
-    return;
-  }
-
-  if(command.current.invocation == 1) {
-    queueResponse(ResponseType::Complete, {status()});
-    command.current.invocation = 0;
-    return;
-  }
+  drive.standby = 1;
+  command.secondResponse.command = 0x07;
+  command.secondResponse.counter = 50'000;
+  command.secondResponse.pending = 1;
+  ack();
 }
 
 //0x08
 auto Disc::commandStop() -> void {
-  if(command.current.invocation == 0) {
-    command.current.invocation = 1;
-    command.current.counter = 50'000;
-
-    ack();
-    return;
-  }
-
-  if(command.current.invocation == 1) {
-    ssr.playingCDDA = 0;
-
-    queueResponse(ResponseType::Complete, {status()});
-    command.current.invocation = 0;
-    return;
-  }
+  drive.standby = 0;
+  command.secondResponse.command = 0x08;
+  command.secondResponse.counter = 50'000;
+  command.secondResponse.pending = 1;
+  ack();
 }
 
 //0x09
 auto Disc::commandPause() -> void {
-  if(command.current.invocation == 0) {
-    command.current.invocation = 1;
-    command.current.counter = system.frequency() * (drive.mode.speed ? 35 : 70) / 1000;
-    ack();
-    ssr.reading = 0;
-    return;
-  }
-
-  if(command.current.invocation == 1) {
-    queueResponse(ResponseType::Complete, {status()});
-    command.current.invocation = 0;
-    return;
-  }
+  ack();
+  drive.standby = 0;
+  fifo.deferred.ready = {};
+  ssr.reading = 0;
+  ssr.playingCDDA = 0;
+  command.secondResponse.command = 0x09;
+  command.secondResponse.counter = system.frequency() * (drive.mode.speed ? 35 : 70) / 1000;
+  command.secondResponse.pending = 1;
 }
 
 //0x0a
 auto Disc::commandInit() -> void {
-  if(command.current.invocation == 0) {
-    if(!fifo.parameter.empty()) {
-      error(ErrorCode_InvalidParameterCount);
-      return;
-    }
-
-    command.current.invocation = 1;
-    command.current.counter = 4'000'000;  // ~118ms
-
-    drive.mode.cdda       = 0;
-    drive.mode.autoPause  = 0;
-    drive.mode.report     = 0;
-    drive.mode.xaFilter   = 0;
-    drive.mode.ignore     = 0;
-    drive.mode.sectorSize = 0;
-    drive.mode.xaADPCM    = 0;
-    drive.mode.speed      = 0;
-    drive.recentlyReset   = 75 << drive.mode.speed;
-    drive.lba = {};
-
-    ssr.motorOn = 1;
-    ssr.reading = 0;
-    ssr.shellOpen = noDisc();
-    ack();
+  if(!fifo.parameter.empty()) {
+    error(ErrorCode_InvalidParameterCount);
     return;
   }
 
-  if(command.current.invocation == 1) {
-    queueResponse(ResponseType::Complete, {status()});
-    command.current.invocation = 0;
+  if(command.secondResponse.pending && command.secondResponse.command == 0x0a) {
     return;
   }
+
+  command.secondResponse.command = 0x0a;
+  command.secondResponse.counter = 4'000'000;
+  command.secondResponse.pending = 1;
+  ack();
+
+  drive.mode.cdda       = 0;
+  drive.mode.autoPause  = 0;
+  drive.mode.report     = 0;
+  drive.mode.xaFilter   = 0;
+  drive.mode.ignore     = 0;
+  drive.mode.sectorSize = 1;
+  drive.mode.xaADPCM    = 0;
+  drive.mode.speed      = 0;
+  drive.lba = {};
+  drive.standby = 0;
+  drive.seeking = 0;
+  drive.seekDelay = 0;
+  drive.seekType = Drive::SeekType::None;
+  drive.pendingOperation = Drive::PendingOperation::None;
+  drive.seekRetries = 0;
+  fifo.deferred.ready = {};
+  fifo.deferred.complete = {};
+
+  ssr.motorOn = !noDisc();
+  ssr.reading = 0;
+  ssr.playingCDDA = 0;
+  ssr.shellOpen = noDisc();
 }
 
 //0x0b
@@ -460,7 +502,7 @@ auto Disc::commandGetlocL() -> void {
     return;
   }
 
-  if(!drive.recentlyReset && (!ssr.reading || ssr.playingCDDA)) {
+  if(!drive.headerValid) {
     error(ErrorCode_CannotRespondYet);
     return;
   }
@@ -479,6 +521,11 @@ auto Disc::commandGetlocL() -> void {
 
 //0x11
 auto Disc::commandGetlocP() -> void {
+  if(noDisc() || ssr.seekError) {
+    error(ErrorCode_CannotRespondYet);
+    return;
+  }
+
   queueResponse(ResponseType::Acknowledge, {
     drive.sector.subq[1], //track
     drive.sector.subq[2], //index
@@ -493,24 +540,16 @@ auto Disc::commandGetlocP() -> void {
 
 //0x12
 auto Disc::commandSetSession() -> void {
-  if(command.current.invocation == 0) {
-    command.current.invocation = 1;
-    command.current.counter = 50'000;
-
-    u8 session = fifo.parameter.read(0);
-    if(session != 1) {
-      debug(unimplemented, "Disc::commandSetSession(): session != 1");
-    }
-
-    ack();
-    return;
+  u8 session = fifo.parameter.read(0);
+  if(session != 1) {
+    debug(unimplemented, "Disc::commandSetSession(): session != 1");
   }
 
-  if(command.current.invocation == 1) {
-    ack();
-    command.current.invocation = 0;
-    return;
-  }
+  command.secondResponse.command = 0x12;
+  command.secondResponse.counter = 50'000;
+  command.secondResponse.pending = 1;
+
+  ack();
 }
 
 //0x13
@@ -561,6 +600,7 @@ auto Disc::commandSeekL() -> void {
   if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); return; }
 
   ack();
+  drive.standby = 1;
 
   ssr.reading = 0;
   ssr.playingCDDA = 0;
@@ -569,7 +609,7 @@ auto Disc::commandSeekL() -> void {
   drive.pendingOperation = Drive::PendingOperation::None;
   drive.seekRetries = 0;
   drive.seeking = drive.distance();
-  drive.seekDelay = 3 << drive.mode.speed;
+  drive.seekDelay = max<u32>(drive.seekDelay, 3 << drive.mode.speed);
   drive.lba.pending = 0;
 }
 
@@ -578,6 +618,7 @@ auto Disc::commandSeekP() -> void {
   if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); return; }
 
   ack();
+  drive.standby = 1;
 
   ssr.reading = 0;
   ssr.playingCDDA = 0;
@@ -586,7 +627,7 @@ auto Disc::commandSeekP() -> void {
   drive.pendingOperation = Drive::PendingOperation::None;
   drive.seekRetries = 0;
   drive.seeking = drive.distance();
-  drive.seekDelay = 3 << drive.mode.speed;
+  drive.seekDelay = max<u32>(drive.seekDelay, 3 << drive.mode.speed);
   drive.lba.pending = 0;
 }
 
@@ -608,44 +649,16 @@ auto Disc::commandTestControllerDate() -> void {
 
 //0x1a
 auto Disc::commandGetID() -> void {
-  if(command.current.invocation == 0) {
-    if(!fifo.parameter.empty()) {
-      error(ErrorCode_InvalidParameterCount);
-      return;
-    }
-
-    command.current.invocation = 1;
-    command.current.counter = 50'000;
-
-    ack();
+  if(!fifo.parameter.empty()) {
+    error(ErrorCode_InvalidParameterCount);
     return;
   }
 
-  if(command.current.invocation == 1) {
-    if(noDisc()) {
-      ssr.idError = 1;
-      queueResponse(ResponseType::Error, {0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-    } else if(region().find("NTSC-J") && Region::NTSCJ()) {
-      ssr.idError = 0;
-      queueResponse(ResponseType::Complete, {status(), 0x00, 0x20,0x00, 'S', 'C', 'E', 'I'});
-    } else if(region().find("NTSC-U") && Region::NTSCU()) {
-      ssr.idError = 0;
-      queueResponse(ResponseType::Complete, {status(), 0x00, 0x20,0x00, 'S', 'C', 'E', 'A'});
-    } else if(region().find("PAL") && Region::PAL()) {
-      ssr.idError = 0;
-      queueResponse(ResponseType::Complete, {status(), 0x00, 0x20,0x00, 'S', 'C', 'E', 'E'});
-    } else if(audioCD()) {
-      ssr.idError = 1;
-      queueResponse(ResponseType::Error, {0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-    } else {
-      //invalid disc inserted
-      ssr.idError = 1;
-      queueResponse(ResponseType::Error, {0x80, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-    }
+  command.secondResponse.command = 0x1a;
+  command.secondResponse.counter = 50'000;
+  command.secondResponse.pending = 1;
 
-    command.current.invocation = 0;
-    return;
-  }
+  ack();
 }
 
 //0x1b
@@ -656,19 +669,11 @@ auto Disc::commandReadS() -> void {
 
 //0x1e
 auto Disc::commandReadToc() -> void {
-  if(command.current.invocation == 0) {
-    command.current.invocation = 1;
-    command.current.counter = 475'000;
+  command.secondResponse.command = 0x1e;
+  command.secondResponse.counter = 475'000;
+  command.secondResponse.pending = 1;
 
-    ack();
-    return;
-  }
-
-  if(command.current.invocation == 1) {
-    ack();
-    command.current.invocation = 0;
-    return;
-  }
+  ack();
 }
 
 auto Disc::commandUnimplemented(u8 operation, maybe<u8> suboperation) -> void {

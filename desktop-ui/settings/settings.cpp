@@ -133,6 +133,8 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Nintendo64/DisableVideoInterfaceProcessing", nintendo64.disableVideoInterfaceProcessing);
   bind(boolean, "Nintendo64/WeaveDeinterlacing", nintendo64.weaveDeinterlacing);
 
+  bind(string, "PlayStation/ParallelPort", playstation.expansionDevice);
+
   bind(boolean, "GameBoyAdvance/Player", gameBoyAdvance.player);
 
   bind(boolean, "SuperFamicom/DeepBlackBoost", superFamicom.deepBlackBoost);
@@ -242,7 +244,7 @@ auto Settings::process(bool load) -> void {
 
     for(auto& firmware : emulator->firmware) {
       string name = {base, "/Firmware/", firmware.type, ".", firmware.region};
-      name.replace(" ", "-");
+      name.replace(" ", "-").replace("(", "").replace(")", "");
       bind(string, name, firmware.location);
     }
   }

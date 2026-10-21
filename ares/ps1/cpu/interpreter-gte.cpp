@@ -6,16 +6,11 @@ auto CPU::GTE::constructTable() -> void {
 }
 
 auto CPU::GTE::countLeadingZeroes16(u16 value) -> u32 {
-  u32 zeroes = 0;
-  while(!(value >> 15) && zeroes < 16) value <<= 1, zeroes++;
-  return zeroes;
+  return std::countl_zero(value);
 }
 
 auto CPU::GTE::countLeadingZeroes32(u32 value) -> u32 {
-  u32 zeroes = 0;
-  if(!(value >> 31)) value = ~value;
-  while(value >> 31) value <<= 1, zeroes++;
-  return zeroes;
+  return std::countl_zero(value >> 31 ? ~value : value);
 }
 
 //

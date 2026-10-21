@@ -20,17 +20,13 @@ auto Disc::Drive::updateSubQ() -> void {
   self.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lba.current)) + 2352 + 12);
   self.fd->read({qbuf, 12});
 
-  const u8  adr      = qbuf[0] & 0x0f;
-  const u16 expected = (u16)((qbuf[10] << 8) | qbuf[11]);
-  const u16 actual   = CD::CRC16({qbuf, 10});
-
-  if(adr == 0x01 && actual == expected) {
-    for(int i = 0; i < 10; i++) sector.subq[i] = qbuf[i];
-  }
+  const u8 adr = qbuf[0] & 0x0f;
+  const u16 crc = (u16)qbuf[10] << 8 | qbuf[11];
+  if(adr != 0x01 || CD::CRC16({qbuf, 10}) != crc) return;
+  for(int i = 0; i < 10; i++) sector.subq[i] = qbuf[i];
 }
 
 auto Disc::Drive::clockSector() -> void {
-  if(recentlyReset) recentlyReset--;
   if(!likely(self.fd)) return;
   if(seekDelay) {
     --seekDelay;
@@ -40,13 +36,14 @@ auto Disc::Drive::clockSector() -> void {
   updateSubQ();
 
   if(seeking) {
+    headerValid = 0;
     if(--seeking) {
       //aim to arrive a little early, this can be as much as 1-50 sectors on hardware, we pick a happy middle
       auto distance = lba.request - lba.current - 25;
       auto remaining = (s32)seeking;
       if(distance != 0) {
         auto step = (distance > 0 ? (distance + remaining - 1) / remaining : (distance - remaining + 1) / remaining);
-        lba.current += (distance > 0) ? std::min(step, distance) : std::max(step, distance);
+        lba.current += distance > 0 ? min(step, distance) : max(step, distance);
       }
 
       return;
@@ -60,8 +57,9 @@ auto Disc::Drive::clockSector() -> void {
 
     if(seekType != SeekType::None) {
       const s32 target = lba.request;
-
-      const bool beyondDisc = target < 0 || target > session->leadOut.lba + CD::LeadOutSectors;
+      static constexpr s32 PregapSectors = 150;
+      const bool beyondDisc = target < -PregapSectors
+                           || target > session->leadOut.lba + CD::LeadOutSectors;
       bool inDataTrack = false;
 
       if(!beyondDisc) {
@@ -75,6 +73,8 @@ auto Disc::Drive::clockSector() -> void {
       const bool ok = (seekType == SeekType::SeekP) ? !beyondDisc : (!beyondDisc && inDataTrack);
 
       if(ok) {
+        if(seekType == SeekType::SeekL && inDataTrack) headerValid = 1;
+
         //correct for imprecise seek
         if(pendingOperation == PendingOperation::Play) {
           lba.current = lba.request;
@@ -95,7 +95,7 @@ auto Disc::Drive::clockSector() -> void {
           self.counter.report = system.frequency() / 75;
         }
 
-        if (pendingOperation == PendingOperation::None) {
+        if(pendingOperation == PendingOperation::None) {
           self.queueResponse(ResponseType::Complete, {self.status()});
         }
 
@@ -117,6 +117,7 @@ auto Disc::Drive::clockSector() -> void {
         self.queueResponse(ResponseType::Error, {self.status(), beyondDisc ? ErrorCode_InvalidParameterValue : ErrorCode_SeekFailed});
         pendingOperation = PendingOperation::None;
         seekType = SeekType::None;
+        standby = 0;
         return;
       }
 
@@ -138,6 +139,7 @@ auto Disc::Drive::clockSector() -> void {
       sector.track = 0;
     }
     sector.offset = 0;
+    headerValid = !self.ssr.playingCDDA;
 
     if(self.ssr.playingCDDA) {
       if(cdda->playMode == Disc::CDDA::PlayMode::FastForward) {
@@ -168,14 +170,15 @@ auto Disc::Drive::clockSector() -> void {
     }
 
     if(sector.data[15] == 0x02) {
-      if(mode.xaFilter) {
+      bool xaAudio = (sector.data[18] & 0x44) == 0x44;
+      if(xaAudio && mode.xaFilter) {
         if(sector.data[16] != cdxa->filter.file) return;
         if(sector.data[17] != cdxa->filter.channel) return;
       }
-      if(mode.xaADPCM && (sector.data[18] & 0x44) == 0x44) {
+      if(mode.xaADPCM && xaAudio) {
         return cdxa->clockSector();
       }
-      if(mode.xaFilter && (sector.data[18] & 0x44) == 0x44) {
+      if(mode.xaFilter && xaAudio) {
         return;
       }
     }

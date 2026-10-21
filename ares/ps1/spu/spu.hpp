@@ -25,22 +25,25 @@ struct SPU : Thread, Memory::Interface {
   auto power(bool reset) -> void;
 
   //io.cpp
+  auto testIRQ(u32 address) -> void;
   auto readRAM(u32 address) -> u16;
   auto writeRAM(u32 address, u16 data) -> void;
   auto canReadDMA() -> bool;
   auto canWriteDMA() -> bool;
   auto readDMA() -> u32;
   auto writeDMA(u32 data) -> void;
-  auto readByte(u32 address) -> u32;
-  auto readHalf(u32 address) -> u32;
-  auto readWord(u32 address) -> u32;
-  auto writeByte(u32 address, u32 data) -> void;
-  auto writeHalf(u32 address, u32 data) -> void;
-  auto writeWord(u32 address, u32 data) -> void;
+  auto readByte(u32 address) -> u32 override;
+  auto readHalf(u32 address) -> u32 override;
+  auto readWord(u32 address) -> u32 override;
+  auto writeByte(u32 address, u32 data) -> void override;
+  auto writeHalf(u32 address, u32 data) -> void override;
+  auto writeWord(u32 address, u32 data) -> void override;
+  auto writeCycle(const Memory::Interface::Cycle& cycle) -> void override;
 
   //fifo.cpp
   auto fifoReadBlock() -> void;
   auto fifoWriteBlock() -> void;
+  auto fifoWriteManual() -> void;
 
   //capture.cpp
   auto captureVolume(u32 channel, s16 volume) -> void;
@@ -84,6 +87,8 @@ struct SPU : Thread, Memory::Interface {
     n3  type;
     n16 address;
     n19 current;
+    u32 samplePhase;
+    n1 request;
     n1  unknown_0;
     n12 unknown_4_15;
   } transfer;
@@ -306,6 +311,9 @@ struct SPU : Thread, Memory::Interface {
   struct Capture {
     n10 address;
   } capture;
+
+  n16 unknown1dbc[2];
+  n16 unknown1e60[16];
 
   queue<u16[32]> fifo;
 

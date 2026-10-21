@@ -6,6 +6,7 @@
 #include <vector>
 #include <nall/hashset.hpp>
 #include <component/processor/m68hc05/m68hc05.hpp>
+#include <component/eeprom/parallel-flash/parallel-flash.hpp>
 
 namespace ares::PlayStation {
   #include <ares/inline.hpp>
@@ -25,6 +26,7 @@ namespace ares::PlayStation {
   #include <ps1/accuracy.hpp>
   #include <ps1/memory/memory.hpp>
   #include <ps1/system/system.hpp>
+  #include <ps1/expansion/expansion.hpp>
   #include <ps1/disc/disc.hpp>
   #include <ps1/cpu/cpu.hpp>
   #include <ps1/gpu/gpu.hpp>

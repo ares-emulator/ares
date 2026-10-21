@@ -106,7 +106,7 @@ auto FirmwareSettings::eventClear() -> void {
 auto FirmwareSettings::eventScan() -> void {
   for(auto& emulator : emulators) {
     for(auto &firmware: emulator->firmware) {
-      if(!file::exists(firmware.location)) firmware.location = findFirmware(firmware.sha256);
+      if(firmware.sha256 && !file::exists(firmware.location)) firmware.location = findFirmware(firmware.sha256);
     }
   }
 

@@ -1,4 +1,15 @@
 struct Interface {
+  struct Cycle {
+    u32 address;
+    u32 data = 0;
+    u32 size;
+    u32 byteEnable;
+  };
+
+  struct Response {
+    u32 data = 0;
+  };
+
   virtual ~Interface() = default;
 
   template<u32 Size> auto read(u32 address) -> u32 {
@@ -21,6 +32,19 @@ struct Interface {
   virtual auto writeHalf(u32 address, u32 data) -> void = 0;
   virtual auto writeWord(u32 address, u32 data) -> void = 0;
 
+  virtual auto readCycle(const Cycle& cycle) -> Response {
+    Response response;
+    if(cycle.size == Byte) response.data = readByte(cycle.address);
+    if(cycle.size == Half) response.data = readHalf(cycle.address);
+    if(cycle.size == Word) response.data = readWord(cycle.address);
+    return response;
+  }
+
+  virtual auto writeCycle(const Cycle& cycle) -> void {
+    if(cycle.size == Byte) return writeByte(cycle.address, cycle.data);
+    if(cycle.size == Half) return writeHalf(cycle.address, cycle.data);
+    if(cycle.size == Word) return writeWord(cycle.address, cycle.data);
+  }
 
   std::mutex mutex;
 };

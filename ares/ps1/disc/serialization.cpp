@@ -14,7 +14,7 @@ auto Disc::serialize(serializer& s) -> void {
   s(drive.mode.sectorSize);
   s(drive.mode.xaADPCM);
   s(drive.mode.speed);
-  s(drive.recentlyReset);
+  s(drive.headerValid);
   s(drive.seeking);
   s(drive.seekDelay);
   s(drive.seekRetries);
@@ -38,14 +38,12 @@ auto Disc::serialize(serializer& s) -> void {
   s(cdxa.samples);
   s(cdxa.previousSamples);
 
-  s(command.current.command);
-  s(command.current.invocation);
-  s(command.current.pending);
-  s(command.current.counter);
-  s(command.queued.command);
-  s(command.queued.pending);
+  s(command.secondResponse.command);
+  s(command.secondResponse.pending);
+  s(command.secondResponse.counter);
   s(command.transfer.counter);
-  s(command.transfer.started);;
+  s(command.transfer.started);
+  s(drive.standby);
   s(command.transfer.command);
 
   s(irq.flag);
@@ -74,6 +72,7 @@ auto Disc::serialize(serializer& s) -> void {
   s(fifo.deferred.complete.data);
   s(fifo.deferred.acknowledge.type);
   s(fifo.deferred.acknowledge.data);
+  s(fifo.deferred.counter);
 
   s(ssr.error);
   s(ssr.motorOn);
