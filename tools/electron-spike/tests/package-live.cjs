@@ -16,7 +16,11 @@ async function run() {
   const rom = path.join(temporary, 'fixture.gb'), report = path.join(temporary, 'renderer.json');
   fs.writeFileSync(rom, makeFixture());
   const settings = path.join(temporary, 'settings.bml'); fs.writeFileSync(settings, '');
-  const env = { ...process.env, PATH: '/usr/bin:/bin', NODE_OPTIONS: '', NODE_PATH: '', ARES_ROM: rom, ARES_SYSTEM: 'Game Boy', ARES_SETTINGS: settings, ARES_SAVE_DIR: path.join(temporary, 'saves'), ARES_ENABLE_SERVICES: '1', ARES_SERVICE_DIR: path.join(temporary, 'ipc'), ARES_SILENT: '1', ARES_AUTOTEST: '1', ARES_TEST_SECONDS: '8', ARES_REPORT: report };
+  const plugin = path.join(temporary, 'plugin'); fs.mkdirSync(path.join(plugin,'src'),{recursive:true});
+  fs.writeFileSync(path.join(plugin,'manifest.json'),JSON.stringify({id:'test.packaged',name:'Packaged TSX',version:'1.0.0',apiVersion:1,entry:'dist/plugin.js',build:{entry:'src/plugin.tsx',jsxFactory:'h'},capabilities:[],contributes:{panels:[{id:'panel',title:'Packaged plugin'}]}}));
+  const pluginSource = version => `function h(tag,props,...children){const element=document.createElement(tag);element.append(...children);return element}export function activate(ctx){ctx.ui.registerPanel('panel',({element})=>element.append(<p>Packaged version ${version}</p>));ctx.ui.openPanel('panel');let stop=ctx.scope.interval(async()=>{await ctx.storage.set('stamp',{version:${version},session:ctx.session});stop()},50)}`;
+  fs.writeFileSync(path.join(plugin,'src/plugin.tsx'),pluginSource(1));
+  const env = { ...process.env, PATH: '/usr/bin:/bin', NODE_OPTIONS: '', NODE_PATH: '', ARES_ROM: rom, ARES_SYSTEM: 'Game Boy', ARES_SETTINGS: settings, ARES_SAVE_DIR: path.join(temporary, 'saves'), ARES_ENABLE_SERVICES: '1', ARES_SERVICE_DIR: path.join(temporary, 'ipc'), ARES_SILENT: '1', ARES_AUTOTEST: '1', ARES_TEST_SECONDS: '10', ARES_PLUGIN_DIRS: plugin, ARES_REPORT: report };
   delete env.ARES_HOST; delete env.ELECTRON_RUN_AS_NODE;
   // This executable, launcher, JS graph, host and dynamic libraries all come from
   // the copied distribution. PATH deliberately has no developer Node/npm/Python.
@@ -47,6 +51,10 @@ async function run() {
     let status;
     for (let i = 0; i < 200; ++i) { status = await peer.tool('emu_status'); if (status.system === 'Game Boy') break; await new Promise(r => setTimeout(r, 20)); }
     assert.equal(status.system, 'Game Boy', diagnostics);
+    const stampFile=path.join(temporary,'profile/plugins/test.packaged-v1.json');
+    const waitStamp=async version=>{for(let i=0;i<150;i++){try{const stamp=JSON.parse(fs.readFileSync(stampFile)).stamp;if(stamp?.version===version)return stamp}catch{}await new Promise(r=>setTimeout(r,20))}throw new Error('Packaged plugin did not build/reload: '+diagnostics)};
+    const firstStamp=await waitStamp(1);fs.writeFileSync(path.join(plugin,'src/plugin.tsx'),pluginSource(2));const nextStamp=await waitStamp(2);assert.deepEqual(nextStamp.session,firstStamp.session,'TSX replacement must keep the native session/epoch');
+
     for (const [tool, args] of [['rsp_capture', {}], ['capture_control', {}], ['call_function', { addr: 0 }], ['call_recover', {}], ['stack', {}], ['render_probe', {}], ['dump_rdram', { path: path.join(temporary, 'unsupported.bin') }], ['dump_range', { path: path.join(temporary, 'unsupported-range.bin'), addr: 0, length: 1 }], ['rdp_capture', {}], ['rsp_debug', {}], ['rsp_break', {}], ['rsp_step', {}], ['rsp_run', {}], ['rsp_stop', {}], ['cpu_set_registers', { gpr: { t0: 1 } }], ['rsp_registers', {}], ['rdp_state', {}], ['peripheral_registers', {}], ['disassemble', { addr: 0, count: 1 }]]) assert.equal((await peer.tool(tool, args)).error, 'unavailable');
     assert.equal((await peer.tool('batch', { steps: [{ kind: 'run', n: 0 }] })).error, 'unavailable');
     assert.ok(status.capabilities.includes('artifact.traceExport'), 'packaged main advertises artifact service');
@@ -100,7 +108,7 @@ async function run() {
     const rpaths = execFileSync('/usr/bin/otool', ['-l', path.join(resources, 'native/bin/ares-electron-host')], { encoding: 'utf8' });
     assert.ok(!/path \/Users\//.test(rpaths), 'No developer rpath');
     const runtime = JSON.parse(fs.readFileSync(path.join(resources, 'runtime.json')));
-    const result = { result: 'PACKAGE_MCP_PASS', runtime, system: status.system, frames: measurement.frames, protocol: 'real MCP stdio', checkoutReadDeniedFor: ['native loader', 'MCP adapter'] };
+    const result = { result: 'PACKAGE_MCP_PASS', runtime, system: status.system, frames: measurement.frames, protocol: 'real MCP stdio', pluginReload: 'packaged TSX 1→2, same session/epoch', checkoutReadDeniedFor: ['native loader', 'MCP adapter'] };
     fs.writeFileSync(path.resolve(__dirname, '../artifacts/package-mcp.json'), JSON.stringify(result, null, 2));
     console.log(result);
   } finally {

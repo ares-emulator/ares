@@ -36,6 +36,7 @@ export function validateManifest(value: unknown): PluginManifest {
       'version',
       'apiVersion',
       'entry',
+      'build',
       'styles',
       'mode',
       'storageVersion',
@@ -56,6 +57,19 @@ export function validateManifest(value: unknown): PluginManifest {
   if (m.apiVersion !== 1) fail('supported apiVersion is 1')
   if (!entryPath(m.entry) || !/\.(?:m?js)$/.test(m.entry))
     fail('entry must be a relative built .js/.mjs file')
+  if (
+    m.build !== undefined &&
+    (!object(m.build, ['entry', 'jsxFactory', 'jsxFragment']) ||
+      !entryPath(m.build.entry) ||
+      !/\.(?:[cm]?[jt]sx?)$/.test(m.build.entry) ||
+      [m.build.jsxFactory, m.build.jsxFragment].some(
+        (v: unknown) =>
+          v !== undefined &&
+          (typeof v !== 'string' ||
+            !/^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/.test(v)),
+      ))
+  )
+    fail('build requires a relative JS/TS/TSX source and valid JSX identifiers')
   if (
     m.styles !== undefined &&
     (!entryPath(m.styles) || !m.styles.endsWith('.css'))

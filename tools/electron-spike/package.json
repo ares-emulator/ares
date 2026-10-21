@@ -20,17 +20,18 @@
     "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig.browser.json && tsc -p tsconfig.preload.json",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "test:state-reference": "npm run build && node tests/state-reference.cjs",
-    "test:plugins": "npm run build && electron tests/electron-plugins.mjs"
+    "test:plugins": "npm run build && electron tests/electron-plugins.mjs",
+    "test:reload": "npm run build && electron tests/electron-reload.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "electron": "44.9.0",
-    "esbuild": "0.28.2",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.3.1",
-    "zod": "^4.6.7"
+    "zod": "^4.6.7",
+    "esbuild": "0.28.2"
   },
   "type": "module"
 }

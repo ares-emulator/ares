@@ -214,7 +214,7 @@ Done when: a generic memory panel works across N64/GBA, a Kirby-only panel activ
 only for the right identity, errors are actionable, and disable/ROM switch revokes
 the plugin's API scope. No marketplace or custom UI framework.
 
-### Task 11 — hot replacement and cleanup
+### Task 11 — hot replacement and cleanup (complete)
 
 Implement watched builds into immutable artifacts, candidate validation, generation
 leases, old-generation cleanup and state restoration. Exercise the failed-build
@@ -296,7 +296,13 @@ validation: **81/81** sequential tests, real Electron plugin and existing sessio
 integration, all 68 MCP tools and a fresh copied-out package. Details are in the
 execution log and `plugins/README.md`.
 
-The immediate next action is **task 11 — hot replacement and cleanup**. Tasks
-1–5, 4.5 and 7–10 are implemented. Earlier physical keyboard/gamepad takeover,
+Task 11 is complete: watched immutable JS/TS/TSX builds, staged candidate
+validation, generation revocation, bounded cleanup, compatible UI state handoff
+and demonstrated activation rollback/recovery. Twelve repeated reloads retain
+constant SDK effect counts, stale writes reject, and real MCP ownership survives.
+The copied app builds/reloads a source TSX plugin with its bundled compiler.
+
+The immediate next action is **task 12 — the first actual agent-authored game
+tool**. Tasks 1–5, 4.5 and 7–11 are implemented. Earlier physical keyboard/gamepad takeover,
 audible-output acceptance and task 8 rollback-failure fault injection remain
 recorded follow-ups for later verification; they are not claimed as passes.

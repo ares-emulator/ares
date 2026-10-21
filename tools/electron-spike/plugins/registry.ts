@@ -1,3 +1,5 @@
+import { watch, type FSWatcher } from 'node:fs'
+import { buildArtifact, type PluginArtifact } from './artifacts.js'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
@@ -20,12 +22,17 @@ import type {
 } from './contracts.js'
 interface Record extends PluginInfo {
   root: string
+  built?: PluginArtifact
+  next?: PluginArtifact
+  previous?: PluginArtifact
+  revision?: number
   owner?: string
   pending: number
   storageQueue: Promise<unknown>
 }
 export class PluginRegistry {
   private records: Record[] = []
+  private catalogRevision = 0
   private enabled = new Set<string>()
   private directories: string[] = []
   private current?: {
@@ -36,6 +43,354 @@ export class PluginRegistry {
   private renderer = false
   private mutation = Promise.resolve()
   private configurationError?: string
+  private watchers = new Map<
+    Record,
+    {
+      watcher: FSWatcher
+      timer?: ReturnType<typeof setTimeout>
+      busy: boolean
+      dirty: boolean
+    }
+  >()
+  private closed = false
+  private building = new Set<Record>()
+  private pruning?: Promise<void>
+  private capturing = 0
+  private pins = new Set<string>()
+  private async capture(source: string) {
+    while (this.pruning) await this.pruning
+    this.capturing++
+    try {
+      const built = await buildArtifact(source, this.cache())
+      this.pins.add(built.hash)
+      return built
+    } finally {
+      this.capturing--
+    }
+  }
+  private cache() {
+    return path.join(this.dataRoot, 'artifacts')
+  }
+  private notify() {
+    this.changed(this.catalog())
+  }
+  private info(r: Record) {
+    return this.catalog().plugins.find((p) => p.source === r.source)!
+  }
+  private newLease(manifest: PluginManifest): PluginLease {
+    const now = this.currentIdentity(),
+      current = this.current
+    if (
+      !this.renderer ||
+      !current ||
+      !now ||
+      now.session !== current.identity.session ||
+      now.epoch !== current.identity.epoch
+    )
+      throw new ServiceError('stale_plugin_scope')
+    const match = activation(manifest, current.system, current.game)
+    if (!match.matches || (manifest.mode && manifest.mode !== 'panel'))
+      throw new Error('Candidate no longer matches the current session/mode')
+    const token = randomUUID()
+    return {
+      token,
+      identity: { ...now },
+      system: current.system,
+      game: current.game,
+      profile: match.profile,
+      baseURL: `ares-plugin://${manifest.id}/${token}/`,
+    }
+  }
+  private syncWatchers() {
+    for (const [r, w] of this.watchers)
+      if (this.closed || !r.enabled || !this.records.includes(r)) {
+        clearTimeout(w.timer)
+        w.watcher.close()
+        this.watchers.delete(r)
+      }
+    if (this.closed) return
+    for (const r of this.records)
+      if (r.enabled && r.manifest && !this.watchers.has(r)) {
+        try {
+          const watcher = watch(
+            r.source,
+            { recursive: true },
+            (_event, file) => {
+              const parts = String(file ?? '').split(/[\\/]/)
+              if (
+                parts.some(
+                  (p) =>
+                    p.startsWith('.') ||
+                    ['node_modules', 'artifacts'].includes(p),
+                ) ||
+                (r.manifest?.build &&
+                  path.dirname(r.manifest.entry) !== '.' &&
+                  !r.manifest.build.entry.startsWith(
+                    path.dirname(r.manifest.entry) + '/',
+                  ) &&
+                  (parts.join('/') === path.dirname(r.manifest.entry) ||
+                    parts
+                      .join('/')
+                      .startsWith(path.dirname(r.manifest.entry) + '/')))
+              )
+                return
+              const w = this.watchers.get(r)
+              if (!w) return
+              r.revision = (r.revision ?? 0) + 1
+              if (r.candidate) {
+                r.candidate = undefined
+                r.next = undefined
+                this.notify()
+              }
+              w.dirty = true
+              clearTimeout(w.timer)
+              w.timer = setTimeout(() => void this.watchedReload(r), 180)
+              w.timer.unref()
+            },
+          )
+          watcher.unref()
+          watcher.on('error', (error) => {
+            r.error = `Plugin watcher: ${error.message}. Use Reload after fixing the source directory.`
+            r.reload = 'error'
+            this.notify()
+          })
+          this.watchers.set(r, { watcher, busy: false, dirty: false })
+        } catch (error) {
+          r.error = `Cannot watch plugin: ${String(error)}`
+          r.reload = 'error'
+        }
+      }
+  }
+  private async watchedReload(r: Record) {
+    const w = this.watchers.get(r)
+    if (!w || w.busy || !w.dirty) return
+    w.busy = true
+    w.dirty = false
+    try {
+      await this.reloadRecord(r, false)
+    } finally {
+      w.busy = false
+      if (w.dirty && this.watchers.has(r)) {
+        w.timer = setTimeout(() => void this.watchedReload(r), 180)
+        w.timer.unref()
+      }
+    }
+  }
+  async close() {
+    this.closed = true
+    this.syncWatchers()
+    this.detach()
+  }
+  private prune(): Promise<void> {
+    if (this.pruning) return this.pruning
+    if (this.building.size || this.capturing) return Promise.resolve()
+    const job = this.pruneArtifacts()
+    this.pruning = job
+    void job.then(
+      () => {
+        this.pruning = undefined
+      },
+      () => {
+        this.pruning = undefined
+      },
+    )
+    return job
+  }
+  private async pruneArtifacts() {
+    if (this.building.size || this.capturing) return
+    const keep = new Set(
+      this.records
+        .flatMap((r) => [r.built?.hash, r.next?.hash, r.previous?.hash])
+        .filter(Boolean),
+    )
+    for (const hash of this.pins) keep.add(hash)
+    for (const entry of await fs.readdir(this.cache()).catch(() => []))
+      if (/^[a-f0-9]{64}$/.test(entry) && !keep.has(entry))
+        await fs.rm(path.join(this.cache(), entry), {
+          recursive: true,
+          force: true,
+        })
+  }
+  private async reloadRecord(r: Record, force: boolean) {
+    if (!r.enabled || !r.manifest || this.closed) return
+    if (r.phase === 'activating') {
+      const w = this.watchers.get(r)
+      if (w) w.dirty = true
+      return
+    }
+    if (this.building.has(r)) {
+      const w = this.watchers.get(r)
+      if (w) w.dirty = true
+      return
+    }
+    this.building.add(r)
+    let captured: PluginArtifact | undefined
+    const revision = r.revision ?? 0
+    r.reload = 'building'
+    this.notify()
+    try {
+      const built = (captured = await this.capture(r.source))
+      if (
+        this.closed ||
+        !r.enabled ||
+        !this.records.includes(r) ||
+        revision !== (r.revision ?? 0)
+      )
+        return
+      if (built.manifest.id !== r.manifest.id)
+        throw new Error(
+          'Plugin id cannot change during reload; add it as a new directory',
+        )
+      if (!force && built.hash === r.built?.hash) {
+        r.reload = undefined
+        return
+      }
+      if ((r.phase as string) === 'activating') {
+        const w = this.watchers.get(r)
+        if (w) w.dirty = true
+        return
+      }
+      if (!r.lease) {
+        r.built = built
+        r.root = built.root
+        r.artifact = built.hash
+        r.manifest = built.manifest
+        r.state = 'waiting'
+        r.error = undefined
+        r.reload = undefined
+        this.reconcile()
+        return
+      }
+      const lease = this.newLease(built.manifest)
+      r.next = built
+      r.candidate = { manifest: built.manifest, lease, artifact: built.hash }
+      r.reload = 'staging'
+      r.error = undefined
+    } catch (error) {
+      r.error = `Build/reload failed: ${String(error)}`.slice(0, 2048)
+      r.reload = 'error'
+    } finally {
+      if (captured) this.pins.delete(captured.hash)
+      this.building.delete(r)
+      void this.prune().catch(() => {})
+      const w = this.watchers.get(r)
+      if (w?.dirty && !w.busy) {
+        clearTimeout(w.timer)
+        w.timer = setTimeout(() => void this.watchedReload(r), 180)
+        w.timer.unref()
+      }
+      this.notify()
+    }
+  }
+  async reload(id: string) {
+    const r = this.records.find((r) => r.manifest?.id === id)
+    if (!r) throw new Error('Unknown plugin')
+    r.revision = (r.revision ?? 0) + 1
+    await this.reloadRecord(r, true)
+    return this.catalog()
+  }
+  private candidate(token: string) {
+    const r = this.records.find((r) => r.candidate?.lease.token === token)
+    if (!r?.candidate || !r.enabled)
+      throw new ServiceError('stale_plugin_scope')
+    const now = this.currentIdentity()
+    if (
+      !now ||
+      now.session !== r.candidate.lease.identity.session ||
+      now.epoch !== r.candidate.lease.identity.epoch
+    )
+      throw new ServiceError('stale_plugin_scope')
+    return r
+  }
+  reject(token: string, message: string) {
+    const r = this.candidate(token)
+    r.candidate = undefined
+    r.next = undefined
+    r.error = `Candidate rejected: ${String(message)}`.slice(0, 2048)
+    r.reload = 'error'
+    this.notify()
+    void this.prune().catch(() => {})
+  }
+  begin(token: string) {
+    return this.serial(async () => {
+      const r = this.candidate(token),
+        candidate = r.candidate!,
+        built = r.next!
+      this.newLease(candidate.manifest)
+      r.previous = r.built
+      r.candidate = undefined
+      r.next = undefined
+      const release = this.revoke(r, true)
+      r.phase = 'activating'
+      try {
+        await release
+      } catch (error) {
+        if (!r.lease) {
+          r.state = 'error'
+          r.error = `Owner release failed; replacement blocked: ${String(error)}`
+          this.notify()
+        }
+        throw error
+      }
+      if (!r.enabled || !this.renderer)
+        throw new ServiceError('stale_plugin_scope')
+      const now = this.currentIdentity()
+      if (
+        !now ||
+        now.session !== candidate.lease.identity.session ||
+        now.epoch !== candidate.lease.identity.epoch
+      )
+        throw new ServiceError('stale_plugin_scope')
+      r.built = built
+      r.root = built.root
+      r.artifact = built.hash
+      r.manifest = built.manifest
+      r.lease = candidate.lease
+      r.owner = 'plugin-' + token
+      r.phase = 'activating'
+      r.reload = 'activating'
+      return this.info(r)
+    })
+  }
+  finish(token: string) {
+    const r = this.lease(token)
+    r.phase = 'active'
+    r.candidate = undefined
+    r.next = undefined
+    r.reload = r.error ? 'error' : undefined
+    const w = this.watchers.get(r)
+    if (w?.dirty) {
+      clearTimeout(w.timer)
+      w.timer = setTimeout(() => void this.watchedReload(r), 180)
+      w.timer.unref()
+    }
+    this.notify()
+    void this.prune().catch(() => {})
+  }
+  rollback(token: string, message: string) {
+    return this.serial(async () => {
+      const r = this.lease(token),
+        previous = r.previous
+      if (!previous) throw new Error('No previous artifact for rollback')
+      await this.revoke(r, true)
+      r.built = previous
+      r.previous = undefined
+      r.root = previous.root
+      r.artifact = previous.hash
+      r.manifest = previous.manifest
+      r.lease = this.newLease(previous.manifest)
+      r.owner = 'plugin-' + r.lease.token
+      r.phase = 'activating'
+      r.error =
+        `Activation failed; previous artifact restored: ${String(message)}`.slice(
+          0,
+          2048,
+        )
+      r.reload = 'activating'
+      return this.info(r)
+    })
+  }
+
   constructor(
     private bundledRoot: string,
     private dataRoot: string,
@@ -113,18 +468,13 @@ export class PluginRegistry {
       const manifest = validateManifest(
         JSON.parse(await fs.readFile(manifestFile, 'utf8')),
       )
-      for (const file of [manifest.entry, manifest.styles].filter(
-        Boolean,
-      ) as string[]) {
-        const location = await this.within(root, file)
-        const info = await fs.stat(location)
-        if (!info.isFile() || info.size > 2097152)
-          throw new Error(`${file}: expected a built file under 2 MiB`)
-      }
+      const built = await this.capture(root)
       return {
         ...base,
-        root,
-        manifest,
+        root: built.root,
+        built,
+        artifact: built.hash,
+        manifest: built.manifest,
         enabled: this.enabled.has(manifest.id),
         state: 'disabled',
       }
@@ -136,7 +486,7 @@ export class PluginRegistry {
     }
   }
   async scan(autoEnable: string[] = []) {
-    this.revokeAll()
+    const oldRecords = this.records
     const candidates: { source: string; bundled: boolean }[] = []
     try {
       for (const dir of (
@@ -155,7 +505,12 @@ export class PluginRegistry {
     const records: Record[] = []
     const ids = new Set<string>()
     for (const c of candidates) {
-      const r = await this.descriptor(c.source, c.bundled)
+      let r: Record
+      const existing = oldRecords.find((r) => r.source === c.source)
+      if (existing?.manifest) {
+        r = existing
+        if (r.enabled) await this.reloadRecord(r, true)
+      } else r = await this.descriptor(c.source, c.bundled)
       if (r.manifest) {
         if (ids.has(r.manifest.id)) {
           r.error = `Duplicate plugin id ${r.manifest.id}; bundled IDs cannot be replaced.`
@@ -184,7 +539,11 @@ export class PluginRegistry {
         pending: 0,
         storageQueue: Promise.resolve(),
       })
+    for (const old of oldRecords)
+      if (!records.includes(old)) void this.revoke(old)
     this.records = records
+    for (const r of records) if (r.built) this.pins.delete(r.built.hash)
+    this.syncWatchers()
     await this.persist()
     this.reconcile()
     return this.catalog()
@@ -192,8 +551,19 @@ export class PluginRegistry {
   catalog(): PluginCatalog {
     return {
       apiVersion: 1,
+      revision: ++this.catalogRevision,
       plugins: this.records.map(
-        ({ root, owner, pending, storageQueue, ...r }) => structuredClone(r),
+        ({
+          root,
+          owner,
+          pending,
+          storageQueue,
+          built,
+          next,
+          previous,
+          revision,
+          ...r
+        }) => structuredClone(r),
       ),
     }
   }
@@ -236,14 +606,26 @@ export class PluginRegistry {
     this.current = undefined
     this.reconcile()
   }
-  private revoke(r: Record) {
+  private revoke(r: Record, strict = false) {
     const owner = r.owner
     r.lease = undefined
     r.owner = undefined
+    r.candidate = undefined
+    r.next = undefined
+    r.phase = undefined
     if (owner)
-      void this.client
+      return this.client
         .request('execution.release', undefined, undefined, owner)
-        .catch(() => {})
+        .then(
+          (reply) => {
+            if (strict && !reply.ok)
+              throw new Error(reply.error || 'Plugin owner release failed')
+          },
+          (error) => {
+            if (strict) throw error
+          },
+        )
+    return Promise.resolve()
   }
   private revokeAll() {
     for (const r of this.records) this.revoke(r)
@@ -271,6 +653,7 @@ export class PluginRegistry {
       }
       if (!r.lease) {
         const token = randomUUID()
+        r.phase = 'activating'
         r.owner = 'plugin-' + token
         r.lease = {
           token,
@@ -282,8 +665,8 @@ export class PluginRegistry {
         }
       }
       r.state = 'active'
-      r.error = undefined
     }
+    this.syncWatchers()
     this.changed(this.catalog())
   }
   async enable(id: string, enabled: boolean) {
@@ -292,15 +675,32 @@ export class PluginRegistry {
       if (!r) throw new Error('Unknown plugin')
       if (typeof enabled !== 'boolean') throw new Error('Invalid enable flag')
       this.revoke(r)
+      r.revision = (r.revision ?? 0) + 1
       r.enabled = enabled
       if (enabled) {
         this.enabled.add(id)
         r.state = 'waiting'
+        try {
+          const built = await this.capture(r.source)
+          this.pins.delete(built.hash)
+          if (built.manifest.id !== id)
+            throw new Error('Plugin id changed; add it as a new plugin')
+          r.built = built
+          r.root = built.root
+          r.artifact = built.hash
+          r.manifest = built.manifest
+          r.error = undefined
+          r.reload = undefined
+        } catch (error) {
+          r.state = 'error'
+          r.error = `Enable/build failed: ${String(error)}`.slice(0, 2048)
+        }
       } else {
         this.enabled.delete(id)
         r.state = 'disabled'
       }
       await this.persist()
+      this.syncWatchers()
       this.reconcile()
       return this.catalog()
     })
@@ -359,6 +759,16 @@ export class PluginRegistry {
       capability = 'session.control'
     if (!capability || !r.manifest!.capabilities.includes(capability))
       throw new ServiceError('plugin_capability_denied')
+    if (
+      r.phase !== 'active' &&
+      ![
+        'session.status',
+        'memory.regions',
+        'memory.read',
+        'execution.status',
+      ].includes(method)
+    )
+      throw new ServiceError('plugin_not_ready')
     if (r.pending >= 8) throw new ServiceError('busy')
     ++r.pending
     try {
@@ -378,8 +788,13 @@ export class PluginRegistry {
     const u = new URL(url),
       segments = u.pathname.split('/').filter(Boolean),
       token = segments.shift() ?? ''
-    const r = this.lease(token)
-    if (u.hostname !== r.manifest!.id || u.search || u.hash)
+    const candidate = this.records.find(
+      (r) => r.candidate?.lease.token === token,
+    )
+    const r = candidate ? this.candidate(token) : this.lease(token)
+    const resourceRoot = candidate ? r.next!.root : r.root
+    const manifest = candidate ? r.candidate!.manifest : r.manifest!
+    if (u.hostname !== manifest.id || u.search || u.hash)
       throw new Error('Invalid plugin resource')
     const relative = segments.map(decodeURIComponent).join('/')
     if (
@@ -388,7 +803,7 @@ export class PluginRegistry {
       relative.split('/').some((p) => p === '..' || p === '.' || !p)
     )
       throw new Error('Invalid plugin path')
-    const file = await this.within(r.root, relative),
+    const file = await this.within(resourceRoot, relative),
       stat = await fs.stat(file)
     if (!stat.isFile() || stat.size > 2097152)
       throw new Error('Plugin resource exceeds 2 MiB')
@@ -405,7 +820,8 @@ export class PluginRegistry {
     const type = mime[path.extname(file)]
     if (!type) throw new Error('Unsupported plugin resource type')
     const bytes = await fs.readFile(file)
-    this.lease(token)
+    if (candidate) this.candidate(token)
+    else this.lease(token)
     return { bytes, type }
   }
   fail(token: string, message: string) {
@@ -433,6 +849,8 @@ export class PluginRegistry {
     value?: unknown,
   ) {
     const r = this.lease(token)
+    if (r.phase !== 'active' && operation !== 'get')
+      throw new ServiceError('plugin_not_ready')
     if (
       !/^[A-Za-z0-9._-]{1,64}$/.test(key) ||
       ['__proto__', 'constructor', 'prototype'].includes(key)

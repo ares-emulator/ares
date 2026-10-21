@@ -6,7 +6,7 @@ import type {
   SessionReply,
 } from '../services/contracts.js'
 import type { GameIdentity } from './contracts.js'
-export type Disposer = () => void
+export type Disposer = () => void | Promise<void>
 export interface PanelContext {
   element: HTMLElement
   onVisibility(callback: (visible: boolean) => void): Disposer
@@ -53,5 +53,12 @@ export interface PluginContext {
   }
 }
 export interface PluginModule {
-  activate(context: PluginContext): void | Disposer | Promise<void | Disposer>
+  /** Pure candidate validation without service or UI effects. */
+  prepare?(): void | Promise<void>
+  stateVersion?: number
+  saveState?(): unknown | Promise<unknown>
+  activate(
+    context: PluginContext,
+    state?: unknown,
+  ): void | Disposer | Promise<void | Disposer>
 }

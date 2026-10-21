@@ -19,6 +19,7 @@ export interface PluginManifest {
   name: string
   version: string
   apiVersion: 1
+  build?: { entry: string; jsxFactory?: string; jsxFragment?: string }
   entry: string
   styles?: string
   mode?: 'panel' | 'overlay' | 'page' | 'shell'
@@ -46,7 +47,17 @@ export interface PluginLease {
   profile: string | null
   baseURL: string
 }
+export interface PluginCandidate {
+  manifest: PluginManifest
+  lease: PluginLease
+  artifact: string
+}
 export interface PluginInfo {
+  artifact?: string
+  candidate?: PluginCandidate
+  phase?: 'activating' | 'active'
+  reload?: 'building' | 'staging' | 'activating' | 'error'
+
   manifest?: PluginManifest
   source: string
   bundled: boolean
@@ -57,6 +68,7 @@ export interface PluginInfo {
   logs: { level: string; message: string }[]
 }
 export interface PluginCatalog {
+  revision?: number
   apiVersion: 1
   plugins: PluginInfo[]
 }
@@ -65,6 +77,11 @@ export interface PluginBridge {
   enable(id: string, enabled: boolean): Promise<PluginCatalog>
   add(): Promise<PluginCatalog>
   refresh(): Promise<PluginCatalog>
+  reload(id: string): Promise<PluginCatalog>
+  begin(token: string): Promise<PluginInfo>
+  finish(token: string): Promise<void>
+  reject(token: string, message: string): Promise<void>
+  rollback(token: string, message: string): Promise<PluginInfo>
   fail(token: string, message: string): Promise<void>
   request<M extends ServiceMethod>(
     token: string,

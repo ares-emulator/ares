@@ -110,6 +110,7 @@ test('registry scopes capabilities, resources, storage and pending work across l
     registry.request(token, 'memory.write', {}),
     /plugin_capability_denied/,
   )
+  registry.finish(token)
   await registry.storage(token, 'set', 'answer', 42)
   assert.equal(await registry.storage(token, 'get', 'answer'), 42)
   await assert.rejects(registry.storage(token, 'set', '__proto__', {}))
@@ -134,8 +135,9 @@ test('registry scopes capabilities, resources, storage and pending work across l
     registry.resource(
       registry.catalog().plugins[0].lease.baseURL + 'escape.js',
     ),
-    /escapes/,
+    /ENOENT|escapes/,
   )
+  await fs.unlink(path.join(plugin, 'escape.js'))
   let finish
   pending = new Promise((resolve) => (finish = resolve))
   const late = registry.request(token, 'memory.read', {})
@@ -146,7 +148,19 @@ test('registry scopes capabilities, resources, storage and pending work across l
     registry.storage(token, 'get', 'answer'),
     /stale_plugin_scope/,
   )
+  await fs.writeFile(
+    path.join(plugin, 'plugin.js'),
+    'export const marker="edited-while-disabled";export function activate(){}',
+  )
   await registry.enable(manifest.id, true)
+  assert.match(
+    (
+      await registry.resource(
+        registry.catalog().plugins[0].lease.baseURL + 'plugin.js',
+      )
+    ).bytes.toString(),
+    /edited-while-disabled/,
+  )
   const next = registry.catalog().plugins[0].lease.token
   assert.notEqual(token, next)
   identity = { ...identity, epoch: 2 }
@@ -197,6 +211,7 @@ test('registry reports invalid builds and duplicate IDs; configuration and stora
     },
   })
   const token = registry.catalog().plugins[0].lease.token
+  registry.finish(token)
   await registry.storage(token, 'set', 'persisted', { value: 7 })
   registry.detach()
   assert.equal(registry.catalog().plugins[0].state, 'waiting')

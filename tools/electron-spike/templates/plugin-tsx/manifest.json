@@ -6,7 +6,21 @@
   "entry": "dist/plugin.js",
   "capabilities": ["session.read"],
   "contributes": {
-    "panels": [{ "id": "hello", "title": "TSX example" }],
-    "commands": [{ "id": "open", "title": "Open TSX example" }]
+    "panels": [
+      {
+        "id": "hello",
+        "title": "TSX example"
+      }
+    ],
+    "commands": [
+      {
+        "id": "open",
+        "title": "Open TSX example"
+      }
+    ]
+  },
+  "build": {
+    "entry": "src/plugin.tsx",
+    "jsxFactory": "h"
   }
 }

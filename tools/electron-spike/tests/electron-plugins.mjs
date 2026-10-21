@@ -15,6 +15,7 @@ fs.mkdirSync(template)
 const templateRoot = fileURLToPath(
   new URL('../templates/plugin-tsx/', import.meta.url),
 )
+fs.cpSync(templateRoot, template, { recursive: true })
 fs.copyFileSync(
   path.join(templateRoot, 'manifest.json'),
   path.join(template, 'manifest.json'),
@@ -165,12 +166,20 @@ app.whenReady().then(async () => {
     await plugins.enable('test.delayed', false)
     await until(() => js('window.pluginLateCleanup'))
     for (const position of ['left', 'right', 'bottom']) {
-      await js(`(()=>{const position=document.querySelector('#plugins select');position.value=${JSON.stringify(position)};position.dispatchEvent(new Event('change'));})()`)
-      assert.equal(await js("document.getElementById('plugin-dock').dataset.position"), position)
+      await js(
+        `(()=>{const position=document.querySelector('#plugins select');position.value=${JSON.stringify(position)};position.dispatchEvent(new Event('change'));})()`,
+      )
+      assert.equal(
+        await js("document.getElementById('plugin-dock').dataset.position"),
+        position,
+      )
     }
-    const screenshot=await window.webContents.capturePage()
-    const artifact=fileURLToPath(new URL('../artifacts/plugin-dock.png',import.meta.url))
-    fs.mkdirSync(path.dirname(artifact),{recursive:true});fs.writeFileSync(artifact,screenshot.toPNG())
+    const screenshot = await window.webContents.capturePage()
+    const artifact = fileURLToPath(
+      new URL('../artifacts/plugin-dock.png', import.meta.url),
+    )
+    fs.mkdirSync(path.dirname(artifact), { recursive: true })
+    fs.writeFileSync(artifact, screenshot.toPNG())
     console.log('PLUGIN_UI_PASS')
     clearTimeout(timeout)
     await stopNative()

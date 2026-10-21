@@ -479,3 +479,9 @@ verified Kirby identity examples start disabled. Plain JS needs no build; a TS/T
 template is included. See [plugin authoring and lifecycle](plugins/README.md).
 Plugins are trusted renderer code. Main pins SDK capabilities to a revocable
 generation/session/epoch; game profiles match normalized content hashes.
+
+Task 11 adds watched immutable JS/TS/TSX builds, per-plugin Reload, compatible UI
+state handoff and rollback to the previous working artifact. Mutations stay blocked
+during activation/restoration; patches run through explicit commands.
+`npm run test:reload` exercises failure recovery, repeated effect cleanup and real
+MCP ownership across replacement. The copied app includes the compiler.

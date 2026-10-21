@@ -1775,3 +1775,90 @@ manual verification later; this work does not claim they passed.
 Final sequential suite with the optional real-game test explicitly enabled:
 **81/81 passed**, no skips, **56.00 seconds**. Task 10 is complete; task 11 is
 the next roadmap task.
+
+## Task 11 — watched immutable replacement and cleanup
+
+Implemented source watchers (180 ms debounce), host-side JS/TS/TSX bundling and
+content-addressed immutable artifacts. Hidden trees, dependencies and declared
+output directories are ignored. Snapshot files are bounded to 2 MiB each, 16 MiB /
+256 files total; syntax/style/build errors retain the current artifact. Compiler
+scripts from plugins are never run. esbuild is now a production dependency so
+copied applications build source plugins without checkout/npm tooling.
+
+Replacement validates the manifest, imports a fresh candidate module and optionally
+runs pure `prepare()` while the working UI remains live. Main confirms release of
+only the previous plugin's native owner before replacement proceeds. Old SDK
+scopes abort immediately, invoke cleanup in reverse order and wait at most one
+second for asynchronous disposal. A failed release blocks replacement. Candidate
+registrations remain detached; listeners and timers arm only after activation and
+panel restoration succeed. Activation/import/preparation have two-second bounds.
+Main and renderer reject mutations before publication (`plugin_not_ready`); patches
+must be explicit commands. Neither rollback nor restoring a panel replays writes.
+
+Optional `stateVersion` / `saveState()` preserve compatible transient JSON (16 KiB),
+with stable panel IDs restoring visibility/selection and existing dock placement.
+Failed activation disposes the candidate and remounts the previous immutable
+artifact under a fresh token. Failed rollback is reported explicitly; another valid
+edit recovers. Build/import/prepare failures retain the actual old DOM/token. Rapid
+edits invalidate obsolete candidates, watcher work coalesces, and monotonic catalog
+revisions prevent late IPC snapshots from reviving a superseded generation.
+
+Native session/epoch changes revoke candidates and active SDK access. Source edits
+never restart/reset the emulator. Renderer interval callbacks suspend when their
+plugin has no visible panel. The developer manager exposes bounded scope, listener,
+timer and request counts plus per-plugin Reload and diagnostics. Disabled-source
+edits are rebuilt when enabled. Artifact pruning retains current/previous/candidate
+snapshots and protects in-flight captures; watchers close at application shutdown.
+Chromium keeps imported ESM modules cached until renderer teardown: the acceptance
+checks prove SDK effect/request cleanup, not individual-module unloading or a
+universal flat-heap guarantee. Plugins remain trusted same-renderer JavaScript;
+raw import-time effects outside the SDK remain the author's responsibility.
+
+Validation:
+
+- Strict main/browser/preload TypeScript compilation passes.
+- Immutable artifact tests cover captured TSX/imports, custom output exclusion,
+  content hashes, preserved previous bytes, failed builds and temporary cleanup.
+  Registry tests cover staging-token denial, nonreplayed writes, rejected-candidate
+  preservation, failed native release, disabled-source rebuild and existing task
+  10 validation/storage/capability behavior.
+- Full sequential suite passed **83/83**, no skips, including isolated real Kirby,
+  N64 and GBA checks. The final repeat passed again in **99.36 seconds** (first
+  run: 49.84 seconds); final targeted artifact/registry checks also pass.
+- Real Electron reload test passes: invalid edit retains DOM/token; watched valid
+  edit restores value 37; prepare failure keeps UI; failed activation remounts the
+  previous artifact/state; activation writes reject without changing memory; stale
+  delayed writes reject; **12** repeated reloads retain **1 scope / 2 listeners /
+  1 timer** and a probe fires once; retained artifacts remain bounded; hidden
+  polling stops; rapid edits discard an obsolete preparing candidate; hanging
+  cleanup reports a bounded timeout and recovers; incompatible state versions
+  start fresh; failed rollback is visible and a valid edit recovers; session switch
+  during preparation rejects the stale candidate; disabling removes all effects.
+- An operation started through **real MCP stdio** remains running across plugin
+  replacement; its MCP owner cancels it explicitly. A plugin-owned run is released
+  with `disconnected` on reload. Only an explicit patch command changes fixture
+  bytes, and they are restored. Native session/epoch remain unchanged across JS
+  edits; the session changes only in the explicit ROM-switch test.
+- Existing task 10 Electron plugin/TSX/delayed-activation test passes.
+- Fresh `artifacts/task-11-complete/Ares.app` copied outside the checkout passes
+  **PACKAGE_MCP_PASS**, **574 GB frames**, Electron 44.9.0 / Node 24.22.0. The copied
+  app's bundled compiler builds and watches an external TSX plugin from version
+  1 to 2 with the same native session/epoch. Native loader and MCP adapter are
+  denied checkout reads. Final package validation is recorded below.
+
+Earlier physical keyboard/gamepad takeover, audible-output acceptance and task 8
+serializer rollback-failure fault injection remain recorded later verification;
+this task does not claim those checks passed.
+
+Final validation: **83/83** sequential regression tests passed (no skips); strict
+build plus final targeted artifact/registry checks passed, including invalid CSS
+and an escaping manifest symlink. The final live reload test additionally injects
+an old IPC catalog snapshot and confirms it cannot replace the current scope/DOM.
+Existing Electron session/inspector and real **68-tool** MCP integration passed.
+The final refreshed copied app passes **PACKAGE_MCP_PASS** with **504 GB frames**
+and packaged TSX 1→2 hot replacement retaining native session/epoch. No checkout
+compiler or resource is required. Original ROMs/saves were not modified.
+
+**Task 11 complete.** Implementation, failure recovery and cleanup acceptance are
+recorded above. Task 12 (actual agent-authored game tool and agent-facing plugin
+commands) is next. Separate earlier manual/fault-injection checks remain pending.

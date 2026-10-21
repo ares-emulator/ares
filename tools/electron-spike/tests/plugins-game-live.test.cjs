@@ -80,6 +80,7 @@ test(
           assert.equal(plugin.state, 'active')
           assert.equal(plugin.lease.profile, 'kirby64-us-rev0')
           const token = plugin.lease.token
+        registry.finish(token)
           registry.observe({
             ...status,
             result: {

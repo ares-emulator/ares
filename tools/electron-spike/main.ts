@@ -153,11 +153,16 @@ app.whenReady().then(async () => {
       if (active.outstanding && active.lastFrame) port.postMessage({ ...active.lastFrame, generation: active.generation, receivedMs: performance.timeOrigin + performance.now() });
     } else enqueue(() => start(process.env.ARES_ROM ? { rom: process.env.ARES_ROM, system: process.env.ARES_SYSTEM } : { hd: process.env.ARES_HD === '1' }));
   });
-  for (const name of ['catalog','enable','add','refresh','request','storage','log','fail'] as const) {
+  for (const name of ['catalog','enable','add','refresh','request','storage','log','fail','reload','begin','finish','reject','rollback'] as const) {
     ipcMain.handle('plugin.' + name, async (event, ...args) => {
       if(event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('invalid_sender');
       switch(name) {
         case 'catalog': return plugins.attach();
+        case 'reload': return plugins.reload(args[0]);
+        case 'begin': return plugins.begin(args[0]);
+        case 'finish': return plugins.finish(args[0]);
+        case 'reject': return plugins.reject(args[0],args[1]);
+        case 'rollback': return plugins.rollback(args[0],args[1]);
         case 'enable': return plugins.enable(args[0], args[1]);
         case 'refresh': return plugins.refresh();
         case 'request': return plugins.request(args[0], args[1], args[2]);
@@ -220,5 +225,5 @@ app.on('window-all-closed', () => app.quit());
 app.on('before-quit', event => {
   if (quitting) return;
   event.preventDefault(); quitting = true;
-  enqueue(stop).finally(async () => { await serviceHost.close(); app.quit(); });
+  enqueue(stop).finally(async () => { await plugins.close(); await serviceHost.close(); app.quit(); });
 });

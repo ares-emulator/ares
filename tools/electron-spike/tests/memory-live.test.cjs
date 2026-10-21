@@ -109,6 +109,7 @@ test('real N64 and GBA debugger regions inspect and restore deterministic writes
         await registry.enable('ares.examples.memory',true);await registry.enable('ares.examples.kirby',true);
         assert.equal(registry.catalog().plugins.find(p=>p.manifest.id==='ares.examples.kirby').state,'waiting');
         const token=registry.catalog().plugins.find(p=>p.manifest.id==='ares.examples.memory').lease.token;
+        registry.finish(token);
         const scoped={request:(method,_identity,params)=>registry.request(token,method,params)};
         const pluginMemory=new MemoryClient(scoped);
         const regions = await pluginMemory.regions();
