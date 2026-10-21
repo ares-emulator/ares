@@ -13,6 +13,7 @@
   },
   "include": [
     "renderer.ts",
+    "plugins/runtime.ts",
     "renderer-globals.d.ts",
     "bridge.ts",
     "services/contracts.ts",

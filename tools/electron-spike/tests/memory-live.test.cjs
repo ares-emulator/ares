@@ -101,7 +101,17 @@ test('real N64 and GBA debugger regions inspect and restore deterministic writes
     let oldRegion;
     for (const [rom, system, target] of [[n64Path, 'Nintendo 64', 'RSP DMEM'], [gbaPath, 'Game Boy Advance', 'CPU EWRAM']]) {
       await instance(['--rom', rom, '--system', system, '--settings', settingsPath], async (memory, client) => {
-        const regions = await memory.regions();
+        const {PluginRegistry}=await import('../dist/plugins/registry.js');
+        const data=fs.mkdtempSync(path.join(scratch,'plugin-data-'));
+        const registry=new PluginRegistry(path.resolve(__dirname,'../bundled-plugins'),data,client,()=>client.identity);
+        await registry.initialize();registry.attach();const status=await client.request('session.status');registry.observe(status);
+        assert.equal(status.result.game.kind,'program.rom');assert.match(status.result.game.sha256,/^[a-f0-9]{64}$/);
+        await registry.enable('ares.examples.memory',true);await registry.enable('ares.examples.kirby',true);
+        assert.equal(registry.catalog().plugins.find(p=>p.manifest.id==='ares.examples.kirby').state,'waiting');
+        const token=registry.catalog().plugins.find(p=>p.manifest.id==='ares.examples.memory').lease.token;
+        const scoped={request:(method,_identity,params)=>registry.request(token,method,params)};
+        const pluginMemory=new MemoryClient(scoped);
+        const regions = await pluginMemory.regions();
         const region = regions.find(r => r.name === target);
         assert.ok(region, `${system}: ${regions.map(r => r.name).join(', ')}`);
         assert.equal(region.writable, true); assert.equal(region.readable, true);
@@ -118,7 +128,13 @@ test('real N64 and GBA debugger regions inspect and restore deterministic writes
           assert.equal(cache.readable, false); assert.equal(cache.writable, false);
           await assert.rejects(memory.read(cache, 0, 1), /unsupported_region/);
         }
+        const before=await pluginMemory.read(region,0,4);
+        await pluginMemory.write(region,0,hexToBytes('12345678'));
+        assert.equal((await pluginMemory.read(region,0,4)).hex,'12345678');
+        await pluginMemory.write(region,0,hexToBytes(before.hex));
         await roundTrip(memory, client, region);
+        await assert.rejects(pluginMemory.read(region,0,1),/stale_plugin_scope/);
+        registry.disconnect();
         oldRegion = region;
       });
     }

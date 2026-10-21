@@ -1,0 +1,12 @@
+{
+  "id": "ares.examples.memory",
+  "name": "Generic memory",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "entry": "plugin.js",
+  "capabilities": ["session.read", "memory.read", "memory.write"],
+  "contributes": {
+    "panels": [{ "id": "memory", "title": "Plugin memory" }],
+    "commands": [{ "id": "open", "title": "Open plugin memory" }]
+  }
+}

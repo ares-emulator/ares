@@ -1,0 +1,22 @@
+{
+  "id": "ares.examples.kirby",
+  "name": "Kirby 64 verified profile",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "entry": "plugin.js",
+  "activation": {
+    "systems": ["Nintendo 64"],
+    "games": [
+      {
+        "profile": "kirby64-us-rev0",
+        "sha256": "2f579751d7ad2824dfd8a6141570306bfaeda1cff40139ba231c30b8591d681c",
+        "revision": "US revision 0"
+      }
+    ]
+  },
+  "capabilities": ["session.read"],
+  "contributes": {
+    "panels": [{ "id": "profile", "title": "Kirby profile" }],
+    "commands": [{ "id": "open", "title": "Open Kirby profile" }]
+  }
+}

@@ -1,3 +1,4 @@
+import type {PluginBridge} from './plugins/contracts.js';
 import type { SessionIdentity, ServiceMethod, ServiceParams, ServiceResult, SessionReply } from './services/contracts.js';
 
 /** Only serializable application data crosses this sandbox bridge. */
@@ -22,6 +23,7 @@ export type NativeCommand =
   | { type: 'clear' }
   | { type: 'report'; report: RendererStats };
 export interface AresBridge {
+  plugins: PluginBridge;
   session<M extends ServiceMethod>(method: M, identity?: SessionIdentity, params?: ServiceParams<M>): Promise<SessionReply<ServiceResult<M>>>;
   ready(): void;
   open(options: Pick<StartOptions, 'system'>): Promise<void>;

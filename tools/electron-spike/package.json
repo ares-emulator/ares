@@ -19,11 +19,13 @@
     "test:package": "node tests/package-live.cjs",
     "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig.browser.json && tsc -p tsconfig.preload.json",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
-    "test:state-reference": "npm run build && node tests/state-reference.cjs"
+    "test:state-reference": "npm run build && node tests/state-reference.cjs",
+    "test:plugins": "npm run build && electron tests/electron-plugins.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "electron": "44.9.0",
+    "esbuild": "0.28.2",
     "typescript": "^7.0.2"
   },
   "dependencies": {

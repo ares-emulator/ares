@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' ares-plugin:; style-src 'self' ares-plugin:; connect-src 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ares · Native canvas spike</title>
   <link rel="stylesheet" href="style.css">
@@ -40,5 +40,6 @@
   <footer id="status">Starting native host…</footer>
   <script type="module" src="dist/browser/renderer.js"></script>
   <script type="module" src="dist/browser/services/inspector.js"></script>
+  <script type="module" src="dist/browser/plugins/runtime.js"></script>
 </body>
 </html>

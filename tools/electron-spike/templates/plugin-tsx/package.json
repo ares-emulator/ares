@@ -1,0 +1,11 @@
+{
+  "name": "ares-plugin-template",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/plugin.tsx --bundle --format=esm --target=es2022 --jsx-factory=h --outfile=dist/plugin.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

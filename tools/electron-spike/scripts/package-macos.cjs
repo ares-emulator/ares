@@ -14,7 +14,7 @@ fs.mkdirSync(app);
 for (const field of ['CFBundleIdentifier', 'CFBundleName', 'CFBundleDisplayName']) execFileSync('plutil', ['-replace', field, '-string', field === 'CFBundleIdentifier' ? 'org.ares.workbench.spike' : 'Ares Workbench', path.join(destination, 'Contents/Info.plist')]);
 for (const file of ['LICENSE', 'LICENSES.chromium.html']) copy(path.join(path.dirname(require.resolve('electron')), 'dist', file), path.join(resources, file));
 copy(path.resolve(root, '../../LICENSE'), path.join(resources, 'ARES-LICENSE'));
-for (const file of ['style.css', 'index.html', 'dist']) copy(path.join(root, file), path.join(app, file));
+for (const file of ['style.css', 'index.html', 'dist', 'bundled-plugins']) copy(path.join(root, file), path.join(app, file));
 fs.writeFileSync(path.join(app, 'package.json'), JSON.stringify({ name: 'ares-workbench', version: '0.2.0', type: 'module', main: 'dist/main.js' }));
 // Ask npm for the installed production tree, then copy it without developer tools.
 const production = execFileSync('npm', ['ls', '--omit=dev', '--all', '--parseable'], { cwd: root, encoding: 'utf8' }).trim().split('\n').slice(1);

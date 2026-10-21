@@ -1,0 +1,12 @@
+{
+  "id": "local.example",
+  "name": "TSX example",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "entry": "dist/plugin.js",
+  "capabilities": ["session.read"],
+  "contributes": {
+    "panels": [{ "id": "hello", "title": "TSX example" }],
+    "commands": [{ "id": "open", "title": "Open TSX example" }]
+  }
+}

@@ -1714,3 +1714,64 @@ bounded adapter contracts are documented together with tests; no tool was remove
 or silently replaced by reading a reused command buffer. Separate earlier manual
 checks above remain honest follow-ups, not claimed passes. Implementation commit:
 `fa7be7742`. Task 10 (plugin loader/panel/game matching) is the next roadmap task.
+
+## Task 10 — local plugin loader, panels and verified game profiles
+
+Implemented API v1 manifests and a main-owned registry for bundled and explicitly
+added/enabled local directories. Validation rejects unknown APIs/capabilities,
+invalid built paths, duplicate contribution/plugin IDs and escaping symlinks.
+Bundled IDs cannot be shadowed. Overlay/page/shell modes are reserved and report
+that only panels/commands are implemented. Configuration persists in userData.
+
+The sandbox preload exposes serializable plugin operations. Scoped resource URLs,
+SDK calls, storage and logs are tied to a random plugin generation and native
+session/epoch. Main checks both before and after async requests; disable, reset,
+ROM replacement and renderer reload revoke tokens. Disposal releases only that
+plugin's execution owner. Renderer scopes own panels, commands, styles, listeners,
+intervals and async activation cleanup. Commands work without mounting a panel;
+panels mount lazily in a left/right/bottom dock and expose visibility callbacks.
+Failures appear in the Plugins manager, alongside bounded logs. JSON storage is
+namespaced/versioned, limited to 16 KiB and atomically published.
+
+Plugins are explicitly trusted renderer JavaScript, not an untrusted-code sandbox.
+The capability SDK routes supported intent but cannot isolate raw same-renderer JS.
+Watched immutable hot replacement and failed-replacement preservation remain task
+11; this task's Refresh action disposes and reloads all discovered scopes.
+
+Native session status now reports a cached SHA-256/size for normalized MIA
+`program.rom`, not filenames or N64 word-swizzled backing memory. Profiles require
+an exact system/content match. Bundled examples provide generic memory read/write
+and the verified Kirby US revision 0 identity panel (gameplay tooling remains task
+12). They default disabled. A standalone esbuild TS/TSX template bundles a tiny DOM
+JSX factory; no custom UI framework or React dependency is imposed.
+
+Validation:
+
+- Native host build and all three strict TypeScript targets pass. Host SHA-256:
+  `3753d98ce6519a040ca3159dcf6e22b7ec1402edfdd8e16599cdb56149c13636`.
+- Manifest/registry tests cover exact hash matching, validation, capabilities,
+  pending-call revocation, resource containment, storage limits/persistence,
+  duplicate IDs and actionable missing-build errors.
+- Real isolated paused N64/GBA fixtures enumerate and write/read/restore memory
+  through the same scoped plugin service path; stale epoch calls reject.
+- An isolated real Kirby test loads renamed big-endian and byte-swapped copies;
+  both normalize to the verified hash and activate the profile. Wrong content
+  revokes it. The original ROM hash remains
+  `2f579751d7ad2824dfd8a6141570306bfaeda1cff40139ba231c30b8591d681c`;
+  all saves/settings are disposable. No active emulator or original save is used.
+- Real Electron plugin test: command before panel mount, memory reads, disable
+  removes UI/rejects old token, reset revokes scope, compiled TSX panel renders,
+  activation failure is actionable, delayed activation returns its cleanup after
+  disable. Existing Electron session/inspector integration also passes.
+- Real 68-tool MCP integration passes with the status addition.
+- Fresh `artifacts/task-10-complete/Ares.app` includes bundled plugin resources and
+  passes copied-out **PACKAGE_MCP_PASS**: 453 GB frames, Electron 44.9.0, Node
+  24.22.0, checkout reads denied to native loader and MCP adapter.
+
+Previous physical keyboard/gamepad takeover, audible-output acceptance and task
+8 rollback-failure fault injection remain recorded follow-ups. The user accepted
+manual verification later; this work does not claim they passed.
+
+Final sequential suite with the optional real-game test explicitly enabled:
+**81/81 passed**, no skips, **56.00 seconds**. Task 10 is complete; task 11 is
+the next roadmap task.

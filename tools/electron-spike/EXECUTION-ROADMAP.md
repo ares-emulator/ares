@@ -202,7 +202,7 @@ not a pass for the port.
 Maps to MCP phase D and plugin-plan steps 2–5. Now build the extension machinery
 on services that already support both agent and JS clients.
 
-### Task 10 — minimal loader, panel and game matching
+### Task 10 — minimal loader, panel and game matching (complete)
 
 Implement local manifests, validation, enabled plugin directories, SDK registration,
 scoped disposal/storage/logging and a dockable panel mount. Support plain JS first
@@ -289,7 +289,14 @@ checks, actual Electron integration and a fresh copied package passed. Intention
 bounds/result/validation differences and separate earlier manual gates remain
 explicit in the ledger/log; no tool was removed.
 
-The immediate next action is **task 10 — minimal plugin loader, panel and game
-matching**. Tasks 1–5, 4.5 and 7–9 are implemented. Task 6 backend checks pass;
-physical keyboard/gamepad acceptance remains a separate manual gate. Runtime
-evidence and remaining manual checks are in the execution log.
+Task 10 is complete: enabled local manifests, capability-routed SDK scopes,
+namespaced commands/panels, scoped cleanup/storage/logging, dock mounting,
+plain-JS examples, TS/TSX template and normalized-content game matching. Final
+validation: **81/81** sequential tests, real Electron plugin and existing session
+integration, all 68 MCP tools and a fresh copied-out package. Details are in the
+execution log and `plugins/README.md`.
+
+The immediate next action is **task 11 — hot replacement and cleanup**. Tasks
+1–5, 4.5 and 7–10 are implemented. Earlier physical keyboard/gamepad takeover,
+audible-output acceptance and task 8 rollback-failure fault injection remain
+recorded follow-ups for later verification; they are not claimed as passes.

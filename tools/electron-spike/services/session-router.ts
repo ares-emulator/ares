@@ -35,6 +35,7 @@ export class SessionRouter {
   private memoryDumps = new MemoryDumps();
   private nextArtifactId = 0;
   private client?: NativeSessionClient;
+  get identity() { return this.client?.identity; }
   private stateTimer?: ReturnType<typeof setInterval>;
   constructor(private onSessionState?: (reply: SessionReply) => void) {}
   attach(client: NativeSessionClient): void {

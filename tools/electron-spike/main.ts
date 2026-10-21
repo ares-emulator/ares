@@ -1,4 +1,5 @@
-import { app, BrowserWindow, ipcMain, dialog, MessageChannelMain, type MessagePortMain } from 'electron';
+import {PluginRegistry} from './plugins/registry.js';
+import { app, BrowserWindow, ipcMain, dialog, MessageChannelMain, protocol, type MessagePortMain } from 'electron';
 import { spawn, execFile, type ChildProcessByStdio } from 'node:child_process';
 import type { Readable, Writable } from 'node:stream';
 import path from 'node:path';
@@ -19,8 +20,13 @@ interface NativeSession {
   system: string; generation: number; outstanding: boolean; lastSequence: number;
   diagnostic: string; failure?: string; lastFrame?: NativeFrame; closed: Promise<void>;
 }
+protocol.registerSchemesAsPrivileged([{scheme:'ares-plugin', privileges:{standard:true,secure:true,supportFetchAPI:true,corsEnabled:true}}]);
 export const sessions = new SessionRouter(reply => {
+  plugins.observe(reply);
   if (window && !window.isDestroyed() && !window.webContents.isDestroyed()) window.webContents.send('session-state', reply);
+});
+export const plugins = new PluginRegistry(path.join(appRoot, 'bundled-plugins'), path.join(app.getPath('userData'), 'plugins'), sessions, () => sessions.identity, catalog => {
+  if (window && !window.isDestroyed()) window.webContents.send('plugin-catalog', catalog);
 });
 export const serviceHost = new LocalServiceHost(sessions);
 export { stop as stopNative };
@@ -44,7 +50,7 @@ async function stop() {
   const old = active;
   if (!old) return;
   active = null;
-  sessions.detach();
+  plugins.disconnect(); sessions.detach();
   // EOF also releases the native command reader. Escalate only for a stuck host.
   old.child.stdin.end('quit\n');
   const timer = setTimeout(() => old.child.kill('SIGKILL'), 2000);
@@ -83,7 +89,7 @@ async function start(options: StartOptions) {
   const child = spawn(hostPath, args, { stdio: ['pipe', 'pipe', 'pipe', 'pipe'] }) as ChildProcessByStdio<Writable, Readable, Readable>;
   const session: NativeSession = { child, system, generation: ++generation, outstanding: false, lastSequence: 0, diagnostic: '', closed: Promise.resolve() };
   session.closed = new Promise(resolve => child.once('close', (code, signal) => {
-    if (active === session) { active = null; sessions.detach(); status(session.failure || ((code !== 0 || signal) ? `Host stopped (${signal || code}). ${session.diagnostic}` : 'Host stopped. Open a ROM or restart a test.')); }
+    if (active === session) { active = null; plugins.disconnect(); sessions.detach(); status(session.failure || ((code !== 0 || signal) ? `Host stopped (${signal || code}). ${session.diagnostic}` : 'Host stopped. Open a ROM or restart a test.')); }
     resolve();
   }));
   active = session;
@@ -113,6 +119,11 @@ function enqueue(task: () => Promise<void>) {
   return operation;
 }
 app.whenReady().then(async () => {
+  await plugins.initialize((process.env.ARES_PLUGIN_DIRS || '').split(path.delimiter).filter(Boolean));
+  protocol.handle('ares-plugin', async request => {
+    try { const {bytes,type} = await plugins.resource(request.url); return new Response(new Uint8Array(bytes), {headers:{'Content-Type':type,'Access-Control-Allow-Origin':'*'}}); }
+    catch { return new Response('Plugin resource unavailable or scope expired', {status:404}); }
+  });
   if (process.env.ARES_ENABLE_SERVICES === '1' || process.argv.includes('--services')) {
     const file = await serviceHost.listen(process.env.ARES_SERVICE_DIR);
     console.error(`ares service instance ${serviceHost.instance}: ${file}`);
@@ -122,8 +133,8 @@ app.whenReady().then(async () => {
       nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
-  window.webContents.on('render-process-gone', () => { port?.close(); port = null; });
-  window.webContents.on('did-start-loading', () => { port?.close(); port = null; });
+  window.webContents.on('render-process-gone', () => { plugins.detach(); port?.close(); port = null; });
+  window.webContents.on('did-start-loading', () => { plugins.detach(); port?.close(); port = null; });
   ipcMain.on('ready', event => {
     if (event.sender !== window.webContents) return;
     port?.close();
@@ -142,6 +153,21 @@ app.whenReady().then(async () => {
       if (active.outstanding && active.lastFrame) port.postMessage({ ...active.lastFrame, generation: active.generation, receivedMs: performance.timeOrigin + performance.now() });
     } else enqueue(() => start(process.env.ARES_ROM ? { rom: process.env.ARES_ROM, system: process.env.ARES_SYSTEM } : { hd: process.env.ARES_HD === '1' }));
   });
+  for (const name of ['catalog','enable','add','refresh','request','storage','log','fail'] as const) {
+    ipcMain.handle('plugin.' + name, async (event, ...args) => {
+      if(event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('invalid_sender');
+      switch(name) {
+        case 'catalog': return plugins.attach();
+        case 'enable': return plugins.enable(args[0], args[1]);
+        case 'refresh': return plugins.refresh();
+        case 'request': return plugins.request(args[0], args[1], args[2]);
+        case 'storage': return plugins.storage(args[0], args[1], args[2], args[3]);
+        case 'fail': return plugins.fail(args[0],args[1]);
+        case 'log': return plugins.log(args[0], args[1], args[2]);
+        case 'add': { const result = await dialog.showOpenDialog(window, {title:'Add trusted local plugin directory',properties:['openDirectory']}); return result.canceled ? plugins.catalog() : plugins.add(result.filePaths[0]); }
+      }
+    });
+  }
   ipcMain.handle('session', async (event, method: ServiceMethod, identity?: SessionIdentity, params?: ServiceParams<ServiceMethod>) => {
     if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('invalid_sender');
     if (!['session.status', 'memory.regions'].includes(method) && !identity) throw new Error('invalid_request');

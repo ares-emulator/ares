@@ -15,3 +15,15 @@ nav select { width:220px; margin:0; } footer { overflow:hidden; white-space:nowr
 
 #memory-offset, #memory-length, #memory-bytes { width:100%; margin-top:7px; padding:7px; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:5px; }
 #memory-output { overflow-wrap:anywhere; }
+
+#plugin-dock { background:#20252d; padding:8px; overflow:auto; resize:vertical; min-height:100px; max-height:55vh; }
+#plugin-dock[data-position="left"], #plugin-dock[data-position="right"] { width:320px; min-width:220px; max-height:none; resize:horizontal; }
+#plugin-dock[data-position="left"] { order:-1; }
+#plugin-dock article { padding:8px; }
+#plugins pre { white-space:pre-wrap; color:#efb798; }
+#plugin-dock nav { display:flex; gap:4px; }
+
+body.panel-left #plugin-dock[data-position="left"] { order:1; }
+body.panel-left #plugin-dock[data-position="right"] { order:-1; }
+#plugin-dock { background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+#plugin-dock input { max-width:100%; background:var(--bg); color:var(--text); border:1px solid var(--line); padding:7px; }

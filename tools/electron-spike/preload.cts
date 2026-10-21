@@ -1,6 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { AresBridge } from './bridge.js';
 const api: AresBridge = {
+  plugins: {
+    fail: (token, message) => ipcRenderer.invoke('plugin.fail', token, message),
+    catalog: () => ipcRenderer.invoke('plugin.catalog'),
+    enable: (id, enabled) => ipcRenderer.invoke('plugin.enable', id, enabled),
+    add: () => ipcRenderer.invoke('plugin.add'),
+    refresh: () => ipcRenderer.invoke('plugin.refresh'),
+    request: (token, method, params) => ipcRenderer.invoke('plugin.request', token, method, params),
+    storage: (token, op, key, value) => ipcRenderer.invoke('plugin.storage', token, op, key, value),
+    log: (token, level, message) => ipcRenderer.invoke('plugin.log', token, level, message),
+    changed: callback => { const listener = (_event: unknown, catalog: any) => callback(catalog); ipcRenderer.on('plugin-catalog', listener); return () => ipcRenderer.removeListener('plugin-catalog', listener); },
+  },
   session: (method, identity, params) => ipcRenderer.invoke('session', method, identity, params),
   ready: () => ipcRenderer.send('ready'),
   open: options => ipcRenderer.invoke('open', options),

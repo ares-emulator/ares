@@ -65,6 +65,8 @@ struct Host : ares::Platform {
   StateLoader stateLoader;
   std::atomic<bool> takeoverRequested{false};
   ares::Node::System root;
+  string contentHash;
+  uint64_t contentSize = 0;
   std::shared_ptr<HID::Joypad> joypad;
   std::shared_ptr<HID::Keyboard> keyboard;
   std::shared_ptr<HID::Mouse> mouse;
@@ -394,6 +396,10 @@ int main(int argc, char** argv) {
       emulator.reset(); return 1;
     }
     host.root = emulator->root;
+    if(auto bytes = emulator->game->pak->read("program.rom")) {
+      host.contentSize = bytes->size();
+      host.contentHash = nall::Hash::SHA256({bytes->data(), bytes->size()}).digest();
+    }
     program.paletteUpdate();
   }
   std::cerr << "ready: " << (synthetic ? "synthetic RGBA source" : host.systemName.data())
@@ -437,6 +443,11 @@ int main(int argc, char** argv) {
   if(n64) viewerService.loadRom(rom);
   host.service.statusFields = [&] {
     MachineService::Object status;
+    if(host.contentHash) {
+      MachineService::Object game; game.add("sha256", controlQuote(host.contentHash.data()));
+      game.number("size", host.contentSize); game.add("kind", controlQuote("program.rom"));
+      status.add("game", game.end());
+    } else status.add("game", "null");
     status.add("loaded", host.root ? "true" : "false");status.number("protocol_version",1);
     status.add("vps",std::to_string(host.framesPerSecond()));
     status.add("gdbHalted",nall::GDB::server.isHalted() ? "true" : "false");status.add("gdb_client",nall::GDB::server.hasClient() ? "true" : "false");

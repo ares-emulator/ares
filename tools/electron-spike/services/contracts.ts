@@ -24,7 +24,7 @@ export const METHODS = [...NATIVE_METHODS, ...ARTIFACT_METHODS, 'artifact.rdpExp
 export type ServiceMethod = typeof METHODS[number];
 export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
 export interface SessionIdentity { session: string; epoch: number }
-export interface SessionStatus { paused: boolean; system: string; synthetic: boolean; capabilities: ServiceMethod[]; frame?: number; frame_kind?: string; at_frame_boundary?: boolean; executor?: string; operation_id?: number | null; batch_id?: number | null }
+export interface SessionStatus { game?: {sha256:string;size:number;kind:'program.rom'} | null; paused: boolean; system: string; synthetic: boolean; capabilities: ServiceMethod[]; frame?: number; frame_kind?: string; at_frame_boundary?: boolean; executor?: string; operation_id?: number | null; batch_id?: number | null }
 export interface ExecutionOperation {
   rsp?: RspProgress;
   call?: CallProgress;
@@ -190,7 +190,7 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
     }
     if (method.startsWith('n64.input.') && method !== 'n64.input.tap') valid = validInput(s);
     if (method === 'n64.input.tap') { decodeReply(JSON.stringify(r), 'execution.status'); valid = s.kind === 'controller_tap'; }
-    if (method.startsWith('session.')) valid = !!s && typeof s.paused === 'boolean' && typeof s.system === 'string' && typeof s.synthetic === 'boolean' && Array.isArray(s.capabilities) && s.capabilities.every((m: ServiceMethod) => METHODS.includes(m));
+    if (method.startsWith('session.')) valid = !!s && typeof s.paused === 'boolean' && typeof s.system === 'string' && typeof s.synthetic === 'boolean' && Array.isArray(s.capabilities) && s.capabilities.every((m: ServiceMethod) => METHODS.includes(m)) && (s.game == null || typeof s.game === 'object' && /^[a-f0-9]{64}$/.test(s.game.sha256) && integer(s.game.size) && s.game.kind === 'program.rom');
     if (method === 'execution.release') valid = !!s && s.released === true;
     if (method.startsWith('execution.') && !['execution.release', 'execution.batchBegin', 'execution.batchCheck'].includes(method)) valid = !!s && integer(s.operation_id) && s.operation_id > 0 && token(s.owner) && typeof s.kind === 'string' && ['running', 'done'].includes(s.state) && s.stopped === (s.state === 'done') && typeof s.stop_reason === 'string' && integer(s.epoch) && integer(s.start_epoch) && integer(s.start_frame) && integer(s.target_frame) && integer(s.frame) && integer(s.elapsed_frames) && typeof s.start_at_frame_boundary === 'boolean' && typeof s.at_frame_boundary === 'boolean' && typeof s.frame_kind === 'string' && typeof s.executor === 'string' && integer(s.slices) && Number.isFinite(s.elapsed_seconds) && s.elapsed_seconds >= 0 && (s.executed === undefined || integer(s.executed)) && (s.debug_stop === undefined || validStop(s.debug_stop)) && (s.completion_registers === undefined || validRegisters(s.completion_registers)) && (s.memory_verification === undefined || validMemoryVerification(s.memory_verification)) && (s.rsp === undefined || validRspProgress(s.rsp)) && (s.call === undefined || s.kind === 'call_function' && validCallProgress(s.call));
     if (VIEWER_METHODS.includes(method as typeof VIEWER_METHODS[number])) valid = validViewer(method, s) && (s.epoch === undefined || s.epoch === r.epoch);

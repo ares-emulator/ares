@@ -470,3 +470,12 @@ registers and request-scoped cancellation are verified. See
 [MCP-PARITY-LEDGER.md](MCP-PARITY-LEDGER.md) and the final task 9 execution-log entry
 for bounds, intentional adapter result/validation differences and acceptance.
 Separate task 6 physical-input/audible manual checks remain recorded.
+
+### Local plugin loader
+
+Task 10 adds the sidebar **Plugins** manager, explicitly enabled local directories,
+namespaced panels/commands and a left/right/bottom dock. Bundled generic memory and
+verified Kirby identity examples start disabled. Plain JS needs no build; a TS/TSX
+template is included. See [plugin authoring and lifecycle](plugins/README.md).
+Plugins are trusted renderer code. Main pins SDK capabilities to a revocable
+generation/session/epoch; game profiles match normalized content hashes.
