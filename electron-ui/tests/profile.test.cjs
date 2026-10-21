@@ -1,0 +1,26 @@
+const { test } = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const os = require('node:os')
+const path = require('node:path')
+
+test('profiles reject traversal and save overrides cannot escape their owned root', async () => {
+  const { profileRoot, profileSaves } = await import('../dist/profile.js')
+  assert.equal(profileRoot('/data'), '/data/Ares Workbench/profiles/default')
+  assert.equal(profileRoot('/data', 'test-2'), '/data/Ares Workbench/profiles/test-2')
+  for (const name of ['', '..', '../other', '/absolute', 'with space'])
+    assert.throws(() => profileRoot('/data', name), /invalid_profile_name/)
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'ares-profile-'))
+  try {
+    const root = path.join(temporary, 'profile')
+    fs.mkdirSync(root)
+    const canonical = fs.realpathSync(root)
+    assert.equal(profileSaves(root), path.join(canonical, 'saves'))
+    assert.equal(profileSaves(root, path.join(root, 'alternate', 'saves')), path.join(canonical, 'alternate', 'saves'))
+    assert.throws(() => profileSaves(root, root), /inside_profile/)
+    assert.throws(() => profileSaves(root, path.join(temporary, 'other')), /inside_profile/)
+    fs.symlinkSync(temporary, path.join(root, 'escape'))
+    assert.throws(() => profileSaves(root, path.join(root, 'escape', 'new', 'saves')), /inside_profile/)
+    assert.equal(fs.existsSync(path.join(temporary, 'new')), false)
+  } finally { fs.rmSync(temporary, { recursive: true, force: true }) }
+})

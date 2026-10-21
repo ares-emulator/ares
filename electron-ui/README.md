@@ -63,10 +63,54 @@ ARES_SETTINGS='/absolute/path/to/settings.bml' npm start --prefix electron-ui
 ARES_SYSTEM='PlayStation' ARES_ROM='/absolute/path/to/disc.cue' npm start --prefix electron-ui
 ```
 
-Saves from Electron go into `electron-ui/artifacts/saves`, using MIA's
-system-specific save layout. They do not replace saves alongside the original
-ROM. The generated `artifacts` directory and `node_modules` are ignored by Git.
-Quit normally to let the original system adapter flush its saves.
+## Profiles and independent development launches
+
+Run `npm start` from `electron-ui/` (or `npm start --prefix electron-ui` from the
+repository root). Each launch builds into a fresh ignored `artifacts/runs/launch-*`
+snapshot and copies the native host, media databases and bundled plugins there.
+The running instance keeps its snapshot until shutdown. Subsequent JS/test/package
+builds and native host relinks cannot replace its executable or loaded UI files.
+Normal shutdown removes the snapshot; a killed launcher may leave a disposable
+snapshot behind. Dependencies in `node_modules` are shared; quit development apps
+before reinstalling dependencies. Explicit local plugin directories remain watched
+for authoring; bundled plugins are copied with the runtime.
+
+Development launches use the `development` profile by default; copied apps use
+`default`. On macOS, named profiles live under
+`~/Library/Application Support/Ares Workbench/profiles/<name>/`:
+
+| Directory | Contents |
+| --- | --- |
+| `saves/` | MIA system-specific game saves |
+| `plugins/` | Enabled plugins, plugin storage and rebuildable plugin artifacts |
+| `browser/` | Browser preferences/local storage and rebuildable Chromium cache |
+| `logs/` | Application logs |
+
+Back up the profile to preserve saves and preferences. Profiles start fresh;
+there is no migration of earlier development data. Original ROMs and saves
+alongside them remain untouched. Quit normally to flush loaded system saves.
+
+Choose a named profile with `ARES_PROFILE` (letters/digits/underscore/hyphen), or
+an exact root with `ARES_PROFILE_DIR`. Explicit Electron `--user-data-dir` and
+embedded `app.setPath('userData', ...)` are also respected; `ARES_PROFILE_DIR`
+takes precedence. Use disjoint roots for independently running profiles. Each
+canonical profile root permits one app process: a duplicate launch exits with
+`profile_in_use` and never forwards commands to the existing app. OS ownership
+releases after a crash. `ARES_SAVE_DIR`, if supplied to Electron, must resolve to
+a subtree of its profile; sharing save directories across profiles is rejected,
+including symlink escapes. Raw host test tools still accept independent save paths.
+
+```sh
+ARES_PROFILE=play npm start
+ARES_PROFILE=experiment npm start
+ARES_PROFILE_DIR=/tmp/ares-disposable-profile npm start
+```
+
+Tests use disposable profiles, saves and endpoints. `npm run test:profiles` checks
+same-profile refusal, concurrent independent profiles and crash recovery;
+`npm run test:launch` rebuilds the checkout while a snapshot app retains its live
+MCP session. Native build directories remain selectable through `ARES_HOST` and
+`ARES_CPU_FIXTURE`; a development launch copies the selected host before starting.
 
 ## Controls and customization
 
@@ -142,7 +186,7 @@ Status/pause/resume/reset use the versioned [session protocol](services/README.m
 with replies on a separate fd 3. EOF requests clean shutdown. Electron closes stdin
 on shutdown and kills an unresponsive host after a timeout. Renderer reload keeps
 the native host and session; frame-port acknowledgements from an old renderer are
-ignored. `ARES_SAVE_DIR` can select an isolated save directory for automated runs.
+ignored. `ARES_PROFILE_DIR` selects an isolated profile for automated Electron runs.
 
 ## Validation
 
@@ -265,8 +309,8 @@ requests for unimplemented MCP snapshot/capture options fail explicitly.
 ### TypeScript and module layout (task 4.5)
 
 `npm run build` cleans and compiles only the Electron side. It does not invoke
-CMake or relink the native emulator. `npm start`, the tests and packaging build
-these outputs automatically; `build:services` remains an alias for compatibility.
+CMake or relink the native emulator. Tests and packaging build these outputs;
+`npm start` builds an independent runtime snapshot instead; `build:services` remains an alias for compatibility.
 
 | Source | Output / runtime |
 | --- | --- |

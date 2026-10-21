@@ -9,7 +9,7 @@ const temporary = fs.mkdtempSync('/tmp/ares-reload-'),
   source = path.join(temporary, 'plugin')
 fs.mkdirSync(source)
 app.setPath('userData', path.join(temporary, 'profile'))
-process.env.ARES_SAVE_DIR = path.join(temporary, 'saves')
+process.env.ARES_SAVE_DIR = path.join(temporary, 'profile', 'saves')
 process.env.ARES_PLUGIN_DIRS = source
 process.env.ARES_ENABLE_SERVICES = '1'
 process.env.ARES_SERVICE_DIR = path.join(temporary, 'ipc')

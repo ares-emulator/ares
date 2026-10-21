@@ -13,7 +13,7 @@ const temporary = fs.mkdtempSync('/tmp/ares-mcp-');
 app.setPath('userData', path.join(temporary, 'profile'));
 const rom = path.join(temporary, 'fixture.gb'), settings = path.join(temporary, 'settings.bml');
 fs.writeFileSync(rom, makeFixture()); fs.writeFileSync(settings, '');
-Object.assign(process.env, { ARES_ROM: rom, ARES_SYSTEM: 'Game Boy', ARES_SILENT: '1', ARES_SETTINGS: settings, ARES_SAVE_DIR: path.join(temporary, 'saves'), ARES_ENABLE_SERVICES: '1', ARES_SERVICE_DIR: path.join(temporary, 'ipc') });
+Object.assign(process.env, { ARES_ROM: rom, ARES_SYSTEM: 'Game Boy', ARES_SILENT: '1', ARES_SETTINGS: settings, ARES_SAVE_DIR: path.join(temporary, 'profile', 'saves'), ARES_ENABLE_SERVICES: '1', ARES_SERVICE_DIR: path.join(temporary, 'ipc') });
 delete process.env.ARES_AUTOTEST;
 const { sessions, serviceHost, stopNative } = await import('../dist/main.js');
 const peers = [];

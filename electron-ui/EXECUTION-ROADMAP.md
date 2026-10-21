@@ -9,8 +9,8 @@ audible-output and serializer rollback-failure checks remain pending.
 Start with [RESUME.md](RESUME.md) for fresh-agent context, validation isolation
 and reproduction. Read [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md) for the audit and
 suggested priorities. The frontend is considered validated; its permanent location
-and cleanup order were approved on 2026-10-21. Begin the sequence in RESUME.md;
-complete foundation cleanup before resuming task 13.
+and cleanup order were approved on 2026-10-21. Relocation/identity and profile/build isolation are implemented. Next extract the
+native desktop dependencies. Complete foundation cleanup before resuming task 13.
 
 Runtime evidence and historical checkpoints are in
 [EXECUTION-LOG.md](EXECUTION-LOG.md).

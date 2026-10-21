@@ -28,6 +28,15 @@ project/multiple reviewable changes. Estimates are relative, not time promises.
    Defer distribution/platform expansion. Extract the live desktop dependencies
    before retiring that superseded frontend; see the proposed order below.
 
+## Implementation progress
+
+Relocation/identity and development/profile isolation have landed as the first two
+foundation slices. `npm start` uses an independent compiled/native runtime snapshot;
+profiles own saves, plugin state and browser preferences with one app writer per
+canonical root. The execution log records actual regression, ownership, rebuild-
+during-play and copied-package evidence. Native desktop extraction is next;
+remaining findings below retain their original audit context.
+
 ## Findings to triage
 
 ### Foundation and maintainability

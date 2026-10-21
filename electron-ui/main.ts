@@ -1,3 +1,4 @@
+import { profileRoot, profileSaves } from './profile.js'
 import { PluginRegistry } from './plugins/registry.js'
 import {
   app,
@@ -27,6 +28,36 @@ import type {
 } from './services/contracts.js'
 // Compiled entry lives in dist/ in both checkout and copied distribution.
 const appRoot = fileURLToPath(new URL('../', import.meta.url))
+const saveDirectory = (() => {
+  try {
+    // Respect explicit Electron profiles used by embedders/tests and --user-data-dir.
+    const inferredProfile = path.join(app.getPath('appData'), app.getName())
+    const suppliedProfile = app.getPath('userData')
+    const selectedProfile = process.env.ARES_PROFILE_DIR ||
+      (app.commandLine.hasSwitch('user-data-dir') || suppliedProfile !== inferredProfile
+        ? suppliedProfile
+        : profileRoot(app.getPath('appData'), process.env.ARES_PROFILE))
+    fs.mkdirSync(selectedProfile, { recursive: true })
+    const profileDirectory = fs.realpathSync(selectedProfile)
+    app.setName('Ares Workbench')
+    app.setPath('userData', profileDirectory)
+    app.setPath('sessionData', path.join(profileDirectory, 'browser'))
+    // Electron owns the OS-backed lock and releases it even after a crash. Never
+    // forward a second launch's arguments or mutations to the existing instance.
+    if (!app.requestSingleInstanceLock()) {
+      console.error(`profile_in_use: ${profileDirectory}; choose ARES_PROFILE or ARES_PROFILE_DIR`)
+      app.exit(1)
+    }
+    fs.mkdirSync(app.getPath('sessionData'), { recursive: true })
+    app.setAppLogsPath(path.join(profileDirectory, 'logs'))
+    return profileSaves(profileDirectory, process.env.ARES_SAVE_DIR)
+  } catch (error) {
+    console.error(error)
+    app.exit(1)
+    throw error
+  }
+})()
+
 interface NativeSession {
   child: ChildProcessByStdio<Writable, Readable, Readable>
   system: string
@@ -200,12 +231,6 @@ async function stop() {
   clearTimeout(timer)
 }
 async function start(options: StartOptions) {
-  const saveDirectory =
-    process.env.ARES_SAVE_DIR ||
-    (installedLayout
-      ? path.join(app.getPath('userData'), 'saves')
-      : path.join(appRoot, 'artifacts', 'saves'))
-  fs.mkdirSync(saveDirectory, { recursive: true })
   let system = 'Synthetic'
   // Probe before stopping the running game, so an unsupported file leaves it intact.
   if (options.rom) {

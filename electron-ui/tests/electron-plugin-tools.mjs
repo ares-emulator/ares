@@ -22,7 +22,7 @@ Object.assign(process.env, {
   ARES_SYSTEM: 'Nintendo 64',
   ARES_SILENT: '1',
   ARES_SETTINGS: path.join(temporary, 'settings.bml'),
-  ARES_SAVE_DIR: path.join(temporary, 'saves'),
+  ARES_SAVE_DIR: path.join(temporary, 'profile', 'saves'),
   ARES_ENABLE_SERVICES: '1',
   ARES_SERVICE_DIR: path.join(temporary, 'ipc'),
 })

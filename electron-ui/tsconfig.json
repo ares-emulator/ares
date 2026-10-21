@@ -17,6 +17,7 @@
   },
   "include": [
     "main.ts",
+    "profile.ts",
     "plugins/cli.ts",
     "protocol.ts",
     "bridge.ts",

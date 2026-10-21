@@ -2026,3 +2026,49 @@ This completes the relocation/identity slice, not the entire foundation batch.
 Next: explicit profile/data roots, per-profile writer ownership and independent
 launch/build outputs; then desktop dependency extraction and acceptance/recovery.
 Task 13 remains on hold. Existing physical-input/audio and fault gates remain open.
+
+
+## 2026-10-21 — profile ownership and independent development runtimes (foundation slice 2)
+
+Electron now chooses an explicit profile root: named profiles under the OS app-data
+`Ares Workbench/profiles/` directory, or `ARES_PROFILE_DIR`. Existing explicit
+Electron `--user-data-dir` / embedded `app.setPath` selections remain supported.
+The canonical root owns saves, plugins, browser storage/cache and logs. An
+OS-backed Electron single-instance lock refuses duplicate writers before plugin
+initialization or native loading; no arguments/mutations are forwarded. Save
+overrides must remain inside the owned profile, including after symlink resolution.
+No old-data migration was added. Raw native test hosts retain their save-path API.
+
+`npm start` builds a fresh ignored runtime snapshot, with copied bundled plugins,
+native executable and databases. It defaults to the separate `development`
+profile; copied apps default to `default`. Checkout JS builds/tests/package builds
+and later native relinks no longer replace a development app's active files.
+Snapshots clean up on shutdown. Dependency installation still requires stopping
+development apps because node_modules is shared. Explicit author plugin paths
+remain watched. Abnormally killed launchers may leave disposable snapshots.
+
+Validation (macOS arm64):
+- Three strict TS targets and sequential regressions: **85 passed, zero failures,
+  one optional verified-Kirby-ROM test skipped**.
+- New real Electron ownership acceptance passes duplicate/symlink-alias refusal,
+  concurrent independent profiles and forced-crash recovery.
+- New launch acceptance copies a distinct native executable, rebuilds checkout
+  dist while the app runs, verifies unchanged snapshot output and MCP session/epoch,
+  then confirms frames and automatic snapshot cleanup.
+- Existing Electron session integration and plugin hot-reload/rollback acceptance
+  pass with the new profile/browser/save layout.
+- Fresh copied `/tmp/ares-profile-package/Ares.app`: **PACKAGE_MCP_PASS**, 875 GB
+  frames, 68 MCP tools, CLI scaffold/build/list/add/enable/open/reload/command and
+  same-session packaged TSX replacement with checkout access denied.
+- Profile path/override/symlink tests and `git diff --check` pass.
+
+The initial launch acceptance used an overlong macOS temporary-directory socket
+path; switching that fixture to a short `/tmp` endpoint passed. This does not
+change the existing transport path bound. The initial ownership helper waited for
+startup during module evaluation; moving that wait after app readiness fixed the
+helper. These failed checks were not recorded as runtime passes.
+
+Next: extract loader/firmware/save/config/input/resource code from desktop-ui,
+inventory remaining features and retire its frontend/Hiro coupling. Then add the
+single acceptance entry point, CI and plugin startup recovery before task 13.
+Physical input, audible output and serializer fault-injection gates remain open.

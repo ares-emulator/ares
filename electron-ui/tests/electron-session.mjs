@@ -9,7 +9,7 @@ import { once } from 'node:events';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'ares-electron-session-'));
 app.setPath('userData', path.join(temporary, 'profile'));
-process.env.ARES_SAVE_DIR = path.join(temporary, 'saves');
+process.env.ARES_SAVE_DIR = path.join(temporary, 'profile', 'saves');
 delete process.env.ARES_ROM;
 delete process.env.ARES_AUTOTEST;
 const { sessions } = await import('../dist/main.js');

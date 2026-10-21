@@ -6,7 +6,8 @@ Updated 2026-10-21. Read this before building, testing or changing runtime files
 
 Promotion is in progress: sources have moved to `electron-ui/`, the build option
 is `ARES_BUILD_ELECTRON_UI`, and the product is Ares Workbench. Package version
-0.1.0 is the shared source/bundle version. Data/profile isolation is next.
+0.1.0 is the shared source/bundle version. Profile ownership and independent
+development launch snapshots are implemented; native desktop extraction is next.
 
 Tasks 1–12 (including 4.5) are implemented. Task 12 landed in `539755659`.
 **The user approved the promotion/cleanup triage on 2026-10-21.** Task 13 stays
@@ -32,7 +33,7 @@ Approved order:
 
 The user explicitly does **not** require preserving existing development data.
 Do not build migration/compatibility machinery for old profiles, settings or saves.
-This does not authorize disrupting the user's active play session; see below.
+The user subsequently waived protection of the old Kirby session; see below.
 
 Deferred: public-release packaging/notarization/updates, Windows/Linux, richer
 plugin commands/media matching, broad protocol/module rewrites, optimizations
@@ -64,8 +65,9 @@ Do not infer a new pass from task completion or a registered tool name.
 The user waived protection of the prior Kirby play session and authorized builds
 in this checkout. Continue using disposable test profiles, saves and endpoints;
 never borrow original saves as writable fixtures. Use `ARES_BACKGROUND_TEST=1`
-for hidden Electron test windows. Profile ownership and independent development
-outputs remain approved foundation work; the current build still cleans `dist`.
+for hidden Electron test windows. `npm start` builds its own runtime snapshot and copies the native host. Tests and
+packaging still clean checkout `dist`; keep direct `electron .` launches out of
+concurrent validation. Development defaults to a separate `development` profile.
 
 ## Reproduction and evidence
 
@@ -74,7 +76,7 @@ Build instructions are in README; native targets are `ares-electron-host` and
 default native output is `build-electron-make/bin`; `ARES_HOST` and
 `ARES_CPU_FIXTURE` override it. JS build does not rebuild C++.
 
-Task 12 validation used `/tmp/ares-task12-APJFCt/electron-ui` (also recorded
+Task 12 validation used `/tmp/ares-task12-APJFCt/tools/electron-spike` (also recorded
 in `/tmp/ares-task12-validation-path`). That directory is disposable and may vanish;
 it is not a dependency. Its native build was shared read-only; no native changes
 were made for task 12. The checkout's `dist` was intentionally left alone.

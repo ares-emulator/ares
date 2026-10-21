@@ -1,6 +1,6 @@
 // Run with dev-browser --connect http://127.0.0.1:9237 run electron-ui/ui-smoke.js
 const tabs = await browser.listPages();
-const target = tabs.find(tab => tab.url.includes('/electron-ui/index.html'));
+const target = tabs.find(tab => tab.url.includes('/electron-ui/') && tab.url.includes('/index.html'));
 if (!target) throw new Error('Electron frontend tab not found');
 const page = await browser.getPage(target.id);
 console.log(await page.snapshotForAI());

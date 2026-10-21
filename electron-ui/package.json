@@ -5,12 +5,11 @@
   "description": "Ares Workbench native emulator frontend",
   "main": "dist/main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "node scripts/start.cjs",
     "test": "npm run build && node --test --test-concurrency=1 protocol.test.cjs tests/*.test.cjs",
     "fixture": "node fixture.cjs artifacts/spike.gb",
     "smoke": "node smoke.cjs",
     "build:services": "npm run build",
-    "prestart": "npm run build",
     "test:session": "npm run build && node --test tests/session-live.test.cjs",
     "presmoke": "npm run build",
     "test:electron": "npm run build && electron tests/electron-session.mjs",
@@ -24,7 +23,9 @@
     "test:reload": "npm run build && electron tests/electron-reload.mjs",
     "test:plugin-tools": "npm run build && electron tests/electron-plugin-tools.mjs",
     "test:kirby": "npm run build && electron tests/electron-kirby.mjs",
-    "plugin": "node dist/plugins/cli.js"
+    "plugin": "node dist/plugins/cli.js",
+    "test:profiles": "npm run build && node tests/profile-live.cjs",
+    "test:launch": "node tests/launch-live.cjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

@@ -51,7 +51,7 @@ async function run() {
     ARES_ROM: rom,
     ARES_SYSTEM: 'Game Boy',
     ARES_SETTINGS: settings,
-    ARES_SAVE_DIR: path.join(temporary, 'saves'),
+    ARES_SAVE_DIR: path.join(temporary, 'profile', 'saves'),
     ARES_ENABLE_SERVICES: '1',
     ARES_SERVICE_DIR: path.join(temporary, 'ipc'),
     ARES_SILENT: '1',

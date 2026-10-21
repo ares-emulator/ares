@@ -7,7 +7,7 @@ import path from 'node:path'
 import assert from 'node:assert/strict'
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'ares-plugin-ui-'))
 app.setPath('userData', path.join(temporary, 'profile'))
-process.env.ARES_SAVE_DIR = path.join(temporary, 'saves')
+process.env.ARES_SAVE_DIR = path.join(temporary, 'profile', 'saves')
 delete process.env.ARES_ROM
 delete process.env.ARES_AUTOTEST
 const template = path.join(temporary, 'tsx')
