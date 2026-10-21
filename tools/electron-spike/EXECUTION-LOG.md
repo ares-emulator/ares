@@ -1947,3 +1947,38 @@ Validation:
 acceptance are documented. Task 13 (settings service/bundled settings plugins) is
 next. Earlier physical takeover, audible-output and task 8 rollback-failure checks
 remain explicitly pending; selector success does not claim those separate passes.
+
+
+## 2026-10-20 — promotion audit and fresh-agent handoff
+
+At the user's request, pause task 13 and treat the Electron architecture as
+validated. Review temporary choices before further feature development.
+
+Added `RESUME.md` with the current objective, document read order, task 12 baseline,
+build/test reproduction, active-play isolation constraints, optional/private inputs
+and remaining manual/fault-injection gates. Corrected the roadmap's stale opening
+(which still said task 10 was next), made the current pause explicit, and fixed
+the service README's reference to deleted inspector.ts.
+
+Added `TECHNICAL-DEBT.md`: 30 findings across layout/identity, build isolation,
+desktop coupling, persistence/profile ownership, settings, host lifecycle, plugin
+recovery/API/builds, test reproducibility/CI/performance, packaging/platforms and
+normal-play UX. Separately recorded intentional bounded contracts and deferred
+features. Proposed `electron-ui/` alongside `desktop-ui/`, with identity/data and
+active-play-safe build decisions before relocation. Proposed batches are awaiting
+user triage; no runtime migration or task 13 implementation was performed.
+
+Validation: source/documentation review and `git diff --check`. No runtime builds,
+GUI launches or emulator mutations; the user's play instance was not used as a
+fixture. Next: discuss triage with the user, then implement the agreed scope.
+
+
+### 2026-10-21 — user clarification on promotion scope
+
+The user explicitly waived preserving existing development data. Choose permanent
+identity/locations without a migration framework or compatibility work for that
+data. Updated the handoff/audit accordingly. Desktop UI is intended to be
+superseded, but verified that the Electron target still compiles desktop sources
+and uses their loader/registry, settings, input mappings, resources and program
+helpers. Those are live dependencies, not merely a feature reference. No runtime
+changes or deletion performed; extraction/retirement scope remains for triage.

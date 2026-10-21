@@ -1,4 +1,4 @@
-# Shared session and memory services (tasks 1–6 input slice)
+# Shared session, memory and debugging services
 
 `contracts.ts` owns the JS schemas, validation, identity and service client
 interface. `native-client.ts` implements bounded request correlation over the
@@ -65,7 +65,8 @@ metadata, with conservative overrides discovered in the audit:
 
 `memory.ts` supplies `MemoryClient`, identity-bearing `RegionHandle`s, byte/hex
 conversion and unsigned 8/16/32-bit helpers that require explicit little/big endian.
-Browser and Node builds use this same code; `inspector.ts` is the temporary panel.
+Browser and Node builds use this same code; the bundled memory plugin in
+`bundled-plugins/memory/plugin.js` is the inspector UI.
 A failed stale request is never automatically re-enumerated and retried.
 
 Unknown versions, missing/extra arguments and

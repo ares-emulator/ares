@@ -1,12 +1,19 @@
 # Execution roadmap: how to tackle the implementation plans
 
-Status: tasks 1–5 and the task 4.5 TypeScript/ESM detour implemented; milestone 1
-integration gate passed on macOS arm64.
-Runtime evidence and pending checks are recorded in
-[EXECUTION-LOG.md](EXECUTION-LOG.md). Task 6 is in progress: input ownership, bounded PC/call traces and PI DMA provenance are implemented;
-profiling and controller taps are implemented; automated and package checks passed.
-Milestone 2 physical keyboard/gamepad acceptance remains pending. Task 7 is implemented: atomic artifact publishing, trace-file export, native screenshots, run_frames screenshot_after and bounded audio/WAV export and presented-frame AVI recording are implemented.
-Task 8 is implemented within documented bounds: native save/load, offline inspection, default-configuration cross-binary compatibility, multiwrite/delayed verification and native-reserved batch experiments pass. The disposable baseline-load/write/active-VI-run/crop sweep passes. Task 9 is complete within the documented bounded native/MCP contract: RSPQ/ELF/config/custom display-list and semantic capture, cooperative RSP debugging, exact RDP task/submission capture, advanced CPU mutation/calls/recovery, immutable completion groups and request cancellation are implemented. All 68 tool names and parameter signatures match the generated reference inventory, and all 68 have successful actual stdio runtime evidence. The final 77-test suite, isolated real-game checks, actual Electron and copied-package gates passed. Separate prior physical-input/audible manual checks remain recorded; no legacy TCP compatibility or removed-tool scope exception is claimed. Task 10 is next.
+Status: **tasks 1–12, including the task 4.5 TypeScript/ESM detour, are implemented**.
+Task 12 landed in `539755659`. All 68 MCP tools have actual stdio runtime evidence;
+plugin, agent CLI and copied-package gates passed. Earlier physical-input,
+audible-output and serializer rollback-failure checks remain pending.
+
+**Current work: promotion/technical-debt audit and user triage. Task 13 is on hold.**
+Start with [RESUME.md](RESUME.md) for fresh-agent context, active-play precautions
+and reproduction. Read [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md) for the audit and
+suggested priorities. The frontend is considered validated; its permanent location
+and cleanup scope await triage. Do not begin the relocation or resume task 13
+merely because they are proposed in these documents.
+
+Runtime evidence and historical checkpoints are in
+[EXECUTION-LOG.md](EXECUTION-LOG.md).
 
 ## Which plan owns what
 
@@ -311,8 +318,8 @@ also played the selector and confirmed it works. All 84 sequential regression
 tests, additional bounded CLI paging coverage, plugin/reload/MCP integration and
 copied-app CLI/TSX runtime validation passed.
 
-The immediate next action is **task 13 — settings service and bundled settings
-plugins**. Tasks 1–5, 4.5 and 7–12 are implemented. Earlier physical keyboard/gamepad
+After the promotion/debt triage, the next numbered feature task remains
+**task 13 — settings service and bundled settings plugins**. Tasks 1–5, 4.5 and 7–12 are implemented. Earlier physical keyboard/gamepad
 takeover, audible-output acceptance and task 8 rollback-failure fault injection
 remain recorded follow-ups; the selector playtest does not silently close those
 separate acceptance gates.
