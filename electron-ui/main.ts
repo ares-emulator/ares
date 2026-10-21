@@ -172,6 +172,9 @@ export const serviceHost = new LocalServiceHost(sessions, async (params) => {
     case 'enable':
       await plugins.enable(params.id, params.enabled)
       return pluginCatalog()
+    case 'resetStartup':
+      await plugins.resetStartup()
+      return pluginCatalog()
     case 'reload':
       await plugins.reload(params.id)
       return pluginCatalog()
@@ -369,6 +372,8 @@ app
             'ares.tools.debugger',
             'ares.examples.kirby',
           ],
+      process.argv.includes('--disable-plugins') ||
+        process.env.ARES_DISABLE_PLUGINS === '1',
     )
     protocol.handle('ares-plugin', async (request) => {
       try {

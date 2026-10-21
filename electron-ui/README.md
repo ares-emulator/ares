@@ -4,7 +4,8 @@ This frontend runs ares as native C++ in a separate process and displays its raw
 video output in a WebGL2 canvas. It does not compile emulation code to WebAssembly.
 
 Fresh agents: read [RESUME.md](RESUME.md) first. Tasks 1–12 are implemented;
-task 13 is paused for the approved [promotion and foundation cleanup](TECHNICAL-DEBT.md).
+the approved [promotion and foundation cleanup](TECHNICAL-DEBT.md) is complete.
+Task 13 (settings, configurable input and SDK declarations) is next.
 The frontend now lives in `electron-ui/`; the remaining foundation cleanup
 sequence is recorded in the handoff.
 
@@ -191,6 +192,14 @@ the native host and session; frame-port acknowledgements from an old renderer ar
 ignored. `ARES_PROFILE_DIR` selects an isolated profile for automated Electron runs.
 
 ## Validation
+
+Run `npm run accept` from `electron-ui/` for the repeatable generated-fixture lane,
+including native builds, strict TS, Electron/MCP/plugins, startup recovery,
+profile/rebuild isolation and copied-package checks. CI uses the same command.
+[Prerequisites, logs, coverage and explicit remaining gates](ACCEPTANCE.md) describe
+what a pass establishes. Optional private-media/manual checks remain separate.
+For a faulty enabled plugin, see [startup recovery](plugins/README.md#startup-recovery).
+
 
 The full default macOS arm64 build exposes **40 system variants** through the
 shared registry. Verified on 2026-10-17: generated GB and NES programs ran at

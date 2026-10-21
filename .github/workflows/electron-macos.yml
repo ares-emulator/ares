@@ -1,0 +1,43 @@
+name: Electron macOS acceptance
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: electron-macos-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  fixtures:
+    # Standard arm64 runner: https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      ARES_ACCEPT_JOBS: '3'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: electron-ui/.node-version
+          cache: npm
+          cache-dependency-path: electron-ui/package-lock.json
+      - name: Install fixture toolchain
+        run: brew install cmake ffmpeg
+      - name: Install locked frontend dependencies
+        run: npm ci --prefix electron-ui
+      - name: Run the same local fixture acceptance command
+        run: npm run accept --prefix electron-ui
+      - name: Preserve acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: electron-macos-evidence
+          path: |
+            electron-ui/artifacts/acceptance/latest.json
+            electron-ui/artifacts/acceptance/run-*/*.json
+            electron-ui/artifacts/acceptance/run-*/*.log
+          if-no-files-found: warn
+          retention-days: 14

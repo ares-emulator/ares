@@ -4,34 +4,32 @@ Updated 2026-10-21. Read this before building, testing or changing runtime files
 
 ## Current objective
 
-Promotion is in progress: sources have moved to `electron-ui/`, the build option
-is `ARES_BUILD_ELECTRON_UI`, and the product is Ares Workbench. Package version
-0.1.0 is the shared source/bundle version. Profile ownership and independent
-development launch snapshots are implemented. Native loaders/config/input have
-been extracted, desktop-ui is retired, and Electron has no Hiro dependency.
-Next: the repeatable acceptance/CI lane and startup plugin recovery.
+**Foundation work is complete. Resume task 13:** real validated/persisted settings,
+configurable input and complete author SDK declarations. Tasks 1–12 (including
+4.5) remain implemented. No further triage approval is needed.
 
-Tasks 1–12 (including 4.5) are implemented. Task 12 landed in `539755659`.
-**The user approved the promotion/cleanup triage on 2026-10-21.** Task 13 stays
-on hold until the foundation work below is complete. Begin implementation; no
-further triage approval is needed. Full findings and acceptance criteria are in
-[TECHNICAL-DEBT.md](TECHNICAL-DEBT.md).
+Completed foundation:
 
-Approved order:
+1. Permanent `electron-ui/` home and Ares Workbench identity; shared package/bundle
+   version 0.1.0 and `ARES_BUILD_ELECTRON_UI` build option.
+2. Explicit owned profiles and development runtime snapshots that survive checkout
+   builds. One app writer per canonical profile; saves/system data stay isolated.
+3. Extracted native loaders/config/input, retired desktop-ui after
+   [feature inventory](DESKTOP-RETIREMENT.md), and removed Electron's Hiro dependency.
+   Core/Ruby/native-service implementations and compiled system support remain.
+4. `npm run accept` builds/runs the complete fixture lane; macOS CI is configured.
+   `--disable-plugins` recovery plus targeted CLI disable/reset is implemented.
+   Manual/fault exclusions have explicit [dispositions](ACCEPTANCE.md).
 
-1. Promote the former `tools/electron-spike/` to **`electron-ui/`**. Normalize product/build
-   names, versioning and data locations; remove spike branding.
-2. Make development independent of active play: separate build outputs/test
-   profiles and define per-profile ownership so instances cannot overwrite each
-   other's data.
-3. **Implemented:** extract live loader/firmware/save/config/input/resource functionality from
-   `desktop-ui/`; inventory remaining desktop features, remove Electron's desktop
-   and Hiro dependencies, and retire the superseded frontend after that inventory.
-   Git history can preserve the reference. Preserve working native services,
-   compiled system support and emulator cores; this is not a core rewrite.
-4. Establish one repeatable acceptance command, macOS CI, startup recovery with
-   plugins disabled, and explicit dispositions for outstanding manual/fault checks.
-5. Resume task 13: real settings, configurable input and complete plugin SDK types.
+Latest local acceptance: **15/15 gates, 89 fixture tests, no failures or skips**;
+actual Electron/MCP/plugins/recovery, profile/crash/rebuild isolation and copied
+package passed. GitHub-hosted CI has not run yet; do not infer a hosted pass from
+the workflow file. Private-ROM/manual/fault checks remain separate, not relabelled.
+
+The approved promotion/foundation triage is complete. Full original findings and
+remaining scoped work are in [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md). Task 13 should
+build on the extracted runtime and owned profile configuration; do not restore a
+desktop frontend dependency or turn deferred audit findings into prerequisites.
 
 The user explicitly does **not** require preserving existing development data.
 Do not build migration/compatibility machinery for old profiles, settings or saves.
@@ -73,7 +71,9 @@ concurrent validation. Development defaults to a separate `development` profile.
 
 ## Reproduction and evidence
 
-Build instructions are in README; native targets are `ares-electron-host` and
+Run `npm run accept` from `electron-ui/` for the fixture lane; prerequisites,
+log locations and exclusions are in ACCEPTANCE.md. Build instructions are in
+README; native targets are `ares-electron-host` and
 `ares-electron-cpu-fixture`, enabled by `ARES_BUILD_ELECTRON_UI=ON`. Current
 default native output is `build-electron-make/bin`; `ARES_HOST` and
 `ARES_CPU_FIXTURE` override it. JS build does not rebuild C++.
@@ -113,5 +113,5 @@ The CJS preload is required by Electron's sandbox; application sources use TS/ES
 Plugins are trusted same-renderer code, not sandboxed extensions.
 
 User authorizes sensible intermediate commits and autonomous completion of agreed
-work. Triage is approved in the order above. Finish that foundation before task 13;
-do not turn deferred audit observations into additional prerequisites.
+work. Foundation is complete; implement task 13 next. Keep the explicitly
+deferred manual/fault checks visible and do not add unrelated prerequisites.

@@ -14,7 +14,7 @@ const fixture = path.join(__dirname, 'artifacts/spike.gb');
 fs.mkdirSync(path.dirname(fixture), { recursive: true }); fs.writeFileSync(fixture, makeFixture()); fs.writeFileSync(nesFixture, makeNesFixture());
 async function run(args, label) {
   const identity = { session: randomUUID(), epoch: 1 };
-  const child = spawn(host, [...args, '--save-dir', path.join(__dirname, 'artifacts/smoke-saves'), '--control-session', identity.session], { stdio: ['pipe', 'pipe', 'pipe', 'pipe'] });
+  const child = spawn(host, [...args, ...(process.env.ARES_SETTINGS ? ['--settings', process.env.ARES_SETTINGS] : []), '--save-dir', path.join(__dirname, 'artifacts/smoke-saves'), '--control-session', identity.session], { stdio: ['pipe', 'pipe', 'pipe', 'pipe'] });
   const closed = once(child, 'close');
   let errorLog = '', waiter, received = 0;
   child.stderr.on('data', b => errorLog += b);

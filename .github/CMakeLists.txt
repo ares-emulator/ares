@@ -7,6 +7,7 @@ set(.github_sources
     ISSUE_TEMPLATE/feature_request.md
     ISSUE_TEMPLATE/game-issue-report.md
     scripts/build_sdl.sh
+    workflows/electron-macos.yml
 )
 
 target_sources(

@@ -2128,3 +2128,64 @@ and explicit manual/fault-check dispositions. Task 13 remains on hold. Existing
 physical keyboard/gamepad, audible-output and serializer rollback-failure gates
 are not closed by this extraction; broader desktop UI features are inventoried,
 not silently claimed as Electron parity.
+
+
+## 2026-10-21 — repeatable fixture acceptance, CI and startup plugin recovery (foundation slice 4)
+
+Added `npm run accept`: prerequisite checks, configure/build both native targets
+with the full default core set and no Hiro/desktop frontend, three strict TS
+outputs, sequential generated-fixture tests, native transport/GB/NES smoke, actual
+Electron session/MCP/plugins/reload/agent-tool/recovery gates, profile/crash/rebuild
+isolation and fresh copied-package acceptance. It clears inherited ARES_* test
+inputs, requires ffprobe/ffmpeg, rejects failed/skipped fixture results, stops on
+failure and records per-gate logs plus revision/tool/build metadata and exclusions.
+The default native output is independent `build-electron-acceptance/`; package
+copies are removed after checks. Individual scripts remain available for focus.
+
+Added `.github/workflows/electron-macos.yml` for macOS arm64 on push/PR/manual
+runs, using the same command and preserving concise logs/JSON on failures. The
+workflow YAML and command wiring were parsed/checked locally. It has not been
+pushed/dispatched or run on GitHub; no hosted CI pass is claimed. Node 24–26 is
+declared for development; `.node-version` pins 24.22.0 for CI. The package lock
+remains authoritative for JS dependencies; CMake uses the existing deps.json pins.
+Optional GBA smoke now forwards explicit ARES_SETTINGS instead of assuming an
+implicit desktop configuration lookup.
+
+`--disable-plugins` / ARES_DISABLE_PLUGINS=1 is a per-launch recovery mode in main.
+It preserves persisted startup selections while reading only bounded manifest
+metadata: no plugin builds/imports, leases, activation or watchers. It ignores
+bundled/default and environment auto-enablement, keeps built-in controls alive
+and remains in effect after renderer reload. The manager can disable saved IDs;
+CLI `disable` also handles missing/broken manifests. Recovery-only `reset-startup`
+clears enabled IDs/local directories without deleting storage, saves or source.
+Enabling/adding/reloading requires a normal restart. Malformed startup config is
+preserved until explicit repair/reset.
+
+Validation:
+- Initial full lane using the existing native build override: **15/15 gates,
+  89 fixture tests, zero failures/skips**. This intentionally excludes the optional
+  private-ROM test file, with that exclusion explicit in the summary/docs.
+- The unmodified default command, `npm run accept --prefix electron-ui`, then
+  passed against a fresh `build-electron-acceptance/` native build: **15/15 gates,
+  89 fixture tests, zero failures/skips**. Fresh copied-package evidence records
+  874 GB frames. Logs/summary: ignored `artifacts/acceptance/run-m02q9e/` and
+  `artifacts/acceptance/latest.json`. Local runner Node 25.8.0, CMake 4.4.4,
+  Electron 44.9.0; copied tools use bundled Node 24.22.0.
+- Standalone recovery unit checks pass missing-build/manifest and malformed-config
+  preservation/reset cases. Actual hidden Electron recovery passes a persisted
+  infinite-loop plugin, responsive UI/native controls, CLI enable rejection,
+  disable/reset, retained plugin storage and same-session safe renderer reload.
+- The initial lane's copied app passes 68 MCP tools, 876 GB frames, bundled CLI
+  authoring and packaged TSX hot replacement with checkout access denied.
+- Ruby's standard YAML parser validates the workflow and acceptance entry point.
+  Python's optional yaml module was absent; no new Python dependency was added.
+
+`ACCEPTANCE.md` records explicit deferrals and completion conditions for physical
+keyboard/gamepad takeover, audible output and serializer rollback-failure fault
+injection. These remain unpassed product gates, not blockers to task 13 code.
+Private Kirby/reference checks, soak/latency, other platforms and broader support
+remain separate lanes/scope. Startup plugin recovery does not claim state/game
+rollback or crash-save restoration.
+
+The approved foundation is complete. The handoff/roadmap now direct the next work
+to task 13: real settings, configurable input and complete author SDK declarations.

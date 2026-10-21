@@ -54,6 +54,7 @@ export interface PluginCandidate {
   artifact: string
 }
 export interface PluginInfo {
+  configuredEnabled?: boolean
   artifact?: string
   candidate?: PluginCandidate
   phase?: 'activating' | 'active'
@@ -69,6 +70,7 @@ export interface PluginInfo {
   logs: { level: string; message: string }[]
 }
 export interface PluginCatalog {
+  startupDisabled?: boolean
   revision?: number
   apiVersion: 1
   plugins: PluginInfo[]

@@ -84,6 +84,8 @@ async function main() {
   }
   try {
     if (operation === 'list') return { plugins: await list() }
+    if (operation === 'reset-startup')
+      return await client.manage({ operation: 'resetStartup' })
     if (operation === 'add') {
       if (!values[0]) throw new Error('add requires a directory')
       return await client.manage({
@@ -93,11 +95,11 @@ async function main() {
     }
     const id = values[0]
     if (!id) throw new Error('A plugin id is required')
-    if (operation === 'enable')
+    if (operation === 'enable' || operation === 'disable')
       return await client.manage({
         operation: 'enable',
         id,
-        enabled: !options.disabled,
+        enabled: operation !== 'disable' && !options.disabled,
       })
     const plugin = (await list()).find((p) => p.manifest?.id === id)
     if (!plugin) throw new Error('Unknown plugin')

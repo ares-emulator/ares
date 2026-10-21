@@ -5,15 +5,17 @@ Task 12 landed in `539755659`. All 68 MCP tools have actual stdio runtime eviden
 plugin, agent CLI and copied-package gates passed. Earlier physical-input,
 audible-output and serializer rollback-failure checks remain pending.
 
-**Current work: approved promotion/foundation cleanup. Task 13 is on hold.**
-Start with [RESUME.md](RESUME.md) for fresh-agent context, validation isolation
-and reproduction. Read [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md) for the audit and
-suggested priorities. The frontend is considered validated; its permanent location
-and cleanup order were approved on 2026-10-21. Relocation/identity, profile/build
-isolation and native desktop extraction are
-implemented. The retired frontend feature inventory is in
-[DESKTOP-RETIREMENT.md](DESKTOP-RETIREMENT.md). Next add acceptance/CI and plugin
-startup recovery; complete foundation cleanup before resuming task 13.
+**Current work: task 13 — settings, configurable input and complete SDK types.**
+The approved foundation is complete: permanent home/identity, owned profiles and
+independent development outputs, native desktop extraction/retirement, repeatable
+fixture acceptance, macOS CI configuration and startup plugin recovery. Start with
+[RESUME.md](RESUME.md). The original audit is [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md);
+retired desktop features are inventoried in [DESKTOP-RETIREMENT.md](DESKTOP-RETIREMENT.md).
+
+`npm run accept` passed locally: 15 gates and 89 fixture tests without failures or
+skips. Hosted CI has not run yet. [ACCEPTANCE.md](ACCEPTANCE.md) records commands,
+evidence boundaries and explicit private-media/manual/fault deferrals. These do
+not prevent task 13 implementation and are not claimed as completed product gates.
 
 Runtime evidence and historical checkpoints are in
 [EXECUTION-LOG.md](EXECUTION-LOG.md).
@@ -255,7 +257,7 @@ Maps to plugin-plan step 6, remaining UI surfaces and MCP phase E.
 
 Add validated settings descriptors with persistence/scope and apply behavior.
 Port firmware/paths, presentation and audio first, followed by input and supported
-core options. Use the same plugin API as local plugins. Keep imported desktop
+core options. Use the same plugin API as local plugins. Keep explicitly imported BML
 settings read-only by default and Electron overrides separate. Remove spike
 hardcoded overrides only as their real settings implementations land.
 
@@ -266,7 +268,7 @@ can register its own settings section.
 ### Task 14 — overlays, custom workspaces and trusted shell extensions
 
 Implement the remaining UI contributions with explicit input/focus and cleanup
-contracts, plus safe-mode recovery. Allow a plugin to combine panels and broad
+contracts, building on the implemented startup recovery. Allow a plugin to combine panels and broad
 trusted UI customization. Do not call same-renderer plugins sandboxed. Build
 profiler/flamechart/RSP/RDP/TMEM and asset workflows as demand justifies them,
 reusing the already ported backends and declaring renderer-specific requirements.
@@ -321,7 +323,7 @@ also played the selector and confirmed it works. All 84 sequential regression
 tests, additional bounded CLI paging coverage, plugin/reload/MCP integration and
 copied-app CLI/TSX runtime validation passed.
 
-After the promotion/debt triage, the next numbered feature task remains
+The promotion/foundation work is complete; the next numbered feature task is
 **task 13 — settings service and bundled settings plugins**. Tasks 1–5, 4.5 and 7–12 are implemented. Earlier physical keyboard/gamepad
 takeover, audible-output acceptance and task 8 rollback-failure fault injection
 remain recorded follow-ups; the selector playtest does not silently close those

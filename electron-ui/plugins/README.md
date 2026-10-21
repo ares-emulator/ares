@@ -114,6 +114,45 @@ Artifact pruning retains current/previous/candidate snapshots, rather than every
 edit. Chromium caches imported ESM modules until renderer teardown; the checks here
 prove SDK effect/request cleanup, not that Chromium unloads individual modules.
 
+## Startup recovery
+
+Quit the app using the affected profile (force quit if its renderer is stuck),
+then launch the same profile with plugins disabled:
+
+```sh
+ARES_PROFILE=play npm start -- --disable-plugins --services
+```
+
+From the repository root, use `npm start --prefix electron-ui --` before those
+flags. Copied apps accept `--disable-plugins --services` on their bundled
+`Contents/MacOS/Electron` executable. `ARES_DISABLE_PLUGINS=1` is the environment
+equivalent. The profile lock still permits only one process per profile.
+
+This bypasses persisted enabled plugins, bundled defaults and ARES_PLUGIN_DIRS
+auto-enablement for the whole launch. Main reads bounded manifest metadata for
+the recovery manager, but does not build/import plugin code, grant SDK leases or
+start plugin watchers. It preserves startup selections until an explicit repair.
+The manager shows the stored choices and lets you uncheck a plugin; enabling,
+adding and reloading remain blocked until restart without the recovery flag.
+Renderer reload cannot leave recovery mode.
+
+For broken/missing manifests or a corrupt startup configuration, select the
+reported service connection file and instance explicitly with the CLI:
+
+```sh
+npm run plugin -- disable local.broken --connection /absolute/instance.json --instance INSTANCE_ID
+npm run plugin -- reset-startup --connection /absolute/instance.json --instance INSTANCE_ID
+```
+
+`disable` removes that ID from saved startup choices, even if its manifest cannot
+load. `reset-startup` is available only during recovery and clears enabled IDs and
+remembered local directories. It preserves plugin storage, saves, source files and
+browser preferences. Restart normally after repair; reset leaves bundled tools
+disabled until you choose to enable them. A first-ever recovery launch does not
+create saved selections, so an untouched fresh profile still gets normal defaults
+on its first ordinary launch. `ARES_DEFAULT_PLUGINS=0` only suppresses fresh-profile
+defaults and is not a recovery mechanism.
+
 ## Bundled tools and agent commands
 
 The former renderer-owned inspector is now `ares.examples.memory`, using the same

@@ -7,8 +7,8 @@ ownership, persistence, extension machinery, service compatibility, distribution
 UI and validation. It is a source/documentation audit, not a new runtime test or a
 proof that every possible defect has been discovered.
 
-**Task 13 is paused for foundation work.** The audit itself made no runtime
-changes. Promotion implementation has begun; see the execution log. The user approved the triage order on 2026-10-21; implementation is authorized.
+**Foundation work is complete; task 13 is next.** The audit itself made no runtime
+changes. The execution log records the implemented foundation and actual evidence. The user approved the triage order on 2026-10-21; implementation is authorized.
 See RESUME.md for the concise approved sequence.
 Effort: S = bounded local change; M = several interacting modules; L = separate
 project/multiple reviewable changes. Estimates are relative, not time promises.
@@ -36,8 +36,11 @@ profiles own saves, plugin state and browser preferences with one app writer per
 canonical root. The execution log records actual regression, ownership, rebuild-
 during-play and copied-package evidence. Native desktop extraction and retirement
 are now implemented; see
-[DESKTOP-RETIREMENT.md](DESKTOP-RETIREMENT.md). Acceptance/CI and startup plugin
-recovery are next. Remaining findings below retain their original audit context.
+[DESKTOP-RETIREMENT.md](DESKTOP-RETIREMENT.md). The repeatable acceptance lane,
+macOS CI configuration and startup plugin recovery
+are also implemented. Local acceptance passed all 15 gates and 89 fixture tests;
+a hosted CI pass is not yet recorded. Explicit remaining check dispositions are
+in [ACCEPTANCE.md](ACCEPTANCE.md). Remaining findings retain their audit context.
 
 ## Findings to triage
 

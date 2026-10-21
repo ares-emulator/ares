@@ -31,6 +31,7 @@ interface Record extends PluginInfo {
   storageQueue: Promise<unknown>
 }
 export class PluginRegistry {
+  private startupDisabled = false
   private records: Record[] = []
   private catalogRevision = 0
   private enabled = new Set<string>()
@@ -283,6 +284,7 @@ export class PluginRegistry {
     }
   }
   async reload(id: string) {
+    if (this.startupDisabled) throw new Error('plugins_disabled_until_restart')
     const r = this.records.find((r) => r.manifest?.id === id)
     if (!r) throw new Error('Unknown plugin')
     r.revision = (r.revision ?? 0) + 1
@@ -401,10 +403,18 @@ export class PluginRegistry {
   private configFile() {
     return path.join(this.dataRoot, 'enabled.json')
   }
-  async initialize(extra: string[] = [], defaults: string[] = []) {
+  async initialize(
+    extra: string[] = [],
+    defaults: string[] = [],
+    startupDisabled = false,
+  ) {
+    this.startupDisabled = startupDisabled
     await fs.mkdir(this.dataRoot, { recursive: true })
     this.dataRoot = await fs.realpath(this.dataRoot)
     try {
+      const stat = await fs.stat(this.configFile())
+      if (!stat.isFile() || stat.size > 32768)
+        throw new Error('plugin configuration must be a regular file under 32 KiB')
       const bytes = await fs.readFile(this.configFile(), 'utf8')
       if (bytes.length > 32768)
         throw new Error('plugin configuration exceeds 32 KiB')
@@ -419,11 +429,13 @@ export class PluginRegistry {
         )
     } catch (e: any) {
       if (e.code !== 'ENOENT') this.configurationError = String(e)
-      else for (const id of defaults) this.enabled.add(id)
+      else if (!startupDisabled)
+        for (const id of defaults) this.enabled.add(id)
     }
-    for (const dir of extra)
-      if (!this.directories.includes(dir)) this.directories.push(dir)
-    await this.scan(extra)
+    if (!startupDisabled)
+      for (const dir of extra)
+        if (!this.directories.includes(dir)) this.directories.push(dir)
+    await this.scan(startupDisabled ? [] : extra)
     return this.catalog()
   }
   private async persist() {
@@ -469,6 +481,14 @@ export class PluginRegistry {
       const manifest = validateManifest(
         JSON.parse(await fs.readFile(manifestFile, 'utf8')),
       )
+      if (this.startupDisabled)
+        return {
+          ...base,
+          root,
+          manifest,
+          enabled: false,
+          state: 'disabled',
+        }
       const built = await this.capture(root)
       return {
         ...base,
@@ -520,7 +540,7 @@ export class PluginRegistry {
           r.manifest = undefined
         } else {
           ids.add(r.manifest.id)
-          if (autoEnable.includes(c.source)) {
+          if (!this.startupDisabled && autoEnable.includes(c.source)) {
             this.enabled.add(r.manifest.id)
             r.enabled = true
           }
@@ -545,13 +565,14 @@ export class PluginRegistry {
     this.records = records
     for (const r of records) if (r.built) this.pins.delete(r.built.hash)
     this.syncWatchers()
-    await this.persist()
+    if (!this.startupDisabled) await this.persist()
     this.reconcile()
     return this.catalog()
   }
   catalog(): PluginCatalog {
     return {
       apiVersion: 1,
+      startupDisabled: this.startupDisabled,
       revision: ++this.catalogRevision,
       plugins: this.records.map(
         ({
@@ -564,7 +585,12 @@ export class PluginRegistry {
           previous,
           revision,
           ...r
-        }) => structuredClone(r),
+        }) => structuredClone({
+          ...r,
+          ...(this.startupDisabled ? {
+            configuredEnabled: this.enabled.has(r.manifest?.id ?? ''),
+          } : {}),
+        }),
       ),
     }
   }
@@ -672,7 +698,17 @@ export class PluginRegistry {
   }
   async enable(id: string, enabled: boolean) {
     return this.serial(async () => {
+      if (this.startupDisabled && enabled)
+        throw new Error('plugins_disabled_until_restart')
       const r = this.records.find((r) => r.manifest?.id === id)
+      // Even a broken/missing manifest can be disabled by its persisted ID.
+      if (
+        !r && this.startupDisabled && enabled === false && this.enabled.has(id)
+      ) {
+        this.enabled.delete(id)
+        await this.persist()
+        return this.catalog()
+      }
       if (!r) throw new Error('Unknown plugin')
       if (typeof enabled !== 'boolean') throw new Error('Invalid enable flag')
       this.revoke(r)
@@ -706,7 +742,22 @@ export class PluginRegistry {
       return this.catalog()
     })
   }
+  async resetStartup() {
+    if (!this.startupDisabled)
+      throw new Error('restart_with_disable_plugins_to_reset')
+    return this.serial(async () => {
+      this.revokeAll()
+      this.enabled.clear()
+      this.directories = []
+      this.records = []
+      this.configurationError = undefined
+      await this.scan()
+      await this.persist()
+      return this.catalog()
+    })
+  }
   async add(source: string) {
+    if (this.startupDisabled) throw new Error('plugins_disabled_until_restart')
     return this.serial(async () => {
       if (this.directories.length >= 64)
         throw new Error('At most 64 local plugin directories')

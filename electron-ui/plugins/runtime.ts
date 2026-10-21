@@ -5,7 +5,7 @@ const bridge = window.ares.plugins
 const manager = document.createElement('details')
 manager.id = 'plugins'
 manager.innerHTML =
-  '<summary>Plugins</summary><p>Local plugins run trusted JavaScript in this renderer.</p><button data-add>Add directory</button><button data-refresh>Refresh manifests</button><select aria-label="Plugin dock position"><option>bottom</option><option>left</option><option>right</option></select><div data-list></div><div data-commands></div><output data-health></output>'
+  '<summary>Plugins</summary><p>Local plugins run trusted JavaScript in this renderer.</p><p data-recovery hidden>Plugins are disabled for this launch. Uncheck a plugin to disable it on future launches, then restart without --disable-plugins.</p><button data-add>Add directory</button><button data-refresh>Refresh manifests</button><select aria-label="Plugin dock position"><option>bottom</option><option>left</option><option>right</option></select><div data-list></div><div data-commands></div><output data-health></output>'
 document.querySelector('aside')!.append(manager)
 const dock = document.createElement('section')
 dock.id = 'plugin-dock'
@@ -50,6 +50,10 @@ function health() {
   dock.hidden = !tabs.childElementCount
 }
 function render() {
+  const recovery = !!catalog.startupDisabled
+  manager.querySelector<HTMLElement>('[data-recovery]')!.hidden = !recovery
+  manager.querySelector<HTMLButtonElement>('[data-add]')!.disabled = recovery
+  if (recovery) manager.open = true
   const list = manager.querySelector('[data-list]')!
   list.replaceChildren()
   for (const p of catalog.plugins) {
@@ -57,8 +61,8 @@ function render() {
       label = document.createElement('label'),
       check = document.createElement('input')
     check.type = 'checkbox'
-    check.checked = p.enabled
-    check.disabled = !p.manifest
+    check.checked = recovery ? !!p.configuredEnabled : p.enabled
+    check.disabled = !p.manifest || (recovery && !p.configuredEnabled)
     check.onchange = () =>
       void bridge
         .enable(p.manifest!.id, check.checked)

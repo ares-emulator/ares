@@ -25,7 +25,9 @@
     "test:kirby": "npm run build && electron tests/electron-kirby.mjs",
     "plugin": "node dist/plugins/cli.js",
     "test:profiles": "npm run build && node tests/profile-live.cjs",
-    "test:launch": "node tests/launch-live.cjs"
+    "test:launch": "node tests/launch-live.cjs",
+    "test:recovery": "npm run build && electron tests/electron-recovery.mjs --disable-plugins",
+    "accept": "node scripts/accept.cjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
@@ -37,5 +39,8 @@
     "zod": "^4.6.7",
     "esbuild": "0.28.2"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=24 <27"
+  }
 }
