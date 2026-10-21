@@ -2,8 +2,9 @@
 
 Implementation order and task-sized kickoff guidance: [EXECUTION-ROADMAP.md](EXECUTION-ROADMAP.md).
 
-Status: source audit and proposed migration, 2026-10-17. No fork code has been
-ported or executed as part of this audit. Complements [PLUGIN-PLAN.md](PLUGIN-PLAN.md)
+Status: native/MCP backend through task 9 implemented and validated, 2026-10-20.
+The source audit baseline below dates from 2026-10-17; runtime evidence is in
+EXECUTION-LOG.md. Complements [PLUGIN-PLAN.md](PLUGIN-PLAN.md)
 and changes its delivery order: MCP preservation is an early milestone, not a
 future add-on after the plugin UI is finished.
 
@@ -408,8 +409,15 @@ post-mutation recovery), never during offline inspection or failed preflight.
 Conservatively mark restored VI phase as not an observed boundary. Loading is now
 implemented; multiwrite/delayed verification are implemented with bounded native operations. Native-reserved bounded batch experiments now pass the baseline-load/write/active-VI-run/crop sweep; task 8 is implemented within documented bounds.
 
-Task 9 is in progress. The first machine-service slice implements paused atomic
-CPU register mutation, 1–128 instruction disassembly and direct RSP/RDP/peripheral
-observations. The RSP gate, command/task/submission hooks, exact interval RDP
-capture and bounded calls/recovery are still dependencies; observation tools do
-not stand in for those hooks. All 68 tools remain preservation targets.
+Task 9 is complete within the documented bounded native/MCP contract. The port
+includes cooperative RSP debugging, real RSPQ/F3DEX2/custom display-list dispatch
+hooks, ELF/DWARF/config semantic decoding, RDP submission/task/exact interval
+capture, advanced CPU mutation/disassembly/inspection and bounded calls/recovery.
+Completed operation registers remain immutable; per-request MCP cancellation and
+batch tokens preserve ownership. Generated FastMCP verifies 68/68 parameter
+signatures/defaults/nullability, and successful actual stdio runtime paths cover
+all 68 names. The 77-test native/service suite, 17 isolated Kirby checks, actual
+Electron and fresh copied-package gates passed. Refer to the ledger for explicit
+bounds, intentional adapter result/validation differences and separate earlier
+physical-input/audible/manual fault checks. No tool was removed or legacy TCP
+compatibility advertised. Task 10 can now build the plugin layer on these services.

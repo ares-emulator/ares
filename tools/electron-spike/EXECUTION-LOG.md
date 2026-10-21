@@ -1698,3 +1698,19 @@ previous task 6/7 manual gates; they were not simulated and called physical test
 Task 8's serializer rollback-failure branch remains a separately recorded
 fault-injection case. No Windows/Linux, signing/notarization or universal
 microcode decoding claim is added.
+
+Fresh `artifacts/task-9-complete/Ares.app` built successfully and passed
+`test:package` after copying outside the checkout: **PACKAGE_MCP_PASS**, all 68
+tools, explicit N64-only unavailability on GB, existing memory/state/image/audio/
+video checks, **455 GB frames**, Electron **44.9.0**, bundled Node **24.22.0**.
+The package test denied checkout reads to both the native loader and MCP adapter;
+embedded RSPQ data and bundled runtime dependencies require no checkout resource.
+
+**Task 9 complete.** All planned native hooks/backends and preserved tool entry
+points have runtime evidence, generated signatures/defaults match, migrated
+bridge/transport/stdio/CPU/paper-cut/recording assertions pass, real-game checks
+pass on the final binary, and actual Electron/copied-package gates pass. Intentional
+bounded adapter contracts are documented together with tests; no tool was removed
+or silently replaced by reading a reused command buffer. Separate earlier manual
+checks above remain honest follow-ups, not claimed passes. Implementation commit:
+`fa7be7742`. Task 10 (plugin loader/panel/game matching) is the next roadmap task.

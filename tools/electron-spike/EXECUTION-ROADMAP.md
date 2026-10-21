@@ -6,8 +6,7 @@ Runtime evidence and pending checks are recorded in
 [EXECUTION-LOG.md](EXECUTION-LOG.md). Task 6 is in progress: input ownership, bounded PC/call traces and PI DMA provenance are implemented;
 profiling and controller taps are implemented; automated and package checks passed.
 Milestone 2 physical keyboard/gamepad acceptance remains pending. Task 7 is implemented: atomic artifact publishing, trace-file export, native screenshots, run_frames screenshot_after and bounded audio/WAV export and presented-frame AVI recording are implemented.
-Task 8 is implemented within documented bounds: native save/load, offline inspection, default-configuration cross-binary compatibility, multiwrite/delayed verification and native-reserved batch experiments pass. The disposable baseline-load/write/active-VI-run/crop sweep passes. Start here when
-choosing the next task. Task 9 is in progress: register mutation, disassembly and direct machine snapshots are implemented; the cooperative RSP debugger is implemented; exact RDP submission/task capture is implemented; stack/dump/probe inspection is implemented; bounded calls/recovery are implemented; bounded F3DEX2/viewer capture is implemented; RSPQ/config/semantic parity and acceptance gates are next.
+Task 8 is implemented within documented bounds: native save/load, offline inspection, default-configuration cross-binary compatibility, multiwrite/delayed verification and native-reserved batch experiments pass. The disposable baseline-load/write/active-VI-run/crop sweep passes. Task 9 is complete within the documented bounded native/MCP contract: RSPQ/ELF/config/custom display-list and semantic capture, cooperative RSP debugging, exact RDP task/submission capture, advanced CPU mutation/calls/recovery, immutable completion groups and request cancellation are implemented. All 68 tool names and parameter signatures match the generated reference inventory, and all 68 have successful actual stdio runtime evidence. The final 77-test suite, isolated real-game checks, actual Electron and copied-package gates passed. Separate prior physical-input/audible manual checks remain recorded; no legacy TCP compatibility or removed-tool scope exception is claimed. Task 10 is next.
 
 ## Which plan owns what
 
@@ -280,8 +279,17 @@ Conversely, none of those deferrals removes an existing MCP tool from the parity
 target without an explicit scope decision. A clean host-library extraction can
 follow when concrete coupling impedes a task; it is not an initial rewrite mandate.
 
-Task 9 is in progress: atomic paused CPU register mutation, bounded CPU disassembly and direct RSP/RDP/peripheral snapshots are implemented. Cooperative RSP debugger progress and bounded debug DMA are implemented. Submission-time RDP and HALT-clear task hooks support bounded exact VI capture. Bounded stack/probe and immutable dump artifacts are implemented. Experimental bounded calls/recovery are implemented. All 68 tool names are registered, including bounded F3DEX2/viewer capture/control. RSPQ/config/custom descriptors, semantic decoding and manual/result parity gates remain pending. Generated FastMCP comparison now records 68/68 names, 67/68 matching signatures and all full-schema validation differences; registration alone does not complete this task.
+Task 9 is complete. Atomic paused CPU mutation/disassembly and machine snapshots,
+cooperative RSP debugging/DMA, exact RDP task/submission capture, stack/dump/probe,
+bounded calls/recovery, RSPQ/F3DEX2/custom-descriptor viewers, ELF/DWARF semantic
+decoding, immutable completion register groups and request cancellation are
+implemented. All **68/68** tool signatures and successful actual stdio runtime
+paths are recorded. The final **77/77** sequential suite, **17/17** isolated Kirby
+checks, actual Electron integration and a fresh copied package passed. Intentional
+bounds/result/validation differences and separate earlier manual gates remain
+explicit in the ledger/log; no tool was removed.
 
-The immediate next action is **task 9 RSPQ/config/semantic capture parity and remaining acceptance gates**. Tasks 1–5, 4.5
-and 7–8 are implemented, and task 6 backend checks pass with physical input acceptance
-still pending. Runtime evidence and remaining manual checks are in the execution log.
+The immediate next action is **task 10 — minimal plugin loader, panel and game
+matching**. Tasks 1–5, 4.5 and 7–9 are implemented. Task 6 backend checks pass;
+physical keyboard/gamepad acceptance remains a separate manual gate. Runtime
+evidence and remaining manual checks are in the execution log.
