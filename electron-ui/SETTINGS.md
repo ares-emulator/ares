@@ -15,13 +15,35 @@ before launching Ares Workbench:
 }
 ```
 
-These four presentation settings and `paths.importBml` (the read-only imported
-BML file selection) currently use the service. An explicit `ARES_SETTINGS`
-launch override wins over the saved import path without rewriting the profile;
-choosing a file explicitly replaces that override and saves the new selection. Firmware, audio,
-input and core settings are still being connected; their presence in this file
-alone does not configure the native host yet. The `panelLeft` setting belongs to
-the temporary UI and is expected to be removed.
+Presentation preferences, the imported BML selection (`paths.importBml`) and
+firmware paths for all compiled systems currently use the service. Expand
+**Paths** or **Firmware** under **Native settings** to edit a path or choose a
+file. Save persists immediately; pending changes apply on the next ROM load.
+Reset removes the profile override and restores the imported value or default.
+The running game is never restarted by a settings edit.
+
+Firmware descriptors come from the native emulator registry. For example, a
+provisioned GBA firmware override is:
+
+```json
+{
+  "version": 1,
+  "values": {
+    "firmware.GameBoyAdvance.BIOS.World": "/absolute/path/to/boot.rom"
+  }
+}
+```
+
+Precedence is explicit launch override, profile value, imported BML, then default.
+`ARES_SETTINGS` overrides the saved import-file selection for the current launch
+without rewriting the profile; explicitly choosing another file saves the new
+selection. Native overrides are written to a separate immutable launch snapshot
+under `<profile>/runtime-settings/` and removed after host acknowledgement or
+exit. Imported BML is never rewritten. Missing/invalid firmware is reported by
+the existing loader when a ROM is opened. No firmware is downloaded.
+
+Audio, configurable input and core settings are still being connected. The
+`panelLeft` setting belongs to the temporary UI and is expected to be removed.
 
 Settings are profile scoped. Defaults, types, validation, UI grouping and apply
 timing are defined in `settings/builtins.ts`. Stable IDs are independent of labels

@@ -1,7 +1,8 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import { fixtures } from './fixtures/gba.cjs';
 const temporary = fs.mkdtempSync('/tmp/ares-settings-ui-');
 const profile = path.join(temporary, 'profile');
 fs.mkdirSync(profile);
@@ -12,7 +13,7 @@ fs.writeFileSync(file, JSON.stringify({ version: 1, values: {
 } }));
 app.setPath('userData', profile);
 Object.assign(process.env, { ARES_PROFILE_DIR: profile, ARES_ROM: '', ARES_AUTOTEST: '', ARES_SILENT: '1', ARES_BACKGROUND_TEST: '1', ARES_DISABLE_PLUGINS: '1', ARES_ENABLE_SERVICES: '0' });
-await import('../dist/main.js');
+const { sessions } = await import('../dist/main.js');
 const until = async check => {
   for (let i = 0; i < 300; i++) {
     try { const result = await check(); if (result) return result; } catch {}
@@ -50,7 +51,26 @@ app.whenReady().then(async () => {
     assert.equal(fs.readFileSync(imported, 'utf8'), original);
     assert.equal(JSON.parse(fs.readFileSync(file)).values['paths.importBml'], imported);
 
-    console.log('SETTINGS_UI_PASS: provisioned values applied; controls and bridge persist updates; reload retains settings; invalid values rejected; no browser-storage settings');
+    const media = path.join(temporary, 'media'); fs.mkdirSync(media);
+    const { rom } = fixtures(media);
+    const firmwareId = 'firmware.GameBoyAdvance.BIOS.World';
+    const rowSelector = `[data-setting="${firmwareId}"]`;
+    await until(() => js(`!!document.querySelector(${JSON.stringify(rowSelector)})`));
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path.join(media, 'boot.rom')] });
+    await js(`window.ares.preferences.chooseFile(${JSON.stringify(firmwareId)})`);
+    assert.equal(await js(`window.ares.preferences.catalog().then(s => s.entries.find(e => e.descriptor.id === ${JSON.stringify(firmwareId)}).pending)`), true);
+    assert.match(await js(`document.querySelector(${JSON.stringify(rowSelector)}).textContent`), /Saved; applies on next ROM load/);
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [rom] });
+    await js("window.ares.open({system: 'Game Boy Advance'})");
+    await until(async () => (await sessions.request('session.status')).result?.system === 'Game Boy Advance');
+    await until(() => js(`window.ares.preferences.catalog().then(s => !s.entries.find(e => e.descriptor.id === ${JSON.stringify(firmwareId)}).pending)`));
+    assert.equal(JSON.parse(fs.readFileSync(file)).values[firmwareId], path.join(media, 'boot.rom'));
+    assert.equal(fs.readFileSync(imported, 'utf8'), original);
+    assert.deepEqual(fs.readdirSync(path.join(profile, 'runtime-settings')), [], 'launch snapshots removed after acknowledgement');
+    await js(`window.ares.preferences.reset(${JSON.stringify(firmwareId)})`);
+    assert.equal(await js(`window.ares.preferences.catalog().then(s => s.entries.find(e => e.descriptor.id === ${JSON.stringify(firmwareId)}).pending)`), true);
+    assert.equal((await sessions.request('session.status')).result.system, 'Game Boy Advance', 'changing firmware never restarts a running game');
+    console.log('SETTINGS_UI_PASS: provisioned values applied; controls and bridge persist updates; reload retains settings; invalid values rejected; firmware picker enables GBA; reset waits for next load; imported BML unchanged');
     app.quit();
   } catch (error) { console.error(error); app.exit(1); }
 });

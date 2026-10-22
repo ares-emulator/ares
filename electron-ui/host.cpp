@@ -42,6 +42,7 @@
 #include "native/recording-service.hpp"
 #include "native/state-snapshot.hpp"
 #include "native/state-loader.hpp"
+#include "native/settings-service.hpp"
 
 using Clock = std::chrono::steady_clock;
 struct Host : ares::Platform {
@@ -295,9 +296,9 @@ int main(int argc, char** argv) {
   dup2(fileno(stderr), fileno(stdout));
 #endif
   if(!host.frameOutput) { std::cerr << "Cannot open frame transport\n"; return 1; }
-  bool synthetic = false, identifyOnly = false, listSystems = false;
+  bool synthetic = false, identifyOnly = false, listSystems = false, inspectSettings = false;
   unsigned width = 640, height = 480;
-  std::string rom, saveDirectory, settingsFile, selectedSystem;
+  std::string rom, saveDirectory, settingsFile, settingsOverlay, selectedSystem;
   string resourceDirectory = Path::program();
   std::vector<string> extraMedia;
   for(int i = 1; i < argc; i++) {
@@ -319,6 +320,8 @@ int main(int argc, char** argv) {
     else if(arg == "--synthetic") synthetic = true;
     else if(arg == "--1080p") { width = 1920; height = 1080; }
     else if(arg == "--systems") listSystems = true;
+    else if(arg == "--settings-info") inspectSettings = true;
+    else if(arg == "--settings-overlay" && i + 1 < argc) settingsOverlay = argv[++i];
     else if(arg == "--settings" && i + 1 < argc) settingsFile = argv[++i];
     else if(arg == "--system" && i + 1 < argc) selectedSystem = argv[++i];
     else if(arg == "--media" && i + 1 < argc) extraMedia.push_back(argv[++i]);
@@ -335,8 +338,18 @@ int main(int argc, char** argv) {
   });
   Emulator::construct();
   if(listSystems) { for(auto& entry : emulators) std::fprintf(host.frameOutput, "%s\n", entry->name.data()); return 0; }
-  if(!synthetic && rom.empty()) { std::cerr << "A ROM is required\n"; return 2; }
   static_cast<Markup::Node&>(settings) = BML::unserialize(string::read(settingsFile.c_str()), " ");
+  if(inspectSettings) {
+    auto json = settingsInfo();
+    std::fprintf(host.frameOutput, "%s\n", json.c_str());
+    return 0;
+  }
+  if(!synthetic && rom.empty()) { std::cerr << "A ROM is required\n"; return 2; }
+  // Electron owns this separate, immutable launch snapshot. Never modify imported BML.
+  if(!settingsOverlay.empty()) {
+    auto overlay = BML::unserialize(string::read(settingsOverlay.c_str()), " ");
+    visitSettings(overlay, {}, [&](const string& key, const string& value) { settings(key).setValue(value); });
+  }
   settings.process(true); // Read configuration only; never rewrite the desktop settings.
   if(saveDirectory.empty()) saveDirectory = std::string(Path::program().data()) + "electron-data/saves/";
   if(saveDirectory.back() != '/') saveDirectory += '/';

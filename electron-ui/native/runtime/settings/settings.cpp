@@ -192,8 +192,7 @@ auto Settings::process(bool load) -> void {
     }
 
     for(auto& firmware : emulator->firmware) {
-      string name = {base, "/Firmware/", firmware.type, ".", firmware.region};
-      name.replace(" ", "-");
+      string name = firmwareSettingPath(emulator->name, firmware.type, firmware.region);
       bind(string, name, firmware.location);
     }
   }

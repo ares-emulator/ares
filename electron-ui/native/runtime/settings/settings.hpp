@@ -1,3 +1,9 @@
+// Shared by firmware discovery and the existing loader's BML bindings.
+inline auto firmwareSettingPath(const string& system, const string& type, const string& region) -> string {
+  string base = string{system}.replace(" ", "").replace("(", "").replace(")", "");
+  return string{base, "/Firmware/", type, ".", region}.replace(" ", "-");
+}
+
 struct Settings : Markup::Node {
   using string = nall::string;
 

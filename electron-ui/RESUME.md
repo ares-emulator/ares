@@ -129,3 +129,15 @@ acceptance has not been rerun for this checkpoint. Next: connect firmware and
 native audio/presentation/core descriptors, configurable input, plugin settings
 registration/bundled UI and complete generated SDK declarations. Task 13 remains
 in progress; its done gates are not yet fulfilled.
+
+
+Task 13 firmware checkpoint: `settings/native.ts` maps registry-discovered firmware
+requirements to descriptors and writes launch-only BML overlays. `settings/form.ts`
+provides reusable descriptor-driven controls currently mounted in the temporary
+sidebar. Paths/Firmware have file pickers, Save/Reset, import inheritance and
+next-ROM pending state. Native discovery/overlay support lives in host.cpp and
+native/settings-service.hpp; firmware BML key helper shared with loader. All 36
+compiled requirements discovered. Original GBA fixture moved to tests/fixtures/gba.cjs.
+Host build, three TS targets, nine targeted tests, Electron settings/GBA and plugin
+recovery checks passed. Next connect live audio/palette and supported core options,
+then input and plugin SDK/settings work. Task 13 remains in progress.

@@ -7,26 +7,7 @@ const { spawn, spawnSync } = require('node:child_process')
 const { once } = require('node:events')
 const host = process.env.ARES_HOST || path.resolve(__dirname, '../../build-electron-make/bin/ares-electron-host')
 
-// Original ARM instructions, not game or vendor firmware bytes. The tiny BIOS
-// jumps to the cartridge. The cartridge increments a persisted boot byte and
-// samples KEYINPUT into SRAM, exercising the actual GBA loader and input path.
-function fixtures(directory) {
-  const bios = Buffer.alloc(16384)
-  bios.writeUInt32LE(0xe51ff004, 0) // ldr pc,[pc,#-4]
-  bios.writeUInt32LE(0x08000000, 4)
-  const rom = Buffer.alloc(512)
-  const instructions = [0xe3a0040e, 0xe5d01002, 0xe2811001, 0xe5c01002,
-    0xe3a0105a, 0xe5c01000, 0xe59f3010, 0xe1d320b0, 0xe5c02001, 0xeafffffc]
-  instructions.forEach((value, index) => rom.writeUInt32LE(value, index * 4))
-  rom.writeUInt32LE(0x04000130, 0x30)
-  rom.write('ARES FIXTURE', 0xa0)
-  rom.write('SRAM_V113', 0x100)
-  fs.writeFileSync(path.join(directory, 'boot.rom'), bios)
-  fs.writeFileSync(path.join(directory, 'fixture.gba'), rom)
-  const settings = path.join(directory, 'settings.bml')
-  fs.writeFileSync(settings, `Paths\n Home: ${path.join(directory, 'foreign-home')}\nGameBoyAdvance\n Firmware\n  BIOS.World: ${path.join(directory, 'boot.rom')}\n`)
-  return { settings, rom: path.join(directory, 'fixture.gba') }
-}
+const { fixtures } = require('./fixtures/gba.cjs')
 function findSave(directory) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const file = path.join(directory, entry.name)
@@ -98,3 +79,40 @@ test('native resource root selects its own database and never falls back to chec
     assert.doesNotMatch(supplied.stderr, /database file for the system was not found/)
   } finally { fs.rmSync(temporary, { recursive: true, force: true }) }
 })
+
+test('registry firmware settings and profile overlay enable GBA without rewriting imported BML', { timeout: 10000 }, async () => {
+  const { SettingsStore } = await import('../dist/settings/store.js');
+  const { firmwareDescriptors, importedValues, parseNativeSettingsInfo, nativeSettingsBml } = await import('../dist/settings/native.js');
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'ares-firmware-settings-'));
+  try {
+    const { settings, rom } = fixtures(temporary);
+    const original = fs.readFileSync(settings, 'utf8').replace(path.join(temporary, 'boot.rom'), path.join(temporary, 'missing.rom'));
+    fs.writeFileSync(settings, original);
+    const result = spawnSync(host, ['--settings-info', '--settings', settings], { encoding: 'utf8', timeout: 3000 });
+    assert.equal(result.status, 0, result.stderr);
+    const info = parseNativeSettingsInfo(result.stdout);
+    const descriptors = firmwareDescriptors(info);
+    assert.ok(descriptors.length > 20, 'all compiled systems contribute firmware requirements');
+    const id = descriptors.find(d => d.nativeKey === 'GameBoyAdvance/Firmware/BIOS.World').id;
+    const file = path.join(temporary, 'profile', 'preferences.json');
+    const store = new SettingsStore(file, descriptors);
+    store.inherit(importedValues(info, descriptors));
+    await store.set(id, path.join(temporary, 'boot.rom'));
+    const restarted = new SettingsStore(file, descriptors);
+    restarted.inherit(importedValues(info, descriptors));
+    const overlay = path.join(temporary, 'profile', 'launch.bml');
+    fs.writeFileSync(overlay, nativeSettingsBml(restarted.catalog()));
+    const loaded = spawnSync(host, ['--rom', rom, '--system', 'Game Boy Advance', '--settings', settings,
+      '--settings-overlay', overlay, '--save-dir', path.join(temporary, 'profile', 'saves'), '--silent'], { input: 'quit\n', encoding: 'utf8', timeout: 4000 });
+    assert.equal(loaded.status, 0, loaded.stderr);
+    assert.match(loaded.stderr, /ready: Game Boy Advance/);
+    assert.equal(fs.readFileSync(settings, 'utf8'), original);
+    assert.equal(fs.existsSync(path.join(temporary, 'foreign-home')), false);
+    await restarted.reset(id);
+    fs.writeFileSync(overlay, nativeSettingsBml(restarted.catalog()));
+    const missing = spawnSync(host, ['--rom', rom, '--system', 'Game Boy Advance', '--settings', settings,
+      '--settings-overlay', overlay, '--save-dir', path.join(temporary, 'profile', 'saves'), '--silent'], { input: 'quit\n', encoding: 'utf8', timeout: 3000 });
+    assert.notEqual(missing.status, 0);
+    assert.match(missing.stderr, /firmware is missing or invalid/);
+  } finally { fs.rmSync(temporary, { recursive: true, force: true }); }
+});

@@ -1,3 +1,4 @@
+import { mountSettingsForm } from './settings/form.js';
 import type { FramePacket, RendererStats } from './bridge.js';
 import type { SessionIdentity, SessionMethod, SessionReply } from './services/contracts.js';
 interface Elements {
@@ -107,6 +108,7 @@ function draw() {
   gl.uniform1f(lines, $('scanlines').checked ? 1 : 0); gl.uniform1f(rows, height);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
+mountSettingsForm(document.getElementById('native-settings')!, window.ares.preferences, entry => !!entry.descriptor.nativeKey || !!entry.descriptor.file);
 apply(); new ResizeObserver(resize).observe($('viewport'));
 window.addEventListener('message', event => {
   if (event.source !== window || event.data?.type !== 'ares-frames' || !event.ports[0]) return;

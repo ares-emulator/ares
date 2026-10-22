@@ -101,3 +101,28 @@ test('explicit launch overrides win without rewriting the profile, until explici
   assert.equal(entry(store, 'presentation.theme').source, 'profile');
   assert.equal(entry(store, 'presentation.theme').value, 'dark');
 });
+
+test('firmware discovery binds profile overrides above read-only imports and reset restores inheritance', async t => {
+  const { SettingsStore, file } = await setup(t);
+  const { firmwareDescriptors, importedValues, parseNativeSettingsInfo, nativeSettingsBml } = await import('../dist/settings/native.js');
+  const info = parseNativeSettingsInfo(JSON.stringify({ firmware: [
+    { system: 'Game Boy Advance', type: 'BIOS', region: 'World', key: 'GameBoyAdvance/Firmware/BIOS.World' },
+  ], imported: { 'GameBoyAdvance/Firmware/BIOS.World': '/vendor/boot.rom' } }));
+  const descriptors = firmwareDescriptors(info), id = descriptors[0].id;
+  const store = new SettingsStore(file, []);
+  store.register(descriptors);
+  store.inherit(importedValues(info, descriptors));
+  assert.equal(entry(store, id).value, '/vendor/boot.rom');
+  assert.equal(entry(store, id).source, 'imported');
+  await store.set(id, '/profile/custom.rom');
+  assert.equal(entry(store, id).source, 'profile');
+  assert.match(nativeSettingsBml(store.catalog()), /GameBoyAdvance\n  Firmware\n    BIOS.World: \/profile\/custom.rom\n/);
+  store.inherit(importedValues({ ...info, imported: { 'GameBoyAdvance/Firmware/BIOS.World': '/vendor/new.rom' } }, descriptors));
+  assert.equal(entry(store, id).value, '/profile/custom.rom');
+  await store.reset(id);
+  assert.equal(entry(store, id).value, '/vendor/new.rom');
+  assert.equal(entry(store, id).source, 'imported');
+  assert.equal(Object.hasOwn(JSON.parse(fs.readFileSync(file)).values, id), false);
+  assert.throws(() => parseNativeSettingsInfo('{"firmware":[{"key":"../bad"}],"imported":{}}'), /invalid_native_settings/);
+  assert.throws(() => store.register([descriptors[0], descriptors[0]]), /invalid_setting_descriptor/);
+});

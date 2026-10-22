@@ -1,3 +1,4 @@
+import { firmwareDescriptors, importedValues, nativeSettingsBml, parseNativeSettingsInfo } from './settings/native.js'
 import { SettingsStore } from './settings/store.js'
 import { presentationSettings } from './settings/builtins.js'
 import { profileRoot, profileSaves } from './profile.js'
@@ -215,7 +216,7 @@ let window: BrowserWindow
 export const preferences = new SettingsStore(
   path.join(app.getPath('userData'), 'preferences.json'), [
     ...presentationSettings,
-    { id: 'paths.importBml', title: 'Imported ares settings', section: 'Paths', type: 'string',
+    { id: 'paths.importBml', title: 'Imported ares settings', section: 'Paths', type: 'string', file: { extensions: ['bml'] },
       default: path.join(app.getPath('userData'), 'settings.bml'), apply: 'next-rom' },
   ],
   snapshot => {
@@ -224,6 +225,32 @@ export const preferences = new SettingsStore(
   undefined,
   process.env.ARES_SETTINGS ? { 'paths.importBml': process.env.ARES_SETTINGS } : {},
 )
+let nativeSettingsRegistered = false
+async function refreshNativeSettings() {
+  const importedFile = String(preferences.catalog().entries.find(entry => entry.descriptor.id === 'paths.importBml')!.value)
+  const info = parseNativeSettingsInfo(await probe(['--settings-info', '--settings', importedFile]))
+  // A newer file choice can arrive while the metadata probe is running.
+  if (preferences.catalog().entries.find(entry => entry.descriptor.id === 'paths.importBml')!.value !== importedFile) return
+  if (!nativeSettingsRegistered) {
+    preferences.register(firmwareDescriptors(info))
+    nativeSettingsRegistered = true
+  }
+  preferences.inherit(importedValues(info, preferences.catalog().entries.map(entry => entry.descriptor)))
+}
+async function setPreference(id: string, value: unknown, reset = false) {
+  if (reset) await preferences.reset(id); else await preferences.set(id, value)
+  if (id === 'paths.importBml') await refreshNativeSettings()
+  return preferences.catalog()
+}
+async function choosePreferenceFile(id: string) {
+  const descriptor = preferences.catalog().entries.find(entry => entry.descriptor.id === id)?.descriptor
+  if (!descriptor?.file) throw new Error('not_a_file_setting')
+  const result = await dialog.showOpenDialog(window, {
+    title: descriptor.title, properties: ['openFile'],
+    filters: descriptor.file.extensions.length ? [{ name: descriptor.title, extensions: descriptor.file.extensions }] : [],
+  })
+  return result.canceled ? preferences.catalog() : setPreference(id, result.filePaths[0])
+}
 let active: NativeSession | null = null,
   port: MessagePortMain | null = null
 let quitting = false,
@@ -249,6 +276,7 @@ async function stop() {
 }
 async function start(options: StartOptions) {
   let system = 'Synthetic'
+  await refreshNativeSettings()
   const startupSettings = preferences.catalog()
   const settingsFile = String(startupSettings.entries.find(entry => entry.descriptor.id === 'paths.importBml')!.value)
   // Probe before stopping the running game, so an unsupported file leaves it intact.
@@ -290,6 +318,12 @@ async function start(options: StartOptions) {
   args.push('--save-dir', saveDirectory, '--resource-dir', resourceDirectory)
   const identity = { session: randomUUID(), epoch: 1 }
   args.push('--control-session', identity.session)
+  const configurationDirectory = path.join(app.getPath('userData'), 'runtime-settings')
+  fs.mkdirSync(configurationDirectory, { recursive: true })
+  const configurationFile = path.join(configurationDirectory, `${identity.session}.bml`)
+  fs.writeFileSync(configurationFile, nativeSettingsBml(startupSettings), { flag: 'wx', mode: 0o600 })
+  args.push('--settings-overlay', configurationFile)
+  const removeConfiguration = () => fs.rmSync(configurationFile, { force: true })
   const child = spawn(hostPath, args, {
     stdio: ['pipe', 'pipe', 'pipe', 'pipe'],
   }) as ChildProcessByStdio<Writable, Readable, Readable>
@@ -304,6 +338,7 @@ async function start(options: StartOptions) {
   }
   session.closed = new Promise((resolve) =>
     child.once('close', (code, signal) => {
+      removeConfiguration()
       if (active === session) {
         active = null
         plugins.disconnect()
@@ -333,6 +368,7 @@ async function start(options: StartOptions) {
   )
   sessions.attach(client)
   void client.request('session.status').then(reply => {
+    removeConfiguration()
     if (reply.ok && active === session) preferences.markApplied(startupSettings, 'next-rom')
   }).catch(error => status(String(error)))
   child.on('error', (error) =>
@@ -378,6 +414,7 @@ function enqueue(task: () => Promise<void>) {
 app
   .whenReady()
   .then(async () => {
+    await refreshNativeSettings()
     await plugins.initialize(
       (process.env.ARES_PLUGIN_DIRS || '')
         .split(path.delimiter)
@@ -572,13 +609,17 @@ app
         return sessions.request(method, identity, params)
       },
     )
-    for (const operation of ['catalog', 'set'] as const) {
+    for (const operation of ['catalog', 'set', 'reset', 'chooseFile'] as const) {
       ipcMain.handle('preferences.' + operation, (event, ...args: unknown[]) => {
         if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame)
           throw new Error('invalid_sender')
         if (operation === 'catalog' && args.length === 0) return preferences.catalog()
         if (operation === 'set' && args.length === 2 && typeof args[0] === 'string')
-          return preferences.set(args[0], args[1])
+          return setPreference(args[0], args[1])
+        if (operation === 'reset' && args.length === 1 && typeof args[0] === 'string')
+          return setPreference(args[0], undefined, true)
+        if (operation === 'chooseFile' && args.length === 1 && typeof args[0] === 'string')
+          return choosePreferenceFile(args[0])
         throw new Error('invalid_request')
       })
     }
@@ -594,7 +635,7 @@ app
         filters: [{ name: 'ares settings', extensions: ['bml'] }],
       })
       if (!result.canceled) {
-        await preferences.set('paths.importBml', result.filePaths[0])
+        await setPreference('paths.importBml', result.filePaths[0])
         status('Selected ares settings; they will apply to the next ROM.')
       }
     })

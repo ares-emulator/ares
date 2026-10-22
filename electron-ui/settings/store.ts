@@ -5,6 +5,7 @@ import { validateValue, type SettingDescriptor, type SettingValue, type Settings
 
 /** The main process owns writes. Unknown values survive descriptor removal and readdition. */
 export class SettingsStore {
+  private inherited: Record<string, unknown> = Object.create(null);
   private values: Record<string, unknown> = Object.create(null);
   private applied = new Map<string, SettingValue>();
   private descriptors = new Map<string, SettingDescriptor>();
@@ -16,10 +17,7 @@ export class SettingsStore {
   private launchValues: Record<string, unknown>;
   constructor(readonly filename: string, descriptors: readonly SettingDescriptor[], private changed: (snapshot: SettingsSnapshot) => void = () => {}, private applyLive: (id: string, value: SettingValue) => Promise<void> = async () => {}, launchValues: Record<string, unknown> = {}) {
     this.launchValues = Object.assign(Object.create(null), launchValues);
-    for (const descriptor of descriptors) {
-      if (!/^[a-zA-Z][a-zA-Z0-9._-]{0,127}$/.test(descriptor.id) || this.descriptors.has(descriptor.id) || !validateValue(descriptor, descriptor.default)) throw new Error('invalid_setting_descriptor');
-      this.descriptors.set(descriptor.id, structuredClone(descriptor));
-    }
+    this.register(descriptors, false);
     try {
       if (fs.statSync(filename).size > 1024 * 1024) throw new Error('settings_file_too_large');
       const data = JSON.parse(fs.readFileSync(filename, 'utf8'));
@@ -33,11 +31,31 @@ export class SettingsStore {
     }
     for (const descriptor of this.descriptors.values()) this.applied.set(descriptor.id, this.value(descriptor));
   }
+  register(descriptors: readonly SettingDescriptor[], notify = true): void {
+    // Validate the entire batch before publishing any definitions.
+    const ids = new Set(this.descriptors.keys());
+    for (const descriptor of descriptors) {
+      if (!/^[a-zA-Z][a-zA-Z0-9._-]{0,127}$/.test(descriptor.id) || ids.has(descriptor.id) || !validateValue(descriptor, descriptor.default)) throw new Error('invalid_setting_descriptor');
+      ids.add(descriptor.id);
+    }
+    for (const descriptor of descriptors) {
+      this.descriptors.set(descriptor.id, structuredClone(descriptor));
+      this.applied.set(descriptor.id, this.value(descriptor));
+    }
+    if (notify) { this.revision++; this.changed(this.catalog()); }
+  }
+  inherit(values: Record<string, unknown>): void {
+    this.inherited = Object.assign(Object.create(null), values);
+    this.revision++;
+    this.changed(this.catalog());
+  }
   private value(descriptor: SettingDescriptor): SettingValue {
     const launch = this.launchValues[descriptor.id];
     if (validateValue(descriptor, launch)) return launch;
     const value = this.values[descriptor.id];
-    return validateValue(descriptor, value) ? value : descriptor.default;
+    if (validateValue(descriptor, value)) return value;
+    const inherited = this.inherited[descriptor.id];
+    return validateValue(descriptor, inherited) ? inherited : descriptor.default;
   }
   catalog(): SettingsSnapshot {
     const invalid = [...this.descriptors.values()].filter(d => Object.hasOwn(this.values, d.id) && !validateValue(d, this.values[d.id])).map(d => d.id);
@@ -45,9 +63,9 @@ export class SettingsStore {
       revision: this.revision,
       entries: [...this.descriptors.values()].map(descriptor => {
         const value = this.value(descriptor), applied = this.applied.get(descriptor.id) ?? descriptor.default;
-        return { descriptor: structuredClone(descriptor), value, applied, source: validateValue(descriptor, this.launchValues[descriptor.id]) ? 'launch' : validateValue(descriptor, this.values[descriptor.id]) ? 'profile' : 'default', pending: value !== applied };
+        return { descriptor: structuredClone(descriptor), value, applied, source: validateValue(descriptor, this.launchValues[descriptor.id]) ? 'launch' : validateValue(descriptor, this.values[descriptor.id]) ? 'profile' : validateValue(descriptor, this.inherited[descriptor.id]) ? 'imported' : 'default', pending: value !== applied };
       }),
-      ...(this.error || this.applyError || invalid.length ? { error: this.error ?? this.applyError ?? `Invalid saved settings (using defaults): ${invalid.join(', ')}` } : {}),
+      ...(this.error || this.applyError || invalid.length ? { error: this.error ?? this.applyError ?? `Invalid saved settings (using inherited values or defaults): ${invalid.join(', ')}` } : {}),
     };
   }
   /** Acknowledge the exact startup snapshot, even if desired values changed during load. */
@@ -64,12 +82,18 @@ export class SettingsStore {
     this.queue = operation.catch(() => {});
     return operation;
   }
-  private async write(id: string, value: unknown): Promise<SettingsSnapshot> {
+  reset(id: string): Promise<SettingsSnapshot> {
+    const operation = this.queue.then(() => this.write(id, undefined, true));
+    this.queue = operation.catch(() => {});
+    return operation;
+  }
+  private async write(id: string, value: unknown, reset = false): Promise<SettingsSnapshot> {
     const descriptor = this.descriptors.get(id);
-    if (!descriptor || !validateValue(descriptor, value)) throw new Error('invalid_setting_value');
+    if (!descriptor || (!reset && !validateValue(descriptor, value))) throw new Error('invalid_setting_value');
     // Never overwrite a malformed/unsupported provisioned file with partial data.
     if (this.unreadable) throw new Error(this.error);
-    const values = Object.assign(Object.create(null), this.values, { [id]: value });
+    const values = Object.assign(Object.create(null), this.values);
+    if (reset) delete values[id]; else values[id] = value;
     fs.mkdirSync(path.dirname(this.filename), { recursive: true });
     const temporary = `${this.filename}.${randomUUID()}.tmp`;
     try {
@@ -81,8 +105,9 @@ export class SettingsStore {
     this.applyError = undefined;
     if (descriptor.apply === 'live') {
       try {
-        await this.applyLive(id, value);
-        this.applied.set(id, value);
+        const desired = this.value(descriptor);
+        await this.applyLive(id, desired);
+        this.applied.set(id, desired);
       } catch (error) {
         this.applyError = `Saved ${id}, but could not apply it: ${String(error)}`;
       }

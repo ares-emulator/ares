@@ -4,6 +4,8 @@ const api: AresBridge = {
   preferences: {
     catalog: () => ipcRenderer.invoke('preferences.catalog'),
     set: (id, value) => ipcRenderer.invoke('preferences.set', id, value),
+    reset: id => ipcRenderer.invoke('preferences.reset', id),
+    chooseFile: id => ipcRenderer.invoke('preferences.chooseFile', id),
     changed: callback => {
       const listener = (_event: unknown, snapshot: import('./settings/contracts.js').SettingsSnapshot) => callback(snapshot)
       ipcRenderer.on('preferences-changed', listener)

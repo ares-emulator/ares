@@ -2214,3 +2214,23 @@ status, imported BML unchanged. Both passed; all three TS targets passed again.
 Preserved explicit `ARES_SETTINGS` launch precedence over saved selections without
 rewriting the profile. Explicit UI changes replace the launch override. Fifth
 store regression passed, as did the three TS targets.
+
+
+### Task 13 — registry-backed firmware settings (2026-10-21)
+
+Added native `--settings-info` discovery for all 36 compiled firmware requirements
+and imported BML values. Firmware keys share the loader's path helper. Native
+`--settings-overlay` applies a separate immutable profile launch snapshot without
+rewriting the import. Descriptor-driven Paths/Firmware controls support manual
+paths, file selection, Save and Reset; profile overrides take precedence over
+imports. Next-load state is acknowledged against the exact launch snapshot.
+Extracted original GBA fixture generation for reuse in Electron tests.
+
+Validation: native host rebuilt; all three strict TS targets passed; nine targeted
+settings/runtime tests passed; actual isolated Electron settings test chose a GBA
+firmware file, loaded the original fixture, acknowledged pending changes, removed
+launch snapshots and reset without restarting the game. Imported BML remained
+byte-identical. Plugin startup recovery also passed after the startup change.
+The full acceptance lane has not been rerun for this checkpoint. Native audio,
+palette/core controls, configurable input, shared plugin registration/UI and
+complete SDK declarations remain task 13 work.
