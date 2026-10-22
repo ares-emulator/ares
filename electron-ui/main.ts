@@ -1,6 +1,7 @@
-import { firmwareDescriptors, importedValues, nativeSettingsBml, parseNativeSettingsInfo } from './settings/native.js'
+import { validRuntimeSettings, type RuntimeSettings } from './services/runtime-contracts.js'
+import { coreDescriptors, firmwareDescriptors, importedValues, nativeSettingsBml, parseNativeSettingsInfo } from './settings/native.js'
 import { SettingsStore } from './settings/store.js'
-import { presentationSettings } from './settings/builtins.js'
+import { presentationSettings, nativeRuntimeSettings } from './settings/builtins.js'
 import { profileRoot, profileSaves } from './profile.js'
 import { PluginRegistry } from './plugins/registry.js'
 import {
@@ -216,13 +217,30 @@ let window: BrowserWindow
 export const preferences = new SettingsStore(
   path.join(app.getPath('userData'), 'preferences.json'), [
     ...presentationSettings,
+    ...nativeRuntimeSettings,
     { id: 'paths.importBml', title: 'Imported ares settings', section: 'Paths', type: 'string', file: { extensions: ['bml'] },
       default: path.join(app.getPath('userData'), 'settings.bml'), apply: 'next-rom' },
   ],
   snapshot => {
     if (window && !window.isDestroyed()) window.webContents.send('preferences-changed', snapshot)
   },
-  undefined,
+  async (id, value) => {
+    if (!nativeRuntimeSettings.some(descriptor => descriptor.id === id)) return
+    const session = active, identity = sessions.identity
+    if (!session || !identity) throw new Error('no_session; applies on next ROM load')
+    // Apply only this edit; other saved-but-pending controls must not be replayed.
+    const entries = preferences.catalog().entries
+    const get = (key: string) => key === id ? value : entries.find(entry => entry.descriptor.id === key)!.applied
+    const configuration = {
+      volume: get('audio.volume'), mute: get('audio.mute'), luminance: get('video.luminance'),
+      saturation: get('video.saturation'), gamma: get('video.gamma'),
+    }
+    if (!validRuntimeSettings(configuration)) throw new Error('invalid_runtime_settings')
+    const reply = await sessions.request('runtime.configure', identity, configuration)
+    if (!reply.ok) throw new Error(reply.error)
+    if (active !== session || sessions.identity?.session !== identity.session || sessions.identity?.epoch !== identity.epoch) throw new Error('stale_session')
+    if (Object.keys(configuration).some(key => reply.result?.[key as keyof RuntimeSettings] !== configuration[key as keyof RuntimeSettings])) throw new Error('runtime_settings_not_applied')
+  },
   process.env.ARES_SETTINGS ? { 'paths.importBml': process.env.ARES_SETTINGS } : {},
 )
 let nativeSettingsRegistered = false
@@ -232,7 +250,7 @@ async function refreshNativeSettings() {
   // A newer file choice can arrive while the metadata probe is running.
   if (preferences.catalog().entries.find(entry => entry.descriptor.id === 'paths.importBml')!.value !== importedFile) return
   if (!nativeSettingsRegistered) {
-    preferences.register(firmwareDescriptors(info))
+    preferences.register([...firmwareDescriptors(info), ...coreDescriptors(info)])
     nativeSettingsRegistered = true
   }
   preferences.inherit(importedValues(info, preferences.catalog().entries.map(entry => entry.descriptor)))
@@ -369,7 +387,10 @@ async function start(options: StartOptions) {
   sessions.attach(client)
   void client.request('session.status').then(reply => {
     removeConfiguration()
-    if (reply.ok && active === session) preferences.markApplied(startupSettings, 'next-rom')
+    if (reply.ok && active === session) {
+      preferences.markApplied(startupSettings, 'next-rom')
+      preferences.markApplied(startupSettings, 'live', nativeRuntimeSettings.map(descriptor => descriptor.id))
+    }
   }).catch(error => status(String(error)))
   child.on('error', (error) =>
     status(`Cannot start native host: ${error.message}`),

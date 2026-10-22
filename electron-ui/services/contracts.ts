@@ -1,3 +1,4 @@
+import { RUNTIME_METHODS, encodeRuntime, validRuntimeSettings, type RuntimeServiceMap } from './runtime-contracts.js';
 import { VIEWER_METHODS, encodeViewer, validViewer, type ViewerServiceMap } from './viewer-contracts.js';
 import { CALL_METHODS, encodeCall, validCallProgress, validCallRecovery, type CallServiceMap, type CallProgress } from './call-contracts.js';
 import { INSPECTION_METHODS, encodeInspection, validInspection, type InspectionServiceMap } from './inspection-contracts.js';
@@ -19,7 +20,7 @@ import { validMemoryVerification, type MemoryVerification, N64_METHODS, encodeN6
 /** Shared contract for Electron routing, the inspector and the future MCP adapter. */
 export const PROTOCOL = 1 as const;
 export const MAX_TRANSFER = 1024;
-export const NATIVE_METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS.filter(m => m !== 'n64.input.tap'), ...TRACE_METHODS, 'n64.dma.log', ...PROFILER_METHODS, 'n64.input.tap', ...FRAME_METHODS, ...AUDIO_METHODS, ...RECORDING_METHODS, ...NATIVE_STATE_METHODS, ...NATIVE_BATCH_METHODS, ...MACHINE_METHODS, ...RSP_METHODS, ...RDP_CAPTURE_METHODS, ...INSPECTION_METHODS, ...CALL_METHODS, ...VIEWER_METHODS] as const;
+export const NATIVE_METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS.filter(m => m !== 'n64.input.tap'), ...TRACE_METHODS, 'n64.dma.log', ...PROFILER_METHODS, 'n64.input.tap', ...FRAME_METHODS, ...AUDIO_METHODS, ...RECORDING_METHODS, ...NATIVE_STATE_METHODS, ...NATIVE_BATCH_METHODS, ...MACHINE_METHODS, ...RSP_METHODS, ...RDP_CAPTURE_METHODS, ...INSPECTION_METHODS, ...CALL_METHODS, ...VIEWER_METHODS, ...RUNTIME_METHODS] as const;
 export const METHODS = [...NATIVE_METHODS, ...ARTIFACT_METHODS, 'artifact.rdpExport', 'artifact.dump', ...SCREENSHOT_METHODS, 'artifact.audioSave', 'artifact.videoStop', ...STATE_METHODS, 'experiment.batch', 'experiment.cancelBatch'] as const;
 export type ServiceMethod = typeof METHODS[number];
 export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
@@ -38,7 +39,7 @@ export interface ExecutionOperation {
 export interface MemoryRegion { id: string; name: string; size: number; readable: boolean; writable: boolean; addressing: 'region-offset'; unavailableReason?: string }
 export interface MemoryRead { region: string; offset: number; length: number; hex: string }
 export interface MemoryWritten { region: string; offset: number; written: number }
-export interface ServiceMap extends ViewerServiceMap, CallServiceMap, InspectionServiceMap, RdpCaptureServiceMap, RspServiceMap, MachineServiceMap, BatchServiceMap, StateServiceMap, RecordingServiceMap, AudioServiceMap, N64ServiceMap, InputServiceMap, TraceServiceMap, DmaServiceMap, ProfilerServiceMap, ArtifactServiceMap, FrameServiceMap, ScreenshotServiceMap {
+export interface ServiceMap extends RuntimeServiceMap, ViewerServiceMap, CallServiceMap, InspectionServiceMap, RdpCaptureServiceMap, RspServiceMap, MachineServiceMap, BatchServiceMap, StateServiceMap, RecordingServiceMap, AudioServiceMap, N64ServiceMap, InputServiceMap, TraceServiceMap, DmaServiceMap, ProfilerServiceMap, ArtifactServiceMap, FrameServiceMap, ScreenshotServiceMap {
   'execution.stepInstructions': { params: { count: number; timeoutMs: number }; result: ExecutionOperation };
   'session.status': { params: undefined; result: SessionStatus };
   'session.pause': { params: undefined; result: SessionStatus };
@@ -73,7 +74,11 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
       !METHODS.includes(method) || !token(owner)) throw new ServiceError('invalid_request');
   let suffix = '';
   // Main-only methods use this validator but never enter the native wire.
-  if (VIEWER_METHODS.includes(method as typeof VIEWER_METHODS[number])) {
+  if (RUNTIME_METHODS.includes(method as typeof RUNTIME_METHODS[number])) {
+    const encoded = encodeRuntime(method, params);
+    if (encoded === undefined) throw new ServiceError('invalid_request');
+    suffix = encoded;
+  } else if (VIEWER_METHODS.includes(method as typeof VIEWER_METHODS[number])) {
     const encoded = encodeViewer(method, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
     suffix = encoded;
@@ -172,6 +177,7 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
   if (r.ok) {
     const s = r.result;
     let valid = false;
+    if (method === 'runtime.settings' || method === 'runtime.configure') valid = validRuntimeSettings(s);
     if (method.startsWith('state.') || method.startsWith('n64.state.')) valid = validStateResult(method, s) && (!['state.load', 'n64.state.loadCommit'].includes(method) || s.epoch === r.epoch);
     if (method.startsWith('audio.') || method === 'artifact.audioSave') valid = validAudio(method, s) && (method !== 'artifact.audioSave' || s.epoch === r.epoch);
     if (method.startsWith('video.record.') || method === 'artifact.videoStop') valid = validRecording(method, s);

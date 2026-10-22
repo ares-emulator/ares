@@ -12,6 +12,7 @@ fs.writeFileSync(file, JSON.stringify({ version: 1, values: {
   'presentation.scanlines': true, 'presentation.panelLeft': true,
 } }));
 app.setPath('userData', profile);
+delete process.env.ARES_SETTINGS;
 Object.assign(process.env, { ARES_PROFILE_DIR: profile, ARES_ROM: '', ARES_AUTOTEST: '', ARES_SILENT: '1', ARES_BACKGROUND_TEST: '1', ARES_DISABLE_PLUGINS: '1', ARES_ENABLE_SERVICES: '0' });
 const { sessions } = await import('../dist/main.js');
 const until = async check => {
@@ -51,6 +52,24 @@ app.whenReady().then(async () => {
     assert.equal(fs.readFileSync(imported, 'utf8'), original);
     assert.equal(JSON.parse(fs.readFileSync(file)).values['paths.importBml'], imported);
 
+    const beforeLive = await sessions.request('session.status');
+    await js(`document.querySelector('[data-setting="audio.volume"] input').value = '0.2'; document.querySelector('[data-setting="audio.volume"] button').click()`);
+    await until(async () => (await sessions.request('runtime.settings')).result?.volume === 0.2);
+    assert.equal((await sessions.request('session.status')).session, beforeLive.session);
+    assert.equal(JSON.parse(fs.readFileSync(file)).values['audio.volume'], 0.2);
+    await sessions.request('execution.batchBegin', undefined, { timeoutMs: 3000 }, 'batch-settings-ui');
+    const pendingAudio = await js("window.ares.preferences.set('audio.volume', 0.7)");
+    assert.equal(pendingAudio.entries.find(e => e.descriptor.id === 'audio.volume').pending, true);
+    assert.match(pendingAudio.error, /Saved.*busy/);
+    assert.equal((await sessions.request('runtime.settings')).result.volume, 0.2);
+    await js("window.ares.preferences.set('presentation.theme', 'green')");
+    assert.equal((await sessions.request('runtime.settings')).result.volume, 0.2, 'unrelated edits never replay pending audio changes');
+    await sessions.request('execution.release', undefined, undefined, 'batch-settings-ui');
+    await js("window.ares.preferences.set('audio.volume', 0.7)");
+    assert.equal((await sessions.request('runtime.settings')).result.volume, 0.7);
+    assert.equal((await js("window.ares.preferences.catalog()")).error, undefined);
+    window.webContents.reload();
+    await until(() => js(`document.querySelector('[data-setting="audio.volume"] input')?.value === '0.7'`));
     const media = path.join(temporary, 'media'); fs.mkdirSync(media);
     const { rom } = fixtures(media);
     const firmwareId = 'firmware.GameBoyAdvance.BIOS.World';
@@ -70,7 +89,7 @@ app.whenReady().then(async () => {
     await js(`window.ares.preferences.reset(${JSON.stringify(firmwareId)})`);
     assert.equal(await js(`window.ares.preferences.catalog().then(s => s.entries.find(e => e.descriptor.id === ${JSON.stringify(firmwareId)}).pending)`), true);
     assert.equal((await sessions.request('session.status')).result.system, 'Game Boy Advance', 'changing firmware never restarts a running game');
-    console.log('SETTINGS_UI_PASS: provisioned values applied; controls and bridge persist updates; reload retains settings; invalid values rejected; firmware picker enables GBA; reset waits for next load; imported BML unchanged');
+    console.log('SETTINGS_UI_PASS: provisioned values applied; controls and bridge persist updates; reload retains settings; invalid values rejected; live audio acknowledged; busy edits saved without replay; firmware picker enables GBA; reset waits for next load; imported BML unchanged');
     app.quit();
   } catch (error) { console.error(error); app.exit(1); }
 });

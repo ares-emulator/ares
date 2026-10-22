@@ -141,3 +141,13 @@ compiled requirements discovered. Original GBA fixture moved to tests/fixtures/g
 Host build, three TS targets, nine targeted tests, Electron settings/GBA and plugin
 recovery checks passed. Next connect live audio/palette and supported core options,
 then input and plugin SDK/settings work. Task 13 remains in progress.
+
+
+Task 13 live/core checkpoint: runtime.settings/runtime.configure added to native
+and TS protocols without adding MCP tools. Volume/mute/palette live controls use
+native acknowledgement and busy/nonreplay protections. Next-ROM core descriptors
+come from settings/native.ts; GPU-only controls depend on host features. Old four
+hardcoded host overrides removed; defaults fastBoot true, volume .4. Fourteen
+targeted tests plus existing audio regression, actual Electron settings and MCP
+checks passed. Next: configurable input, scoped plugin settings registration and
+bundled settings plugin, complete generated SDK declarations, final acceptance.

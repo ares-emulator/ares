@@ -35,7 +35,7 @@ struct ExecutionService {
     if(!reservation && (owner.rfind("batch-", 0) != 0 || method == "execution.batchBegin" || method == "execution.batchCheck" || method == "n64.state.loadAbort")) return true;
     if(owner == "ui" && (method == "session.pause" || method == "session.resume" || method == "session.reset" || method == "execution.cancel")) return true;
     static const std::vector<std::string> reads = {
-      "session.status", "memory.regions", "memory.read", "execution.status", "execution.release",
+      "runtime.settings", "session.status", "memory.regions", "memory.read", "execution.status", "execution.release",
       "n64.capture.control", "n64.capture.rsp", "n64.capture.rdp", "n64.cpu.stack", "n64.render.probe", "n64.dump.read", "n64.dump.release", "n64.cpu.disassemble", "n64.rsp.registers", "n64.rdp.state", "n64.peripheral.registers",
       "n64.memory.read", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
       "n64.input.state", "n64.profiler.top", "n64.dma.log", "n64.trace.page", "n64.state.format", "n64.state.layout",

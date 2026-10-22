@@ -77,7 +77,7 @@ export function mountSettingsForm(element: HTMLElement, bridge: PreferencesBridg
         if (entry.descriptor.type === 'boolean') (row.input as HTMLInputElement).checked = entry.value === true;
         else row.input.value = String(entry.value);
       }
-      row.note.textContent = `${entry.source}${entry.pending ? ` · Saved; applies ${entry.descriptor.apply === 'next-rom' ? 'on next ROM load' : entry.descriptor.apply === 'restart' ? 'after restart' : 'when applied'}` : ''}`;
+      row.note.textContent = `${entry.source} · ${entry.pending ? `Saved; applies ${entry.descriptor.apply === 'next-rom' ? 'on next ROM load' : entry.descriptor.apply === 'restart' ? 'after restart' : 'when applied'}` : entry.descriptor.apply === 'next-rom' ? 'Next ROM load' : entry.descriptor.apply === 'restart' ? 'Restart required' : 'Live'}`;
       row.note.dataset.pending = String(entry.pending);
     }
     message.textContent = snapshot.error ?? '';

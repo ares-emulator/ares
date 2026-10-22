@@ -50,7 +50,7 @@ struct Settings : Markup::Node {
     bool dynamic = false;
     bool mute = false;
 
-    f64 volume = 1.0;
+    f64 volume = 0.4;
     f64 balance = 0.0;
   } audio;
 
@@ -62,7 +62,7 @@ struct Settings : Markup::Node {
   } input;
 
   struct Boot {
-    bool fast = false;
+    bool fast = true;
     bool debugger = false;
     bool awaitGDBClient = false;
     string prefer = "NTSC-U";

@@ -85,12 +85,15 @@ test('native boundary rejects invalid versions, arguments and methods', { timeou
       'control 1 c validation 1 memory.unimplemented',
       'control 1 d validation 1',
       'wrong-prefix 1 e validation 1 session.pause',
+      'control 1 g validation 1 runtime.configure nan 0 1 1 1',
+      'control 1 h validation 1 runtime.configure 0.4 2 1 1 1',
+      'control 1 i validation 1 runtime.configure 0.4 0 1 1 0',
       'control 1 f validation 1 session.status',
     ];
     // Deliberately fragment a request across pipe writes.
     child.stdin.write('con'); child.stdin.write(requests.join('\n').slice(3) + '\n');
     for (let i = 0; i < 500 && replies.length < requests.length; i++) await sleep(10);
-    assert.deepEqual(replies.map(r => r.error), ['invalid_request', 'invalid_request', 'unavailable', 'invalid_request', 'invalid_request', undefined]);
+    assert.deepEqual(replies.map(r => r.error), ['invalid_request', 'invalid_request', 'unavailable', 'invalid_request', 'invalid_request', 'invalid_request', 'invalid_request', 'invalid_request', undefined]);
     assert.equal(replies.at(-1).result.paused, false);
     child.stdin.end('quit\n');
     assert.equal((await closed)[0], 0);

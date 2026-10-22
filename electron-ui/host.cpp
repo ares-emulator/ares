@@ -11,6 +11,7 @@
 #include <thread>
 #include <vector>
 #include <csignal>
+#include <cmath>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -147,8 +148,9 @@ struct Host : ares::Platform {
         mixed[0] += samples[0];
         mixed[1] += samples[channels == 1 ? 0 : 1];
       }
-      for(auto& sample : mixed) sample = std::clamp(sample, -1.0, 1.0) * 0.4;
+      for(auto& sample : mixed) sample = std::clamp(sample, -1.0, 1.0) * settings.audio.volume;
       audioCapture.push(mixed[0], mixed[1]);
+      if(settings.audio.mute) mixed[0] = mixed[1] = 0.0;
       if(sound && !service.execution.active) output.output(mixed);
     }
   }
@@ -384,10 +386,6 @@ int main(int argc, char** argv) {
     if(!emulator) { std::cerr << "System is not compiled into this host\n"; return 2; }
     host.systemName = emulator->name;
     runtime.mediaQueue = extraMedia;
-    settings.boot.fast = true;
-    settings.nintendo64.quality = "SD";
-    settings.nintendo64.supersampling = false;
-    settings.developer.forceInterpreter = false;
     host.setupInput();
     if(host.sound) {
       if(!host.output.create()) { std::cerr << "Native audio unavailable; use --silent to test without it\n"; return 1; }
@@ -496,6 +494,9 @@ int main(int argc, char** argv) {
     }
     return host.captures.execute(method, args, owner, host.service.epoch, execution.frame, n64, execution.frameKind, host.service.paused);
   };
+  host.service.runtimeRequest = [&](const std::string& method, const std::vector<std::string>& args) {
+    return configureRuntime(method, args, bool(execution.active) || bool(execution.reservation) || host.stateLoader.upload.has_value());
+  };
   host.service.audioRequest = [&](const std::string& method, const std::vector<std::string>& args, const std::string& owner) {
     return host.audioCapture.execute(method, args, owner, !host.streams.empty());
   };
@@ -508,7 +509,7 @@ int main(int argc, char** argv) {
     if(load.upload && (method == "session.pause" || method == "session.resume") && owner != "ui" && owner != load.upload->owner) return "busy";
     if(!load.upload || method.starts_with("n64.state.load")) return {};
     static const std::vector<std::string> allowed = {
-      "session.status", "session.pause", "session.resume", "session.reset", "execution.status", "execution.cancel", "execution.release", "execution.batchCheck",
+      "runtime.settings", "session.status", "session.pause", "session.resume", "session.reset", "execution.status", "execution.cancel", "execution.release", "execution.batchCheck",
       "n64.capture.control", "n64.capture.rsp", "n64.capture.rdp", "n64.cpu.stack", "n64.render.probe", "n64.dump.read", "n64.dump.release", "n64.cpu.disassemble", "n64.rsp.registers", "n64.rdp.state", "n64.peripheral.registers",
       "memory.regions", "memory.read", "n64.memory.read", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
       "n64.input.state", "n64.profiler.top", "n64.dma.log", "n64.trace.page", "n64.state.format", "n64.state.layout", "n64.state.read", "n64.state.release",

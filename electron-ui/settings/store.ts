@@ -13,7 +13,7 @@ export class SettingsStore {
   private error?: string;
   private unreadable = false;
   private queue: Promise<unknown> = Promise.resolve();
-  private applyError?: string;
+  private applyErrors = new Map<string, string>();
   private launchValues: Record<string, unknown>;
   constructor(readonly filename: string, descriptors: readonly SettingDescriptor[], private changed: (snapshot: SettingsSnapshot) => void = () => {}, private applyLive: (id: string, value: SettingValue) => Promise<void> = async () => {}, launchValues: Record<string, unknown> = {}) {
     this.launchValues = Object.assign(Object.create(null), launchValues);
@@ -59,20 +59,24 @@ export class SettingsStore {
   }
   catalog(): SettingsSnapshot {
     const invalid = [...this.descriptors.values()].filter(d => Object.hasOwn(this.values, d.id) && !validateValue(d, this.values[d.id])).map(d => d.id);
+    const applyError = [...this.applyErrors.values()].join('; ') || undefined;
     return {
       revision: this.revision,
       entries: [...this.descriptors.values()].map(descriptor => {
         const value = this.value(descriptor), applied = this.applied.get(descriptor.id) ?? descriptor.default;
         return { descriptor: structuredClone(descriptor), value, applied, source: validateValue(descriptor, this.launchValues[descriptor.id]) ? 'launch' : validateValue(descriptor, this.values[descriptor.id]) ? 'profile' : validateValue(descriptor, this.inherited[descriptor.id]) ? 'imported' : 'default', pending: value !== applied };
       }),
-      ...(this.error || this.applyError || invalid.length ? { error: this.error ?? this.applyError ?? `Invalid saved settings (using inherited values or defaults): ${invalid.join(', ')}` } : {}),
+      ...(this.error || applyError || invalid.length ? { error: this.error ?? applyError ?? `Invalid saved settings (using inherited values or defaults): ${invalid.join(', ')}` } : {}),
     };
   }
   /** Acknowledge the exact startup snapshot, even if desired values changed during load. */
-  markApplied(snapshot: SettingsSnapshot, timing: 'next-rom' | 'restart'): void {
+  markApplied(snapshot: SettingsSnapshot, timing: 'live' | 'next-rom' | 'restart', ids?: readonly string[]): void {
     for (const entry of snapshot.entries) {
       const descriptor = this.descriptors.get(entry.descriptor.id);
-      if (descriptor?.apply === timing && validateValue(descriptor, entry.value)) this.applied.set(descriptor.id, entry.value);
+      if (descriptor?.apply === timing && (!ids || ids.includes(descriptor.id)) && validateValue(descriptor, entry.value)) {
+        this.applied.set(descriptor.id, entry.value);
+        if (this.value(descriptor) === entry.value) this.applyErrors.delete(descriptor.id);
+      }
     }
     this.revision++;
     this.changed(this.catalog());
@@ -102,14 +106,14 @@ export class SettingsStore {
     } finally { fs.rmSync(temporary, { force: true }); }
     this.values = values;
     delete this.launchValues[id];
-    this.applyError = undefined;
+    this.applyErrors.delete(id);
     if (descriptor.apply === 'live') {
       try {
         const desired = this.value(descriptor);
         await this.applyLive(id, desired);
         this.applied.set(id, desired);
       } catch (error) {
-        this.applyError = `Saved ${id}, but could not apply it: ${String(error)}`;
+        if (this.applied.get(id) !== this.value(descriptor)) this.applyErrors.set(id, `Saved ${id}, but could not apply it: ${String(error)}`);
       }
     }
     this.revision++;

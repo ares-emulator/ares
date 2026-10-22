@@ -42,7 +42,18 @@ under `<profile>/runtime-settings/` and removed after host acknowledgement or
 exit. Imported BML is never rewritten. Missing/invalid firmware is reported by
 the existing loader when a ROM is opened. No firmware is downloaded.
 
-Audio, configurable input and core settings are still being connected. The
+Audio volume/mute and video luminance/saturation/gamma apply live. Native
+acknowledgement determines applied state; during controlled execution a change
+is saved and reported as pending rather than interrupting or replaying the run.
+Save again when idle, or load the next ROM. Speaker mute keeps audio pacing;
+debugger PCM capture remains before speaker mute but reflects the volume control.
+
+Supported loader options are available under Core and system sections and apply
+on the next ROM load. GPU quality/supersampling controls appear only when the
+native host reports GPU support. The old forced boot, quality, supersampling and
+interpreter overrides have been removed; fast boot remains the default.
+
+Configurable input and plugin settings registration are still being connected. The
 `panelLeft` setting belongs to the temporary UI and is expected to be removed.
 
 Settings are profile scoped. Defaults, types, validation, UI grouping and apply

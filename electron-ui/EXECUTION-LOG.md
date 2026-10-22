@@ -2234,3 +2234,28 @@ byte-identical. Plugin startup recovery also passed after the startup change.
 The full acceptance lane has not been rerun for this checkpoint. Native audio,
 palette/core controls, configurable input, shared plugin registration/UI and
 complete SDK declarations remain task 13 work.
+
+
+### Task 13 — live native settings and core options (2026-10-21)
+
+Added bounded native runtime.settings/runtime.configure methods (no new MCP tools)
+for volume, speaker mute, luminance, saturation and gamma. Apply occurs on the
+emulation thread, checks identity/epoch and refuses active/reserved execution or
+state upload. Main applies only the edited field with other applied values;
+saved-but-pending edits are never replayed by unrelated changes. Failed apply
+errors are tracked per setting. Native startup acknowledges only native live
+fields so concurrent renderer presentation changes are not reverted.
+
+Added next-load descriptors for supported loader/core/system options and host
+feature discovery for GPU quality/supersampling controls. Removed the four old
+forced startup overrides; defaults retain fast boot and 40% output volume.
+
+Validation: host rebuilt and all three TS targets passed. Fourteen targeted
+settings/runtime/loader/session tests passed, including real GB black/restored
+pixels, zero/restored PCM, native busy/stale rejection, invalid raw protocol
+arguments, and persisted N64 interpreter/4 MiB Expansion Pak behavior. Existing
+audio/MCP WAV regression passed with its required local socket permission. Actual
+Electron settings check passed: live control/native readback, busy saved pending
+value, unrelated changes do not replay it, retry applies, UI reload persists and
+firmware GBA flow still works. Actual Electron MCP integration passed. Physical
+audible-output acceptance remains deferred; no audible pass is claimed.
