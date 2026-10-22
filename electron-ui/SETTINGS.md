@@ -1,4 +1,4 @@
-# Profile settings (task 13 in progress)
+# Profile settings
 
 The main process owns `<profile>/preferences.json`. You can provision this file
 before launching Ares Workbench:
@@ -15,7 +15,7 @@ before launching Ares Workbench:
 }
 ```
 
-Presentation preferences, the imported BML selection (`paths.importBml`) and
+Presentation preferences (including plugin dock position), the imported BML selection (`paths.importBml`) and
 firmware paths for all compiled systems currently use the service. Expand
 **Paths** or **Firmware** under **Settings** to edit a path or choose a
 file. Save persists immediately; pending changes apply on the next ROM load.
@@ -66,11 +66,16 @@ bindings match the previous frontend. Imported native direct-keyboard/peripheral
 bindings remain separate and read-only. Physical hardware acceptance remains a
 manual gate; virtual mapping tests are not a physical keyboard/gamepad pass.
 
-Plugin settings registration is still being connected. The
+The bundled Settings plugin uses the same scoped SDK and shared form as local
+plugins. Fresh profiles enable it; existing profiles can enable it in Plugins.
+Local plugins declare/register sections and retain their values in this profile
+file under `plugin:<plugin ID>:<section>:<field>`. See
+[plugin settings API](plugins/README.md#profile-settings-contributions). The
 `panelLeft` setting belongs to the temporary UI and is expected to be removed.
 
 Settings are profile scoped. Defaults, types, validation, UI grouping and apply
-timing are defined in `settings/builtins.ts`. Stable IDs are independent of labels
+timing are defined in `settings/builtins.ts`, `settings/native.ts` and
+`settings/input.ts`, or registered through the plugin SDK. Stable IDs are independent of labels
 and UI sections. Moving or relabeling a setting requires no file migration.
 Removing a descriptor makes its saved value inactive; it remains in the file so
 older/newer configurations remain usable. Unknown keys are preserved on writes.
@@ -86,8 +91,8 @@ watching is not implemented. Edit while the profile is closed.
 The sandbox bridge exposes `preferences.catalog()`, `set(id, value)` and
 `changed(callback)`. Entries distinguish saved `value` from `applied`, with
 `pending` and the descriptor's `apply` timing. Failed application keeps the saved
-value and reports the error. Native settings will explicitly acknowledge their
-application through this service. Plugin access/registration is still pending.
+value and reports the error. Native settings explicitly acknowledge their
+application through this service. Plugin access is gated by settings capabilities and the current lease.
 
 Validation: `npm run test:settings` exercises real Electron controls and reload;
 `tests/settings.test.cjs` covers persistence across reconstructed stores, unknown

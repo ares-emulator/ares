@@ -10,12 +10,13 @@ npm run accept
 This is the same command used by `.github/workflows/electron-macos.yml`. It
 configures/builds both native targets, compiles three strict TS targets, runs the
 fixture suite and native GB/NES/transport smoke, then actual Electron session,
-MCP, plugin, hot-reload, agent-tool and startup-recovery checks. It also verifies
+MCP, plugin, hot-reload, agent-tool, profile settings, local plugin settings and startup-recovery checks. It also verifies
 profile ownership/crash recovery, a running app surviving checkout rebuild, and
 a fresh copied macOS app with checkout access denied. No private ROM, vendor BIOS,
 reference checkout or live user profile is needed. The GBA BIOS/cartridge fixture
 contains original instructions and verifies firmware loading, input and persisted
-SRAM. Existing bounds, session/epoch ownership and nonreplay contracts remain.
+SRAM. Live settings checks verify native pixels/PCM, core options, persistence,
+scoped plugin registration, reload/nonreplay and SDK type checking. Existing bounds, session/epoch ownership and nonreplay contracts remain.
 
 Prerequisites: macOS arm64, Xcode command-line tools, CMake 3.28+, Node 24–26,
 locked npm dependencies, and ffmpeg/ffprobe. CI pins Node via `.node-version`;

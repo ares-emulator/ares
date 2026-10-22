@@ -49,3 +49,6 @@ tests/m68000/tests
 # Exclude unused legacy zlib header that is renamed by CMake
 thirdparty/libchdr/deps/zlib-*/zconf.h
 thirdparty/libchdr/deps/zlib-*/zconf.h.included
+
+# Generated complete plugin SDK declarations (produced by npm run build)
+electron-ui/templates/plugin-tsx/src/sdk/

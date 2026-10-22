@@ -1,0 +1,12 @@
+{
+  "id": "ares.tools.settings",
+  "name": "Settings",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "entry": "plugin.js",
+  "capabilities": ["settings.read", "settings.write"],
+  "contributes": {
+    "panels": [{"id": "settings", "title": "Settings"}],
+    "commands": [{"id": "open", "title": "Open settings"}]
+  }
+}

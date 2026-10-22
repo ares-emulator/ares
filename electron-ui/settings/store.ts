@@ -35,7 +35,7 @@ export class SettingsStore {
     // Validate the entire batch before publishing any definitions.
     const ids = new Set(this.descriptors.keys());
     for (const descriptor of descriptors) {
-      if (!/^[a-zA-Z][a-zA-Z0-9._-]{0,127}$/.test(descriptor.id) || ids.has(descriptor.id) || !validateValue(descriptor, descriptor.default)) throw new Error('invalid_setting_descriptor');
+      if (!/^[a-zA-Z][a-zA-Z0-9._:-]{0,255}$/.test(descriptor.id) || ids.has(descriptor.id) || !validateValue(descriptor, descriptor.default)) throw new Error('invalid_setting_descriptor');
       ids.add(descriptor.id);
     }
     for (const descriptor of descriptors) {
@@ -43,6 +43,19 @@ export class SettingsStore {
       this.applied.set(descriptor.id, this.value(descriptor));
     }
     if (notify) { this.revision++; this.changed(this.catalog()); }
+  }
+  remove(ids: readonly string[]): void {
+    for (const id of ids) { this.descriptors.delete(id); this.applied.delete(id); this.applyErrors.delete(id); }
+    this.revision++; this.changed(this.catalog());
+  }
+  preview(descriptors: readonly SettingDescriptor[]): SettingsSnapshot {
+    const snapshot = this.catalog();
+    for (const descriptor of descriptors) {
+      if (snapshot.entries.some(entry => entry.descriptor.id === descriptor.id)) continue;
+      const value = this.value(descriptor);
+      snapshot.entries.push({ descriptor: structuredClone(descriptor), value, applied: value, pending: false, source: validateValue(descriptor, this.values[descriptor.id]) ? 'profile' : 'default' });
+    }
+    return snapshot;
   }
   inherit(values: Record<string, unknown>): void {
     this.inherited = Object.assign(Object.create(null), values);
@@ -81,13 +94,13 @@ export class SettingsStore {
     this.revision++;
     this.changed(this.catalog());
   }
-  set(id: string, value: unknown): Promise<SettingsSnapshot> {
-    const operation = this.queue.then(() => this.write(id, value));
+  set(id: string, value: unknown, guard: () => void = () => {}): Promise<SettingsSnapshot> {
+    const operation = this.queue.then(() => { guard(); return this.write(id, value); });
     this.queue = operation.catch(() => {});
     return operation;
   }
-  reset(id: string): Promise<SettingsSnapshot> {
-    const operation = this.queue.then(() => this.write(id, undefined, true));
+  reset(id: string, guard: () => void = () => {}): Promise<SettingsSnapshot> {
+    const operation = this.queue.then(() => { guard(); return this.write(id, undefined, true); });
     this.queue = operation.catch(() => {});
     return operation;
   }
@@ -99,9 +112,11 @@ export class SettingsStore {
     const values = Object.assign(Object.create(null), this.values);
     if (reset) delete values[id]; else values[id] = value;
     fs.mkdirSync(path.dirname(this.filename), { recursive: true });
+    const serialized = JSON.stringify({ version: 1, values }, null, 2) + '\n';
+    if (Buffer.byteLength(serialized) > 1024 * 1024) throw new Error('settings_file_too_large');
     const temporary = `${this.filename}.${randomUUID()}.tmp`;
     try {
-      fs.writeFileSync(temporary, JSON.stringify({ version: 1, values }, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+      fs.writeFileSync(temporary, serialized, { flag: 'wx', mode: 0o600 });
       fs.renameSync(temporary, this.filename);
     } finally { fs.rmSync(temporary, { force: true }); }
     this.values = values;

@@ -1,3 +1,5 @@
+import { mountSettingsForm } from '../settings/form.js'
+import type { PluginSettingsRequest } from '../settings/contracts.js'
 import type { PluginInfo } from './contracts.js'
 import type { Disposer, PluginContext, PluginModule } from './sdk.js'
 export async function bounded<T>(
@@ -107,6 +109,17 @@ export class PluginScope {
       })
     }
     const fail = (error: unknown) => this.dock.error(error)
+    const settingsRequest = async (request: PluginSettingsRequest) => {
+      alive()
+      if (['set', 'reset', 'chooseFile'].includes(request.operation)) writable()
+      if (this.pending >= 8) throw new Error('busy')
+      ++this.pending
+      try {
+        const snapshot = await window.ares.plugins.settings(this.token, request)
+        alive(); return snapshot
+      } finally { --this.pending }
+    }
+
     this.context = {
       id: m.id,
       session: lease.identity,
@@ -114,6 +127,28 @@ export class PluginScope {
       game: lease.game,
       profile: lease.profile,
       signal: this.abort.signal,
+      settings: {
+        catalog: () => settingsRequest({ operation: 'catalog' }),
+        set: (id, value) => settingsRequest({ operation: 'set', id, value }),
+        reset: id => settingsRequest({ operation: 'reset', id }),
+        chooseFile: id => settingsRequest({ operation: 'chooseFile', id }),
+        changed: callback => effect(() => window.ares.preferences.changed(() => {
+          void settingsRequest({ operation: 'catalog' }).then(snapshot => {
+            if (!this.abort.signal.aborted) callback(snapshot)
+          }).catch(() => {})
+        })),
+        registerSection: async (section, descriptors) => {
+          await settingsRequest({ operation: 'register', section, descriptors })
+          return add(() => {
+            if (this.abort.signal.aborted) return
+            return window.ares.plugins.settings(this.token, { operation: 'unregister', section }).then(() => {}, () => {})
+          })
+        },
+        mount: element => {
+          alive()
+          return effect(() => mountSettingsForm(element, this.context.settings))
+        },
+      },
       services: {
         request: async (method, params) => {
           alive()

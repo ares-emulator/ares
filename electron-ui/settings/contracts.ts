@@ -35,3 +35,14 @@ export function validateValue(descriptor: SettingDescriptor, value: unknown): va
     case 'string': return typeof value === 'string' && (!descriptor.nativeKey || value.trim() === value) && (descriptor.control !== 'key' || /^(?:[A-Za-z][A-Za-z0-9]{0,31}(?:,[A-Za-z][A-Za-z0-9]{0,31}){0,3})?$/.test(value)) && value.length <= (descriptor.maxLength ?? 4096) && !/[\u0000-\u001f\u007f]/.test(value);
   }
 }
+
+
+/** Plugin fields are live profile values; native bindings and file dialogs remain host-owned. */
+export type PluginSettingDescriptor = SettingDescriptor extends infer D ? D extends SettingDescriptor
+  ? Omit<D, 'section' | 'nativeKey' | 'file' | 'apply'> & { apply?: 'live' } : never : never;
+export type PluginSettingsRequest =
+  | { operation: 'catalog' }
+  | { operation: 'register'; section: string; descriptors: PluginSettingDescriptor[] }
+  | { operation: 'unregister'; section: string }
+  | { operation: 'set'; id: string; value: SettingValue }
+  | { operation: 'reset' | 'chooseFile'; id: string };

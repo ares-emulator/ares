@@ -1,3 +1,4 @@
+import type { PluginSettingsRequest, SettingsSnapshot } from '../settings/contracts.js'
 import type {
   SessionIdentity,
   SessionStatus,
@@ -13,6 +14,9 @@ export const CAPABILITIES = [
   'session.control',
   'memory.read',
   'memory.write',
+  'settings.read',
+  'settings.write',
+  'settings.register',
 ] as const
 export type Capability = (typeof CAPABILITIES)[number]
 export interface PluginManifest {
@@ -31,6 +35,7 @@ export interface PluginManifest {
   }
   capabilities: Capability[]
   contributes: {
+    settings?: { id: string; title: string }[]
     panels?: { id: string; title: string }[]
     commands?: { id: string; title: string }[]
   }
@@ -82,6 +87,7 @@ export interface PluginAction {
   name: string
 }
 export interface PluginBridge {
+  settings(token: string, request: PluginSettingsRequest): Promise<SettingsSnapshot>
   actions(callback: (action: PluginAction) => void): () => void
   result(id: string, token: string, error?: string): Promise<void>
   catalog(): Promise<PluginCatalog>

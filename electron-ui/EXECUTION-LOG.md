@@ -2277,3 +2277,48 @@ it; prior live audio, busy/nonreplay and GBA firmware checks still passed.
 Physical keyboard/gamepad acceptance remains deferred, not inferred from these
 virtual events. Shared plugin settings registration/UI and complete SDK types
 remain task 13 work, followed by full acceptance.
+
+### Task 13 complete — shared plugin settings, complete SDK, full acceptance (2026-10-21)
+
+Added settings.read/write/register capabilities, declared manifest sections,
+profile-namespaced plugin fields and lease-scoped API. Activation stages metadata
+without publishing or persisting defaults; finish publishes it; revocation removes
+definitions/writers but retains saved values. Validation rejects arbitrary native
+bindings/file descriptors and malformed schemas. Writes recheck scope inside the
+serialized persistence queue. The bundled settings plugin uses the same API and
+shared form available to local plugins. File size is bounded to 1 MiB.
+
+Replaced the template's manually maintained SDK subset with the complete generated
+browser declaration graph. Strict author fixture checks lifecycle, storage, UI,
+settings and typed services, including expected compile errors. Standalone template
+npm run typecheck is optional; esbuild still transpiles without type checking.
+Development snapshots include the new settings directory and SDK generator scripts.
+The previously overlooked plugin dock position now persists in preferences.json;
+no application presentation settings remain in browser storage.
+
+Actual local plugin acceptance verifies staged-only activation, shared bundled
+form editing, profile persistence, reload/nonreplay, stale writer rejection,
+revoke/reenable/reset, retained session/epoch and durable dock position. Fixed two
+replacement ordering races exposed by this check: status polling cannot issue an
+intermediate writer while native owner release is pending, and an old catalog
+cannot dispose/reactivate an already mounted candidate. Added a deterministic
+native-release gate regression. Full acceptance first exposed a separate paused
+renderer reload identity race; UI actions now capture or obtain an identity and
+still reject stale mutations instead of replaying them.
+
+Final validation: ARES_ACCEPT_BUILD_DIR=build-electron-make npm run accept passed
+**17/17 gates, 107 fixture tests, zero failures and skips**. Evidence is under
+artifacts/acceptance/run-606q3R/ (latest.json points there). Both native targets,
+three strict TS targets plus SDK generation/typecheck, native smoke, actual
+Electron session/MCP/plugins/reload/agent-tools/settings/plugin-settings/recovery,
+profile ownership, launch isolation and fresh copied-package gates passed. Copied
+app exercised all 68 MCP tools and CLI scaffold/build/list/add/enable/open/reload/
+command, retained session/epoch through TSX 1→2, and denied checkout reads to native
+loader/MCP/CLI; 873 GB frames. Bundled Electron44.9.0/Node24.22.0 on macOS arm64.
+The temporary bundle was removed by the lane. Hosted CI was not run.
+
+Initial run-FpEKbA passed all 107 fixture tests but failed the paused renderer
+reload check; the issue was fixed and the entire lane rerun. Physical keyboard/
+gamepad and audible-output acceptance, serializer rollback-failure injection,
+private-media/reference checks and broader soak/platform work remain explicitly
+deferred in ACCEPTANCE.md. Task 13 done gates are fulfilled; task 14 is next.

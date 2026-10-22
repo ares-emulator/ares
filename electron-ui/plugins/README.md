@@ -2,7 +2,7 @@
 
 Open **Plugins** in the sidebar. Add a directory containing `manifest.json`, then
 explicitly enable it. Fresh profiles enable the bundled memory explorer, N64
-stop/register view and verified Kirby powers tool. Existing enable/disable choices
+stop/register view, settings panel and verified Kirby powers tool. Existing enable/disable choices
 are preserved; use Plugins or the CLI to enable a new bundled tool in an older
 profile. `ARES_DEFAULT_PLUGINS=0` suppresses these first-profile defaults for tests. Enabled roots
 and IDs persist under Electron's userData/plugins; `ARES_PLUGIN_DIRS` (platform
@@ -32,7 +32,7 @@ module side effects are the author's responsibility. Tabs toggle visibility;
 Capabilities: `session.read` (status), `session.control` (pause/resume and bounded
 execution), `debug.read` (N64 frozen stop/register snapshots), `memory.read`
 (regions/read and N64 CPU/RDRAM reads), `memory.write` (region writes and N64
-single/batched writes). No filesystem or
+single/batched writes), plus the settings capabilities described below. No general filesystem or
 arbitrary service methods are exposed through the SDK. Service replies preserve
 native errors; check `reply.ok`. Stale scopes reject with `stale_plugin_scope`.
 Logs retain the latest 128 messages (2 KiB each). Activation/command failures show
@@ -52,7 +52,13 @@ For plain JS copy `bundled-plugins/memory`. For TS/TSX copy
 `templates/plugin-tsx`, run `npm install` then `npm run build`, and add that directory.
 The host can build the template directly from its manifest `build.entry`; npm
 build remains available for standalone authoring. The template bundles JSX with a tiny DOM factory; no framework is imposed. Its
-sdk.d.ts describes the subset it uses; the full API is in plugins/sdk.ts.
+`src/sdk.d.ts` re-exports the complete generated browser SDK declaration graph.
+Run the host build before copying the source template, or use the CLI scaffold.
+After `npm install`, `npm run typecheck` checks your plugin against all SDK and
+service types. Host/CLI esbuild builds remain transpilation, not type checking.
+The distributed types include settings, storage, lifecycle, UI, session identities
+and the full typed service map; runtime capabilities still restrict which methods
+a plugin may call.
 
 Validation: `npm test` includes manifest/registry and real N64/GBA scoped memory
 checks; `npm run test:plugins` runs the real Electron UI test. Optional Kirby test:
@@ -200,3 +206,53 @@ external-run busy exclusion and human pause. `npm run test:kirby` requires
 `ARES_PLUGIN_TEST_ROM`; it verifies all 36 buttons/icons/readbacks using disposable
 ROM/settings/saves, and leaves originals unchanged. `ARES_BACKGROUND_TEST=1`
 hides test windows while retaining unthrottled rendering.
+
+
+## Profile settings contributions
+
+`settings.read` reads all registered settings; `settings.write` with read permits
+editing them (including plugin sections) and using host file pickers. The bundled
+`ares.tools.settings` panel uses these same APIs. `settings.register` permits
+registering, reading and editing only the plugin's own declared sections without
+granting access to other profile settings. Capabilities govern the supported SDK;
+plugins remain trusted same-renderer code, not isolated extensions.
+
+Declare sections in the manifest:
+
+```json
+{
+  "capabilities": ["settings.register"],
+  "contributes": { "settings": [{ "id": "display", "title": "Display" }] }
+}
+```
+
+Register fields during activation, then use a command or shared form for edits:
+
+```ts
+export async function activate(context: PluginContext) {
+  await context.settings.registerSection('display', [
+    { id: 'accent', title: 'Accent', type: 'enum',
+      options: ['blue', 'green'], default: 'blue' }
+  ]);
+  context.ui.registerPanel('settings', ({ element }) => context.settings.mount(element));
+}
+```
+
+That panel must also be declared in `contributes.panels`. A field's stable profile
+key is `plugin:<plugin ID>:<section ID>:<field ID>`. Provision it in the same
+`preferences.json` as host settings. Registration stages metadata without writing
+defaults or publishing controls until activation succeeds. Reload, disable,
+renderer replacement and session/epoch changes revoke definitions and writers;
+saved values remain for the next registration. Queued writes recheck the lease
+before touching the file. Activation/restore cannot write settings.
+
+`catalog()`, `set(id, value)`, `reset(id)`, `chooseFile(id)` and `changed(callback)`
+share the host settings model. `mount(element)` renders the shared scoped form.
+Subscriptions and returned disposers belong to the plugin scope. Plugin fields
+currently support live, profile-scoped booleans, bounded numbers, enums and
+strings (including key controls); arbitrary native bindings and file descriptors
+are host-owned. Limit: eight declared sections, 32 fields per section, 128 fields
+per plugin. The complete profile file is bounded to 1 MiB. Renaming IDs or changing
+value semantics needs an explicit migration; moving sections visually or removing
+fields leaves saved data readable. Changing a registered section ID changes its
+field namespace; changing only its title or display position does not. See [settings behavior](../SETTINGS.md).

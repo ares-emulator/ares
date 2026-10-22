@@ -16,7 +16,7 @@
     "package:mac": "npm run build && node scripts/package-macos.cjs",
     "test:mcp": "npm run build && electron tests/electron-mcp.mjs",
     "test:package": "node tests/package-live.cjs",
-    "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig.browser.json && tsc -p tsconfig.preload.json",
+    "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig.browser.json && tsc -p tsconfig.preload.json && node scripts/generate-sdk.cjs",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "test:state-reference": "npm run build && node tests/state-reference.cjs",
     "test:plugins": "npm run build && electron tests/electron-plugins.mjs",
@@ -26,6 +26,7 @@
     "plugin": "node dist/plugins/cli.js",
     "test:profiles": "npm run build && node tests/profile-live.cjs",
     "test:launch": "node tests/launch-live.cjs",
+    "test:plugin-settings": "npm run build && electron tests/electron-plugin-settings.mjs",
     "test:settings": "npm run build && electron tests/electron-settings.mjs",
     "test:recovery": "npm run build && electron tests/electron-recovery.mjs --disable-plugins",
     "accept": "node scripts/accept.cjs"

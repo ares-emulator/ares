@@ -14,15 +14,29 @@ const tabs = document.createElement('nav'),
   body = document.createElement('div')
 dock.append(tabs, body)
 const position = manager.querySelector('select')!
-position.value = localStorage.getItem('plugin-dock-position') || 'bottom'
+position.value = 'bottom'
 function place() {
   dock.dataset.position = position.value
-  localStorage.setItem('plugin-dock-position', position.value)
   if (position.value === 'bottom')
     document.querySelector('footer')!.before(dock)
   else document.querySelector('main')!.append(dock)
 }
-position.onchange = place
+let positionRevision = -1
+function acceptPosition(snapshot: import('../settings/contracts.js').SettingsSnapshot) {
+  if (snapshot.revision < positionRevision) return
+  positionRevision = snapshot.revision
+  const value = snapshot.entries.find(entry => entry.descriptor.id === 'presentation.pluginDock')?.applied
+  if (typeof value === 'string') { position.value = value; place() }
+}
+position.onchange = () => {
+  place()
+  void window.ares.preferences.set('presentation.pluginDock', position.value).then(acceptPosition).catch(async error => {
+    acceptPosition(await window.ares.preferences.catalog())
+    console.error(error)
+  })
+}
+window.ares.preferences.changed(acceptPosition)
+void window.ares.preferences.catalog().then(acceptPosition)
 place()
 const scopes = new Map<string, PluginScope>(),
   jobs = new Map<string, Promise<void>>(),
@@ -276,7 +290,7 @@ function update(next: PluginCatalog) {
     if (
       !p?.enabled ||
       !p.lease ||
-      (!jobs.has(id) && p.lease.token !== scope.token)
+      (!jobs.has(id) && p.lease.token !== scope.token && p.candidate?.lease.token !== scope.token)
     ) {
       // Session/disable invalidation is synchronous even during a replacement job.
       if (!p?.enabled || !p.lease || !jobs.has(id)) {
@@ -288,7 +302,10 @@ function update(next: PluginCatalog) {
   for (const p of next.plugins) {
     const id = p.manifest?.id
     if (!id || jobs.has(id)) continue
-    if (p.candidate) start(id, () => replace(p, p.candidate!))
+    // finish() may resolve before its catalog event arrives. A completed
+    // replacement still matches the candidate in the older catalog; do not
+    // dispose it or run activate() a second time while waiting for that event.
+    if (p.candidate && scopes.get(id)?.token !== p.candidate.lease.token) start(id, () => replace(p, p.candidate!))
     else if (p.lease && !scopes.has(id)) start(id, () => initial(p))
   }
   render()

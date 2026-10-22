@@ -1,3 +1,5 @@
+import type { PluginSettingsService } from '../settings/plugins.js'
+import type { PluginSettingsRequest } from '../settings/contracts.js'
 import { watch, type FSWatcher } from 'node:fs'
 import { buildArtifact, type PluginArtifact } from './artifacts.js'
 import fs from 'node:fs/promises'
@@ -31,6 +33,18 @@ interface Record extends PluginInfo {
   storageQueue: Promise<unknown>
 }
 export class PluginRegistry {
+  private settingsHost?: PluginSettingsService
+  connectSettings(host: PluginSettingsService) {
+    if (this.settingsHost) throw new Error('settings_host_already_connected')
+    this.settingsHost = host
+  }
+  async settings(token: string, request: PluginSettingsRequest) {
+    const r = this.lease(token)
+    if (!this.settingsHost) throw new Error('settings_unavailable')
+    const snapshot = await this.settingsHost.request(token, r.manifest!, r.phase === 'active', request, () => { this.authorize(token) })
+    this.lease(token)
+    return snapshot
+  }
   private startupDisabled = false
   private records: Record[] = []
   private catalogRevision = 0
@@ -356,6 +370,7 @@ export class PluginRegistry {
   }
   finish(token: string) {
     const r = this.lease(token)
+    this.settingsHost?.finish(token)
     r.phase = 'active'
     r.candidate = undefined
     r.next = undefined
@@ -374,7 +389,9 @@ export class PluginRegistry {
       const r = this.lease(token),
         previous = r.previous
       if (!previous) throw new Error('No previous artifact for rollback')
-      await this.revoke(r, true)
+      const release = this.revoke(r, true)
+      r.phase = 'activating'
+      await release
       r.built = previous
       r.previous = undefined
       r.root = previous.root
@@ -635,6 +652,7 @@ export class PluginRegistry {
   }
   private revoke(r: Record, strict = false) {
     const owner = r.owner
+    if (r.lease) this.settingsHost?.revoke(r.lease.token)
     r.lease = undefined
     r.owner = undefined
     r.candidate = undefined
@@ -678,6 +696,9 @@ export class PluginRegistry {
         r.state = 'waiting'
         continue
       }
+      // A replacement has revoked its old lease and is awaiting native owner
+      // release. Status polling must not create an intermediate writer here.
+      if (!r.lease && r.phase === 'activating') continue
       if (!r.lease) {
         const token = randomUUID()
         r.phase = 'activating'

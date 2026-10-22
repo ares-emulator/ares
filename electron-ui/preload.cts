@@ -13,6 +13,7 @@ const api: AresBridge = {
     },
   },
   plugins: {
+    settings: (token, request) => ipcRenderer.invoke('plugin.settings', token, request),
     actions: (callback) => {
       const listener = (_event: unknown, action: any) => callback(action)
       ipcRenderer.on('plugin-action', listener)

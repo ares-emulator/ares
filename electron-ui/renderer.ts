@@ -206,7 +206,16 @@ function acceptSessionState(reply: SessionReply) {
 }
 window.ares.onSessionState(acceptSessionState);
 async function sessionRequest(method: SessionMethod) {
-  const reply = await window.ares.session(method, sessionIdentity);
+  let identity = sessionIdentity;
+  if (!identity && method !== 'session.status') {
+    const status = await window.ares.session('session.status');
+    if (!status.ok) throw new Error(status.error);
+    acceptSessionState(status);
+    identity = { session: status.session, epoch: status.epoch };
+  }
+  // Capture the identity for this action. Overlapping reload/status synchronization
+  // may clear the shared field; stale actions still fail instead of being replayed.
+  const reply = await window.ares.session(method, identity);
   if (!reply.ok) throw new Error(reply.error);
   acceptSessionState(reply);
   return reply;

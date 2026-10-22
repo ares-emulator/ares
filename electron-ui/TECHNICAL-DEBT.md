@@ -151,3 +151,18 @@ before task 13. Deferred items remain deferred; listing a finding does not make
 it an immediate implementation prerequisite.
 There is no proposal to rewrite the emulator cores, introduce multiple JS packages,
 generate all protocols, or optimize video copies as a prerequisite.
+
+
+### Task 13 disposition (2026-10-21)
+
+D01's remaining presentation/dock localStorage values now live in the owned
+profile preferences file. D02's selected BML path, firmware overrides, audio and
+palette settings, supported core settings and frontend input mappings use typed
+descriptors, persistence and live/next-ROM timing. Imported BML remains read-only;
+the four forced host overrides were replaced by real settings/defaults. P03's
+manually maintained SDK subset was replaced by the complete generated browser
+declaration graph and a standalone template `npm run typecheck` command; esbuild
+itself is still explicitly transpilation. Plugin settings use declared sections,
+capabilities and lease-scoped staged registration. These changes do not close
+physical keyboard/gamepad or audible-output acceptance, broader platform/soak work,
+or deferred desktop feature inventory items.

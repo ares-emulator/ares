@@ -3,11 +3,11 @@
 This frontend runs ares as native C++ in a separate process and displays its raw
 video output in a WebGL2 canvas. It does not compile emulation code to WebAssembly.
 
-Fresh agents: read [RESUME.md](RESUME.md) first. Tasks 1–12 are implemented;
+Fresh agents: read [RESUME.md](RESUME.md) first. Tasks 1–13 are implemented;
 the approved [promotion and foundation cleanup](TECHNICAL-DEBT.md) is complete.
-Task 13 (settings, configurable input and SDK declarations) is next.
-The frontend now lives in `electron-ui/`; the remaining foundation cleanup
-sequence is recorded in the handoff.
+Task 14 (overlays and custom workspaces) is next.
+Profile settings, firmware/native controls, configurable input and plugin settings
+are described in [SETTINGS.md](SETTINGS.md).
 
 Use [EXECUTION-ROADMAP.md](EXECUTION-ROADMAP.md) for the implementation
 sequence, bounded tasks and completion gates across the plans below.

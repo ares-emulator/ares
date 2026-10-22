@@ -1,3 +1,4 @@
+import type { PluginSettingDescriptor, PreferencesBridge } from '../settings/contracts.js'
 import type {
   SessionIdentity,
   ServiceMethod,
@@ -18,6 +19,11 @@ export interface PluginContext {
   readonly game: GameIdentity | null
   readonly profile: string | null
   readonly signal: AbortSignal
+  settings: PreferencesBridge & {
+    /** Local field IDs become plugin:<plugin ID>:<section>:<field>. Activation stages metadata only. */
+    registerSection(id: string, descriptors: PluginSettingDescriptor[]): Promise<Disposer>
+    mount(element: HTMLElement): Disposer
+  }
   services: {
     request<M extends ServiceMethod>(
       method: M,
@@ -62,3 +68,8 @@ export interface PluginModule {
     state?: unknown,
   ): void | Disposer | Promise<void | Disposer>
 }
+
+export type { PluginSettingDescriptor, SettingDescriptor, SettingEntry, SettingValue, SettingsSnapshot } from '../settings/contracts.js'
+
+export type { SessionIdentity, SessionStatus, SessionReply, ServiceMethod, ServiceParams, ServiceResult, ExecutionOperation } from '../services/contracts.js'
+export type { GameIdentity, PluginManifest } from './contracts.js'

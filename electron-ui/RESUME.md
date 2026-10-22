@@ -4,9 +4,9 @@ Updated 2026-10-21. Read this before building, testing or changing runtime files
 
 ## Current objective
 
-**Foundation work is complete. Resume task 13:** real validated/persisted settings,
-configurable input and complete author SDK declarations. Tasks 1–12 (including
-4.5) remain implemented. No further triage approval is needed.
+**Foundation and task 13 are complete. Next numbered work is task 14**
+(overlays, custom workspaces and trusted shell extensions), when requested.
+Tasks 1–13 (including 4.5) are implemented. No further triage approval is needed.
 
 Completed foundation:
 
@@ -21,13 +21,13 @@ Completed foundation:
    `--disable-plugins` recovery plus targeted CLI disable/reset is implemented.
    Manual/fault exclusions have explicit [dispositions](ACCEPTANCE.md).
 
-Latest local acceptance: **15/15 gates, 89 fixture tests, no failures or skips**;
+Latest local acceptance: **17/17 gates, 107 fixture tests, no failures or skips**;
 actual Electron/MCP/plugins/recovery, profile/crash/rebuild isolation and copied
 package passed. GitHub-hosted CI has not run yet; do not infer a hosted pass from
 the workflow file. Private-ROM/manual/fault checks remain separate, not relabelled.
 
 The approved promotion/foundation triage is complete. Full original findings and
-remaining scoped work are in [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md). Task 13 should
+remaining scoped work are in [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md). Further work should
 build on the extracted runtime and owned profile configuration; do not restore a
 desktop frontend dependency or turn deferred audit findings into prerequisites.
 
@@ -113,50 +113,42 @@ The CJS preload is required by Electron's sandbox; application sources use TS/ES
 Plugins are trusted same-renderer code, not sandboxed extensions.
 
 User authorizes sensible intermediate commits and autonomous completion of agreed
-work. Foundation is complete; implement task 13 next. Keep the explicitly
+work. Foundation and task 13 are complete; task 14 is next. Keep the explicitly
 deferred manual/fault checks visible and do not add unrelated prerequisites.
 
 
-Task 13 checkpoint (2026-10-21): profile settings foundation implemented in
-`settings/`; presentation controls use profile `preferences.json` instead of
-localStorage. The BML file selection also persists (`paths.importBml`) and is
-acknowledged against the exact startup snapshot after native host status succeeds.
-Descriptors define stable IDs, types/defaults/validation/group/apply timing.
-Unknown keys survive descriptor removal; malformed files are never overwritten.
-See SETTINGS.md. Three strict TS targets, five settings tests and isolated actual
-Electron provisioning/write/reload/native-start acknowledgement passed. Full
-acceptance has not been rerun for this checkpoint. Next: connect firmware and
-native audio/presentation/core descriptors, configurable input, plugin settings
-registration/bundled UI and complete generated SDK declarations. Task 13 remains
-in progress; its done gates are not yet fulfilled.
 
+## Task 13 implementation and final evidence
 
-Task 13 firmware checkpoint: `settings/native.ts` maps registry-discovered firmware
-requirements to descriptors and writes launch-only BML overlays. `settings/form.ts`
-provides reusable descriptor-driven controls currently mounted in the temporary
-sidebar. Paths/Firmware have file pickers, Save/Reset, import inheritance and
-next-ROM pending state. Native discovery/overlay support lives in host.cpp and
-native/settings-service.hpp; firmware BML key helper shared with loader. All 36
-compiled requirements discovered. Original GBA fixture moved to tests/fixtures/gba.cjs.
-Host build, three TS targets, nine targeted tests, Electron settings/GBA and plugin
-recovery checks passed. Next connect live audio/palette and supported core options,
-then input and plugin SDK/settings work. Task 13 remains in progress.
+- `settings/store.ts` owns profile `preferences.json`: validated stable IDs,
+  atomic bounded writes, default/import/profile/launch precedence, saved/applied
+  state, Reset and unknown-key preservation. No migration of old development data.
+- Descriptors: `settings/builtins.ts` (presentation/audio/palette), `native.ts`
+  (registry-discovered firmware/core options/BML launch overlays), `input.ts`
+  (virtual-port-1 keyboard/gamepad mapping). Plugin dock position also moved out
+  of localStorage. Imported BML stays read-only; old forced native overrides gone.
+- `settings/form.ts` provides a shared form/file picker/key recorder. Recovery UI
+  uses the host bridge; bundled `ares.tools.settings` uses the same scoped SDK as
+  local plugins. `settings/plugins.ts` stages declared, namespaced plugin fields,
+  commits on activation and revokes metadata/writers with the lease, retaining
+  saved values. Capabilities: settings.read/write/register.
+- Runtime settings apply between native runs, respect identity/execution/state
+  ownership, and never replay pending changes on unrelated edits. Native tests
+  verify GB pixels/PCM and N64 interpreter/Expansion Pak behavior; actual Electron
+  tests cover GBA firmware, persistence, key capture/clear, plugin lifecycle and
+  reload. Physical hardware/audible acceptance remains separately deferred.
+- Complete browser SDK declaration graph generated by scripts/generate-sdk.cjs
+  during build and shipped with the template/CLI scaffold. Template supports
+  npm run typecheck. Generation output is ignored, regenerated on build. Launcher
+  snapshots now include settings/ and scripts/; copied app/CLI remain independent.
+- Fixed reload ordering races: no intermediate lease while awaiting owner release,
+  no duplicate replacement activation from an older catalog, and UI session
+  actions obtain a missing identity during renderer synchronization without replay.
 
-
-Task 13 live/core checkpoint: runtime.settings/runtime.configure added to native
-and TS protocols without adding MCP tools. Volume/mute/palette live controls use
-native acknowledgement and busy/nonreplay protections. Next-ROM core descriptors
-come from settings/native.ts; GPU-only controls depend on host features. Old four
-hardcoded host overrides removed; defaults fastBoot true, volume .4. Fourteen
-targeted tests plus existing audio regression, actual Electron settings and MCP
-checks passed. Next: configurable input, scoped plugin settings registration and
-bundled settings plugin, complete generated SDK declarations, final acceptance.
-
-Task 13 input checkpoint: settings/input.ts now defines virtual-port-1 keyboard,
-N64 A/B, analog direction and gamepad device/buttons/axes/inversion/deadzone/focus
-settings and pure mapInput(). Renderer consumes applied values and clears input
-on mapping changes. Shared form supports Record key, Save/Reset, integer indices.
-Three TS targets, three input regressions and extended actual Electron settings
-check passed (key capture/persist/reload/input-clear plus existing audio/GBA).
-Next: plugin settings capabilities/registration and bundled settings UI via same
-SDK, complete generated author declarations, then final fixture acceptance.
+Final command: `ARES_ACCEPT_BUILD_DIR=build-electron-make npm run accept` from
+`electron-ui/`: **17/17 gates, 107 fixture tests, no failures/skips**. Evidence:
+`artifacts/acceptance/run-606q3R/` and latest.json. Copied package passed all 68 MCP
+tools and CLI/TSX reload with checkout read denied (873 GB frames); Electron44.9.0,
+bundled Node24.22.0, macOS arm64. Temporary bundle removed by the lane. Hosted CI
+was not run. Initial run-FpEKbA exposed the paused-reload identity issue; fixed and
+rerun fully, not claimed as a pass. See SETTINGS.md and plugins/README.md for APIs.

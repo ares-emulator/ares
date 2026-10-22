@@ -94,10 +94,11 @@ export function validateManifest(value: unknown): PluginManifest {
     m.capabilities.some((v: any) => !CAPABILITIES.includes(v))
   )
     fail('capabilities')
-  if (!object(m.contributes, ['panels', 'commands'])) fail('contributes')
+  if (!object(m.contributes, ['panels', 'commands', 'settings'])) fail('contributes')
   for (const [kind, max] of [
     ['panels', 8],
     ['commands', 64],
+    ['settings', 8],
   ] as const)
     if (m.contributes[kind] !== undefined) {
       const list = m.contributes[kind]

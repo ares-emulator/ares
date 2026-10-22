@@ -1,3 +1,4 @@
+import { PluginSettingsService } from './settings/plugins.js'
 import { inputDescriptors } from './settings/input.js'
 import { validRuntimeSettings, type RuntimeSettings } from './services/runtime-contracts.js'
 import { coreDescriptors, firmwareDescriptors, importedValues, nativeSettingsBml, parseNativeSettingsInfo } from './settings/native.js'
@@ -257,20 +258,22 @@ async function refreshNativeSettings() {
   }
   preferences.inherit(importedValues(info, preferences.catalog().entries.map(entry => entry.descriptor)))
 }
-async function setPreference(id: string, value: unknown, reset = false) {
-  if (reset) await preferences.reset(id); else await preferences.set(id, value)
+async function setPreference(id: string, value: unknown, reset = false, guard: () => void = () => {}) {
+  if (reset) await preferences.reset(id, guard); else await preferences.set(id, value, guard)
   if (id === 'paths.importBml') await refreshNativeSettings()
   return preferences.catalog()
 }
-async function choosePreferenceFile(id: string) {
+async function choosePreferenceFile(id: string, guard: () => void = () => {}) {
+  guard()
   const descriptor = preferences.catalog().entries.find(entry => entry.descriptor.id === id)?.descriptor
   if (!descriptor?.file) throw new Error('not_a_file_setting')
   const result = await dialog.showOpenDialog(window, {
     title: descriptor.title, properties: ['openFile'],
     filters: descriptor.file.extensions.length ? [{ name: descriptor.title, extensions: descriptor.file.extensions }] : [],
   })
-  return result.canceled ? preferences.catalog() : setPreference(id, result.filePaths[0])
+  return result.canceled ? preferences.catalog() : setPreference(id, result.filePaths[0], false, guard)
 }
+plugins.connectSettings(new PluginSettingsService(preferences, setPreference, choosePreferenceFile))
 let active: NativeSession | null = null,
   port: MessagePortMain | null = null
 let quitting = false,
@@ -447,6 +450,7 @@ app
         : [
             'ares.examples.memory',
             'ares.tools.debugger',
+            'ares.tools.settings',
             'ares.examples.kirby',
           ],
       process.argv.includes('--disable-plugins') ||
@@ -563,6 +567,7 @@ app
       'refresh',
       'request',
       'storage',
+      'settings',
       'log',
       'fail',
       'reload',
@@ -596,6 +601,8 @@ app
             return plugins.refresh()
           case 'request':
             return plugins.request(args[0], args[1], args[2])
+          case 'settings':
+            return plugins.settings(args[0], args[1])
           case 'storage':
             return plugins.storage(args[0], args[1], args[2], args[3])
           case 'fail':

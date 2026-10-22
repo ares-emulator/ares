@@ -1,21 +1,21 @@
 # Execution roadmap: how to tackle the implementation plans
 
-Status: **tasks 1–12, including the task 4.5 TypeScript/ESM detour, are implemented**.
+Status: **tasks 1–13, including the task 4.5 TypeScript/ESM detour, are implemented**.
 Task 12 landed in `539755659`. All 68 MCP tools have actual stdio runtime evidence;
 plugin, agent CLI and copied-package gates passed. Earlier physical-input,
 audible-output and serializer rollback-failure checks remain pending.
 
-**Current work: task 13 — settings, configurable input and complete SDK types.**
+**Task 13 is complete. Next: task 14 — overlays, custom workspaces and trusted shell extensions.**
 The approved foundation is complete: permanent home/identity, owned profiles and
 independent development outputs, native desktop extraction/retirement, repeatable
 fixture acceptance, macOS CI configuration and startup plugin recovery. Start with
 [RESUME.md](RESUME.md). The original audit is [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md);
 retired desktop features are inventoried in [DESKTOP-RETIREMENT.md](DESKTOP-RETIREMENT.md).
 
-`npm run accept` passed locally: 15 gates and 89 fixture tests without failures or
+`npm run accept` passed locally after task 13: 17 gates and 107 fixture tests without failures or
 skips. Hosted CI has not run yet. [ACCEPTANCE.md](ACCEPTANCE.md) records commands,
 evidence boundaries and explicit private-media/manual/fault deferrals. These do
-not prevent task 13 implementation and are not claimed as completed product gates.
+not block the next numbered task and are not claimed as completed product gates.
 
 Runtime evidence and historical checkpoints are in
 [EXECUTION-LOG.md](EXECUTION-LOG.md).
@@ -255,6 +255,12 @@ Maps to plugin-plan step 6, remaining UI surfaces and MCP phase E.
 
 ### Task 13 — settings service and bundled settings plugins
 
+**Implemented.** Profile-backed descriptors, firmware overrides/read-only BML,
+live audio/palette controls, next-ROM core settings, configurable input, scoped
+plugin sections/shared bundled form and complete generated SDK declarations.
+Local acceptance: 17/17 gates, 107 fixture tests; copied macOS app passed. See
+[SETTINGS.md](SETTINGS.md) and the final task 13 execution log entry.
+
 Add validated settings descriptors with persistence/scope and apply behavior.
 Port firmware/paths, presentation and audio first, followed by input and supported
 core options. Use the same plugin API as local plugins. Keep explicitly imported BML
@@ -324,7 +330,7 @@ tests, additional bounded CLI paging coverage, plugin/reload/MCP integration and
 copied-app CLI/TSX runtime validation passed.
 
 The promotion/foundation work is complete; the next numbered feature task is
-**task 13 — settings service and bundled settings plugins**. Tasks 1–5, 4.5 and 7–12 are implemented. Earlier physical keyboard/gamepad
+**task 14 — overlays, custom workspaces and trusted shell extensions**. Tasks 1–13, including 4.5, are implemented. Earlier physical keyboard/gamepad
 takeover, audible-output acceptance and task 8 rollback-failure fault injection
 remain recorded follow-ups; the selector playtest does not silently close those
 separate acceptance gates.

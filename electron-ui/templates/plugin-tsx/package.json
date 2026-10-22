@@ -3,9 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild src/plugin.tsx --bundle --format=esm --target=es2022 --jsx-factory=h --outfile=dist/plugin.js"
+    "build": "esbuild src/plugin.tsx --bundle --format=esm --target=es2022 --jsx-factory=h --outfile=dist/plugin.js",
+    "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "typescript": "^7.0.2"
   }
 }
