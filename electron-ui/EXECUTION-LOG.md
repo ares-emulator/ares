@@ -2259,3 +2259,21 @@ Electron settings check passed: live control/native readback, busy saved pending
 value, unrelated changes do not replay it, retry applies, UI reload persists and
 firmware GBA flow still works. Actual Electron MCP integration passed. Physical
 audible-output acceptance remains deferred; no audible pass is claimed.
+
+### Task 13 — configurable frontend input (2026-10-21)
+
+Added profile descriptors for virtual-port-1 keyboard bindings, N64 A/B overrides,
+keyboard analog directions, gamepad device/focus selection, button/axis indices,
+inversion and deadzone. Empty keys and -1 indices disable mappings. Added key
+recording to the shared descriptor form; binding changes clear held input before
+polling the new map. Renderer mapping is now a pure shared function, preserving
+prior defaults. Native direct-keyboard/peripheral BML bindings remain separate.
+
+Validation: three strict TS targets passed; three input tests passed (defaults,
+N64 exceptions, custom keys/devices, deadzone/inversion/finite bounds, defocus,
+invalid bindings/indices and restart persistence). Actual isolated Electron
+settings check recorded/saved a key, observed input clear, reloaded and retained
+it; prior live audio, busy/nonreplay and GBA firmware checks still passed.
+Physical keyboard/gamepad acceptance remains deferred, not inferred from these
+virtual events. Shared plugin settings registration/UI and complete SDK types
+remain task 13 work, followed by full acceptance.

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
@@ -52,6 +52,21 @@ app.whenReady().then(async () => {
     assert.equal(fs.readFileSync(imported, 'utf8'), original);
     assert.equal(JSON.parse(fs.readFileSync(file)).values['paths.importBml'], imported);
 
+    let clearedInput = 0;
+    const observeInput = (_event, command) => { if (command.type === 'clear') clearedInput++; };
+    ipcMain.on('command', observeInput);
+    const keyboardRow = '[data-setting="input.keyboard.south"]';
+    await js(`(() => {
+      const row = document.querySelector(${JSON.stringify(keyboardRow)}), input = row.querySelector('input');
+      row.querySelectorAll('button')[1].click();
+      input.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyN', bubbles: true, cancelable: true }));
+      row.querySelector('button').click();
+    })()`);
+    await until(async () => JSON.parse(fs.readFileSync(file)).values['input.keyboard.south'] === 'KeyN');
+    await until(() => clearedInput > 0);
+    ipcMain.removeListener('command', observeInput);
+    window.webContents.reload();
+    await until(() => js(`document.querySelector(${JSON.stringify(keyboardRow)})?.querySelector('input').value === 'KeyN'`));
     const beforeLive = await sessions.request('session.status');
     await js(`document.querySelector('[data-setting="audio.volume"] input').value = '0.2'; document.querySelector('[data-setting="audio.volume"] button').click()`);
     await until(async () => (await sessions.request('runtime.settings')).result?.volume === 0.2);
@@ -89,7 +104,7 @@ app.whenReady().then(async () => {
     await js(`window.ares.preferences.reset(${JSON.stringify(firmwareId)})`);
     assert.equal(await js(`window.ares.preferences.catalog().then(s => s.entries.find(e => e.descriptor.id === ${JSON.stringify(firmwareId)}).pending)`), true);
     assert.equal((await sessions.request('session.status')).result.system, 'Game Boy Advance', 'changing firmware never restarts a running game');
-    console.log('SETTINGS_UI_PASS: provisioned values applied; controls and bridge persist updates; reload retains settings; invalid values rejected; live audio acknowledged; busy edits saved without replay; firmware picker enables GBA; reset waits for next load; imported BML unchanged');
+    console.log('SETTINGS_UI_PASS: provisioned values applied; controls and bridge persist updates; reload retains settings; invalid values rejected; key recording persists and releases input; live audio acknowledged; busy edits saved without replay; firmware picker enables GBA; reset waits for next load; imported BML unchanged');
     app.quit();
   } catch (error) { console.error(error); app.exit(1); }
 });

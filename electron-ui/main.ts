@@ -1,3 +1,4 @@
+import { inputDescriptors } from './settings/input.js'
 import { validRuntimeSettings, type RuntimeSettings } from './services/runtime-contracts.js'
 import { coreDescriptors, firmwareDescriptors, importedValues, nativeSettingsBml, parseNativeSettingsInfo } from './settings/native.js'
 import { SettingsStore } from './settings/store.js'
@@ -218,6 +219,7 @@ export const preferences = new SettingsStore(
   path.join(app.getPath('userData'), 'preferences.json'), [
     ...presentationSettings,
     ...nativeRuntimeSettings,
+    ...inputDescriptors,
     { id: 'paths.importBml', title: 'Imported ares settings', section: 'Paths', type: 'string', file: { extensions: ['bml'] },
       default: path.join(app.getPath('userData'), 'settings.bml'), apply: 'next-rom' },
   ],

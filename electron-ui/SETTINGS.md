@@ -17,7 +17,7 @@ before launching Ares Workbench:
 
 Presentation preferences, the imported BML selection (`paths.importBml`) and
 firmware paths for all compiled systems currently use the service. Expand
-**Paths** or **Firmware** under **Native settings** to edit a path or choose a
+**Paths** or **Firmware** under **Settings** to edit a path or choose a
 file. Save persists immediately; pending changes apply on the next ROM load.
 Reset removes the profile override and restores the imported value or default.
 The running game is never restarted by a settings edit.
@@ -53,7 +53,20 @@ on the next ROM load. GPU quality/supersampling controls appear only when the
 native host reports GPU support. The old forced boot, quality, supersampling and
 interpreter overrides have been removed; fast boot remains the default.
 
-Configurable input and plugin settings registration are still being connected. The
+Input settings configure the frontend's virtual port 1. Keyboard values use
+browser key codes (for example `KeyZ` or `ArrowUp`), optionally up to four codes
+separated by commas. An empty value unbinds the control. Record key captures one
+code; Save persists it. The Nintendo 64 A/B keyboard overrides preserve the old
+N64 defaults while allowing separate customization.
+
+Gamepads support the first standard device or an explicit browser device index,
+button/axis indices (`-1` disables), axis inversion, deadzone and app/canvas focus.
+Mapping changes clear held keyboard/native input before the next poll. Default
+bindings match the previous frontend. Imported native direct-keyboard/peripheral
+bindings remain separate and read-only. Physical hardware acceptance remains a
+manual gate; virtual mapping tests are not a physical keyboard/gamepad pass.
+
+Plugin settings registration is still being connected. The
 `panelLeft` setting belongs to the temporary UI and is expected to be removed.
 
 Settings are profile scoped. Defaults, types, validation, UI grouping and apply

@@ -151,3 +151,12 @@ hardcoded host overrides removed; defaults fastBoot true, volume .4. Fourteen
 targeted tests plus existing audio regression, actual Electron settings and MCP
 checks passed. Next: configurable input, scoped plugin settings registration and
 bundled settings plugin, complete generated SDK declarations, final acceptance.
+
+Task 13 input checkpoint: settings/input.ts now defines virtual-port-1 keyboard,
+N64 A/B, analog direction and gamepad device/buttons/axes/inversion/deadzone/focus
+settings and pure mapInput(). Renderer consumes applied values and clears input
+on mapping changes. Shared form supports Record key, Save/Reset, integer indices.
+Three TS targets, three input regressions and extended actual Electron settings
+check passed (key capture/persist/reload/input-clear plus existing audio/GBA).
+Next: plugin settings capabilities/registration and bundled settings UI via same
+SDK, complete generated author declarations, then final fixture acceptance.

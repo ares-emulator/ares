@@ -1,3 +1,4 @@
+import { appliedInputSettings, defaultInputSettings, mapInput } from './settings/input.js';
 import { mountSettingsForm } from './settings/form.js';
 import type { FramePacket, RendererStats } from './bridge.js';
 import type { SessionIdentity, SessionMethod, SessionReply } from './services/contracts.js';
@@ -59,9 +60,17 @@ const presentationControls = {
   scanlines: 'presentation.scanlines', left: 'presentation.panelLeft',
 } as const;
 let preferenceRevision = -1;
+let inputSettings = defaultInputSettings();
+let inputSettingsSignature = JSON.stringify(inputSettings);
 function applyPreferences(snapshot: import('./settings/contracts.js').SettingsSnapshot) {
   if (snapshot.revision < preferenceRevision) return;
   preferenceRevision = snapshot.revision;
+  const nextInputSettings = appliedInputSettings(snapshot);
+  const nextInputSignature = JSON.stringify(nextInputSettings);
+  if (nextInputSignature !== inputSettingsSignature) {
+    inputSettings = nextInputSettings; inputSettingsSignature = nextInputSignature;
+    releaseInput();
+  }
   for (const [name, id] of Object.entries(presentationControls)) {
     const entry = snapshot.entries.find(entry => entry.descriptor.id === id);
     if (!entry) continue;
@@ -108,7 +117,7 @@ function draw() {
   gl.uniform1f(lines, $('scanlines').checked ? 1 : 0); gl.uniform1f(rows, height);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
-mountSettingsForm(document.getElementById('native-settings')!, window.ares.preferences, entry => !!entry.descriptor.nativeKey || !!entry.descriptor.file);
+mountSettingsForm(document.getElementById('native-settings')!, window.ares.preferences, entry => !!entry.descriptor.nativeKey || !!entry.descriptor.file || entry.descriptor.id.startsWith('input.'));
 apply(); new ResizeObserver(resize).observe($('viewport'));
 window.addEventListener('message', event => {
   if (event.source !== window || event.data?.type !== 'ares-frames' || !event.ports[0]) return;
@@ -116,9 +125,9 @@ window.addEventListener('message', event => {
   port.onmessage = ({ data }: MessageEvent<import('./bridge.js').FrameMessage>) => {
     if (data.reset) {
       system = data.system;
-      $('controls').textContent = system.startsWith('Nintendo 64')
+      $('controls').textContent = 'Default controls (custom bindings are in Settings): ' + (system.startsWith('Nintendo 64')
         ? 'WASD · Analog stick / Arrows · D-pad / Z · B / X · A / IJKL · C-buttons / Q & E · L & R / Space · Z / Enter · Start. Standard gamepad mappings follow ares.'
-        : 'Arrows · D-pad / Z X C V · Face buttons / Q E · Shoulders / Shift · Select / Enter · Start / WASD & IJKL · Analog sticks. Keyboard and mouse are forwarded while the canvas is focused.';
+        : 'Arrows · D-pad / Z X C V · Face buttons / Q E · Shoulders / Shift · Select / Enter · Start / WASD & IJKL · Analog sticks. Keyboard and mouse are forwarded while the canvas is focused.');
       pending = null; frames = skipped = last = firstNative = lastNative = firstSequence = receivedFrames = maxPending = 0;
       bridge = []; upload = []; inputAges = []; inputTimes.clear(); started = performance.now();
       lastMask = -1; syncSession(); window.dispatchEvent(new Event('ares-session-reset')); return;
@@ -130,10 +139,6 @@ window.addEventListener('message', event => {
   port.start();
 });
 // Bits represent ares's virtual pad, so existing per-system mappings remain authoritative.
-const keys: Record<string, number> = { ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3, KeyZ: 4, KeyX: 5,
-  KeyC: 6, KeyV: 7, ShiftLeft: 8, ShiftRight: 8, Enter: 9, KeyQ: 10, KeyE: 11, Space: 13,
-  Digit1: 16, Digit2: 17, Digit3: 18, Digit4: 19, Digit5: 20, Digit6: 21, Digit7: 22,
-  Digit8: 23, Digit9: 24, Digit0: 25 };
 const pressed = new Set<string>();
 let inputSeq = 0, lastMask = -1, lastAxes = '';
 function sendInput(mask: number, x = 0, y = 0, rx = 0, ry = 0) {
@@ -145,28 +150,8 @@ function sendInput(mask: number, x = 0, y = 0, rx = 0, ry = 0) {
   window.ares.command({ type: 'input', sequence: inputSeq, mask, x, y, rx, ry });
 }
 function pollInput() {
-  let mask = 0, x = 0, y = 0, rx = 0, ry = 0;
-  if (document.hasFocus()) {
-    for (const code of pressed) {
-      let bit = keys[code];
-      if (system.startsWith('Nintendo 64') && code === 'KeyZ') bit = 6;
-      if (system.startsWith('Nintendo 64') && code === 'KeyX') bit = 4;
-      if (bit !== undefined) mask |= 1 << bit;
-    }
-    x = (Number(pressed.has('KeyD')) - Number(pressed.has('KeyA'))) * 32767;
-    y = (Number(pressed.has('KeyS')) - Number(pressed.has('KeyW'))) * 32767;
-    rx = (Number(pressed.has('KeyL')) - Number(pressed.has('KeyJ'))) * 32767;
-    ry = (Number(pressed.has('KeyK')) - Number(pressed.has('KeyI'))) * 32767;
-    const pad = [...navigator.getGamepads()].find(p => p?.mapping === 'standard');
-    if (pad) {
-      const mapping: Record<string, number> = { 12: 0, 13: 1, 14: 2, 15: 3, 0: 4, 1: 5, 2: 6, 3: 7,
-        8: 8, 9: 9, 4: 10, 5: 11, 6: 12, 7: 13, 10: 14, 11: 15 };
-      for (const [button, bit] of Object.entries(mapping)) if (pad.buttons[Number(button)]?.pressed) mask |= 1 << bit;
-      const axis = (i: number) => Math.abs(pad.axes[i] || 0) > .12 ? Math.round(pad.axes[i] * 32767) : 0;
-      x = axis(0) || x; y = axis(1) || y; rx = axis(2) || rx; ry = axis(3) || ry;
-    }
-  }
-  sendInput(mask, x, y, rx, ry);
+  const input = mapInput(inputSettings, pressed, system, [...navigator.getGamepads()], document.hasFocus(), document.activeElement === canvas);
+  sendInput(input.mask, input.x, input.y, input.rx, input.ry);
 }
 function nativeKey(code: string) {
   if (/^Key[A-Z]$/.test(code)) return code.slice(3);

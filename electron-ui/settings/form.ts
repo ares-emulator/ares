@@ -52,7 +52,7 @@ export function mountSettingsForm(element: HTMLElement, bridge: PreferencesBridg
         } else {
           input = document.createElement('input');
           input.type = descriptor.type === 'boolean' ? 'checkbox' : descriptor.type === 'number' ? 'number' : 'text';
-          if (descriptor.type === 'number') { input.min = String(descriptor.min); input.max = String(descriptor.max); input.step = 'any'; }
+          if (descriptor.type === 'number') { input.min = String(descriptor.min); input.max = String(descriptor.max); input.step = descriptor.integer ? '1' : 'any'; }
         }
         label.append(input); field.append(label);
         const save = document.createElement('button'), note = document.createElement('p');
@@ -61,6 +61,20 @@ export function mountSettingsForm(element: HTMLElement, bridge: PreferencesBridg
         input.oninput = () => { row.dirty = true; };
         save.onclick = () => { void run(row, () => bridge.set(descriptor.id, value(row))); };
         field.append(save);
+        if (descriptor.control === 'key') {
+          const record = document.createElement('button'); record.textContent = 'Record key';
+          let recording = false;
+          record.onclick = () => { recording = true; record.textContent = 'Press a key (Esc cancels)'; input.focus(); };
+          input.onkeydown = event => {
+            if (!recording) return;
+            event.preventDefault(); event.stopPropagation();
+            recording = false; record.textContent = 'Record key';
+            if (event.code !== 'Escape') { input.value = event.code; row.dirty = true; }
+          };
+          input.onblur = () => { recording = false; record.textContent = 'Record key'; };
+          field.append(record);
+        }
+
         if (descriptor.file) {
           const browse = document.createElement('button'); browse.textContent = 'Choose file…';
           browse.onclick = () => { void run(row, () => bridge.chooseFile(descriptor.id)); };
