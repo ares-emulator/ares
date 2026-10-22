@@ -1,6 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { AresBridge } from './bridge.js'
 const api: AresBridge = {
+  preferences: {
+    catalog: () => ipcRenderer.invoke('preferences.catalog'),
+    set: (id, value) => ipcRenderer.invoke('preferences.set', id, value),
+    changed: callback => {
+      const listener = (_event: unknown, snapshot: import('./settings/contracts.js').SettingsSnapshot) => callback(snapshot)
+      ipcRenderer.on('preferences-changed', listener)
+      return () => ipcRenderer.removeListener('preferences-changed', listener)
+    },
+  },
   plugins: {
     actions: (callback) => {
       const listener = (_event: unknown, action: any) => callback(action)

@@ -53,12 +53,37 @@ let frames = 0, skipped = 0, last = 0, firstNative = 0, lastNative = 0, firstSeq
 let bridge: number[] = [], upload: number[] = [], inputTimes = new Map<number, number>(), inputAges: number[] = [], latestQueue = 0;
 let started = performance.now(), lastStats = started, latestReadback: number[] | null = null;
 let receivedFrames = 0, maxPending = 0;
-const settings: Record<string, string | boolean> = (() => { try { return JSON.parse(localStorage.getItem('ares-workbench') || '{}'); } catch { return {}; } })();
-for (const name of ['theme', 'scale', 'scanlines', 'left'] as const) {
-  const el = $(name);
-  if (settings[name] !== undefined) el instanceof HTMLInputElement ? el.checked = Boolean(settings[name]) : el.value = String(settings[name]);
-  el.onchange = () => { settings[name] = el instanceof HTMLInputElement ? el.checked : el.value;
-    localStorage.setItem('ares-workbench', JSON.stringify(settings)); apply(); };
+const presentationControls = {
+  theme: 'presentation.theme', scale: 'presentation.scale',
+  scanlines: 'presentation.scanlines', left: 'presentation.panelLeft',
+} as const;
+let preferenceRevision = -1;
+function applyPreferences(snapshot: import('./settings/contracts.js').SettingsSnapshot) {
+  if (snapshot.revision < preferenceRevision) return;
+  preferenceRevision = snapshot.revision;
+  for (const [name, id] of Object.entries(presentationControls)) {
+    const entry = snapshot.entries.find(entry => entry.descriptor.id === id);
+    if (!entry) continue;
+    const el = $(name as keyof typeof presentationControls);
+    if (el instanceof HTMLInputElement) el.checked = entry.applied === true;
+    else el.value = String(entry.applied);
+  }
+  apply();
+  if (snapshot.error) $('status').textContent = snapshot.error;
+}
+window.ares.preferences.changed(applyPreferences);
+void window.ares.preferences.catalog().then(applyPreferences).catch(error => { $('status').textContent = String(error); });
+for (const [name, id] of Object.entries(presentationControls)) {
+  const el = $(name as keyof typeof presentationControls);
+  el.onchange = async () => {
+    el.disabled = true;
+    try {
+      applyPreferences(await window.ares.preferences.set(id, el instanceof HTMLInputElement ? el.checked : el.value));
+    } catch (error) {
+      applyPreferences(await window.ares.preferences.catalog());
+      $('status').textContent = String(error);
+    } finally { el.disabled = false; }
+  };
 }
 function apply() {
   document.body.dataset.theme = $('theme').value;

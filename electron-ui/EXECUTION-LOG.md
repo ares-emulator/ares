@@ -2189,3 +2189,18 @@ rollback or crash-save restoration.
 
 The approved foundation is complete. The handoff/roadmap now direct the next work
 to task 13: real settings, configurable input and complete author SDK declarations.
+
+### Task 13 — presentation persistence foundation (2026-10-21)
+
+Added main-owned, profile-scoped `preferences.json`, stable typed descriptors,
+atomic writes, serialized updates and saved/applied/pending state. Moved theme,
+scaling, scanlines and the temporary panel position from renderer localStorage.
+Unknown keys survive writes and descriptor removal/readdition. Invalid known
+values are diagnosed; malformed/future-version files cannot be overwritten.
+
+Validation: all three TypeScript targets passed; three new settings store tests
+passed; actual isolated Electron settings check passed (provisioning, controls,
+file writes, renderer reload, bridge updates, invalid-value rejection). Added the
+Electron check to the acceptance lane; the full lane has not been rerun for this
+checkpoint. Firmware/native application, input configuration, plugin settings
+registration and complete SDK declarations remain task 13 work.

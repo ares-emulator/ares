@@ -26,6 +26,7 @@
     "plugin": "node dist/plugins/cli.js",
     "test:profiles": "npm run build && node tests/profile-live.cjs",
     "test:launch": "node tests/launch-live.cjs",
+    "test:settings": "npm run build && electron tests/electron-settings.mjs",
     "test:recovery": "npm run build && electron tests/electron-recovery.mjs --disable-plugins",
     "accept": "node scripts/accept.cjs"
   },

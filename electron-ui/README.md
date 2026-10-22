@@ -88,6 +88,11 @@ Development launches use the `development` profile by default; copied apps use
 | `browser/` | Browser preferences/local storage and rebuildable Chromium cache |
 | `logs/` | Application logs |
 
+Presentation preferences live in `<profile>/preferences.json`, independently of
+Electron browser storage. Provision the file before launching, or change controls
+in the UI; changes persist immediately. See [SETTINGS.md](SETTINGS.md) for the file
+format and descriptor lifecycle.
+
 Back up the profile to preserve saves and preferences. Profiles start fresh;
 there is no migration of earlier development data. Original ROMs and saves
 alongside them remain untouched. Quit normally to flush loaded system saves.

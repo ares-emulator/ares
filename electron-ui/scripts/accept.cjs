@@ -103,6 +103,7 @@ async function main() {
     ['electron-plugins', 'electron-plugins.mjs', []],
     ['electron-reload', 'electron-reload.mjs', []],
     ['electron-plugin-tools', 'electron-plugin-tools.mjs', []],
+    ['electron-settings', 'electron-settings.mjs', []],
     ['electron-recovery', 'electron-recovery.mjs', ['--disable-plugins']],
   ]) await gate(name, electron, [`tests/${file}`, ...args])
   await gate('profile-ownership', process.execPath, ['tests/profile-live.cjs'])

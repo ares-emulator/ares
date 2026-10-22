@@ -1,3 +1,5 @@
+import { SettingsStore } from './settings/store.js'
+import { presentationSettings } from './settings/builtins.js'
 import { profileRoot, profileSaves } from './profile.js'
 import { PluginRegistry } from './plugins/registry.js'
 import {
@@ -212,6 +214,12 @@ const probe = (args: string[]): Promise<string> =>
     })
   })
 let window: BrowserWindow
+export const preferences = new SettingsStore(
+  path.join(app.getPath('userData'), 'preferences.json'), presentationSettings,
+  snapshot => {
+    if (window && !window.isDestroyed()) window.webContents.send('preferences-changed', snapshot)
+  },
+)
 let active: NativeSession | null = null,
   port: MessagePortMain | null = null
 let quitting = false,
@@ -555,6 +563,16 @@ app
         return sessions.request(method, identity, params)
       },
     )
+    for (const operation of ['catalog', 'set'] as const) {
+      ipcMain.handle('preferences.' + operation, (event, ...args: unknown[]) => {
+        if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame)
+          throw new Error('invalid_sender')
+        if (operation === 'catalog' && args.length === 0) return preferences.catalog()
+        if (operation === 'set' && args.length === 2 && typeof args[0] === 'string')
+          return preferences.set(args[0], args[1])
+        throw new Error('invalid_request')
+      })
+    }
     ipcMain.handle('systems', async (event) => {
       if (event.sender !== window.webContents) return []
       return (await probe(['--systems'])).split('\n').filter(Boolean)
