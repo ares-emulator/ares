@@ -30,10 +30,9 @@ export function jsonState(value: unknown): unknown {
   return JSON.parse(bytes)
 }
 export interface Dock {
-  tabs: HTMLElement
-  body: HTMLElement
   commands: HTMLElement
-  visibility: Map<HTMLElement, (visible: boolean) => void>
+  registerPanel(id: string, title: string, mount: (context: import('../workspace/runtime.js').PanelMount) => void | Disposer): Disposer
+  openPanel(id: string, automatic?: boolean): void
   changed(): void
   error(error: unknown): void
 }
@@ -43,17 +42,9 @@ export class PluginScope {
   readonly token: string
   private disposers = new Set<Disposer>()
   private arms = new Set<() => void>()
-  private tabFragment = document.createDocumentFragment()
-  private panelFragment = document.createDocumentFragment()
   private commandFragment = document.createDocumentFragment()
-  private panels = new Map<
-    string,
-    {
-      element: HTMLElement
-      open: () => void
-      setVisible: (value: boolean) => void
-    }
-  >()
+  private panels = new Map<string, { instances: Set<{ visible: boolean }>; open(automatic?: boolean): void }>()
+  private pendingOpens = new Set<string>()
   private commands = new Map<string, () => void | Promise<void>>()
   private links: HTMLLinkElement[] = []
   private ready = false
@@ -81,16 +72,20 @@ export class PluginScope {
           'plugin_not_ready: use a command for writes; activation/reload never replays mutations',
         )
     }
+    let currentMount: { disposers: Set<Disposer>; visible: boolean } | undefined
     const add = (dispose: Disposer): Disposer => {
+      const owner = currentMount
       alive()
       let active = true
       const once = () => {
         if (!active) return
         active = false
         this.disposers.delete(once)
+        owner?.disposers.delete(once)
         return dispose()
       }
       this.disposers.add(once)
+      owner?.disposers.add(once)
       return once
     }
     const effect = (start: () => Disposer) => {
@@ -183,10 +178,11 @@ export class PluginScope {
       },
       scope: {
         add,
-        listen: (target, event, listener) =>
-          effect(() => {
+        listen: (target, event, listener) => {
+          const view = currentMount
+          return effect(() => {
             const guarded: EventListener = (e) => {
-              if (!this.abort.signal.aborted)
+              if (!this.abort.signal.aborted && (!view || view.visible))
                 try {
                   void Promise.resolve(listener(e)).catch((error) => {
                     if (!this.abort.signal.aborted) fail(error)
@@ -203,8 +199,10 @@ export class PluginScope {
               --this.listeners
               this.dock.changed()
             }
-          }),
+          })
+        },
         interval: (callback, milliseconds) => {
+          const view = currentMount
           if (!Number.isFinite(milliseconds) || milliseconds < 50)
             throw new Error('Plugin intervals must be at least 50ms')
           if (this.arms.size >= 128)
@@ -213,7 +211,7 @@ export class PluginScope {
             const timer = setInterval(() => {
               if (
                 !this.abort.signal.aborted &&
-                [...this.panels.values()].some((p) => !p.element.hidden)
+                (view ? view.visible : [...this.panels.values()].some(p => [...p.instances].some(instance => instance.visible)))
               )
                 try {
                   void Promise.resolve(callback()).catch((error) => {
@@ -278,69 +276,46 @@ export class PluginScope {
       ui: {
         registerPanel: (id, mount) => {
           alive()
-          const contribution = m.contributes.panels?.find((p) => p.id === id)
-          if (!contribution || this.panels.has(id))
-            throw new Error('Undeclared or duplicate panel: ' + id)
-          const tab = document.createElement('button'),
-            element = document.createElement('article'),
-            visibility = new Set<(value: boolean) => void>()
-          tab.textContent = contribution.title
-          element.hidden = true
-          element.dataset.pluginPanel = m.id + ':' + id
-          if (this.published) {
-            this.dock.tabs.append(tab)
-            this.dock.body.append(element)
-          } else {
-            this.tabFragment.append(tab)
-            this.panelFragment.append(element)
-          }
-          let mounted = false,
-            cleanup: void | Disposer
-          const setVisible = (value: boolean) => {
-            if (element.hidden === !value) return
-            element.hidden = !value
-            for (const callback of visibility) callback(value)
-          }
-          const open = () => {
-            alive()
-            for (const [other, notify] of this.dock.visibility)
-              if (other !== element) notify(false)
-            setVisible(true)
-            if (!mounted) {
-              mounted = true
+          const contribution = m.contributes.panels?.find(p => p.id === id)
+          if (!contribution || this.panels.has(id)) throw new Error('Undeclared or duplicate panel: ' + id)
+          const instances = new Set<{ visible: boolean }>()
+          const install = effect(() => this.dock.registerPanel(id, contribution.title, context => {
+            const instance = { visible: true, disposers: new Set<Disposer>() }
+            const abort = new AbortController(), visibility = new Set<Disposer>()
+            instances.add(instance)
+            const cancel = context.onVisibility(visible => { instance.visible = visible })
+            const previous = currentMount; currentMount = instance
+            let cleanup: void | Disposer
+            try {
               cleanup = mount({
-                element,
-                onVisibility: (callback) => {
+                instanceId: context.instanceId,
+                element: context.element,
+                signal: abort.signal,
+                onVisibility: callback => {
                   alive()
-                  visibility.add(callback)
-                  callback(!element.hidden)
-                  return add(() => {
-                    visibility.delete(callback)
-                  })
+                  const dispose = context.onVisibility(visible => { if (!abort.signal.aborted && !this.abort.signal.aborted) callback(visible) })
+                  visibility.add(dispose)
+                  return () => { visibility.delete(dispose); return dispose() }
                 },
               })
-            }
-            this.dock.changed()
-          }
-          tab.onclick = () => {
-            try {
-              writable()
-              if (!element.hidden) setVisible(false)
-              else open()
             } catch (error) {
-              fail(error)
+              abort.abort(); instances.delete(instance); void cancel()
+              for (const dispose of [...instance.disposers].reverse()) void dispose()
+              for (const dispose of visibility) void dispose()
+              throw error
+            } finally { currentMount = previous }
+            let disposed = false
+            return async () => {
+              if (disposed) return
+              disposed = true; abort.abort(); instances.delete(instance)
+              const actions = [cancel, ...visibility, ...[...instance.disposers].reverse(), ...(cleanup ? [cleanup] : [])]
+              const settled = await Promise.allSettled(actions.map(dispose => Promise.resolve().then(dispose)))
+              const failed = settled.find(result => result.status === 'rejected')
+              if (failed?.status === 'rejected') throw failed.reason
             }
-          }
-          this.panels.set(id, { element, open, setVisible })
-          this.dock.visibility.set(element, setVisible)
-          return add(() => {
-            tab.remove()
-            element.remove()
-            this.dock.visibility.delete(element)
-            visibility.clear()
-            this.panels.delete(id)
-            return cleanup?.()
-          })
+          }))
+          this.panels.set(id, { instances, open: automatic => this.dock.openPanel(id, automatic) })
+          return add(() => { this.panels.delete(id); return install() })
         },
         registerCommand: (id, run) => {
           alive()
@@ -366,11 +341,11 @@ export class PluginScope {
             this.commands.delete(id)
           })
         },
-        openPanel: (id) => {
+        openPanel: id => {
           alive()
-          const panel = this.panels.get(id)
-          if (!panel) throw new Error('Unknown panel: ' + id)
-          panel.open()
+          if (!this.panels.has(id)) throw new Error('Unknown panel: ' + id)
+          if (!this.published) this.pendingOpens.add(id)
+          else this.panels.get(id)!.open()
         },
       },
     }
@@ -389,11 +364,6 @@ export class PluginScope {
     }
     if (this.abort.signal.aborted) throw new Error('stale_plugin_scope')
   }
-  visible() {
-    return [...this.panels]
-      .filter(([, p]) => !p.element.hidden)
-      .map(([id]) => id)
-  }
   async activate(state?: unknown) {
     const result = Promise.resolve(this.module.activate(this.context, state))
     void result.then(
@@ -408,15 +378,10 @@ export class PluginScope {
     )
     await bounded(result, 'Plugin activation')
   }
-  restore(ids: string[]) {
-    for (const id of ids) this.panels.get(id)?.open()
-  }
   publish() {
     if (this.abort.signal.aborted) throw new Error('stale_plugin_scope')
     this.ready = true
     this.published = true
-    this.dock.tabs.append(this.tabFragment)
-    this.dock.body.append(this.panelFragment)
     this.dock.commands.append(this.commandFragment)
     if (this.info.manifest!.styles) {
       const link = document.createElement('link')
@@ -426,6 +391,8 @@ export class PluginScope {
       this.links.push(link)
     }
     for (const arm of this.arms) arm()
+    for (const id of this.pendingOpens) this.panels.get(id)?.open(true)
+    this.pendingOpens.clear()
     this.dock.changed()
   }
   dispose(): Promise<void> {

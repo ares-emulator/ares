@@ -95,12 +95,7 @@ app.whenReady().then(async () => {
         .plugins.find((p) => p.manifest.id === 'ares.examples.kirby').state,
       'waiting',
     )
-    assert.equal(
-      await js(
-        'document.querySelector(\'[data-plugin-panel="ares.examples.memory:memory"]\')?.hidden',
-      ),
-      false,
-    )
+    assert.equal(await js(`!!document.querySelector('[data-plugin-panel="ares.examples.memory:memory"]')`), false, 'activation does not open a panel');
     await js(
       'document.querySelector(\'[data-plugin-command="ares.examples.memory:open"]\').click()',
     )
@@ -168,15 +163,7 @@ app.whenReady().then(async () => {
     await until(() => js('window.pluginActivationStarted'))
     await plugins.enable('test.delayed', false)
     await until(() => js('window.pluginLateCleanup'))
-    for (const position of ['left', 'right', 'bottom']) {
-      await js(
-        `(()=>{const position=document.querySelector('#plugins select');position.value=${JSON.stringify(position)};position.dispatchEvent(new Event('change'));})()`,
-      )
-      assert.equal(
-        await js("document.getElementById('plugin-dock').dataset.position"),
-        position,
-      )
-    }
+    await js("window.dispatchEvent(new KeyboardEvent('keydown', {code:'Comma',metaKey:true,bubbles:true,cancelable:true})); document.querySelector('[data-tab=plugins]').click()");
     const screenshot = await window.webContents.capturePage()
     const artifact = fileURLToPath(
       new URL('../artifacts/plugin-dock.png', import.meta.url),

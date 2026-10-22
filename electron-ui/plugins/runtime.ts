@@ -1,50 +1,19 @@
+import { workspace, showSettings, notify } from '../workspace/shell.js'
+import { panelKey } from '../workspace/model.js'
 import type { PluginCatalog, PluginInfo, PluginCandidate } from './contracts.js'
 import type { PluginModule } from './sdk.js'
 import { PluginScope, bounded, jsonState, type Dock } from './scope.js'
 const bridge = window.ares.plugins
-const manager = document.createElement('details')
+const manager = document.createElement('div')
 manager.id = 'plugins'
-manager.innerHTML =
-  '<summary>Plugins</summary><p>Local plugins run trusted JavaScript in this renderer.</p><p data-recovery hidden>Plugins are disabled for this launch. Uncheck a plugin to disable it on future launches, then restart without --disable-plugins.</p><button data-add>Add directory</button><button data-refresh>Refresh manifests</button><select aria-label="Plugin dock position"><option>bottom</option><option>left</option><option>right</option></select><div data-list></div><div data-commands></div><output data-health></output>'
-document.querySelector('aside')!.append(manager)
-const dock = document.createElement('section')
-dock.id = 'plugin-dock'
-dock.hidden = true
-const tabs = document.createElement('nav'),
-  body = document.createElement('div')
-dock.append(tabs, body)
-const position = manager.querySelector('select')!
-position.value = 'bottom'
-function place() {
-  dock.dataset.position = position.value
-  if (position.value === 'bottom')
-    document.querySelector('footer')!.before(dock)
-  else document.querySelector('main')!.append(dock)
-}
-let positionRevision = -1
-function acceptPosition(snapshot: import('../settings/contracts.js').SettingsSnapshot) {
-  if (snapshot.revision < positionRevision) return
-  positionRevision = snapshot.revision
-  const value = snapshot.entries.find(entry => entry.descriptor.id === 'presentation.pluginDock')?.applied
-  if (typeof value === 'string') { position.value = value; place() }
-}
-position.onchange = () => {
-  place()
-  void window.ares.preferences.set('presentation.pluginDock', position.value).then(acceptPosition).catch(async error => {
-    acceptPosition(await window.ares.preferences.catalog())
-    console.error(error)
-  })
-}
-window.ares.preferences.changed(acceptPosition)
-void window.ares.preferences.catalog().then(acceptPosition)
-place()
+manager.innerHTML = '<p class="help">Choose which plugins are available in your workspace.</p><p data-recovery hidden>Plugins are disabled for this launch. Disable a broken plugin here, then restart without --disable-plugins.</p><div class="plugin-actions"><button data-add>Add plugin directory…</button><button data-refresh>Refresh</button></div><div data-list></div><div id="plugin-commands" data-commands></div>'
+document.getElementById('plugin-management')!.append(manager)
 const scopes = new Map<string, PluginScope>(),
-  jobs = new Map<string, Promise<void>>(),
-  visibility = new Map<HTMLElement, (v: boolean) => void>()
+  jobs = new Map<string, Promise<void>>()
 let catalog: PluginCatalog = { apiVersion: 1, plugins: [] }
 const errors = new Map<string, string>()
 function showError(error: unknown) {
-  manager.open = true
+  showSettings('plugins')
   errors.set('host', String(error))
   render()
 }
@@ -59,15 +28,13 @@ function health() {
   }
   for (const [key, value] of Object.entries(counts))
     manager.dataset[key] = String(value)
-  manager.querySelector('[data-health]')!.textContent =
-    `${counts.scopes} scopes · ${counts.listeners} listeners · ${counts.timers} timers · ${counts.pending} requests`
-  dock.hidden = !tabs.childElementCount
+
 }
 function render() {
   const recovery = !!catalog.startupDisabled
   manager.querySelector<HTMLElement>('[data-recovery]')!.hidden = !recovery
   manager.querySelector<HTMLButtonElement>('[data-add]')!.disabled = recovery
-  if (recovery) manager.open = true
+  if (recovery) showSettings('plugins')
   const list = manager.querySelector('[data-list]')!
   list.replaceChildren()
   for (const p of catalog.plugins) {
@@ -86,6 +53,7 @@ function render() {
       check,
       `${p.manifest?.name ?? p.source}: ${p.reload ?? p.state}`,
     )
+    row.className = 'plugin-card'
     row.title = p.source
     row.append(label)
     if (p.manifest) {
@@ -117,16 +85,23 @@ manager.querySelector<HTMLButtonElement>('[data-refresh]')!.onclick = () =>
   void bridge.refresh().then(update).catch(showError)
 function host(id: string): Dock {
   return {
-    tabs,
-    body,
     commands: manager.querySelector('[data-commands]')!,
-    visibility,
+    registerPanel: (local, title, mount) => workspace.registerPanel(panelKey(id, local), title, context => {
+      try { return mount(context) } catch (error) {
+        const scope = scopes.get(id)
+        if (scope && !scope.abort.signal.aborted) {
+          errors.set(id, String(error)); void scope.dispose().catch(showError)
+          void bridge.fail(scope.token, String(error)).catch(() => {})
+        }
+        throw error
+      }
+    }),
+    openPanel: (local, automatic) => workspace.openPanel(panelKey(id, local), automatic),
     changed: health,
-    error: (error) => {
+    error: error => {
       const scope = scopes.get(id)
       if (!scope || scope.abort.signal.aborted) return
-      errors.set(id, String(error))
-      manager.open = true
+      errors.set(id, String(error)); notify(error)
       void scope.dispose().catch(showError)
       void bridge.fail(scope.token, String(error)).catch(() => {})
       render()
@@ -164,7 +139,6 @@ async function mount(
   info: PluginInfo,
   module: PluginModule,
   state: unknown,
-  visible: string[],
 ) {
   const id = info.manifest!.id,
     scope = new PluginScope(info, module, host(id))
@@ -173,7 +147,6 @@ async function mount(
   try {
     await scope.activate(state)
     if (scope.abort.signal.aborted) throw new Error('stale_plugin_scope')
-    scope.restore(visible)
     await bridge.finish(scope.token)
     if (scope.abort.signal.aborted) throw new Error('stale_plugin_scope')
     scope.publish()
@@ -189,11 +162,11 @@ async function initial(info: PluginInfo) {
   try {
     const module = await load(info)
     if (!isCurrent(info)) return
-    await mount(info, module, undefined, [])
+    await mount(info, module, undefined)
   } catch (error) {
     if (isCurrent(info)) {
       errors.set(info.manifest!.id, String(error))
-      manager.open = true
+      showSettings('plugins')
       await bridge.fail(info.lease!.token, String(error)).catch(() => {})
     }
   }
@@ -206,8 +179,7 @@ async function replace(p: PluginInfo, candidate: PluginCandidate) {
       manifest: candidate.manifest,
       lease: candidate.lease,
       artifact: candidate.artifact,
-    },
-    visible = old?.visible() ?? []
+    }
   let state: unknown,
     version: number | undefined,
     begun = false,
@@ -238,7 +210,6 @@ async function replace(p: PluginInfo, candidate: PluginCandidate) {
       module.stateVersion !== undefined && module.stateVersion === version
         ? state
         : undefined,
-      visible,
     )
   } catch (error) {
     if (!begun) {
@@ -259,12 +230,11 @@ async function replace(p: PluginInfo, candidate: PluginCandidate) {
         module.stateVersion !== undefined && module.stateVersion === version
           ? state
           : undefined,
-        visible,
-      )
+        )
     } catch (rollbackError) {
       const message = `Replacement failed: ${String(error)}; rollback failed: ${String(rollbackError)}`
       errors.set(id, message)
-      manager.open = true
+      showSettings('plugins')
       const current = scopes.get(id)
       if (current) await current.dispose().catch(() => {})
       const token = current?.token ?? newInfo?.lease?.token
@@ -285,6 +255,7 @@ function start(id: string, work: () => Promise<void>) {
 function update(next: PluginCatalog) {
   if ((next.revision ?? 0) < (catalog.revision ?? 0)) return
   catalog = next
+  workspace.setKnown(next.plugins.flatMap(plugin => plugin.manifest?.contributes.panels?.map(panel => ({ key: panelKey(plugin.manifest!.id, panel.id), title: `${plugin.manifest!.name} / ${panel.title}` })) ?? []))
   for (const [id, scope] of scopes) {
     const p = next.plugins.find((p) => p.manifest?.id === id)
     if (

@@ -69,17 +69,15 @@ app.whenReady().then(async () => {
     assert.equal(own()[0].value, 'blue');
     assert.equal((await sessions.request('session.status')).session, identity.session);
     assert.equal((await sessions.request('session.status')).epoch, identity.epoch);
-    await js(`(() => { const position = document.querySelector('#plugins select'); position.value = 'left'; position.dispatchEvent(new Event('change')); })()`);
-    await until(() => JSON.parse(fs.readFileSync(file)).values['presentation.pluginDock'] === 'left');
     const beforeReload = fs.readFileSync(file, 'utf8');
     const beforeRendererToken = local().lease.token;
     window.webContents.once('did-finish-load', () => { void js('window.allowSettingsActivation = true; window.finishSettingsActivation?.()'); });
     window.webContents.reload();
     await until(() => local()?.phase === 'active' && local().lease.token !== beforeRendererToken && own().length === 1);
-    await until(() => js(`document.querySelector('#plugin-dock')?.dataset.position === 'left'`));
+    await until(() => js(`!!document.querySelector('[data-plugin-panel="ares.tools.settings:settings"]')`));
     assert.equal(fs.readFileSync(file, 'utf8'), beforeReload, 'renderer reload never replays setting writes');
-    assert.equal(await js("localStorage.getItem('plugin-dock-position')"), null);
-    console.log('PLUGIN_SETTINGS_PASS: staged local section, shared bundled form, profile persistence, reload/nonreplay, stale scopes, revoke/reenable/reset, durable dock position');
+    assert.equal(await js("!!document.querySelector('#plugin-dock')"), false);
+    console.log('PLUGIN_SETTINGS_PASS: staged local section, shared bundled form, profile persistence, reload/nonreplay, stale scopes, revoke/reenable/reset, durable workspace placement');
     app.quit();
   } catch (error) { console.error(error); app.exit(1); }
 });

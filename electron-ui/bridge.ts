@@ -1,3 +1,4 @@
+import type { WorkspaceBridge } from './workspace/model.js';
 import type { PreferencesBridge } from './settings/contracts.js';
 import type {PluginBridge} from './plugins/contracts.js';
 import type { SessionIdentity, ServiceMethod, ServiceParams, ServiceResult, SessionReply } from './services/contracts.js';
@@ -24,6 +25,8 @@ export type NativeCommand =
   | { type: 'clear' }
   | { type: 'report'; report: RendererStats };
 export interface AresBridge {
+  workspace: WorkspaceBridge;
+  onAction(callback: (action: 'settings' | 'open' | 'pause' | 'reset' | 'edit-workspace' | 'reset-workspace') => void): () => void;
   plugins: PluginBridge;
   preferences: PreferencesBridge;
   session<M extends ServiceMethod>(method: M, identity?: SessionIdentity, params?: ServiceParams<M>): Promise<SessionReply<ServiceResult<M>>>;

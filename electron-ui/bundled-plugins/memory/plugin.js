@@ -1,11 +1,12 @@
-export const stateVersion = 1
-let state = { offset: '0x0', length: '64', hex: '', region: '' }
+export const stateVersion = 2
+let views = {}
 export function saveState() {
-  return state
+  return views
 }
 export function activate(ctx, restored) {
-  state = restored ?? { offset: '0x0', length: '64', hex: '', region: '' }
-  ctx.ui.registerPanel('memory', ({ element }) => {
+  views = restored ?? {}
+  ctx.ui.registerPanel('memory', ({ element, instanceId, signal }) => {
+    const state = views[instanceId] ??= { offset: '0x0', length: '64', hex: '', region: '' }
     element.innerHTML =
       '<h2>Memory inspector</h2><button id="memory-refresh">Refresh regions</button><label>Region<select id="memory-region" aria-label="Memory region"></select></label><p id="memory-info">No regions loaded.</p><label>Region offset<input id="memory-offset" spellcheck="false"></label><label>Byte count<input id="memory-length" type="number" min="1" max="1024"></label><button id="memory-read" disabled>Read bytes</button><label>Hex bytes to write<textarea id="memory-bytes" maxlength="3072" spellcheck="false" rows="2"></textarea></label><button id="memory-write" disabled>Write bytes</button><pre id="memory-output" aria-live="polite"></pre>'
     const $ = (id) => element.querySelector('#memory-' + id),
@@ -42,7 +43,7 @@ export function activate(ctx, restored) {
       read.disabled = write.disabled = true
       try {
         const result = await request('memory.regions')
-        if (ctx.signal.aborted || n !== generation) return
+        if ((ctx.signal.aborted || signal.aborted) || n !== generation) return
         regions = result.regions
         select.replaceChildren()
         for (const r of regions) {
@@ -55,7 +56,7 @@ export function activate(ctx, restored) {
           select.value = state.region
         describe()
       } catch (error) {
-        if (!ctx.signal.aborted) info.textContent = String(error)
+        if (!(ctx.signal.aborted || signal.aborted)) info.textContent = String(error)
       }
     }
     const offset = () => {
@@ -72,12 +73,12 @@ export function activate(ctx, restored) {
       read.disabled = write.disabled = true
       try {
         const text = await fn()
-        if (!ctx.signal.aborted && n === generation) output.textContent = text
+        if (!(ctx.signal.aborted || signal.aborted) && n === generation) output.textContent = text
       } catch (error) {
-        if (!ctx.signal.aborted && n === generation)
+        if (!(ctx.signal.aborted || signal.aborted) && n === generation)
           output.textContent = String(error)
       } finally {
-        if (!ctx.signal.aborted && n === generation) describe()
+        if (!(ctx.signal.aborted || signal.aborted) && n === generation) describe()
       }
     }
     for (const [id, key] of [
@@ -124,5 +125,4 @@ export function activate(ctx, restored) {
     void refresh()
   })
   ctx.ui.registerCommand('open', () => ctx.ui.openPanel('memory'))
-  ctx.ui.openPanel('memory')
 }

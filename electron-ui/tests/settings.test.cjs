@@ -14,19 +14,20 @@ const entry = (store, id) => store.catalog().entries.find(e => e.descriptor.id =
 
 test('provisioned presentation settings survive updates, restarts, and removal/readdition of descriptors', async t => {
   const { SettingsStore, presentationSettings, file } = await setup(t);
-  fs.writeFileSync(file, JSON.stringify({ version: 1, values: { 'presentation.theme': 'green', 'future.setting': { untouched: true }, 'presentation.panelLeft': true } }));
-  const store = new SettingsStore(file, presentationSettings);
+  const descriptors = [...presentationSettings, {id:'temporary.side', title:'Temporary', section:'Test', type:'boolean', default:false, apply:'live'}];
+  fs.writeFileSync(file, JSON.stringify({ version: 1, values: { 'presentation.theme': 'green', 'future.setting': { untouched: true }, 'temporary.side': true } }));
+  const store = new SettingsStore(file, descriptors);
   assert.equal(entry(store, 'presentation.theme').applied, 'green');
   assert.equal(entry(store, 'presentation.theme').source, 'profile');
   await Promise.all([store.set('presentation.theme', 'paper'), store.set('presentation.scale', 'integer')]);
-  const removed = new SettingsStore(file, presentationSettings.filter(d => d.id !== 'presentation.panelLeft'));
+  const removed = new SettingsStore(file, descriptors.filter(d => d.id !== 'temporary.side'));
   await removed.set('presentation.scanlines', true);
   assert.deepEqual(JSON.parse(fs.readFileSync(file)).values['future.setting'], { untouched: true });
-  const restarted = new SettingsStore(file, presentationSettings);
+  const restarted = new SettingsStore(file, descriptors);
   assert.equal(entry(restarted, 'presentation.theme').value, 'paper');
   assert.equal(entry(restarted, 'presentation.scale').value, 'integer');
   assert.equal(entry(restarted, 'presentation.scanlines').value, true);
-  assert.equal(entry(restarted, 'presentation.panelLeft').value, true);
+  assert.equal(entry(restarted, 'temporary.side').value, true);
 });
 
 test('invalid requests cannot change persisted values; malformed and future-version files remain intact', async t => {

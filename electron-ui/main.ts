@@ -1,3 +1,4 @@
+import { WorkspaceStore } from './workspace/store.js'
 import { PluginSettingsService } from './settings/plugins.js'
 import { inputDescriptors } from './settings/input.js'
 import { validRuntimeSettings, type RuntimeSettings } from './services/runtime-contracts.js'
@@ -12,6 +13,7 @@ import {
   ipcMain,
   dialog,
   MessageChannelMain,
+  Menu,
   protocol,
   type MessagePortMain,
 } from 'electron'
@@ -216,6 +218,7 @@ const probe = (args: string[]): Promise<string> =>
     })
   })
 let window: BrowserWindow
+export const workspace = new WorkspaceStore(path.join(app.getPath('userData'), 'workspace.json'))
 export const preferences = new SettingsStore(
   path.join(app.getPath('userData'), 'preferences.json'), [
     ...presentationSettings,
@@ -488,6 +491,36 @@ app
         sandbox: true,
         backgroundThrottling: false,
       },
+    })
+    const action = (name: Parameters<Parameters<import('./bridge.js').AresBridge['onAction']>[0]>[0]) => () => window.webContents.send('app-action', name)
+    Menu.setApplicationMenu(Menu.buildFromTemplate([
+      ...(process.platform === 'darwin' ? [{ label: app.getName(), submenu: [
+        { label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: action('settings') },
+        { type: 'separator' as const }, { role: 'hide' as const }, { role: 'hideOthers' as const }, { role: 'unhide' as const },
+        { type: 'separator' as const }, { role: 'quit' as const },
+      ] }] : []),
+      { label: 'File', submenu: [
+        { label: 'Open ROM…', accelerator: 'CmdOrCtrl+O', click: action('open') },
+        ...(process.platform !== 'darwin' ? [{ label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: action('settings') }] : []),
+        { role: 'close' as const },
+      ] },
+      { role: 'editMenu' },
+      { label: 'Emulation', submenu: [
+        { label: 'Pause / Resume', accelerator: 'CmdOrCtrl+P', click: action('pause') },
+        { label: 'Reset', accelerator: 'CmdOrCtrl+Shift+R', click: action('reset') },
+      ] },
+      { label: 'View', submenu: [
+        { label: 'Customize Workspace', accelerator: 'CmdOrCtrl+Shift+L', click: action('edit-workspace') },
+        { label: 'Video Only', click: action('reset-workspace') },
+        { type: 'separator' }, { role: 'togglefullscreen' },
+      ] },
+      { role: 'windowMenu' },
+    ]))
+    for (const operation of ['load', 'save'] as const) ipcMain.handle('workspace.' + operation, (event, ...args: unknown[]) => {
+      if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('invalid_sender')
+      if (operation === 'load' && args.length === 0) return workspace.load()
+      if (operation === 'save' && args.length === 1) return workspace.save(args[0] as import('./workspace/model.js').WorkspaceLayout)
+      throw new Error('invalid_request')
     })
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
     window.webContents.on('will-navigate', (event) => event.preventDefault())

@@ -34,6 +34,8 @@ app.whenReady().then(async () => {
   await until(() => serviceHost.metadataFile);
   enter('renderer startup');
   const window = BrowserWindow.getAllWindows()[0];
+  await until(() => window.webContents.executeJavaScript("!!document.querySelector('[data-plugin-command=\"ares.examples.memory:open\"]')"));
+  await window.webContents.executeJavaScript("document.querySelector('[data-plugin-command=\"ares.examples.memory:open\"]').click()");
   await until(() => window.webContents.executeJavaScript("document.getElementById('memory-region')?.options.length > 0"));
   enter('MCP initialize');
   const mcp = peer(); await mcp.initialize();
@@ -115,7 +117,7 @@ app.whenReady().then(async () => {
   assert.equal((await mcp.tool('screenshot', { source: 'presented' })).error, 'no_frame');
   assert.equal((await mcp.tool('write_memory', { region: ram.id, addr: 240, hex_bytes: '00' })).error, 'stale_epoch');
   assert.equal((await mcp.tool('memory_regions')).epoch, 2);
-  await window.webContents.executeJavaScript("document.getElementById('synthetic').click()");
+  await window.webContents.executeJavaScript("window.ares.command({type:'synthetic'})");
   await until(async () => (await sessions.request('session.status')).session !== initial.session);
   assert.equal((await mcp.tool('write_memory', { region: ram.id, addr: 240, hex_bytes: '00' })).error, 'stale_session');
   const fresh = await mcp.tool('memory_regions');
@@ -145,7 +147,7 @@ app.whenReady().then(async () => {
   enter('replacement during owned operation');
   const revoked = mcp.tool('run_frames', { n: 1000000, max_seconds: 10 });
   await until(async () => (await sessions.request('session.status')).result.operation_id);
-  await window.webContents.executeJavaScript("document.getElementById('synthetic').click()");
+  await window.webContents.executeJavaScript("window.ares.command({type:'synthetic'})");
   await until(async () => (await sessions.request('session.status')).session !== fresh.session);
   assert.ok(['stale_session', 'native_host_disconnected'].includes((await revoked).error));
   await mcp.tool('emu_status');

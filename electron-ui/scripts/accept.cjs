@@ -104,6 +104,7 @@ async function main() {
     ['electron-reload', 'electron-reload.mjs', []],
     ['electron-plugin-tools', 'electron-plugin-tools.mjs', []],
     ['electron-plugin-settings', 'electron-plugin-settings.mjs', []],
+    ['electron-workspace', 'electron-workspace.mjs', []],
     ['electron-settings', 'electron-settings.mjs', []],
     ['electron-recovery', 'electron-recovery.mjs', ['--disable-plugins']],
   ]) await gate(name, electron, [`tests/${file}`, ...args])

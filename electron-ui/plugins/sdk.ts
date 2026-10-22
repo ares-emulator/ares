@@ -9,6 +9,10 @@ import type {
 import type { GameIdentity } from './contracts.js'
 export type Disposer = () => void | Promise<void>
 export interface PanelContext {
+  /** Stable placement ID; use it to keep independent per-view transient state. */
+  readonly instanceId: string
+  /** Aborted when this particular panel instance closes or is replaced. */
+  readonly signal: AbortSignal
   element: HTMLElement
   onVisibility(callback: (visible: boolean) => void): Disposer
 }

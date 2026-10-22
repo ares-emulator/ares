@@ -5,14 +5,14 @@ Task 12 landed in `539755659`. All 68 MCP tools have actual stdio runtime eviden
 plugin, agent CLI and copied-package gates passed. Earlier physical-input,
 audible-output and serializer rollback-failure checks remain pending.
 
-**Task 13 is complete. Next: task 14 — overlays, custom workspaces and trusted shell extensions.**
+**Task 13 and the requested workspace cleanup are complete. Trusted shell extensions are deferred.**
 The approved foundation is complete: permanent home/identity, owned profiles and
 independent development outputs, native desktop extraction/retirement, repeatable
 fixture acceptance, macOS CI configuration and startup plugin recovery. Start with
 [RESUME.md](RESUME.md). The original audit is [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md);
 retired desktop features are inventoried in [DESKTOP-RETIREMENT.md](DESKTOP-RETIREMENT.md).
 
-`npm run accept` passed locally after task 13: 17 gates and 107 fixture tests without failures or
+`npm run accept` passed locally after workspace cleanup: 18 gates and 109 fixture tests without failures or
 skips. Hosted CI has not run yet. [ACCEPTANCE.md](ACCEPTANCE.md) records commands,
 evidence boundaries and explicit private-media/manual/fault deferrals. These do
 not block the next numbered task and are not claimed as completed product gates.
@@ -334,3 +334,11 @@ The promotion/foundation work is complete; the next numbered feature task is
 takeover, audible-output acceptance and task 8 rollback-failure fault injection
 remain recorded follow-ups; the selector playtest does not silently close those
 separate acceptance gates.
+
+## User-directed workspace cleanup
+
+Implemented the minimal video-only shell, native Settings accelerator, editable
+split tree, independent plugin panel placements, overlays and draggable/resizable
+hotkey popups. Profile-owned `workspace.json` supports provisioning. See
+[WORKSPACE.md](WORKSPACE.md). Broader trusted shell extensions remain deferred;
+this does not mark all of numbered task 14 complete.

@@ -12,7 +12,7 @@ const copy = (from, to) => fs.cpSync(from, to, { recursive: true, mode: fs.const
 let child
 try {
   for (const entry of fs.readdirSync(root)) {
-    if (/\.(?:ts|cts|json|html|css)$/.test(entry) || ['plugins', 'services', 'settings', 'scripts', 'mcp', 'bundled-plugins', 'templates'].includes(entry))
+    if (/\.(?:ts|cts|json|html|css)$/.test(entry) || ['plugins', 'services', 'settings', 'workspace', 'scripts', 'mcp', 'bundled-plugins', 'templates'].includes(entry))
       copy(path.join(root, entry), path.join(snapshot, entry))
   }
   fs.symlinkSync(path.join(root, 'node_modules'), path.join(snapshot, 'node_modules'), 'dir')

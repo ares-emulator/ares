@@ -539,7 +539,7 @@ Separate task 6 physical-input/audible manual checks remain recorded.
 ### Local plugin loader
 
 Task 10 adds the sidebar **Plugins** manager, explicitly enabled local directories,
-namespaced panels/commands and a left/right/bottom dock. Bundled generic memory and
+namespaced panels/commands and a configurable [workspace](WORKSPACE.md). Bundled generic memory and
 Kirby powers examples use the shared SDK. Fresh profiles enable the bundled tools;
 existing enable/disable preferences are preserved. Plain JS needs no build; a TS/TSX
 template is included. See [plugin authoring and lifecycle](plugins/README.md).
@@ -565,3 +565,7 @@ The [agent CLI](plugins/README.md#bundled-tools-and-agent-commands) scaffolds, b
 enables, opens, invokes and hot-reloads tools through the private local endpoint,
 without UI scraping. Copied apps include an `ares-plugin` launcher and templates.
 The preserved MCP tool count remains 68.
+
+The default workspace is video only. **Cmd+,** opens Settings; **Cmd+Shift+L**
+reveals region controls for splitting and choosing panels. Settings → Workspace
+configures overlays, draggable popup panels and their hotkeys. See [Workspace](WORKSPACE.md).

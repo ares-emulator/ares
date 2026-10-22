@@ -26,8 +26,12 @@ Use `scope.listen`, `scope.interval`, `scope.add` and `signal` for cleanup. SDK
 listeners/timers arm only after activation succeeds. Interval callbacks run only
 while the plugin has a visible panel. Disposers may return promises; cleanup is
 bounded to one second and failures are reported. Raw
-module side effects are the author's responsibility. Tabs toggle visibility;
-`onVisibility` lets panels suspend their work. Select left/right/bottom to dock.
+module side effects are the author's responsibility. `onVisibility` lets panels suspend their work.
+Panels can appear in multiple workspace regions or floating windows; see [Workspace](../WORKSPACE.md).
+Each mount receives a stable `instanceId` and its own abort `signal`. SDK effects
+created synchronously during mounting belong to that instance and stop on removal.
+Activation-time `ui.openPanel` does not modify the workspace; an explicit command
+can open a panel in a persistent popup.
 
 Capabilities: `session.read` (status), `session.control` (pause/resume and bounded
 execution), `debug.read` (N64 frozen stop/register snapshots), `memory.read`
@@ -109,11 +113,11 @@ export function activate(ctx, restoredState) {
 
 State must serialize as JSON under 16 KiB and is restored only when both artifacts
 opt into the same stateVersion. Durable data stays in namespaced storage. Stable
-panel IDs retain selection/visibility and the dock retains its position. A hidden
-panel is not eagerly remounted; its serialized state is available on activation.
+panel IDs retain workspace placements. Hidden popups retain their mounted view,
+with polling suspended; plugin reload restores compatible serialized state.
 
-The developer manager shows scope/listener/timer/request counts and build/reload
-errors. `npm run test:reload` exercises repeated reloads, polling, stale writes,
+The plugin manager in Settings shows build/reload errors. Diagnostic effect counts
+remain available as DOM data attributes for the integration harness. `npm run test:reload` exercises repeated reloads, polling, stale writes,
 invalid edits, failed activation/rollback, hanging cleanup, real MCP ownership,
 plugin-owned operation release, rapid edits and a session switch during preparation.
 Artifact pruning retains current/previous/candidate snapshots, rather than every

@@ -9,15 +9,13 @@ before launching Ares Workbench:
   "values": {
     "presentation.theme": "green",
     "presentation.scale": "integer",
-    "presentation.scanlines": false,
-    "presentation.panelLeft": false
+    "presentation.scanlines": false
   }
 }
 ```
 
-Presentation preferences (including plugin dock position), the imported BML selection (`paths.importBml`) and
-firmware paths for all compiled systems currently use the service. Expand
-**Paths** or **Firmware** under **Settings** to edit a path or choose a
+Presentation preferences, the imported BML selection (`paths.importBml`) and
+firmware paths for all compiled systems currently use the service. Open **Settings** with Cmd+, and use **General** or **Firmware** to edit a path or choose a
 file. Save persists immediately; pending changes apply on the next ROM load.
 Reset removes the profile override and restores the imported value or default.
 The running game is never restarted by a settings edit.
@@ -70,8 +68,8 @@ The bundled Settings plugin uses the same scoped SDK and shared form as local
 plugins. Fresh profiles enable it; existing profiles can enable it in Plugins.
 Local plugins declare/register sections and retain their values in this profile
 file under `plugin:<plugin ID>:<section>:<field>`. See
-[plugin settings API](plugins/README.md#profile-settings-contributions). The
-`panelLeft` setting belongs to the temporary UI and is expected to be removed.
+[plugin settings API](plugins/README.md#profile-settings-contributions). The temporary side checkbox and dock-position settings have been removed.
+Workspace layout lives in a separate provisionable [workspace.json](WORKSPACE.md).
 
 Settings are profile scoped. Defaults, types, validation, UI grouping and apply
 timing are defined in `settings/builtins.ts`, `settings/native.ts` and

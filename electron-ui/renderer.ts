@@ -1,20 +1,17 @@
 import { appliedInputSettings, defaultInputSettings, mapInput } from './settings/input.js';
-import { mountSettingsForm } from './settings/form.js';
+import { blocksGameInput, notify, onSessionAction } from './workspace/shell.js';
 import type { FramePacket, RendererStats } from './bridge.js';
 import type { SessionIdentity, SessionMethod, SessionReply } from './services/contracts.js';
 interface Elements {
-  screen: HTMLCanvasElement; theme: HTMLSelectElement; scale: HTMLSelectElement;
-  scanlines: HTMLInputElement; left: HTMLInputElement; system: HTMLSelectElement;
+  screen: HTMLCanvasElement; viewport: HTMLElement; system: HTMLSelectElement;
   pause: HTMLButtonElement; reset: HTMLButtonElement; open: HTMLButtonElement;
-  settings: HTMLButtonElement; synthetic: HTMLButtonElement; hd: HTMLButtonElement; stress: HTMLButtonElement;
-  status: HTMLElement; controls: HTMLElement; viewport: HTMLElement; metrics: HTMLElement;
 }
 const $ = <K extends keyof Elements>(id: K): Elements[K] => {
   const element = document.getElementById(id);
   if (!element) throw new Error(`Missing UI element: ${id}`);
   return element as Elements[K];
 };
-window.addEventListener('error', event => { $('status').textContent = event.message; });
+window.addEventListener('error', event => notify(event.message));
 const canvas = $('screen'), context = canvas.getContext('webgl2', { alpha: false, antialias: false, preserveDrawingBuffer: true });
 if (!context) throw new Error('WebGL2 is unavailable');
 const gl = context;
@@ -55,10 +52,7 @@ let frames = 0, skipped = 0, last = 0, firstNative = 0, lastNative = 0, firstSeq
 let bridge: number[] = [], upload: number[] = [], inputTimes = new Map<number, number>(), inputAges: number[] = [], latestQueue = 0;
 let started = performance.now(), lastStats = started, latestReadback: number[] | null = null;
 let receivedFrames = 0, maxPending = 0;
-const presentationControls = {
-  theme: 'presentation.theme', scale: 'presentation.scale',
-  scanlines: 'presentation.scanlines', left: 'presentation.panelLeft',
-} as const;
+let scaleSetting = 'fit', scanlineSetting = false;
 let preferenceRevision = -1;
 let inputSettings = defaultInputSettings();
 let inputSettingsSignature = JSON.stringify(inputSettings);
@@ -71,41 +65,21 @@ function applyPreferences(snapshot: import('./settings/contracts.js').SettingsSn
     inputSettings = nextInputSettings; inputSettingsSignature = nextInputSignature;
     releaseInput();
   }
-  for (const [name, id] of Object.entries(presentationControls)) {
-    const entry = snapshot.entries.find(entry => entry.descriptor.id === id);
-    if (!entry) continue;
-    const el = $(name as keyof typeof presentationControls);
-    if (el instanceof HTMLInputElement) el.checked = entry.applied === true;
-    else el.value = String(entry.applied);
-  }
-  apply();
-  if (snapshot.error) $('status').textContent = snapshot.error;
+  const get = (id: string) => snapshot.entries.find(entry => entry.descriptor.id === id)?.applied;
+  document.body.dataset.theme = String(get('presentation.theme') ?? 'dark');
+  scaleSetting = String(get('presentation.scale') ?? 'fit');
+  scanlineSetting = get('presentation.scanlines') === true;
+  if (width) resize();
+  if (snapshot.error) notify(snapshot.error);
 }
 window.ares.preferences.changed(applyPreferences);
-void window.ares.preferences.catalog().then(applyPreferences).catch(error => { $('status').textContent = String(error); });
-for (const [name, id] of Object.entries(presentationControls)) {
-  const el = $(name as keyof typeof presentationControls);
-  el.onchange = async () => {
-    el.disabled = true;
-    try {
-      applyPreferences(await window.ares.preferences.set(id, el instanceof HTMLInputElement ? el.checked : el.value));
-    } catch (error) {
-      applyPreferences(await window.ares.preferences.catalog());
-      $('status').textContent = String(error);
-    } finally { el.disabled = false; }
-  };
-}
-function apply() {
-  document.body.dataset.theme = $('theme').value;
-  document.body.classList.toggle('panel-left', $('left').checked);
-  if (width) resize();
-}
+void window.ares.preferences.catalog().then(applyPreferences).catch(notify);
 function resize() {
   if (!width) return;
   const rect = $('viewport').getBoundingClientRect();
   const displayWidth = height * aspect;
-  let factor = Math.min((rect.width - 4) / displayWidth, (rect.height - 4) / height);
-  if ($('scale').value === 'integer' && factor >= 1) factor = Math.floor(factor);
+  let factor = Math.min(rect.width / displayWidth, rect.height / height);
+  if (scaleSetting === 'integer' && factor >= 1) factor = Math.floor(factor);
   const w = Math.max(1, Math.floor(displayWidth * factor)), h = Math.max(1, Math.floor(height * factor));
   canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
   const backingW = Math.round(w * devicePixelRatio), backingH = Math.round(h * devicePixelRatio);
@@ -114,20 +88,17 @@ function resize() {
   draw();
 }
 function draw() {
-  gl.uniform1f(lines, $('scanlines').checked ? 1 : 0); gl.uniform1f(rows, height);
+  gl.uniform1f(lines, scanlineSetting ? 1 : 0); gl.uniform1f(rows, height);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
-mountSettingsForm(document.getElementById('native-settings')!, window.ares.preferences, entry => !!entry.descriptor.nativeKey || !!entry.descriptor.file || entry.descriptor.id.startsWith('input.'));
-apply(); new ResizeObserver(resize).observe($('viewport'));
+new ResizeObserver(resize).observe($('viewport'));
 window.addEventListener('message', event => {
   if (event.source !== window || event.data?.type !== 'ares-frames' || !event.ports[0]) return;
   port?.close(); port = event.ports[0];
   port.onmessage = ({ data }: MessageEvent<import('./bridge.js').FrameMessage>) => {
     if (data.reset) {
       system = data.system;
-      $('controls').textContent = 'Default controls (custom bindings are in Settings): ' + (system.startsWith('Nintendo 64')
-        ? 'WASD · Analog stick / Arrows · D-pad / Z · B / X · A / IJKL · C-buttons / Q & E · L & R / Space · Z / Enter · Start. Standard gamepad mappings follow ares.'
-        : 'Arrows · D-pad / Z X C V · Face buttons / Q E · Shoulders / Shift · Select / Enter · Start / WASD & IJKL · Analog sticks. Keyboard and mouse are forwarded while the canvas is focused.');
+      document.getElementById('empty-state')!.hidden = system !== 'Synthetic';
       pending = null; frames = skipped = last = firstNative = lastNative = firstSequence = receivedFrames = maxPending = 0;
       bridge = []; upload = []; inputAges = []; inputTimes.clear(); started = performance.now();
       lastMask = -1; syncSession(); window.dispatchEvent(new Event('ares-session-reset')); return;
@@ -150,7 +121,7 @@ function sendInput(mask: number, x = 0, y = 0, rx = 0, ry = 0) {
   window.ares.command({ type: 'input', sequence: inputSeq, mask, x, y, rx, ry });
 }
 function pollInput() {
-  const input = mapInput(inputSettings, pressed, system, [...navigator.getGamepads()], document.hasFocus(), document.activeElement === canvas);
+  const input = mapInput(inputSettings, pressed, system, [...navigator.getGamepads()], document.hasFocus() && !blocksGameInput(), document.activeElement === canvas);
   sendInput(input.mask, input.x, input.y, input.rx, input.ry);
 }
 function nativeKey(code: string) {
@@ -177,6 +148,7 @@ window.addEventListener('keyup', event => {
   window.ares.command({ type: 'key', name: nativeKey(event.code), value: false });
 });
 function releaseInput() { pressed.clear(); sendInput(0); window.ares.command({ type: 'clear' }); }
+window.addEventListener('ares-input-release', releaseInput);
 window.addEventListener('blur', releaseInput); canvas.addEventListener('blur', releaseInput);
 function mouseInput(event: MouseEvent) {
   if (document.activeElement !== canvas) return;
@@ -191,10 +163,9 @@ canvas.addEventListener('mousemove', mouseInput); canvas.addEventListener('mouse
 canvas.addEventListener('contextmenu', event => event.preventDefault());
 canvas.onclick = () => canvas.focus();
 $('open').onclick = () => window.ares.open({ system: $('system').value });
-$('settings').onclick = () => window.ares.settings();
 window.ares.systems().then(systems => {
   for (const name of systems) { const option = document.createElement('option'); option.value = option.textContent = name; $('system').append(option); }
-}).catch(error => { $('status').textContent = error instanceof Error ? error.message : String(error); });
+}).catch(error => { notify(error); });
 let sessionIdentity: SessionIdentity | undefined;
 function acceptSessionState(reply: SessionReply) {
   if (!reply.ok || !reply.result) return;
@@ -222,23 +193,25 @@ async function sessionRequest(method: SessionMethod) {
 }
 async function syncSession() {
   sessionIdentity = undefined;
-  try { await sessionRequest('session.status'); } catch (error) { $('status').textContent = error instanceof Error ? error.message : String(error); }
+  try { await sessionRequest('session.status'); } catch (error) { notify(error); }
 }
 $('pause').onclick = async () => {
   $('pause').disabled = true;
   try { await sessionRequest(paused ? 'session.resume' : 'session.pause'); }
-  catch (error) { $('status').textContent = error instanceof Error ? error.message : String(error); await syncSession(); }
+  catch (error) { notify(error); await syncSession(); }
   finally { $('pause').disabled = false; }
 };
 $('reset').onclick = async () => {
   try { await sessionRequest('session.reset'); }
-  catch (error) { $('status').textContent = error instanceof Error ? error.message : String(error); await syncSession(); }
+  catch (error) { notify(error); await syncSession(); }
 };
-$('synthetic').onclick = () => window.ares.command({ type: 'synthetic' });
-$('hd').onclick = () => window.ares.command({ type: 'synthetic', hd: true });
+onSessionAction(action => {
+  if (action === 'open') $('open').click();
+  else if (action === 'pause') $('pause').click();
+  else $('reset').click();
+});
 function stress() { const until = performance.now() + 250; while (performance.now() < until) {} }
-$('stress').onclick = stress;
-window.ares.onStatus(text => { $('status').textContent = text; });
+window.ares.onStatus(text => { if (!/^ready:|^stopped$/.test(text)) notify(text); });
 const percentile = (array: number[], p: number) => array.length ? [...array].sort((a, b) => a - b)[Math.min(array.length - 1, Math.floor(array.length * p))] : 0;
 function record(array: number[], value: number) { array.push(value); if (array.length > 3600) array.shift(); }
 function stats(): RendererStats {
@@ -275,10 +248,6 @@ function tick() {
     last = frame.sequence; lastNative = frame.nativeMs; frames++;
     port!.postMessage({ ack: frame.sequence, generation: frame.generation });
   }
-  if (performance.now() - lastStats > 500) {
-    const s = stats(); lastStats = performance.now();
-    $('metrics').textContent = `${width} × ${height} RGBA\nNative: ${s.nativeFPS.toFixed(1)} fps\nSubmitted: ${(frames / s.seconds).toFixed(1)} fps\nSkipped: ${skipped}\nBridge p95: ${s.bridgeToSubmitP95Ms.toFixed(2)} ms\nUpload p95: ${s.uploadSubmitP95Ms.toFixed(2)} ms\nInput echo p95: ${s.inputToFrameSubmitP95Ms.toFixed(1)} ms`;
-  }
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
@@ -288,7 +257,6 @@ window.ares.ready();
 const params = new URLSearchParams(location.search);
 if (params.get('autotest') === '1') {
   setTimeout(stress, 2500);
-  setTimeout(() => { $('left').checked = !$('left').checked; apply(); }, 3500);
   setTimeout(() => {
     const pixel = new Uint8Array(4); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
     latestReadback = [...pixel];

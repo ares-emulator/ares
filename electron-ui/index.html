@@ -8,27 +8,43 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header><div><small>ARES / EXPERIMENT</small><h1>Native canvas</h1></div><span id="badge">C++ → WebGL</span></header>
-  <nav>
-    <select id="system" aria-label="Emulator system"><option value="">Auto-detect system</option></select><button id="open">Open ROM</button><button id="settings">Use ares settings…</button><button id="pause">Pause</button><button id="reset">Reset</button>
-    <button id="synthetic">640 × 480 test</button><button id="hd">1080p test</button>
-  </nav>
-  <main>
-    <section id="viewport"><canvas id="screen" width="640" height="480" tabindex="0" aria-label="Emulator display"></canvas></section>
-    <aside>
-      <h2>Presentation</h2>
-      <label>Theme<select id="theme"><option value="dark">Midnight</option><option value="paper">Paper</option><option value="green">Terminal</option></select></label>
-      <label>Scaling<select id="scale"><option value="fit">Best fit</option><option value="integer">Integer</option></select></label>
-      <label><input type="checkbox" id="scanlines"> Scanlines</label>
-      <label><input type="checkbox" id="left"> Panel on left</label>
-      <h2>Settings</h2><div id="native-settings"></div>
-      <button id="stress">Block UI for 250 ms</button>
-      <h2>Live measurements</h2><pre id="metrics">Waiting for frames…</pre>
-      <p id="controls">Open a ROM to see its controls.</p>
-      <p>Audio runs in the native host. This canvas receives raw pixels.</p>
-    </aside>
-  </main>
-  <footer id="status">Starting native host…</footer>
+  <main id="workspace" aria-label="Workspace"></main>
+  <div id="floating-layer"></div>
+  <div id="panel-parking" hidden>
+    <section id="viewport">
+      <canvas id="screen" width="640" height="480" tabindex="0" aria-label="Emulator display"></canvas>
+      <div id="empty-state"><button id="open">Open ROM</button><span>⌘O</span></div>
+    </section>
+  </div>
+  <dialog id="settings-dialog" aria-labelledby="settings-title">
+    <header class="settings-header"><h1 id="settings-title">Settings</h1><button id="close-settings" aria-label="Close settings">×</button></header>
+    <div class="settings-layout">
+      <nav id="settings-tabs" aria-label="Settings sections">
+        <button data-tab="general">General</button><button data-tab="input">Input</button><button data-tab="firmware">Firmware</button><button data-tab="core">Core options</button><button data-tab="plugins">Plugins</button><button data-tab="workspace">Workspace</button>
+      </nav>
+      <div class="settings-pages">
+        <section data-page="general">
+          <div class="session-controls"><label>System for next ROM<select id="system"><option value="">Auto-detect</option></select></label><button id="pause">Pause</button><button id="reset">Reset game</button></div>
+          <div id="settings-general"></div>
+        </section>
+        <section data-page="input" hidden><p class="help">Bindings apply to virtual controller port 1. Click the video to use the keyboard.</p><div id="settings-input"></div></section>
+        <section data-page="firmware" hidden><div id="settings-firmware"></div></section>
+        <section data-page="core" hidden><div id="settings-core"></div></section>
+        <section data-page="plugins" hidden><div id="plugin-management"></div><div id="settings-plugins"></div></section>
+        <section data-page="workspace" hidden>
+          <p class="help">Split the workspace and choose a panel for each region. Use an overlay for an always-visible panel, or a pop-up you can toggle with a shortcut.</p>
+          <div class="workspace-actions"><button id="edit-layout">Customize layout</button><button id="video-only">Video only</button></div>
+          <label>Panel<select id="floating-panel"></select></label>
+          <label>Show as<select id="floating-mode"><option value="popup">Pop-up window</option><option value="overlay">Overlay</option></select></label>
+          <button id="add-floating">Add panel</button>
+          <div id="floating-settings"></div>
+          <p class="help">⌘⇧L toggles layout controls. Drag dividers to resize regions. Drag a pop-up by its title and resize it from the corner. Shortcuts require Command/Ctrl or Alt.</p>
+        </section>
+      </div>
+    </div>
+    <output id="settings-feedback" role="status" hidden></output>
+  </dialog>
+  <output id="status" role="status" hidden></output>
   <script type="module" src="dist/browser/renderer.js"></script>
   <script type="module" src="dist/browser/plugins/runtime.js"></script>
 </body>

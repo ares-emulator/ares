@@ -256,7 +256,7 @@ app.whenReady().then(async () => {
       'artifact pruning',
     )
     enter('hidden polling stays idle')
-    await js("document.querySelector('#plugin-dock nav button').click()")
+    await js("document.querySelector('[data-floating] [aria-label=\"Hide panel\"]').click()")
     await sleep(100)
     const ticks = await js('window.ticks')
     await sleep(180)
@@ -388,7 +388,7 @@ app.whenReady().then(async () => {
       ),
     )
     await until(() => js('window.preparing'), 'candidate preparation')
-    await js("document.getElementById('synthetic').click()")
+    await js("window.ares.command({type:'synthetic'})")
     const switched = await until(async () => {
       const s = await sessions.request('session.status')
       return s.session !== identity.session ? s : false

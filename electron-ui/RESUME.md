@@ -4,8 +4,11 @@ Updated 2026-10-21. Read this before building, testing or changing runtime files
 
 ## Current objective
 
-**Foundation and task 13 are complete. Next numbered work is task 14**
-(overlays, custom workspaces and trusted shell extensions), when requested.
+**Foundation and task 13 are complete. The requested minimal UI/workspace is implemented.**
+See [WORKSPACE.md](WORKSPACE.md) for video-only startup, Cmd+, settings, split
+regions, overlays and hotkey popups. The broader task 14 trusted shell-extension
+work is deferred at the user’s request; resume from
+[SHELL-EXTENSIONS-LATER.md](SHELL-EXTENSIONS-LATER.md).
 Tasks 1–13 (including 4.5) are implemented. No further triage approval is needed.
 
 Completed foundation:
@@ -21,7 +24,7 @@ Completed foundation:
    `--disable-plugins` recovery plus targeted CLI disable/reset is implemented.
    Manual/fault exclusions have explicit [dispositions](ACCEPTANCE.md).
 
-Latest local acceptance: **17/17 gates, 107 fixture tests, no failures or skips**;
+Latest local acceptance: **18/18 gates, 109 fixture tests, no failures or skips**;
 actual Electron/MCP/plugins/recovery, profile/crash/rebuild isolation and copied
 package passed. GitHub-hosted CI has not run yet; do not infer a hosted pass from
 the workflow file. Private-ROM/manual/fault checks remain separate, not relabelled.

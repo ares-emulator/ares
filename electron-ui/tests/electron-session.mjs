@@ -36,6 +36,8 @@ app.whenReady().then(async () => {
   const rendererErrors = [];
   window.webContents.on('console-message', (_event, details) => { if (details.level === 'error') rendererErrors.push(details.message); });
   await until(() => window.webContents.executeJavaScript("document.getElementById('pause')?.textContent === 'Pause'"));
+  await until(() => window.webContents.executeJavaScript("!!document.querySelector('[data-plugin-command=\"ares.examples.memory:open\"]')"));
+  await window.webContents.executeJavaScript("document.querySelector('[data-plugin-command=\"ares.examples.memory:open\"]').click()");
   // Renderer JavaScript is blocked. Main/native controls must keep working.
   enter('stalled renderer controls');
   const blocked = window.webContents.executeJavaScript('(() => { const end = performance.now() + 750; while (performance.now() < end) {} return true; })()');
@@ -62,8 +64,7 @@ app.whenReady().then(async () => {
     await window.webContents.executeJavaScript("document.getElementById('memory-read').click()");
     await until(() => window.webContents.executeJavaScript("document.getElementById('memory-output').textContent.includes('deadbeef')"));
     await window.webContents.executeJavaScript(`(async () => {
-      const aside = document.querySelector('aside'), target = document.getElementById('memory-refresh');
-      aside.scrollTop += target.getBoundingClientRect().top - aside.getBoundingClientRect().top - 12;
+      const panel = document.querySelector('[data-plugin-panel]'); panel.scrollTop = 0;
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     })()`);
     const screenshot = await window.webContents.capturePage();
@@ -94,7 +95,7 @@ app.whenReady().then(async () => {
   assert.equal(await window.webContents.executeJavaScript('stats().maxPending'), 1);
   assert.equal(await window.webContents.executeJavaScript('stats().glError'), 0);
   assert.ok(!rendererErrors.some(message => message.includes('Frame credit')), rendererErrors.join('\n'));
-  await window.webContents.executeJavaScript("document.getElementById('synthetic').click()");
+  await window.webContents.executeJavaScript("window.ares.command({type:'synthetic'})");
   const replacement = await until(async () => {
     const reply = await sessions.request('session.status');
     return reply.session !== first.session && reply;

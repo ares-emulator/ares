@@ -1,6 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { AresBridge } from './bridge.js'
 const api: AresBridge = {
+  workspace: {
+    load: () => ipcRenderer.invoke('workspace.load'),
+    save: layout => ipcRenderer.invoke('workspace.save', layout),
+  },
+  onAction: callback => {
+    const listener = (_event: unknown, action: Parameters<Parameters<AresBridge['onAction']>[0]>[0]) => callback(action)
+    ipcRenderer.on('app-action', listener)
+    return () => ipcRenderer.removeListener('app-action', listener)
+  },
   preferences: {
     catalog: () => ipcRenderer.invoke('preferences.catalog'),
     set: (id, value) => ipcRenderer.invoke('preferences.set', id, value),

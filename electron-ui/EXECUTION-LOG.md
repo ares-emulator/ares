@@ -2322,3 +2322,30 @@ reload check; the issue was fixed and the entire lane rerun. Physical keyboard/
 gamepad and audible-output acceptance, serializer rollback-failure injection,
 private-media/reference checks and broader soak/platform work remain explicitly
 deferred in ACCEPTANCE.md. Task 13 done gates are fulfilled; task 14 is next.
+
+
+## Minimal UI and configurable workspace — 2026-10-21
+
+Replaced spike chrome with video-only startup. Cmd+, opens centralized Settings
+with plugin management and shared settings forms. Cmd+Shift+L enables split-region
+editing and per-region panel selection. Added draggable dividers, independently
+mounted panel instances, overlays with optional mouse passthrough, and draggable/
+resizable popup panels with configurable hotkeys. Main owns validated, atomically
+persisted workspace.json. Missing plugins preserve placements. Video relocation
+keeps the single canvas and native session; plugin activation does not alter layout.
+Removed temporary side/dock settings. Per-instance scoped effects and polling stop
+on removal/hiding. Broader trusted shell extensions remain deferred; the requested
+short resumption note is SHELL-EXTENSIONS-LATER.md.
+
+Full acceptance passed: **18/18 gates, 109 fixture tests, no failures or skips**.
+Evidence: artifacts/acceptance/run-rokPax/. Includes native smoke, Electron session/
+MCP/plugins/reload/settings/recovery, workspace persistence and reload identity,
+profile/launch isolation and copied-package validation. Copied app exercised all
+68 MCP tools, packaged TSX 1→2 and CLI operations while denying checkout reads;
+829 GB frames. Workspace GUI check also exercised actual Electron pointer events
+for divider/window dragging and resizing, popup hotkeys, hidden polling, multiple
+instances, overlay passthrough and video relocation. Screenshots reviewed at
+artifacts/workspace.png and artifacts/settings-window.png. Hosted CI, physical
+keyboard/gamepad, audible-output and existing private-media/fault/soak exclusions
+remain unclaimed. Opened the development app in the persistent workspace-preview
+profile for the user, without loading test ROMs or modifying existing play saves.
