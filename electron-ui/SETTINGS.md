@@ -15,7 +15,10 @@ before launching Ares Workbench:
 }
 ```
 
-Currently these four presentation settings use the service. Firmware, audio,
+These four presentation settings and `paths.importBml` (the read-only imported
+BML file selection) currently use the service. An explicit `ARES_SETTINGS`
+launch override wins over the saved import path without rewriting the profile;
+choosing a file explicitly replaces that override and saves the new selection. Firmware, audio,
 input and core settings are still being connected; their presence in this file
 alone does not configure the native host yet. The `panelLeft` setting belongs to
 the temporary UI and is expected to be removed.

@@ -40,6 +40,16 @@ app.whenReady().then(async () => {
     await until(() => js("!document.querySelector('#scanlines').checked"));
     assert.equal(JSON.parse(fs.readFileSync(file)).values['presentation.scanlines'], false);
     assert.equal(await js("window.ares.preferences.set('presentation.theme', 'bad').then(() => false, () => true)"), true);
+    const imported = path.join(temporary, 'imported.bml');
+    const original = 'Boot\n  Fast: false\n';
+    fs.writeFileSync(imported, original);
+    await js(`window.ares.preferences.set('paths.importBml', ${JSON.stringify(imported)})`);
+    assert.equal(await js("window.ares.preferences.catalog().then(s => s.entries.find(e => e.descriptor.id === 'paths.importBml').pending)"), true);
+    await js("window.ares.command({type: 'synthetic'})");
+    await until(() => js("window.ares.preferences.catalog().then(s => !s.entries.find(e => e.descriptor.id === 'paths.importBml').pending)"));
+    assert.equal(fs.readFileSync(imported, 'utf8'), original);
+    assert.equal(JSON.parse(fs.readFileSync(file)).values['paths.importBml'], imported);
+
     console.log('SETTINGS_UI_PASS: provisioned values applied; controls and bridge persist updates; reload retains settings; invalid values rejected; no browser-storage settings');
     app.quit();
   } catch (error) { console.error(error); app.exit(1); }

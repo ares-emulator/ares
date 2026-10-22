@@ -115,3 +115,17 @@ Plugins are trusted same-renderer code, not sandboxed extensions.
 User authorizes sensible intermediate commits and autonomous completion of agreed
 work. Foundation is complete; implement task 13 next. Keep the explicitly
 deferred manual/fault checks visible and do not add unrelated prerequisites.
+
+
+Task 13 checkpoint (2026-10-21): profile settings foundation implemented in
+`settings/`; presentation controls use profile `preferences.json` instead of
+localStorage. The BML file selection also persists (`paths.importBml`) and is
+acknowledged against the exact startup snapshot after native host status succeeds.
+Descriptors define stable IDs, types/defaults/validation/group/apply timing.
+Unknown keys survive descriptor removal; malformed files are never overwritten.
+See SETTINGS.md. Three strict TS targets, five settings tests and isolated actual
+Electron provisioning/write/reload/native-start acknowledgement passed. Full
+acceptance has not been rerun for this checkpoint. Next: connect firmware and
+native audio/presentation/core descriptors, configurable input, plugin settings
+registration/bundled UI and complete generated SDK declarations. Task 13 remains
+in progress; its done gates are not yet fulfilled.

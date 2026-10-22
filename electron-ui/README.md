@@ -54,7 +54,7 @@ paths are passed to the existing loader queue.
 
 The host reads `<profile>/settings.bml` by default, including firmware locations,
 core options and peripheral configuration. **Use ares settings…** can
-select another settings file. The selected settings apply to the next ROM and are
+select another settings file and persist that selection in the profile. The selected settings apply to the next ROM and are
 read only: the native host does not rewrite the selected configuration. Firmware
 failures are reported in the status bar. No firmware is downloaded by this frontend.
 

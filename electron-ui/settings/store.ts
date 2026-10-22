@@ -13,7 +13,9 @@ export class SettingsStore {
   private unreadable = false;
   private queue: Promise<unknown> = Promise.resolve();
   private applyError?: string;
-  constructor(readonly filename: string, descriptors: readonly SettingDescriptor[], private changed: (snapshot: SettingsSnapshot) => void = () => {}, private applyLive: (id: string, value: SettingValue) => Promise<void> = async () => {}) {
+  private launchValues: Record<string, unknown>;
+  constructor(readonly filename: string, descriptors: readonly SettingDescriptor[], private changed: (snapshot: SettingsSnapshot) => void = () => {}, private applyLive: (id: string, value: SettingValue) => Promise<void> = async () => {}, launchValues: Record<string, unknown> = {}) {
+    this.launchValues = Object.assign(Object.create(null), launchValues);
     for (const descriptor of descriptors) {
       if (!/^[a-zA-Z][a-zA-Z0-9._-]{0,127}$/.test(descriptor.id) || this.descriptors.has(descriptor.id) || !validateValue(descriptor, descriptor.default)) throw new Error('invalid_setting_descriptor');
       this.descriptors.set(descriptor.id, structuredClone(descriptor));
@@ -32,6 +34,8 @@ export class SettingsStore {
     for (const descriptor of this.descriptors.values()) this.applied.set(descriptor.id, this.value(descriptor));
   }
   private value(descriptor: SettingDescriptor): SettingValue {
+    const launch = this.launchValues[descriptor.id];
+    if (validateValue(descriptor, launch)) return launch;
     const value = this.values[descriptor.id];
     return validateValue(descriptor, value) ? value : descriptor.default;
   }
@@ -41,10 +45,19 @@ export class SettingsStore {
       revision: this.revision,
       entries: [...this.descriptors.values()].map(descriptor => {
         const value = this.value(descriptor), applied = this.applied.get(descriptor.id) ?? descriptor.default;
-        return { descriptor: structuredClone(descriptor), value, applied, source: validateValue(descriptor, this.values[descriptor.id]) ? 'profile' : 'default', pending: value !== applied };
+        return { descriptor: structuredClone(descriptor), value, applied, source: validateValue(descriptor, this.launchValues[descriptor.id]) ? 'launch' : validateValue(descriptor, this.values[descriptor.id]) ? 'profile' : 'default', pending: value !== applied };
       }),
       ...(this.error || this.applyError || invalid.length ? { error: this.error ?? this.applyError ?? `Invalid saved settings (using defaults): ${invalid.join(', ')}` } : {}),
     };
+  }
+  /** Acknowledge the exact startup snapshot, even if desired values changed during load. */
+  markApplied(snapshot: SettingsSnapshot, timing: 'next-rom' | 'restart'): void {
+    for (const entry of snapshot.entries) {
+      const descriptor = this.descriptors.get(entry.descriptor.id);
+      if (descriptor?.apply === timing && validateValue(descriptor, entry.value)) this.applied.set(descriptor.id, entry.value);
+    }
+    this.revision++;
+    this.changed(this.catalog());
   }
   set(id: string, value: unknown): Promise<SettingsSnapshot> {
     const operation = this.queue.then(() => this.write(id, value));
@@ -64,6 +77,7 @@ export class SettingsStore {
       fs.renameSync(temporary, this.filename);
     } finally { fs.rmSync(temporary, { force: true }); }
     this.values = values;
+    delete this.launchValues[id];
     this.applyError = undefined;
     if (descriptor.apply === 'live') {
       try {

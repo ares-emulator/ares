@@ -203,9 +203,7 @@ const hostPath =
     ? installedHost
     : path.resolve(appRoot, '../build-electron-make/bin/ares-electron-host'))
 const resourceDirectory = process.env.ARES_RESOURCE_DIR || path.dirname(hostPath)
-let generation = 0,
-  settingsFile = process.env.ARES_SETTINGS ||
-    path.join(app.getPath('userData'), 'settings.bml')
+let generation = 0
 const probe = (args: string[]): Promise<string> =>
   new Promise((resolve, reject) => {
     execFile(hostPath, ['--resource-dir', resourceDirectory, ...args], { timeout: 30000 }, (error, stdout, stderr) => {
@@ -215,10 +213,16 @@ const probe = (args: string[]): Promise<string> =>
   })
 let window: BrowserWindow
 export const preferences = new SettingsStore(
-  path.join(app.getPath('userData'), 'preferences.json'), presentationSettings,
+  path.join(app.getPath('userData'), 'preferences.json'), [
+    ...presentationSettings,
+    { id: 'paths.importBml', title: 'Imported ares settings', section: 'Paths', type: 'string',
+      default: path.join(app.getPath('userData'), 'settings.bml'), apply: 'next-rom' },
+  ],
   snapshot => {
     if (window && !window.isDestroyed()) window.webContents.send('preferences-changed', snapshot)
   },
+  undefined,
+  process.env.ARES_SETTINGS ? { 'paths.importBml': process.env.ARES_SETTINGS } : {},
 )
 let active: NativeSession | null = null,
   port: MessagePortMain | null = null
@@ -245,6 +249,8 @@ async function stop() {
 }
 async function start(options: StartOptions) {
   let system = 'Synthetic'
+  const startupSettings = preferences.catalog()
+  const settingsFile = String(startupSettings.entries.find(entry => entry.descriptor.id === 'paths.importBml')!.value)
   // Probe before stopping the running game, so an unsupported file leaves it intact.
   if (options.rom) {
     const identifyArgs = [
@@ -326,6 +332,9 @@ async function start(options: StartOptions) {
     },
   )
   sessions.attach(client)
+  void client.request('session.status').then(reply => {
+    if (reply.ok && active === session) preferences.markApplied(startupSettings, 'next-rom')
+  }).catch(error => status(String(error)))
   child.on('error', (error) =>
     status(`Cannot start native host: ${error.message}`),
   )
@@ -585,7 +594,7 @@ app
         filters: [{ name: 'ares settings', extensions: ['bml'] }],
       })
       if (!result.canceled) {
-        settingsFile = result.filePaths[0]
+        await preferences.set('paths.importBml', result.filePaths[0])
         status('Selected ares settings; they will apply to the next ROM.')
       }
     })

@@ -12,7 +12,7 @@ export interface SettingEntry {
   descriptor: SettingDescriptor;
   value: SettingValue;
   applied: SettingValue;
-  source: 'default' | 'profile';
+  source: 'default' | 'profile' | 'launch';
   pending: boolean;
 }
 export interface SettingsSnapshot { revision: number; entries: SettingEntry[]; error?: string }

@@ -2204,3 +2204,13 @@ file writes, renderer reload, bridge updates, invalid-value rejection). Added th
 Electron check to the acceptance lane; the full lane has not been rerun for this
 checkpoint. Firmware/native application, input configuration, plugin settings
 registration and complete SDK declarations remain task 13 work.
+
+The BML import selection now also persists as `paths.importBml`; startup
+acknowledgement records the exact loaded snapshot, preserving pending changes
+made during load. Added fourth store regression and extended isolated Electron
+check: selection persisted, next-load pending flag cleared only after native
+status, imported BML unchanged. Both passed; all three TS targets passed again.
+
+Preserved explicit `ARES_SETTINGS` launch precedence over saved selections without
+rewriting the profile. Explicit UI changes replace the launch override. Fifth
+store regression passed, as did the three TS targets.

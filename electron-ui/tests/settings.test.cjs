@@ -73,3 +73,31 @@ test('saved values remain pending when live application fails or requires anothe
   snapshot.entries[0].descriptor.default = 99;
   assert.equal(entry(restarted, 'audio.volume').descriptor.default, 0.4);
 });
+
+test('startup acknowledgement uses the loaded snapshot rather than a newer saved selection', async t => {
+  const { SettingsStore, file } = await setup(t);
+  const descriptor = { id: 'paths.importBml', title: 'Imported settings', section: 'Paths', type: 'string', default: '', apply: 'next-rom' };
+  const store = new SettingsStore(file, [descriptor]);
+  await store.set(descriptor.id, '/tmp/first.bml');
+  const loading = store.catalog();
+  await store.set(descriptor.id, '/tmp/second.bml');
+  store.markApplied(loading, 'next-rom');
+  const current = entry(store, descriptor.id);
+  assert.equal(current.value, '/tmp/second.bml');
+  assert.equal(current.applied, '/tmp/first.bml');
+  assert.equal(current.pending, true);
+  await assert.rejects(store.set(descriptor.id, '/tmp/file\nInjected: value'));
+});
+
+test('explicit launch overrides win without rewriting the profile, until explicitly changed', async t => {
+  const { SettingsStore, presentationSettings, file } = await setup(t);
+  const original = JSON.stringify({ version: 1, values: { 'presentation.theme': 'paper' } });
+  fs.writeFileSync(file, original);
+  const store = new SettingsStore(file, presentationSettings, undefined, undefined, { 'presentation.theme': 'green' });
+  assert.equal(entry(store, 'presentation.theme').source, 'launch');
+  assert.equal(entry(store, 'presentation.theme').value, 'green');
+  assert.equal(fs.readFileSync(file, 'utf8'), original);
+  await store.set('presentation.theme', 'dark');
+  assert.equal(entry(store, 'presentation.theme').source, 'profile');
+  assert.equal(entry(store, 'presentation.theme').value, 'dark');
+});
