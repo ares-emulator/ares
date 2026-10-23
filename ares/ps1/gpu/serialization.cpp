@@ -1,4 +1,6 @@
 auto GPU::serialize(serializer& s) -> void {
+  screen->synchronize();
+  renderer.synchronize();
   Thread::serialize(s);
 
   s(vram);
@@ -14,6 +16,8 @@ auto GPU::serialize(serializer& s) -> void {
 
   s((u32&)io.mode);
   s(io.field);
+  s(io.activeField);
+  s(io.inVblank);
   s(io.hcounter);
   s(io.vcounter);
   s(io.pcounter);
@@ -64,11 +68,17 @@ auto GPU::serialize(serializer& s) -> void {
   s(io.texturePaletteX);
   s(io.texturePaletteY);
 
+  s(input.data);
+  s(input.read);
+  s(input.size);
+
+  s(queue.gp0.polyline);
   s(queue.gp0.command);
   s(queue.gp0.length);
   s(queue.gp0.data);
   s(queue.gp0.counterX);
   s(queue.gp0.counterY);
+  s(queue.gp1.polyline);
   s(queue.gp1.command);
   s(queue.gp1.length);
   s(queue.gp1.data);

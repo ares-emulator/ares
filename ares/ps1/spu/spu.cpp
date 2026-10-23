@@ -73,8 +73,8 @@ auto SPU::sample() -> void {
   }
   noise.update();
   if(cdaudio.enable) {
-    lcdaudio = disc.cdda.sample.left  + disc.cdxa.sample.left;
-    rcdaudio = disc.cdda.sample.right + disc.cdxa.sample.right;
+    lcdaudio = disc.audio.sample.left;
+    rcdaudio = disc.audio.sample.right;
     lcdaudio = amplify(lcdaudio, cdaudio.volume[0]);
     rcdaudio = amplify(rcdaudio, cdaudio.volume[1]);
     lsum += lcdaudio;

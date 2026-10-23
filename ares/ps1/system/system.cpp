@@ -18,6 +18,7 @@ auto load(Node::System& node, string name) -> bool {
 }
 
 auto option(string name, string value) -> bool {
+  if(name == "CD-ROM Controller Version") return disc.setControllerVersion(value);
   if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
   return true;
 }
@@ -48,15 +49,15 @@ auto System::load(Node::System& root, string name) -> bool {
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;
-    information.gpuFrequency = 53'693'175;
+    information.timing.gpuFrequency = Clock::GPUNtsc;
   }
   if(name.find("NTSC-U")) {
     information.region = Region::NTSCU;
-    information.gpuFrequency = 53'693'175;
+    information.timing.gpuFrequency = Clock::GPUNtsc;
   }
   if(name.find("PAL")) {
     information.region = Region::PAL;
-    information.gpuFrequency = 53'693'175;
+    information.timing.gpuFrequency = Clock::GPUPal;
   }
 
   node = std::make_shared<Core::System>(information.name);

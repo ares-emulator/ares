@@ -34,7 +34,7 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
   }
 
   if(operation == 0x07) {
-    name = "Standby";
+    name = "MotorOn";
   }
 
   if(operation == 0x08) {

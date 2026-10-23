@@ -1,4 +1,7 @@
 auto GPU::Blitter::queue() -> void {
+  // The refresh callback owns this snapshot until the previous frame completes.
+  self.screen->synchronize();
+  self.renderer.synchronize();
   self.refreshed = true;
 
   self.screen->refreshRateHint(self.io.videoMode ? 50 : 60); // TODO: More accurate refresh rate hint
@@ -12,43 +15,38 @@ auto GPU::Blitter::queue() -> void {
 
   depth = self.io.colorDepth;
 
-  width  = self.display.width;
-  height = self.display.height;
+  // Capture geometry from the same current mode as the origin and color depth.
+  // The scanline timing cache may still describe the previous frame.
+  const u32 dotclock = self.dotclockDivider();
+  const bool interlace = self.io.verticalResolution && self.io.interlace;
+  width  = self.displayWidth();
+  height = (self.io.videoMode ? 256 : 240) << interlace;
 
   s32 offsetX1 = 0;
-  if(self.display.width == 256) offsetX1 = 0x228;
-  if(self.display.width == 320) offsetX1 = 0x260;
-  if(self.display.width == 368) offsetX1 = 0x260;  //untested
-  if(self.display.width == 512) offsetX1 = 0x260;
-  if(self.display.width == 640) offsetX1 = 0x260;
+  if(width == 256) offsetX1 = 0x228;
+  if(width == 320) offsetX1 = 0x260;
+  if(width == 368) offsetX1 = 0x260;  //untested
+  if(width == 512) offsetX1 = 0x260;
+  if(width == 640) offsetX1 = 0x260;
 
   s32 offsetY1 = 0;
-  if(self.display.height == 240) offsetY1 = 0x10;
-  if(self.display.height == 256) offsetY1 = 0x20;
-  if(self.display.height == 480) offsetY1 = 0x10;
-  if(self.display.height == 512) offsetY1 = 0x20;
+  if(height == 240) offsetY1 = 0x10;
+  if(height == 256) offsetY1 = 0x20;
+  if(height == 480) offsetY1 = 0x10;
+  if(height == 512) offsetY1 = 0x20;
 
   //target coordinates
-  tx = max(((s32)self.io.displayRangeX1 - offsetX1) / (s32)self.display.dotclock, 0);
-  ty = max(((s32)self.io.displayRangeY1 - offsetY1) << self.display.interlace, 0);
-  tw = max(((s32)self.io.displayRangeX2 - (s32)self.io.displayRangeX1) / (s32)self.display.dotclock & ~3, 0);
-  th = max(((s32)self.io.displayRangeY2 - (s32)self.io.displayRangeY1) << self.display.interlace, 0);
+  tx = max(((s32)self.io.displayRangeX1 - offsetX1) / (s32)dotclock, 0);
+  ty = max(((s32)self.io.displayRangeY1 - offsetY1) << interlace, 0);
+  tw = max(((s32)self.io.displayRangeX2 - (s32)self.io.displayRangeX1) / (s32)dotclock & ~3, 0);
+  th = max(((s32)self.io.displayRangeY2 - (s32)self.io.displayRangeY1) << interlace, 0);
 
-  //ensure coordinates cannot go out of bounds of the output region
-  if(tx > 1023) tx = 1023;
-  if(ty >  511) ty =  511;
-  if(tx + tw > 1023) tw = 1023 - tx;
-  if(ty + th >  511) th =  511 - ty;
+  // Clip against the actual viewport, not the 1024-pixel VRAM row width.
+  tx = std::min<s32>(tx, width);
+  ty = std::min<s32>(ty, height);
+  tw = std::min<s32>(tw, width - tx);
+  th = std::min<s32>(th, height - ty);
 
-  if(tx != self.display.previous.x
-  || ty != self.display.previous.y
-  || tw != self.display.previous.width
-  || th != self.display.previous.height
-  ) {
-    //the video output area has changed: clear the output buffer completely.
-    //this ensures that none of the previous frames are still drawn to the screen.
-    //todo
-  }
   self.display.previous.x = tx;
   self.display.previous.y = ty;
   self.display.previous.width  = tw;
@@ -87,9 +85,10 @@ auto GPU::Blitter::queue() -> void {
 }
 
 auto GPU::Blitter::refresh() -> void {
+  auto pixels = self.screen->pixels(1);
+  std::fill(pixels.begin(), pixels.end(), 0);
   if(blank) return;
-
-  auto output = self.screen->pixels(1).data();
+  auto output = pixels.data();
 
   //15bpp
   if(depth == 0) {

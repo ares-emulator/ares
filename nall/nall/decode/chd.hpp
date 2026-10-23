@@ -11,6 +11,7 @@ namespace nall::Decode {
 
 struct CHD {
   ~CHD();
+  enum class Subchannel { None, RW, RWRaw };
   struct Index {
     auto sectorCount() const -> u32;
 
@@ -25,6 +26,7 @@ struct CHD {
 
     u8 number = 0xff; //01-99
     string type;
+    Subchannel subchannel = Subchannel::None;
     std::vector<Index> indices;
     maybe<s32> pregap;
     maybe<s32> postgap;
@@ -32,10 +34,12 @@ struct CHD {
 
   auto load(const string& location) -> bool;
   auto read(u32 sector) const -> std::vector<u8>;
+  auto readSubchannel(u32 sector) const -> std::vector<u8>;
   auto sectorCount() const -> u32;
 
   std::vector<Track> tracks;
 private:
+  auto readFrame(u32 sector) const -> const u8*;
   file_buffer fp;
   chd_file* chd = nullptr;
   static constexpr int chd_sector_size = 2352 + 96;
@@ -124,6 +128,8 @@ inline auto CHD::load(const string& location) -> bool {
     Track track;
     track.number = track_no;
     track.type = type;
+    track.subchannel = string{subtype} == "RW" ? Subchannel::RW
+      : string{subtype} == "RW_RAW" ? Subchannel::RWRaw : Subchannel::None;
     track.pregap = pregap_frames;
     track.postgap = postgap_frames;
 
@@ -187,6 +193,43 @@ inline auto CHD::load(const string& location) -> bool {
   return true;
 }
 
+inline auto CHD::readFrame(u32 sector) const -> const u8* {
+  u64 address = u64(sector) * chd_sector_size;
+  u32 hunk = address / chd_hunk_size;
+  u32 offset = address % chd_hunk_size;
+  if(hunk != chd_current_hunk) {
+    chd_current_hunk = -1;
+    if(chd_read(chd, hunk, chd_hunk_buffer.data()) != CHDERR_NONE) return nullptr;
+    chd_current_hunk = hunk;
+  }
+  return chd_hunk_buffer.data() + offset;
+}
+
+inline auto CHD::readSubchannel(u32 sector) const -> std::vector<u8> {
+  for(auto& track : tracks) {
+    for(auto& index : track.indices) {
+      if(sector < index.lba || sector > index.end) continue;
+      if(index.chd_lba < 0 || track.subchannel == Subchannel::None) return {};
+      auto frame = readFrame(sector - index.lba + index.chd_lba);
+      if(!frame) return {};
+      std::vector<u8> output(96);
+      const u8* source = frame + 2352;
+      if(track.subchannel == Subchannel::RW) {
+        std::copy(source, source + 96, output.data());
+      } else {
+        // RW_RAW stores one bit of P..W in each symbol; expose eight planar 12-byte channels.
+        for(u32 symbol : range(96)) {
+          for(u32 channel : range(8)) {
+            output[channel * 12 + symbol / 8] |= ((source[symbol] >> (7 - channel)) & 1) << (7 - symbol % 8);
+          }
+        }
+      }
+      return output;
+    }
+  }
+  return {};
+}
+
 inline auto CHD::read(u32 sector) const -> std::vector<u8> {
   // Convert LBA in CD-ROM to LBA in CHD
   for(auto& track : tracks) {
@@ -198,17 +241,12 @@ inline auto CHD::read(u32 sector) const -> std::vector<u8> {
         std::vector<u8> output;
         output.resize(track.type == "MODE1" ? 2048 : 2352);
 
-        int hunk = (chd_lba * chd_sector_size) / chd_hunk_size;
-        int offset = (chd_lba * chd_sector_size) % chd_hunk_size;
-
-        if (hunk != chd_current_hunk) {
-          chd_read(chd, hunk, chd_hunk_buffer.data());
-          chd_current_hunk = hunk;
-        }
+        auto frame = readFrame(chd_lba);
+        if(!frame) return {};
 
         // Audio data is in big-endian, so we need to byteswap
         if (track.type == "AUDIO") {
-          u8* src_ptr = chd_hunk_buffer.data() + offset;
+          const u8* src_ptr = frame;
           u8* dst_ptr = output.data();
           const int value_count = 2352 / sizeof(uint16_t);
           for (int i = 0; i < value_count; i++) {
@@ -220,7 +258,7 @@ inline auto CHD::read(u32 sector) const -> std::vector<u8> {
             dst_ptr += sizeof(value);
           }
         } else {
-          std::copy(chd_hunk_buffer.data() + offset, chd_hunk_buffer.data() + offset + output.size(), output.data());
+          std::copy(frame, frame + output.size(), output.data());
         }
 
         return output;

@@ -6,10 +6,17 @@ struct System {
 
   enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
+  struct Clock {
+    static constexpr u32 CPUCompatibility = 33'868'500;
+    static constexpr u32 CPUNominal = 33'868'800;
+    static constexpr u32 GPUNtsc = 53'693'175;
+    static constexpr u32 GPUPal = 53'203'425;
+  };
+
   auto name() const -> string { return information.name; }
   auto region() const -> Region { return information.region; }
-  auto frequency() const -> u32 { return 33'868'500; }
-  auto gpuFrequency() const -> u32 { return information.gpuFrequency; }
+  auto frequency() const -> u32 { return information.timing.cpuFrequency; }
+  auto gpuFrequency() const -> u32 { return information.timing.gpuFrequency; }
 
   //system.cpp
   auto game() -> string;
@@ -27,7 +34,10 @@ private:
   struct Information {
     string name = "PlayStation";
     Region region = Region::NTSCJ;
-    u32 gpuFrequency = 53'690'000;
+    struct Timing {
+      u32 cpuFrequency = Clock::CPUCompatibility;
+      u32 gpuFrequency = Clock::GPUNtsc;
+    } timing;
   } information;
 
   //serialization.cpp

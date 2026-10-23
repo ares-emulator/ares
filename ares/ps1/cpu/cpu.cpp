@@ -1,21 +1,20 @@
 #include <ps1/ps1.hpp>
-#include <map>
 
 namespace ares::PlayStation {
 
 CPU cpu;
+#include "debugger/debugger.cpp"
 #include "delay-slots.cpp"
-#include "memory.cpp"
-#include "icache.cpp"
 #include "exceptions.cpp"
-#include "breakpoints.cpp"
-#include "interpreter.cpp"
-#include "interpreter-ipu.cpp"
-#include "interpreter-scc.cpp"
-#include "interpreter-gte.cpp"
-#include "debugger.cpp"
+#include "execution.cpp"
+#include "gte/gte.cpp"
+#include "icache.cpp"
+#include "interpreter/interpreter.cpp"
+#include "memory.cpp"
+#include "instruction.cpp"
+#include "scc/scc.cpp"
 #include "serialization.cpp"
-#include "disassembler.cpp"
+#include "write-buffer.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("CPU");
@@ -26,29 +25,33 @@ auto CPU::load(Node::Object parent) -> void {
 }
 
 auto CPU::unload() -> void {
-  debugger = {};
+  debugger.unload();
   scratchpad.reset();
   ram.reset();
   node.reset();
 }
 
 auto CPU::main() -> void {
-  //we need to return periodically to allow save states/exit/etc to function
-  //re-entering has high function call overhead; but we can batch instructions
-  while (true) {
+  // I/O may repeatedly clear accruedCycles before a branch reaches the cooldown.
+  // Bound the batch so synchronized saves always reach Thread::Enter's safe point.
+  for(u32 instructions : range(1024)) {
     instruction();
     if(ipu.pb + 4 != ipu.pc) {
-       if(accruedCycles >= branchCooldownCycles) {
+      if(accruedCycles >= branchCooldownCycles) {
         synchronize();
-        break;
+        return;
       }
     }
   }
+  synchronize();
 }
 
 auto CPU::step(u32 clocks) -> void {
   if(clocks == 0) return;
 
+  execution.clock += clocks;
+  retireExecutionUnits();
+  retireMemoryFrontend();
   accruedCycles += clocks;
 
   if(cyclesUntilForcedSync <= 0) {
@@ -77,58 +80,21 @@ auto CPU::ioSynchronize() -> void {
   if(accruedCycles >= ioCooldownCycles) synchronize();
 }
 
-auto CPU::waitDMA() -> void {
-  while(dma.active()) step(16);
+auto CPU::waitBus(u8 owner) -> void {
+  //Let devices reach the elapsed CPU time before competing for the next bus word.
+  if(active()) synchronize();
+  while(!bus.acquire(owner)) {
+    step(1);
+    if(active()) synchronize();
+  }
 }
 
-auto CPU::instruction() -> void {
-  if constexpr(Accuracy::CPU::Breakpoints) {
-    if(unlikely(breakpoint.testCode(ipu.pc))) {
-        return (void)instructionEpilogue();
-    }
-  }
-
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(ipu.pc & 3)) {
-      exception.address<Read>(ipu.pc);
-        return (void)instructionEpilogue();
-    }
-  }
-
-  u32 instruction = fetch(ipu.pc);
-  if(exception()) return (void)instructionEpilogue();
-
-  instructionPrologue(instruction);
-  decoderEXECUTE();
-  instructionEpilogue();
-}
-
-auto CPU::instructionPrologue(u32 instruction) -> void {
-  pipeline.address = ipu.pc;
-  pipeline.instruction = instruction;
-  debugger.instruction();
-}
-
-auto CPU::instructionEpilogue() -> void {
-  ipu.pb = ipu.pc;
-  ipu.pc = ipu.pd;
-  ipu.pd = ipu.pd + 4;
-
-  processDelayLoad();
-  processDelayBranch();
-  ipu.r[0] = 0;  //it's faster to allow assigning to r0 and then clearing it later
-
-  if(auto interrupts = exception.interruptsPending()) {
-    debugger.interrupt(scc.cause.interruptPending);
-    exception.interrupt();
-  }
-  exception.triggered = 0;
-
-  //When a branch is detected, check if we need to hook a  bios call
-  if(ipu.pb + 4 != ipu.pc) {
-    debugger.message();
-    debugger.function();
-  }
+auto CPU::stepBus(u32 clocks, u8 owner, bool ramData) -> void {
+  bool codeDataContention = ramData && memory.ram.delay
+    && bus.arbiter.owner == Bus::InstructionRefill;
+  waitBus(owner);
+  step(clocks + codeDataContention);
+  bus.release(owner);
 }
 
 auto CPU::instructionHook() -> void {
@@ -161,13 +127,14 @@ auto CPU::power(bool reset) -> void {
 
   accruedCycles = 0;
   cyclesUntilForcedSync = 0;
+  execution = {};
+  frontend = {};
 
   pipeline = {};
   delay = {};
   icache.power(reset);
   exeLoaded = 0;
   exception.triggered = 0;
-  breakpoint.lastPC = 0;
   for(auto& r : ipu.r) r = 0;
   ipu.lo = 0;
   ipu.hi = 0;
@@ -180,95 +147,7 @@ auto CPU::power(bool reset) -> void {
   scc.status = {};
   scc.cause = {};
   scc.epc = 0;
-  gte.v.a.x = 0;
-  gte.v.a.y = 0;
-  gte.v.a.z = 0;
-  gte.v.b.x = 0;
-  gte.v.b.y = 0;
-  gte.v.b.z = 0;
-  gte.v.c.x = 0;
-  gte.v.c.y = 0;
-  gte.v.c.z = 0;
-  gte.rgbc.r = 0;
-  gte.rgbc.g = 0;
-  gte.rgbc.b = 0;
-  gte.rgbc.t = 0;
-  gte.otz = 0;
-  gte.ir.x = 0;
-  gte.ir.y = 0;
-  gte.ir.z = 0;
-  gte.ir.t = 0;
-  gte.screen[0].x = 0;
-  gte.screen[0].y = 0;
-  gte.screen[0].z = 0;
-  gte.screen[1].x = 0;
-  gte.screen[1].y = 0;
-  gte.screen[1].z = 0;
-  gte.screen[2].x = 0;
-  gte.screen[2].y = 0;
-  gte.screen[2].z = 0;
-  gte.screen[3].x = 0;
-  gte.screen[3].y = 0;
-  gte.screen[3].z = 0;
-  gte.rgb[0] = 0;
-  gte.rgb[1] = 0;
-  gte.rgb[2] = 0;
-  gte.rgb[3] = 0;
-  gte.mac.x = 0;
-  gte.mac.y = 0;
-  gte.mac.z = 0;
-  gte.mac.t = 0;
-  gte.lzcs = 0;
-  gte.lzcr = 0;
-  gte.rotation.a.x = 0;
-  gte.rotation.a.y = 0;
-  gte.rotation.a.z = 0;
-  gte.rotation.b.x = 0;
-  gte.rotation.b.y = 0;
-  gte.rotation.b.z = 0;
-  gte.rotation.c.x = 0;
-  gte.rotation.c.y = 0;
-  gte.rotation.c.z = 0;
-  gte.translation.x = 0;
-  gte.translation.y = 0;
-  gte.translation.z = 0;
-  gte.light.a.x = 0;
-  gte.light.a.y = 0;
-  gte.light.a.z = 0;
-  gte.light.b.x = 0;
-  gte.light.b.y = 0;
-  gte.light.b.z = 0;
-  gte.light.c.x = 0;
-  gte.light.c.y = 0;
-  gte.light.c.z = 0;
-  gte.backgroundColor.r = 0;
-  gte.backgroundColor.g = 0;
-  gte.backgroundColor.b = 0;
-  gte.color.a.r = 0;
-  gte.color.a.g = 0;
-  gte.color.a.b = 0;
-  gte.color.b.r = 0;
-  gte.color.b.g = 0;
-  gte.color.b.b = 0;
-  gte.color.c.r = 0;
-  gte.color.c.g = 0;
-  gte.color.c.b = 0;
-  gte.farColor.r = 0;
-  gte.farColor.g = 0;
-  gte.farColor.b = 0;
-  gte.ofx = 0;
-  gte.ofy = 0;
-  gte.h = 0;
-  gte.dqa = 0;
-  gte.dqb = 0;
-  gte.zsf3 = 0;
-  gte.zsf4 = 0;
-  gte.flag.value = 0;
-  gte.lm = 0;
-  gte.tv = 0;
-  gte.mv = 0;
-  gte.mm = 0;
-  gte.sf = 0;
+  gte.power();
 }
 
 }

@@ -38,19 +38,32 @@ ares_add_sources(
   CORE #
     ps1
   INCLUDED #
-    cpu/breakpoints.cpp
     cpu/cpu.hpp
-    cpu/debugger.cpp
+    cpu/debugger/bios.cpp
+    cpu/debugger/debugger.cpp
+    cpu/debugger/debugger.hpp
+    cpu/debugger/disassembler.cpp
+    cpu/debugger/tracer.cpp
     cpu/delay-slots.cpp
-    cpu/disassembler.cpp
+    cpu/execution.cpp
     cpu/exceptions.cpp
     cpu/icache.cpp
-    cpu/interpreter-gte.cpp
-    cpu/interpreter-ipu.cpp
-    cpu/interpreter-scc.cpp
-    cpu/interpreter.cpp
+    cpu/instruction.cpp
+    cpu/gte/gte.cpp
+    cpu/gte/gte.hpp
+    cpu/interpreter/decoder.cpp
+    cpu/interpreter/gte.cpp
+    cpu/interpreter/interpreter.cpp
+    cpu/interpreter/interpreter.hpp
+    cpu/interpreter/ipu.cpp
+    cpu/interpreter/scc.cpp
     cpu/memory.cpp
+    cpu/scc/breakpoints.cpp
+    cpu/scc/registers.cpp
+    cpu/scc/scc.cpp
+    cpu/scc/scc.hpp
     cpu/serialization.cpp
+    cpu/write-buffer.cpp
 )
 
 ares_add_sources(

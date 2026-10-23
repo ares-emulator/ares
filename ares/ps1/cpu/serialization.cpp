@@ -7,6 +7,55 @@ auto CPU::serialize(serializer& s) -> void {
   s(exeLoaded);
   s(accruedCycles);
   s(cyclesUntilForcedSync);
+  s(execution.clock);
+  s(execution.multiplyDivide.active);
+  s(execution.multiplyDivide.completion);
+  s(execution.multiplyDivide.hi);
+  s(execution.multiplyDivide.lo);
+  s(execution.gteCompletion);
+  s(execution.nextEventSequence);
+  for(auto& event : execution.events) {
+    s(event.type);
+    s(event.index);
+    s(event.value);
+    s(event.completion);
+    s(event.sequence);
+  }
+  s(execution.retiredInstructions);
+  s(execution.status.managed);
+  s(execution.status.visible);
+  s(execution.status.nextSequence);
+  for(auto& event : execution.status.events) {
+    s(event.active);
+    s(event.value);
+    s(event.retirement);
+    s(event.sequence);
+  }
+  s(frontend.refill.active);
+  s(frontend.refill.address);
+  s(frontend.refill.tag);
+  s(frontend.refill.line);
+  s(frontend.refill.requestedWord);
+  s(frontend.refill.nextWord);
+  s(frontend.refill.finalWord);
+  s(frontend.refill.completedWords);
+  s(frontend.refill.started);
+  s(frontend.refill.completion);
+  s(frontend.refill.granted);
+  for(auto& entry : frontend.writeBuffer.entries) {
+    s(entry.address);
+    s(entry.offset);
+    s(entry.data);
+    s(entry.byteEnable);
+    s(entry.sequence);
+  }
+  s(frontend.writeBuffer.head);
+  s(frontend.writeBuffer.count);
+  s(frontend.writeBuffer.completion);
+  s(frontend.writeBuffer.nextSequence);
+  s(frontend.writeBuffer.ready);
+  s(frontend.writeBuffer.delay);
+  s(frontend.busWait);
 
   s(pipeline.address);
   s(pipeline.instruction);
@@ -23,16 +72,16 @@ auto CPU::serialize(serializer& s) -> void {
   s(delay.branch[1].slot);
   s(delay.branch[1].take);
   s(delay.branch[1].address);
-  s(delay.interrupt);
 
   for(auto& line : icache.lines) {
     s(line.words);
     s(line.tag);
+    s(line.valid);
   }
 
   s(exception.triggered);
 
-  s(breakpoint.lastPC);
+  s(scc.breakpoint.lastPC);
 
   for(auto& r : ipu.r) s(r);
   s(ipu.lo);
@@ -90,93 +139,5 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.cause.branchDelay);
   s(scc.epc);
 
-  s(gte.v.a.x);
-  s(gte.v.a.y);
-  s(gte.v.a.z);
-  s(gte.v.b.x);
-  s(gte.v.b.y);
-  s(gte.v.b.z);
-  s(gte.v.c.x);
-  s(gte.v.c.y);
-  s(gte.v.c.z);
-  s(gte.rgbc.r);
-  s(gte.rgbc.g);
-  s(gte.rgbc.b);
-  s(gte.rgbc.t);
-  s(gte.otz);
-  s(gte.ir.x);
-  s(gte.ir.y);
-  s(gte.ir.z);
-  s(gte.ir.t);
-  s(gte.screen[0].x);
-  s(gte.screen[0].y);
-  s(gte.screen[0].z);
-  s(gte.screen[1].x);
-  s(gte.screen[1].y);
-  s(gte.screen[1].z);
-  s(gte.screen[2].x);
-  s(gte.screen[2].y);
-  s(gte.screen[2].z);
-  s(gte.screen[3].x);
-  s(gte.screen[3].y);
-  s(gte.screen[3].z);
-  s(gte.rgb[0]);
-  s(gte.rgb[1]);
-  s(gte.rgb[2]);
-  s(gte.rgb[3]);
-  s(gte.mac.x);
-  s(gte.mac.y);
-  s(gte.mac.z);
-  s(gte.mac.t);
-  s(gte.lzcs);
-  s(gte.lzcr);
-  s(gte.rotation.a.x);
-  s(gte.rotation.a.y);
-  s(gte.rotation.a.z);
-  s(gte.rotation.b.x);
-  s(gte.rotation.b.y);
-  s(gte.rotation.b.z);
-  s(gte.rotation.c.x);
-  s(gte.rotation.c.y);
-  s(gte.rotation.c.z);
-  s(gte.translation.x);
-  s(gte.translation.y);
-  s(gte.translation.z);
-  s(gte.light.a.x);
-  s(gte.light.a.y);
-  s(gte.light.a.z);
-  s(gte.light.b.x);
-  s(gte.light.b.y);
-  s(gte.light.b.z);
-  s(gte.light.c.x);
-  s(gte.light.c.y);
-  s(gte.light.c.z);
-  s(gte.backgroundColor.r);
-  s(gte.backgroundColor.g);
-  s(gte.backgroundColor.b);
-  s(gte.color.a.r);
-  s(gte.color.a.g);
-  s(gte.color.a.b);
-  s(gte.color.b.r);
-  s(gte.color.b.g);
-  s(gte.color.b.b);
-  s(gte.color.c.r);
-  s(gte.color.c.g);
-  s(gte.color.c.b);
-  s(gte.farColor.r);
-  s(gte.farColor.g);
-  s(gte.farColor.b);
-  s(gte.ofx);
-  s(gte.ofy);
-  s(gte.h);
-  s(gte.dqa);
-  s(gte.dqb);
-  s(gte.zsf3);
-  s(gte.zsf4);
-  s(gte.flag.value);
-  s(gte.lm);
-  s(gte.tv);
-  s(gte.mv);
-  s(gte.mm);
-  s(gte.sf);
+  gte.serialize(s);
 }
