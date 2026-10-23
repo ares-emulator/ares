@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ares/memory/memory.hpp>
+#include <limits>
 #include <span>
 
 namespace ares::Memory {
@@ -33,14 +34,20 @@ struct Readable {
 
   auto load(VFS::File fp) -> void {
     if(!self.size) allocate(fp->size());
-    fp->read({(u8*)self.data, min(fp->size(), self.size * sizeof(T))});
+    // On 32-bit, size_t!=u64
+    u64 sz = min(fp->size(), self.size * sizeof(T));
+    assert(sz <= std::numeric_limits<size_t>::max());
+    fp->read({(u8*)self.data, static_cast<size_t>(sz)});
     for(u32 address = self.size; address <= self.mask; address++) {
       self.data[address] = self.data[mirror(address, self.size)];
     }
   }
 
   auto save(VFS::File fp) -> void {
-    fp->write({self.data, min(fp->size(), self.size * sizeof(T))});
+    // On 32-bit, size_t!=u64
+    u64 sz = min(fp->size(), self.size * sizeof(T));
+    assert(sz <= std::numeric_limits<size_t>::max());
+    fp->write({(const u8*)self.data, static_cast<size_t>(sz)});
   }
 
   explicit operator bool() const { return (bool)self.data; }

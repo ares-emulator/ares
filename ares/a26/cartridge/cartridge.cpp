@@ -1,5 +1,7 @@
 #include <a26/a26.hpp>
 
+#include <limits>
+
 namespace ares::Atari2600 {
 
 Cartridge& cartridge = cartridgeSlot.cartridge;
@@ -20,7 +22,9 @@ auto Cartridge::connect() -> void {
   information.board  = pak->attribute("board");
   information.phosphor = pak->attribute("phosphor").boolean();
   if(auto fp = pak->read("program.rom")) {
-    information.sha256 = Hash::SHA256({fp->data(), fp->size()}).digest();
+    // On 32-bit, size_t!=u64
+    assert(fp->size() <= std::numeric_limits<size_t>::max());
+    information.sha256 = Hash::SHA256({fp->data(), static_cast<size_t>(fp->size())}).digest();
   }
 
   if(information.board == "Linear")         board = std::make_unique<Board::Linear>(*this);

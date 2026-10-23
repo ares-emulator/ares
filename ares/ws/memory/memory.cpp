@@ -1,5 +1,7 @@
 #include <ws/ws.hpp>
 
+#include <limits>
+
 namespace ares::WonderSwan {
 
 InternalRAM iram;
@@ -14,7 +16,10 @@ auto InternalRAM::power() -> void {
 }
 
 auto InternalRAM::serialize(serializer& s) -> void {
-  s(std::span<n8>{memory, SoC::ASWAN() ? 16_KiB : 64_KiB});
+  // On 32-bit, size_t!=u64
+  u64 sz = SoC::ASWAN() ? 16_KiB : 64_KiB;
+  assert(sz <= std::numeric_limits<size_t>::max());
+  s(std::span<n8>{memory, static_cast<size_t>(sz)});
 }
 
 auto Bus::power() -> void {
