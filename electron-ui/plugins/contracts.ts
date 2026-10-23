@@ -1,3 +1,4 @@
+import type { PluginBridgeFailure } from './admission.js'
 import type { PluginSettingsRequest, SettingsSnapshot } from '../settings/contracts.js'
 import type {
   SessionIdentity,
@@ -87,7 +88,7 @@ export interface PluginAction {
   name: string
 }
 export interface PluginBridge {
-  settings(token: string, request: PluginSettingsRequest): Promise<SettingsSnapshot>
+  settings(token: string, request: PluginSettingsRequest): Promise<SettingsSnapshot | PluginBridgeFailure>
   actions(callback: (action: PluginAction) => void): () => void
   result(id: string, token: string, error?: string): Promise<void>
   catalog(): Promise<PluginCatalog>
@@ -104,7 +105,7 @@ export interface PluginBridge {
     token: string,
     method: M,
     params?: ServiceParams<M>,
-  ): Promise<SessionReply<ServiceResult<M>>>
+  ): Promise<SessionReply<ServiceResult<M>> | PluginBridgeFailure>
   storage(
     token: string,
     operation: 'get' | 'set' | 'delete',

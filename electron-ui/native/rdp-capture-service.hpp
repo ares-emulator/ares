@@ -1,9 +1,22 @@
 #pragma once
 #include "execution-service.hpp"
 #include "n64-service.hpp"
+#include "machine-service.hpp"
 struct RdpCaptureService {
   uint64_t operationId = 0, epoch = 0;
-  std::string owner, stopReason;
+  std::string owner, stopReason, startPoint = "null", endPoint = "null", rom = "null", renderer = "none";
+  std::function<std::string()> romIdentity;
+  // Reference machine-point fields, frozen at arm/completion rather than export.
+  static std::string point(uint64_t epoch, uint64_t frame) {
+    using namespace ares::Nintendo64;
+    MachineService::Object out, v;
+    auto& io = vi.io;
+    v.number("VI_CTRL.colorDepth", io.colorDepth); v.number("VI_CTRL.serrate", io.serrate); v.number("VI_CTRL.antialias", io.antialias);
+    v.hex("VI_ORIGIN", io.dramAddress); v.number("VI_WIDTH", io.width); v.number("VI_V_CURRENT", io.vcounter);
+    v.number("VI_X_SCALE", io.xscale); v.number("VI_Y_SCALE", io.yscale); v.number("VI_H_START", io.hstart); v.number("VI_H_END", io.hend);
+    v.number("VI_V_START", io.vstart); v.number("VI_V_END", io.vend); v.number("field", io.field);
+    out.hex("pc", cpu.ipu.pc); out.number("frame", frame); out.number("epoch", epoch); out.add("vi", v.end()); out.add("dpc", MachineService::rdpState()); return out.end();
+  }
   bool completed = false, intervalComplete = false;
   void reset() { operationId = 0; owner.clear(); completed = false; ares::Nintendo64::rdp.debugCapture = {}; }
   void releaseOwner(const std::string& actor) { if(owner == actor) reset(); }
@@ -11,6 +24,7 @@ struct RdpCaptureService {
     if(!operationId || completed) return;
     auto& c = ares::Nintendo64::rdp.debugCapture;
     intervalComplete = reason == "frames_done" && ares::Nintendo64::executionCoordinate.frame == c.frame + 1;
+    endPoint = point(epoch, ares::Nintendo64::executionCoordinate.frame);
     c.disarm(); stopReason = reason; completed = true;
   }
   ControlResult execute(const std::string& method, const std::vector<std::string>& args, const std::string& actor, uint64_t e, bool available, bool& paused, ExecutionService& execution) {
@@ -26,6 +40,8 @@ struct RdpCaptureService {
     auto result = execution.execute("execution.runFrames", {"1", std::to_string(ms)}, actor, e, paused);
     if(!result.error.empty()) return result;
     operationId = execution.active->id; epoch = e; owner = actor; completed = false; stopReason.clear();
+    startPoint = point(e, execution.frame); endPoint = "null"; rom = romIdentity ? romIdentity() : "null";
+    renderer = vulkan.enable ? "paraLLEl-RDP" : "software";
     rdp.debugCapture.arm(e, execution.frame, limit, args[1] == "1");
     execution.active->kind = "rdp_capture";
     return {{}, execution.snapshot(*execution.active)};
@@ -47,6 +63,7 @@ struct RdpCaptureService {
     auto quote = [](uint64_t value) { return controlQuote(N64Service::hex(value)); };
     auto bytes = [](const auto& data) { static const char* h = "0123456789abcdef"; std::string s; for(auto b : data) { s += h[(uint8_t)b >> 4]; s += h[(uint8_t)b & 15]; } return controlQuote(s); };
     std::string out = "{\"operation_id\":" + std::to_string(id) + ",\"epoch\":" + std::to_string(epoch) + ",\"frame\":" + std::to_string(c.frame)
+      + ",\"rom\":" + rom + ",\"renderer\":" + controlQuote(renderer) + ",\"start\":" + startPoint + ",\"end\":" + endPoint + ",\"rdram_size\":" + std::to_string(rdram.ram.size)
       + ",\"kind\":" + controlQuote(args[1]) + ",\"stop_reason\":" + controlQuote(stopReason)
       + ",\"complete\":" + (intervalComplete ? "true" : "false")
       + ",\"truncated\":" + (c.truncated ? "true" : "false") + ",\"dropped_words\":" + std::to_string(c.droppedWords)

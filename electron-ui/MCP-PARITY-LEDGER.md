@@ -108,3 +108,31 @@ Generated schema evidence under `tests/reference/` records **68/68** matching
 parameter signatures. Strict adapter validation differences remain explicit in
 the report. `task-9-tool-coverage.json` records successful stdio test paths for
 every tool; it supplements, rather than replaces, native semantic assertions.
+
+## Kirby feedback implementation delta — 2026-10-21
+
+The reference remains commit `1c9b9637476a83f7b80d3db1115a0f71529820d9`.
+The inventory now contains 79 tools: all 68 reference names plus 11 explicit
+memory/diagnostic additions recorded in the schema report. Batch step capacity is
+256; result budget is bounded at 128 KiB after measuring the real 50-sample case.
+MCP `steps` is an additive alias of `results` (existing consumers retain `results`).
+Controller set/state use named `buttons` plus `buttons_mask`; native numeric masks,
+ownership UUIDs and address contracts remain lossless. No global address casing or
+sign-extension change was made. CPU virtual and region-relative APIs stay distinct.
+RDP decoded command fields/lengths follow exact reference capture, including
+cross-batch commands; export envelope enrichment (ROM, renderer, machine points,
+OSTask associations) remains incomplete. These additions do not imply full parity
+or acceptance of previously deferred private-media/reference scenarios.
+
+### Continuation — 2026-10-22
+
+Inventory is now **85 tools**, preserving all 68 reference names with 17 additions.
+The six new additions are capture freezing, query start/advance/page/release and
+content changes. RDP envelopes now include frozen ROM/renderer/start/end points;
+OSTask decoding and latest-graphics-task batch associations follow the reference
+rules. Original raw task/header/current/end metadata is retained with aliases.
+`software` remains an honest renderer-name difference from the reference fork's
+angrylion/none choices. Universal N64 RDRAM regions now explicitly read raw storage;
+atomic N64 CPU-view reads reject before chip mapping is ready, avoiding guest RNG
+side effects found in the core's degradation path. These changes do not claim
+private Kirby-media acceptance or a true write-event map.

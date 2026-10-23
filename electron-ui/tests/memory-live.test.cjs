@@ -129,6 +129,22 @@ test('real N64 and GBA debugger regions inspect and restore deterministic writes
           assert.equal(cache.readable, false); assert.equal(cache.writable, false);
           await assert.rejects(memory.read(cache, 0, 1), /unsupported_region/);
         }
+        const big = regions.find(r => r.readable && r.size >= 65536);
+        assert.ok(big);
+        const sampled = await pluginMemory.readMany([{region: big, offset: 0, length: 0x6000}, {region, offset: 0, length: 1024}]);
+        assert.equal(sampled.reads[0].hex.length, 0xc000);
+        const second = await memory.readMany([{region: big, offset: 0, length: 65536}]);
+        assert.equal(second.frame, sampled.frame); assert.ok(second.sample_id > sampled.sample_id);
+        assert.equal(second.reads[0].hex.length, 131072);
+        await assert.rejects(memory.readMany([{region, offset: 0, length: 1}, {region, offset: region.size, length: 1}]), /out_of_bounds/);
+        const overlap = await memory.readMany([{region, offset: 0, length: 8}, {region, offset: 2, length: 4}]);
+        assert.equal(overlap.reads[0].hex.slice(4,12),overlap.reads[1].hex);
+        if (rdram) {
+          const p={reads:[{address:'0x80000000', view:'cpu', length:0x6000},{address:'0xa0000000',view:'cpu',length:1024}]};
+          const cpu=await client.request('n64.memory.readMany', undefined, p);
+          assert.equal(cpu.error,'rdram_not_initialized');
+          assert.equal((await client.request('n64.memory.readMany', undefined, {reads:[p.reads[0],{address:'0x1fffffff',view:'cpu',length:8}]})).error,'rdram_not_initialized');
+        }
         const before=await pluginMemory.read(region,0,4);
         await pluginMemory.write(region,0,hexToBytes('12345678'));
         assert.equal((await pluginMemory.read(region,0,4)).hex,'12345678');

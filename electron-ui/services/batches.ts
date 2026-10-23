@@ -37,7 +37,7 @@ export class Batches {
       for (const [index, step] of p.steps.entries()) {
         guard(); unwrap(await native.request('execution.batchCheck', identity, { batchId }, child));
         // Reserve the largest bounded per-step result before performing effects.
-        if (Buffer.byteLength(JSON.stringify(results)) > 32000) { reason = 'result_limit'; break; }
+        if (Buffer.byteLength(JSON.stringify(results)) > 114000) { reason = 'result_limit'; break; }
         let record: BatchStepResult;
         let runReason = '';
         try {

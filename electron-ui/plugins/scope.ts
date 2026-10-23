@@ -1,3 +1,4 @@
+import { PLUGIN_REQUEST_LIMIT, PluginAdmissionError, unwrapPluginBridge } from './admission.js'
 import { mountSettingsForm } from '../settings/form.js'
 import type { PluginSettingsRequest } from '../settings/contracts.js'
 import type { PluginInfo } from './contracts.js'
@@ -63,14 +64,14 @@ export class PluginScope {
       lease = info.lease!
     this.token = lease.token
     const alive = () => {
-      if (this.abort.signal.aborted) throw new Error('stale_plugin_scope')
+      if (this.abort.signal.aborted) throw Object.assign(new Error('stale_plugin_scope'), { code: 'stale_plugin_scope' })
     }
     const writable = () => {
       alive()
       if (!this.ready)
-        throw new Error(
+        throw Object.assign(new Error(
           'plugin_not_ready: use a command for writes; activation/reload never replays mutations',
-        )
+        ), {code: 'plugin_not_ready'})
     }
     let currentMount: { disposers: Set<Disposer>; visible: boolean } | undefined
     const add = (dispose: Disposer): Disposer => {
@@ -107,10 +108,10 @@ export class PluginScope {
     const settingsRequest = async (request: PluginSettingsRequest) => {
       alive()
       if (['set', 'reset', 'chooseFile'].includes(request.operation)) writable()
-      if (this.pending >= 8) throw new Error('busy')
+      if (this.pending >= PLUGIN_REQUEST_LIMIT) throw new PluginAdmissionError(this.pending)
       ++this.pending
       try {
-        const snapshot = await window.ares.plugins.settings(this.token, request)
+        const snapshot = unwrapPluginBridge(await window.ares.plugins.settings(this.token, request))
         alive(); return snapshot
       } finally { --this.pending }
     }
@@ -152,14 +153,15 @@ export class PluginScope {
               'session.status',
               'memory.regions',
               'memory.read',
-              'n64.memory.read',
+              'memory.readMany', 'memory.snapshot.capture', 'memory.recorder.start', 'memory.recorder.stop', 'memory.capture.status', 'memory.capture.read', 'memory.capture.release', 'memory.snapshot.compare', 'memory.capture.freeze', 'memory.query.start', 'memory.query.advance', 'memory.query.page', 'memory.query.release', 'memory.snapshot.changes',
+              'n64.memory.readMany', 'n64.memory.read',
               'n64.debug.lastStop',
               'n64.debug.registers',
               'execution.status',
             ].includes(method)
           )
             writable()
-          if (this.pending >= 8) throw new Error('busy')
+          if (this.pending >= PLUGIN_REQUEST_LIMIT) throw new PluginAdmissionError(this.pending)
           ++this.pending
           this.dock.changed()
           try {
@@ -169,7 +171,7 @@ export class PluginScope {
               params,
             )
             alive()
-            return reply
+            return unwrapPluginBridge(reply)
           } finally {
             --this.pending
             this.dock.changed()
@@ -352,7 +354,7 @@ export class PluginScope {
   }
   async action(kind: 'open' | 'command', name: string) {
     if (!this.ready || this.abort.signal.aborted)
-      throw new Error('stale_plugin_scope')
+      throw Object.assign(new Error('stale_plugin_scope'), { code: 'stale_plugin_scope' })
     if (kind === 'open') {
       const panel = this.panels.get(name)
       if (!panel) throw new Error('Unknown panel')
@@ -362,7 +364,7 @@ export class PluginScope {
       if (!run) throw new Error('Unknown command')
       await run()
     }
-    if (this.abort.signal.aborted) throw new Error('stale_plugin_scope')
+    if (this.abort.signal.aborted) throw Object.assign(new Error('stale_plugin_scope'), { code: 'stale_plugin_scope' })
   }
   async activate(state?: unknown) {
     const result = Promise.resolve(this.module.activate(this.context, state))
@@ -379,7 +381,7 @@ export class PluginScope {
     await bounded(result, 'Plugin activation')
   }
   publish() {
-    if (this.abort.signal.aborted) throw new Error('stale_plugin_scope')
+    if (this.abort.signal.aborted) throw Object.assign(new Error('stale_plugin_scope'), { code: 'stale_plugin_scope' })
     this.ready = true
     this.published = true
     this.dock.commands.append(this.commandFragment)

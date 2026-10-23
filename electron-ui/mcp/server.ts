@@ -1,3 +1,4 @@
+import { registerMemoryTools } from './memory-tools.js';
 import { installCancellation } from './cancellation.js';
 import { registerViewerTools } from './viewer-tools.js';
 import { registerCallTools } from './call-tools.js';
@@ -26,15 +27,16 @@ import { MemoryClient, hexToBytes, type RegionHandle } from '../services/memory.
 
 const args = process.argv.slice(2);
 const take = (flag: string) => { const index = args.indexOf(flag); return index >= 0 ? args[index + 1] : undefined; };
-const file = take('--connection'), instance = take('--instance');
-if (!file || !path.isAbsolute(file) || !instance || args.length !== 4 || args.filter(x => x === '--connection').length !== 1 || args.filter(x => x === '--instance').length !== 1) {
-  console.error('Usage: ares-mcp --connection /absolute/instance.json --instance UUID'); process.exit(2);
+const file = take('--connection'), instance = take('--instance'), name = take('--instance-name'), directory = take('--service-dir');
+if (args.length !== 4 || !(name && directory && path.isAbsolute(directory) && !file && !instance || file && path.isAbsolute(file) && instance && !name && !directory)) {
+  console.error('Usage: ares-mcp --connection /absolute/instance.json --instance UUID OR --service-dir /absolute/dir --instance-name NAME'); process.exit(2);
 }
-const local = new LocalServiceClient(file, instance);
+const local = name ? LocalServiceClient.named(directory!, name) : new LocalServiceClient(file!, instance!);
 const memory = new MemoryClient(local);
 let regions: RegionHandle[] | undefined;
 // Retain identity with recent operation handles, just as region handles do.
 const operationIdentities = new Map<number, SessionIdentity>();
+local.onDisconnect = () => { regions = undefined; operationIdentities.clear(); };
 function unwrap<T>(r: SessionReply<T>): T { if (!r.ok || !r.result) throw new ServiceError(r.error || 'invalid_reply'); return r.result; }
 function address(value: number | string): number {
   const text = typeof value === 'string' ? value.trim().replace(/_/g, '') : String(value);
@@ -56,6 +58,9 @@ function createServer(): McpServer {
   installCancellation(server,local);
   const status = async () => { const reply = await local.request('session.status'); return { ...unwrap(reply), session: reply.session, epoch: reply.epoch }; };
   const call = (fn: () => Promise<unknown>) => fn().then(output, failure);
+  registerMemoryTools(server, local, status);
+  server.registerTool('plugin_logs', { description: 'Bounded plugin runtime logs with generation and loss counters.', inputSchema: z.object({ id: z.string(), cursor: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(32).default(32), generation: z.string().optional() }).strict(), annotations: {readOnlyHint:true} }, p => call(() => local.manage({operation:'logs',...p})));
+  server.registerTool('ui_screenshot', { description: 'Explicit app window or open plugin panel screenshot, separate from game framebuffer capture. Writes a new PNG file.', inputSchema: z.object({path:z.string(),panel:z.string().optional()}).strict() }, p => call(() => local.manage({operation:'screenshot',...p})));
   server.registerTool('emu_status', { description: 'Native safe-point status: system, VI/epoch/PC, execution/debug ownership, input, save metadata and presentation counters. Verbose retains renderer/configuration details.', inputSchema: z.object({ verbose: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true } }, async ({verbose}) => call(async()=>{
     const result=await status() as Awaited<ReturnType<typeof status>> & {last_stop?:import('../services/n64-contracts.js').Stop;debug_mode?:Record<string,unknown>};
     if(result.last_stop) result.last_stop=formatStop(result.last_stop) as any;
@@ -76,6 +81,12 @@ function createServer(): McpServer {
     const r = await region(name), result = await memory.read(r, address(addr), length);
     return { region: r.name, region_id: r.id, addr: `0x${result.offset.toString(16).toUpperCase()}`, len: result.length, hex: result.hex, ...r.identity };
   }));
+  server.registerTool('read_memory_many', { description: 'Atomic native safe-point sample: 1–64 ordered region ranges, 64 KiB total. Does not advance paused execution. Returns frame/boundary/sample identity.', inputSchema: z.object({ reads: z.array(z.object({ region: z.string(), offset: z.number().int().nonnegative(), length: z.number().int().min(1).max(65536) }).strict()).min(1).max(64) }).strict(), annotations: { readOnlyHint: true } }, ({ reads }) => call(async () => {
+    const ranges = [];
+    for (const r of reads) ranges.push({ ...r, region: await region(r.region) });
+    return memory.readMany(ranges);
+  }));
+  server.registerTool('read_memory_many_va', { description: 'N64 CPU/cache or raw RDRAM view atomic safe-point sample; 64 ranges, 64 KiB total.', inputSchema: z.object({ reads: z.array(z.object({ address: z.string(), view: z.enum(['cpu', 'rdram']).default('cpu'), length: z.number().int().min(1).max(65536) }).strict()).min(1).max(64) }).strict(), annotations: { readOnlyHint: true } }, p => call(async () => unwrap(await local.request('n64.memory.readMany', await status(), p))));
   server.registerTool('write_memory', { description: 'EXPERIMENTAL: write 1–1024 hex bytes at region-relative addr. Unavailable/read-only regions reject writes; no cache-coherence promise.', inputSchema: z.object({ region: z.string(), addr, hex_bytes: z.string().max(4096) }).strict(), annotations: { destructiveHint: true } }, async ({ region: name, addr, hex_bytes }) => call(async () => {
     const hex = hex_bytes.trim();
     if (!hex.length || hex.length > MAX_TRANSFER * 2) throw new ServiceError('invalid_request');

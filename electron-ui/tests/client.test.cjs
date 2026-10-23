@@ -52,7 +52,7 @@ test('owner disconnects have reserved capacity and fail closed if revocation can
   const input = new PassThrough(), output = new PassThrough(); let failure;
   const client = new NativeSessionClient(input, output, identity, e => { failure = e; });
   const pending = Array.from({ length: 32 }, () => client.request('session.status').catch(e => e.code));
-  await assert.rejects(client.request('session.status'), /busy/);
+  await assert.rejects(client.request('session.status'), /request_overload/);
   const release = client.request('execution.release', undefined, undefined, 'departed-owner');
   output.write(JSON.stringify({ protocol: 1, id: 'req33', ...identity, ok: true, result: { released: true } }) + '\n');
   assert.equal((await release).result.released, true);
@@ -85,7 +85,7 @@ test('main observes a native CPU stop without a renderer request or frame', { ti
 for(const [name,wire,code] of [
   ['mismatched reply ID',JSON.stringify(reply('wrong'))+'\n','unexpected_reply'],
   ['wrong session',JSON.stringify({...reply('req1'),session:'other'})+'\n','wrong_session'],
-  ['oversized fragmented reply','x'.repeat(65537),'reply_too_large'],
+  ['oversized fragmented reply','x'.repeat(196609),'reply_too_large'],
   ['malformed JSON','{broken}\n',undefined],
 ]) test(`bridge integrity: ${name} drops all pending requests without replay`,async()=>{
   const input=new PassThrough(),output=new PassThrough();let sent='',failure;

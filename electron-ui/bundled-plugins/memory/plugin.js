@@ -1,9 +1,11 @@
+import { activateExplorer } from './explorer.js'
 export const stateVersion = 2
 let views = {}
 export function saveState() {
   return views
 }
 export function activate(ctx, restored) {
+  activateExplorer(ctx)
   views = restored ?? {}
   ctx.ui.registerPanel('memory', ({ element, instanceId, signal }) => {
     const state = views[instanceId] ??= { offset: '0x0', length: '64', hex: '', region: '' }

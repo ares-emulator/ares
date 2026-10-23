@@ -15,7 +15,7 @@ export class NativeSessionClient implements SessionClient {
         this.buffer += chunk;
         let end: number;
         while ((end = this.buffer.indexOf('\n')) >= 0) {
-          if (end > 65536) throw new ServiceError('reply_too_large');
+          if (end > 196608) throw new ServiceError('reply_too_large');
           const line = this.buffer.slice(0, end); this.buffer = this.buffer.slice(end + 1);
           const id = JSON.parse(line)?.id;
           const waiting = this.pending.get(id);
@@ -27,7 +27,7 @@ export class NativeSessionClient implements SessionClient {
           this.identity = { session: reply.session, epoch: reply.epoch };
           waiting.resolve(reply);
         }
-        if (this.buffer.length > 65536) throw new ServiceError('reply_too_large');
+        if (this.buffer.length > 196608) throw new ServiceError('reply_too_large');
       } catch (error) { this.fail(error as Error); }
     });
     output.on('end', () => this.fail(new ServiceError('native_host_disconnected')));
@@ -42,7 +42,7 @@ export class NativeSessionClient implements SessionClient {
     const release = method === 'execution.release';
     if (this.pending.size >= (release ? 40 : 32) || this.input.writableLength > (release ? 49152 : 16384)) {
       if (release) this.fail(new ServiceError('owner_revocation_failed'));
-      return Promise.reject(new ServiceError(release ? 'owner_revocation_failed' : 'busy'));
+      return Promise.reject(new ServiceError(release ? 'owner_revocation_failed' : 'request_overload'));
     }
     const id = `req${++this.nextId}`;
     let wire: string;

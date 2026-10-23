@@ -39,6 +39,12 @@ export class MemoryClient {
   async read(region: RegionHandle, offset: number, length: number): Promise<MemoryRead> {
     return unwrap(await this.client.request('memory.read', region.identity, { region: region.id, offset, length }));
   }
+  async readMany(reads: { region: RegionHandle; offset: number; length: number }[]) {
+    if (!reads.length) throw new ServiceError('invalid_request');
+    const identity = reads[0]!.region.identity;
+    if (reads.some(r => r.region.identity.session !== identity.session || r.region.identity.epoch !== identity.epoch)) throw new ServiceError('stale_region');
+    return unwrap(await this.client.request('memory.readMany', identity, { reads: reads.map(r => ({ region: r.region.id, offset: r.offset, length: r.length })) }));
+  }
   async write(region: RegionHandle, offset: number, bytes: Uint8Array): Promise<MemoryWritten> {
     if (!bytes.byteLength || bytes.byteLength > MAX_TRANSFER) throw new ServiceError('invalid_request');
     return unwrap(await this.client.request('memory.write', region.identity, { region: region.id, offset, hex: bytesToHex(bytes) }));

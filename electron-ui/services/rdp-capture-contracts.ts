@@ -6,7 +6,9 @@ export type CaptureKind = 'words' | 'batches' | 'tasks';
 export interface CaptureWord { value: string; address: string; batch: number }
 export interface CaptureBatch { id: number; source: 'DMEM' | 'RDRAM'; dpc_start: string; current: string; end: string; words: number; first_word: number; captured_words: number; cpu_pc: string; rsp_pc: string; rsp_running: boolean; task: number }
 export interface CaptureTask { id: number; cpu_pc: string; header: string; dmem_hash_xxh64: string; imem_hash_xxh64: string; dmem: string | null }
+export interface CapturePoint { pc: string; frame: number; epoch: number; vi: Record<string, number | string>; dpc: Record<string, number | string> }
 export interface CapturePage {
+  rom: {sha256: string; size: number; title?: string; id?: string}; renderer: string; start: CapturePoint; end: CapturePoint; rdram_size: number;
   operation_id: number; epoch: number; frame: number; kind: CaptureKind; stop_reason: string; complete: boolean; truncated: boolean;
   dropped_words: number; dropped_batches: number; dropped_tasks: number; batches_outside_interval: number;
   word_count: number; batch_count: number; task_count: number; storage_word_limit: number; storage_batch_limit: 512; storage_task_limit: 64; dmem_snapshots: boolean;
@@ -26,6 +28,8 @@ export function encodeRdpCapture(method: string, p: any): string | undefined {
 }
 export function validCapturePage(s: any): s is CapturePage {
   if (!s || !n(s.operation_id) || !s.operation_id || !n(s.epoch) || !s.epoch || !n(s.frame) || !['words', 'batches', 'tasks'].includes(s.kind) || typeof s.stop_reason !== 'string' || typeof s.complete !== 'boolean' || typeof s.truncated !== 'boolean' || typeof s.dmem_snapshots !== 'boolean') return false;
+  const point = (v: any) => !!v && hex64(v.pc) && n(v.frame) && v.epoch === s.epoch && v.vi && typeof v.vi === 'object' && hex64(v.vi.VI_ORIGIN) && v.dpc && typeof v.dpc === 'object' && hex64(v.dpc.DPC_CURRENT);
+  if (!s.rom || !/^[a-f0-9]{64}$/.test(s.rom.sha256) || !n(s.rom.size) || typeof s.renderer !== 'string' || !point(s.start) || !point(s.end) || !n(s.rdram_size, 8*1024*1024) || !s.rdram_size) return false;
   for (const key of ['dropped_words', 'dropped_batches', 'dropped_tasks', 'batches_outside_interval', 'word_count', 'batch_count', 'task_count', 'storage_word_limit', 'offset', 'total']) if (!n(s[key])) return false;
   if (!s.storage_word_limit || s.storage_word_limit > 65536 || s.word_count > s.storage_word_limit || s.batch_count > 512 || s.task_count > 64 || s.storage_batch_limit !== 512 || s.storage_task_limit !== 64 || !Array.isArray(s.records)) return false;
   const total = s.kind === 'words' ? s.word_count : s.kind === 'batches' ? s.batch_count : s.task_count;

@@ -1,0 +1,10 @@
+.memory-diff > label { display:inline-flex; flex-direction:column; vertical-align:top; gap:4px; margin:6px 12px 8px 0; max-width:230px; }
+.memory-diff input[type=number] { width:120px; }
+.memory-diff input:not([type]), .memory-diff select { max-width:220px; }
+.memory-diff button { margin:5px 6px 5px 0; }
+.memory-diff table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; margin:12px 0; }
+.memory-diff th, .memory-diff td { padding:6px 10px; text-align:left; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.memory-diff fieldset { display:flex; flex-wrap:wrap; align-items:end; gap:8px; margin:14px 0; border:1px solid var(--line); border-radius:6px; padding:10px; }
+.memory-diff fieldset label { display:flex; flex-direction:column; gap:4px; }
+.memory-diff fieldset p { flex-basis:100%; margin:6px 0; }
+.memory-diff [role=status] { min-height:1.5em; }

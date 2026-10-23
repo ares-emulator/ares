@@ -225,7 +225,7 @@ test('isolated N64 host and real MCP stdio share instruction operations, registe
     const neutralTap = await peer.tool('controller_tap', { button: 'a', port: 4, max_seconds: 0.01, keep_override: true });
     assert.equal(neutralTap.ownership, 'injected');
     let tapped = (await peer.tool('controller_state')).ports[3];
-    assert.equal(tapped.pending.overridden, true); assert.equal(tapped.latched.buttons, 0);
+    assert.equal(tapped.pending.overridden, true); assert.deepEqual(tapped.latched.buttons, []); assert.equal(tapped.latched.buttons_mask, 0);
     await peer.tool('controller_release', { port: 4 });
     assert.equal((await peer.tool('controller_tap', { button: 'invalid', port: 4 })).error, 'invalid_button');
     const tapParams = { port: 4, button: 0, frames: 2, timeoutMs: 10000, keepOverride: true };
@@ -248,7 +248,7 @@ test('isolated N64 host and real MCP stdio share instruction operations, registe
     let input = unwrap(await client.request('n64.input.set', undefined, setInput));
     assert.equal(input.ports[0].pending.buttons, 1); assert.equal(input.ports[0].latched.overridden, false);
     const held = await peer.tool('controller_set', { port: 2, b: true });
-    assert.equal(held.ports[1].pending.buttons, 2);
+    assert.deepEqual(held.ports[1].pending.buttons, ['b']); assert.equal(held.ports[1].pending.buttons_mask, 2);
     assert.equal((await client.request('n64.input.set', undefined, { ...setInput, port: 2 })).error, 'busy');
     assert.equal((await peer.tool('controller_release', { port: 1 })).error, 'busy');
     await done(native, unwrap(await native.request('execution.stepInstructions', undefined, { count: 1, timeoutMs: 1000 })));

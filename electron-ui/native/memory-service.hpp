@@ -2,6 +2,7 @@
 #include <charconv>
 #include <string>
 #include <vector>
+#include <functional>
 
 inline auto controlQuote(const std::string& value) -> std::string {
   std::string result = "\"";
@@ -16,7 +17,11 @@ inline auto controlQuote(const std::string& value) -> std::string {
 // This service exposes debugger-region offsets, never CPU virtual addresses.
 struct MemoryService {
   static constexpr uint32_t maxTransfer = 1024;
-  struct Region { std::string id; ares::Node::Debugger::Memory node; bool supported, writesAllowed; };
+  struct Region {
+    std::string id; ares::Node::Debugger::Memory node; bool supported, writesAllowed;
+    std::function<uint8_t(uint32_t)> hostRead;
+    uint8_t read(uint32_t offset) { return hostRead ? hostRead(offset) : uint8_t(node->read(offset)); }
+  };
   std::vector<Region> regions;
   void bind(ares::Node::System root, const std::string& session, bool n64) {
     regions.clear();
@@ -48,10 +53,37 @@ struct MemoryService {
         if(json.back() != '[') json += ',';
         json += "{\"id\":" + controlQuote(r.id) + ",\"name\":" + controlQuote(r.node->name().data()) + ",\"size\":" + std::to_string(r.node->size()) + ",\"readable\":" + (r.supported && r.node->readable() ? "true" : "false") + ",\"writable\":" + (r.supported && r.writesAllowed && r.node->writable() ? "true" : "false") + ",\"addressing\":\"region-offset\"";
         if(!r.supported) json += ",\"unavailableReason\":\"Requires N64 cache-aware service\"";
-        else if(!r.writesAllowed) json += ",\"unavailableReason\":\"Writes require N64 memory service; debugger view follows chip mapping\"";
+        else if(!r.writesAllowed) json += ",\"unavailableReason\":\"Writes require N64 memory service; host reads use raw physical storage\"";
         json += '}';
       }
       return {{}, json + "]}"};
+    }
+    if(method == "memory.readMany") {
+      if(args.empty() || args.size() % 3 || args.size() > 64 * 3) return {"invalid_request", {}};
+      struct Range { Region* region; uint32_t offset, length; };
+      std::vector<Range> ranges;
+      uint32_t total = 0;
+      for(size_t i = 0; i < args.size(); i += 3) {
+        uint32_t offset, length;
+        if(!number(args[i + 1], offset) || !number(args[i + 2], length) || !length || length > 65536 - total) return {"invalid_request", {}};
+        Region* region = nullptr;
+        for(auto& r : regions) if(r.id == args[i]) { region = &r; break; }
+        if(!region) return {"stale_region", {}};
+        if(!region->supported) return {"unsupported_region", {}};
+        if(!region->node->readable()) return {"region_not_readable", {}};
+        if(offset > region->node->size() || length > region->node->size() - offset) return {"out_of_bounds", {}};
+        total += length; ranges.push_back({region, offset, length});
+      }
+      // Every range is validated before the first callback. This loop never yields.
+      std::string out = "{\"reads\":[";
+      const char* digits = "0123456789abcdef";
+      for(auto& r : ranges) {
+        std::string bytes; bytes.reserve(r.length * 2);
+        for(uint32_t i = 0; i < r.length; ++i) { uint8_t v = r.region->read(r.offset + i); bytes += digits[v >> 4]; bytes += digits[v & 15]; }
+        if(out.back() != '[') out += ',';
+        out += "{\"region\":" + controlQuote(r.region->id) + ",\"offset\":" + std::to_string(r.offset) + ",\"length\":" + std::to_string(r.length) + ",\"hex\":" + controlQuote(bytes) + "}";
+      }
+      return {{}, out + "]}"};
     }
     if(method != "memory.read" && method != "memory.write") return {"unavailable", {}};
     if(args.size() != 3) return {"invalid_request", {}};
@@ -83,7 +115,7 @@ struct MemoryService {
       if(!node->readable()) return {"region_not_readable", {}};
       const char* digits = "0123456789abcdef";
       std::string hex; hex.reserve(length * 2);
-      for(uint32_t i = 0; i < length; ++i) { uint8_t value = node->read(offset + i); hex += digits[value >> 4]; hex += digits[value & 15]; }
+      for(uint32_t i = 0; i < length; ++i) { uint8_t value = region->read(offset + i); hex += digits[value >> 4]; hex += digits[value & 15]; }
       return {{}, json + ",\"length\":" + std::to_string(length) + ",\"hex\":" + controlQuote(hex) + "}"};
     }
     if(!region->writesAllowed || !node->writable()) return {"region_not_writable", {}};

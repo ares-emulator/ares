@@ -260,3 +260,70 @@ per plugin. The complete profile file is bounded to 1 MiB. Renaming IDs or chang
 value semantics needs an explicit migration; moving sections visually or removing
 fields leaves saved data readable. Changing a registered section ID changes its
 field namespace; changing only its title or display position does not. See [settings behavior](../SETTINGS.md).
+
+### Admission and diagnostics (Kirby feedback implementation)
+
+Each plugin has one admission bound of **8 concurrent service/settings requests**.
+The renderer and registry enforce the same bound, with no queue or replay.
+Excess SDK calls reject with `code: request_overload`, `pending`, and `limit: 8`;
+stale scopes reject with `code: stale_plugin_scope`. Native service failures remain
+resolved `ok: false` replies. `busy` continues to mean execution contention.
+Always clear refresh latches with `finally`, including around `Promise.all`:
+
+```js
+if (refreshing) return
+refreshing = true
+try {
+  const reply = await ctx.services.request('memory.readMany', { reads })
+  if (!reply.ok) throw new Error(reply.error)
+  render(reply.result)
+} finally {
+  refreshing = false
+}
+```
+
+`memory.readMany` accepts 1–64 region-offset ranges and 64 KiB total, preserves
+order/overlaps, and validates all ranges before invoking callbacks. One native
+safe-point dispatch copies the entire sample without guest execution between
+ranges. A paused read does not advance a frame. Results carry epoch, frame kind,
+frame, `sample_id` and `at_frame_boundary`. Separate `n64.memory.readMany` ranges
+use `{address, view, length}` with existing CPU/cache-aware translation.
+
+Use `ares-plugin logs <id> --connection FILE --instance UUID` for up to 32 log
+entries, or `--cursor N --generation TOKEN --limit N` to continue. The response
+contains dropped/missed counts; a changed generation rejects a stale cursor.
+`ares-plugin screenshot --output /absolute/new.png [--panel plugin.id:panel]`
+uses the same explicit selection and captures the app UI rather than framebuffer.
+A hidden/closed panel reports `panel_not_open`; existing files are not replaced.
+MCP exposes the same operations as `plugin_logs` and `ui_screenshot`.
+
+Stable targeting: launch the app with `--instance-name kirby` and select it with
+`--service-dir /absolute/private/services --instance-name kirby`. Names are
+opt-in, case-sensitive, 1–48 ASCII alphanumeric/underscore/hyphen characters and
+must begin alphanumeric. No newest-instance discovery is performed. Each launch
+still has fresh credentials; reconnect never replays in-flight requests. A native
+kernel claim lock serializes publication/recovery; its `.lock` inode intentionally
+remains after exit. Connection records are private, atomically published and
+removed only by the launch that owns them.
+
+The Generic memory plugin includes a RAM diff panel with native before/after
+snapshots, typed comparison pages and game-specific labels. Labels can be
+imported/exported with ROM and region-map provenance. Native candidate narrowing, changed-run maps and recorded-frame navigation are
+available as described below.
+
+RAM diff continuation: Find candidates performs a bounded native query; Narrow
+retained candidates reuses its native set with fresh snapshots. Adjacent run,
+line and page content views fetch only the visible page. Frame recording keeps
+capacity separate from duration and never resumes a paused game. Refresh recording
+shows sequence/frame identity, overwrites and native copy measurements; use a
+retained sequence as before/after to freeze it for analysis. Expired handles clear
+the local samples with an actionable recapture message. Labels survive reload;
+recording/snapshot/query resources are released with the plugin owner. Large
+candidate or byte budgets fail explicitly rather than silently truncating a set.
+
+Host admission errors cross IPC/contextBridge as plain internal failure data and
+are reconstructed into SDK Error objects in the renderer. This preserves code,
+pending and limit even when the renderer has not itself hit its admission bound.
+The internal window bridge is not the public SDK; native ok:false service replies
+remain ordinary resolved SDK replies. Live unload tests settle pending calls and
+verify both zero host bookkeeping and a working replacement plugin generation.

@@ -9,7 +9,7 @@ const params = { steps: [{ kind: 'run', n: 0 }], timeoutMs: 1000, stopOnError: t
 test('batch contracts reject nesting, extra keys, malformed later payloads and aggregate bounds', () => {
   assert.match(encodeRequest('x', identity, 'experiment.batch', { ...params, steps: [capture] }), /experiment.batch owner=ui/);
   for (const steps of [[{ kind: 'batch', steps: [] }], [{ kind: 'run', n: 1, parallel: true }], [capture, { kind: 'write', address: '0x2000', view: 'cpu', hex: 'zz' }],
-    Array(33).fill(params.steps[0]), Array(2).fill({ kind: 'run', n: 1000000 }), Array(17).fill({ kind: 'read', address: '0x2000', view: 'rdram', length: 1024 }), Array(9).fill(capture), [{ ...capture, inline: true }]]) {
+    Array(257).fill(params.steps[0]), Array(2).fill({ kind: 'run', n: 1000000 }), Array(17).fill({ kind: 'read', address: '0x2000', view: 'rdram', length: 1024 }), Array(9).fill(capture), [{ ...capture, inline: true }]]) {
     assert.throws(() => encodeRequest('x', identity, 'experiment.batch', { ...params, steps }), /invalid_request/);
   }
   assert.doesNotThrow(() => encodeRequest('x',identity,'experiment.batch',{...params,timeoutMs:600000}));
@@ -56,9 +56,9 @@ test('batch result-space exhaustion stops before a following mutation and preser
     return { protocol: 1, id: 'read', ...identity, ok: true, result: { addr: '0x2000', paddr: '0x2000', view: 'rdram', cache_aware: false, length: 1024, hex: 'ab'.repeat(1024) } };
   } };
   const read = { kind: 'read', address: '0x2000', length: 1024, view: 'rdram' };
-  const result = await batches.run(native, invoke, identity, { ...params, steps: [...Array(15).fill(read), { kind: 'write', address: '0x2000', view: 'rdram', hex: 'ff' }] }, 'parent', () => true, () => {});
-  assert.equal(result.stop_reason, 'result_limit'); assert.equal(writes, 0); assert.equal(result.results.length, 15);
-  assert.ok(Buffer.byteLength(JSON.stringify(result)) <= 49152);
+  const result = await batches.run(native, invoke, identity, { ...params, steps: [...Array(53).fill(read), { kind: 'write', address: '0x2000', view: 'rdram', hex: 'ff' }] }, 'parent', () => true, () => {});
+  assert.equal(result.stop_reason, 'result_limit'); assert.equal(writes, 0); assert.equal(result.results.length, 52);
+  assert.ok(Buffer.byteLength(JSON.stringify(result)) <= 131072);
   decodeReply(JSON.stringify({ protocol: 1, id: 'result', ...identity, ok: true, result }), 'experiment.batch');
 });
 test('batch cancellation token cannot revoke a foreign or later job',async()=>{

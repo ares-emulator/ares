@@ -282,3 +282,108 @@ semaphore and DMA engine, with no MMIO reads. Machine contracts validate vector
 sizes/lane widths, lossless addresses/registers, signed decimal DMA clock and
 structured peripheral groups. RSP debug metadata remains unavailable until the
 core gate is ported. See MCP docs for bounded/schema differences and evidence.
+
+## Memory sampling and native storage
+
+`memory.readMany` and `n64.memory.readMany` bound requests to 64 ranges / 64 KiB.
+Hex expansion and metadata fit a bounded 192 KiB native/local reply line. Individual
+legacy `memory.read` limits remain 1024 bytes. CPU-view DCache does not masquerade
+as a raw region. All reads in a sample occur in one emulation-thread dispatch.
+
+Native memory tools share the plugin/MCP service path:
+
+- `memory.snapshot.capture {reads, scheduling: 'immediate'|'boundary'}` reserves
+  up to 16 MiB of immutable bytes. Immediate works paused; a paused boundary
+  request reports `paused_boundary_unavailable` and never resumes execution.
+- `memory.recorder.start {reads, capacity, duration}` stores at most 64 KiB/sample
+  in a ring, up to 1024 samples. Duration counts frames independently of capacity;
+  zero records until stopped. Recording supports N64/synthetic VI boundaries and explicitly labelled primary-
+  screen frame boundaries on other cores; absent coordinates reject.
+- `memory.capture.status`, `memory.recorder.stop`, `memory.capture.release`
+  accept `{handle}`. There are at most 32 captures, 4 recorders and 64 MiB of
+  total reserved sample storage. Snapshots and rings share this budget.
+- `memory.capture.read {handle, sequence, range, offset, length}` pages up to
+  16 KiB of an immutable retained sample. Status includes first/next sequence and
+  dropped count. `cursor_overwritten` requires restarting at first sequence.
+- `memory.snapshot.compare {before, after, range, type, endian, filter, cursor,
+  limit, value}` scans at most 64 KiB per call and returns up to 256 typed values.
+  Types are unsigned u8/u16/u32 or f32, alignment is relative to the captured range,
+  and endian is explicit. changed/unchanged compare bits (including NaN payloads);
+  ordered/delta exclude either NaN; equals excludes a new NaN, float equality is exact, integer delta uses
+  mathematical subtraction without wraparound. Nonfinite display values are null
+  with exact raw hex retained. Follow next_cursor even for empty pages.
+
+Handles are connection/plugin-owner and epoch scoped. Reset/load invalidates
+captures; disconnect/unload releases resources. Compare reports content changes,
+not writes that later restore a value. Candidate handles, content maps and non-N64 screen scheduling are described below.
+Non-stopping call/write buffers remain an investigation.
+No performance or zero-slowdown claim is made for the recorder.
+
+Batches accept up to 256 steps, 16 KiB aggregate memory transfers, 1M total frames,
+8 artifacts and a 600-second deadline. The bounded result budget is now 128 KiB:
+the real 50 run/read sample fixture exceeded the old early-stop budget. The
+orchestrator reserves room before effects and reports `result_limit` explicitly.
+MCP adds reference-facing `steps` while retaining `results` for existing consumers.
+MCP controller set/state present named `buttons` and lossless `buttons_mask`;
+native/SDK numeric button contracts and owner UUIDs remain unchanged.
+
+RDP artifacts now include exact-capture decoded commands (`seq`, opcode, name,
+address, source, words, batches, frame, incomplete/expected_words). The table and
+names are ported with attribution from ares-64 commit
+`1c9b9637476a83f7b80d3db1115a0f71529820d9`. Decode happens after capture; raw words,
+batches/tasks, limits, drops and completeness are retained. The envelope uses
+`kind: ares-rdp-capture`, epoch/interval/complete/truncated/dropped_words and the
+existing detailed summary. ROM/renderer/start/end envelopes and OSTask association enrichment now follow
+the reference rules, as detailed below. Legacy viewer lengths are separate.
+
+Pause remains immediate at the next native service safe point. Check
+`at_frame_boundary` before exact next-VI capture; do not assume pause advances to a
+VI. Controller timeout is an upper bound: disconnect, reset or takeover can release
+earlier. Some MCP clients need restarting to discover newly registered tools.
+Development CDP is an optional Electron `--remote-debugging-port` launch flag; UI
+screenshots do not require CDP or disabling Chromium sandboxing.
+
+## Native candidates, content maps and recorder navigation (continuation)
+
+`memory.query.start` accepts `{before, after, range, type, endian, filter, value,
+candidates}`. `candidates: 0` scans all aligned values; otherwise it narrows a
+completed query with matching region/offset/length/type/endian provenance. Both
+range start and length must align to the type. `memory.query.advance {handle}`
+processes at most 64 KiB of values and reports running/done/failed, scanned/total,
+candidate_count and an explicit error. Up to eight queries reserve 1 MiB each,
+independent of the 64 MiB capture budget. More than 262144 matches fails with
+candidate_budget_exhausted; failed partial sets cannot be narrowed or paged.
+
+`memory.query.page {handle,cursor,limit}` returns up to 256 typed matches after
+completion. Query cursors index candidates, not bytes. Snapshot bytes must remain
+alive while advancing or paging values. Completed candidate offsets remain usable
+for narrowing after those old snapshot handles are released. Release with
+`memory.query.release`; a source used by a running descendant returns query_in_use.
+Owner disconnect/unload and epoch changes clear both captures and candidate sets.
+`equals` compares the new value and excludes a new NaN; ordered/delta comparisons
+exclude either NaN. Changed/unchanged compare bits, including signed zero and NaN
+payloads. All returned finite floating values preserve double round-trip precision.
+
+`memory.snapshot.changes {before,after,range,cursor,limit,granularity}` reports
+changed contents as adjacent byte runs, 16-byte lines or 4096-byte pages. At most
+64 KiB is examined per request, with up to 256 groups. Cursors are range-relative
+bytes; line/page groups are anchored to absolute region offsets. Run continuation
+flags identify a group cut by the work bound. These are content maps; writes that
+restore the original value are intentionally invisible. Freeze consecutive ring
+samples to obtain per-frame maps through the same service.
+
+`memory.capture.freeze {handle,sequence}` deep-copies a retained sequence into a
+budgeted native snapshot. It preserves the source frame and survives ring wrap.
+Non-N64 systems with a screen now use the first registered screen's submission
+boundary, labelled primary-screen-frame rather than N64 VI. Other screens do not
+double-count. Immediate snapshots still work without a screen. Paused boundary
+requests reject without resuming. Status includes first/last frames, native
+last_copy_ns/max_copy_ns, copied_bytes and fetched transferred_bytes. Copy metrics
+exclude renderer transport and are measurements, not a zero-slowdown guarantee.
+
+The RDP envelope now freezes ROM/renderer/start/end at capture time and enriches
+OSTask descriptors and batch associations using the reference rules. Native raw
+header/current/end/task indices remain available under additive aliases. The
+software renderer name is implementation-specific; it is not labelled angrylion.
+The core debugger callback audit and non-stopping instrumentation investigation
+are recorded in MEMORY-SAMPLING-AUDIT.md.

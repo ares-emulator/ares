@@ -7,7 +7,7 @@ const {normalize,compare,report} = require('../scripts/schema-parity.cjs');
 test('actual stdio registry matches the recorded FastMCP comparison, including pending differences', async () => {
   const expected = JSON.parse(fs.readFileSync(path.join(__dirname,'reference/schema-parity-report.json'),'utf8'));
   assert.deepEqual(await report(),expected,'Schema drift: inspect and regenerate the report; a recorded difference is not parity approval.');
-  assert.deepEqual(expected.missing,[]); assert.deepEqual(expected.added,[]);
+  assert.deepEqual(expected.missing,[]); assert.deepEqual(expected.added, ['memory_capture_freeze', 'memory_capture_read', 'memory_capture_release', 'memory_capture_status', 'memory_changes', 'memory_compare', 'memory_query_advance', 'memory_query_page', 'memory_query_release', 'memory_query_start', 'memory_record_start', 'memory_record_stop', 'memory_snapshot', 'plugin_logs', 'read_memory_many', 'read_memory_many_va', 'ui_screenshot']);
   assert.equal(expected.reference_count,68);
   assert.equal(expected.signature_matching,68);
   assert.deepEqual(expected.signature_differences,[]);

@@ -23,3 +23,13 @@ test('memory contract rejects missing/extra arguments, wrapping offsets, malform
   const reply = { protocol: 1, id: 'r', ...identity, ok: true, result: { region: 'r', offset: 0, length: 2, hex: 'ff' } };
   assert.throws(() => decodeReply(JSON.stringify(reply), 'memory.read'), /invalid_reply/);
 });
+test('atomic ranges enforce exact count and aggregate byte limits and retain overlaps', () => {
+  const range = { region: 'r', offset: 0, length: 1024 };
+  for (const method of ['memory.readMany', 'n64.memory.readMany']) {
+    const r = method.startsWith('n64') ? { address: '0x80000000', view: 'cpu', length: 1024 } : range;
+    assert.doesNotThrow(() => encodeRequest('req', identity, method, { reads: Array(64).fill(r) }));
+    assert.doesNotThrow(() => encodeRequest('req', identity, method, { reads: [{ ...r, length: 65536 }] }));
+    for (const reads of [[], Array(65).fill(r), [{ ...r, length: 65537 }], [{ ...r, length: 65536 }, r], [r, { ...r, length: 0 }]])
+      assert.throws(() => encodeRequest('req', identity, method, { reads }), /invalid_request/);
+  }
+});

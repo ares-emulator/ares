@@ -1,3 +1,4 @@
+import { pluginBridgeResult } from './plugins/admission.js'
 import { WorkspaceStore } from './workspace/store.js'
 import { PluginSettingsService } from './settings/plugins.js'
 import { inputDescriptors } from './settings/input.js'
@@ -165,11 +166,31 @@ export const serviceHost = new LocalServiceHost(sessions, async (params) => {
           'name',
           'offset',
           'limit',
+          'cursor',
+          'generation',
+          'path',
+          'panel',
         ].includes(key),
     )
   )
     throw new Error('invalid_plugin_request')
   switch (params.operation) {
+    case 'logs':
+      return plugins.logs(params.id, params.cursor, params.limit, params.generation)
+    case 'screenshot': {
+      if (!window || window.isDestroyed()) throw new Error('window_closed')
+      if (typeof params.path !== 'string' || !path.isAbsolute(params.path)) throw new Error('absolute_path_required')
+      let rect: Electron.Rectangle | undefined
+      if (params.panel !== undefined) {
+        if (typeof params.panel !== 'string' || params.panel.length > 256) throw new Error('invalid_panel')
+        const selector = JSON.stringify(params.panel)
+        rect = await window.webContents.executeJavaScript(`(() => {const all=[...document.querySelectorAll('[data-plugin-panel]')];const e=all.find(e=>e.dataset.pluginPanel===${selector} && e.getBoundingClientRect().width>0 && e.getBoundingClientRect().height>0);if(!e)return;const r=e.getBoundingClientRect();return {x:Math.floor(r.x),y:Math.floor(r.y),width:Math.ceil(r.width),height:Math.ceil(r.height)}})()`)
+        if (!rect) throw new Error('panel_not_open')
+      }
+      const image = await window.webContents.capturePage(rect)
+      await fs.promises.writeFile(params.path, image.toPNG(), { flag: 'wx' })
+      return { path: params.path, source: params.panel === undefined ? 'window' : 'panel', panel: params.panel ?? null, ...image.getSize() }
+    }
     case 'list':
       return pluginCatalog(params.offset ?? 0, params.limit ?? 4)
     case 'add':
@@ -334,7 +355,7 @@ async function start(options: StartOptions) {
   if (options.rom) args.push('--system', system)
   if (
     process.env.ARES_ENABLE_SERVICES === '1' ||
-    process.argv.includes('--services')
+    process.argv.includes('--services') || process.argv.includes('--instance-name')
   )
     args.push('--debug-provenance', '--debug-capture')
   for (const media of options.media || []) args.push('--media', media)
@@ -473,9 +494,9 @@ app
     })
     if (
       process.env.ARES_ENABLE_SERVICES === '1' ||
-      process.argv.includes('--services')
+      process.argv.includes('--services') || process.argv.includes('--instance-name')
     ) {
-      const file = await serviceHost.listen(process.env.ARES_SERVICE_DIR)
+      const file = await serviceHost.listen(process.env.ARES_SERVICE_DIR, process.argv[process.argv.indexOf('--instance-name') + 1] && process.argv.includes('--instance-name') ? process.argv[process.argv.indexOf('--instance-name') + 1] : undefined, hostPath)
       console.error(`ares service instance ${serviceHost.instance}: ${file}`)
     }
     window = new BrowserWindow({
@@ -633,9 +654,9 @@ app
           case 'refresh':
             return plugins.refresh()
           case 'request':
-            return plugins.request(args[0], args[1], args[2])
+            return pluginBridgeResult(() => plugins.request(args[0], args[1], args[2]))
           case 'settings':
-            return plugins.settings(args[0], args[1])
+            return pluginBridgeResult(() => plugins.settings(args[0], args[1]))
           case 'storage':
             return plugins.storage(args[0], args[1], args[2], args[3])
           case 'fail':
@@ -783,3 +804,5 @@ app.on('before-quit', (event) => {
     app.quit()
   })
 })
+
+for (const signal of ['SIGTERM', 'SIGINT'] as const) process.on(signal, () => app.quit())

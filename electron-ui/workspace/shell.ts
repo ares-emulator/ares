@@ -12,13 +12,26 @@ let workspace: Workspace;
 export function showSettings(tab = 'general'): void {
   window.dispatchEvent(new Event('ares-input-release'));
   for (const page of document.querySelectorAll<HTMLElement>('[data-page]')) page.hidden = page.dataset.page !== tab;
-  for (const button of document.querySelectorAll<HTMLElement>('[data-tab]')) button.setAttribute('aria-selected', String(button.dataset.tab === tab));
+  for (const button of document.querySelectorAll<HTMLElement>('[data-tab]')) { button.setAttribute('aria-selected', String(button.dataset.tab === tab)); button.tabIndex = button.dataset.tab === tab ? 0 : -1; }
   if (!dialog.open) dialog.showModal();
 }
 export function closeSettings(): void { dialog.close(); element<HTMLCanvasElement>('screen').focus({ preventScroll: true }); }
 element('close-settings').onclick = closeSettings;
 dialog.addEventListener('cancel', event => { event.preventDefault(); closeSettings(); });
 for (const button of document.querySelectorAll<HTMLElement>('[data-tab]')) button.onclick = () => showSettings(button.dataset.tab);
+element('settings-tabs').setAttribute('role', 'tablist');
+element('settings-tabs').setAttribute('aria-orientation', 'vertical');
+for (const tab of document.querySelectorAll<HTMLElement>('[data-tab]')) {
+  tab.setAttribute('role', 'tab'); tab.id = `settings-tab-${tab.dataset.tab}`;
+  const page = document.querySelector<HTMLElement>(`[data-page="${tab.dataset.tab}"]`)!;
+  page.setAttribute('role', 'tabpanel'); page.setAttribute('aria-labelledby', tab.id);
+  page.id ||= `settings-page-${tab.dataset.tab}`; tab.setAttribute('aria-controls', page.id);
+  tab.onkeydown = event => {
+    const tabs = [...document.querySelectorAll<HTMLElement>('[data-tab]')], index = tabs.indexOf(tab);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : ['ArrowRight','ArrowDown'].includes(event.key) ? (index + 1) % tabs.length : ['ArrowLeft','ArrowUp'].includes(event.key) ? (index + tabs.length - 1) % tabs.length : -1;
+    if (next >= 0) { event.preventDefault(); showSettings(tabs[next]!.dataset.tab); tabs[next]!.focus(); }
+  };
+}
 mountSettingsForm(element('settings-general'), window.ares.preferences, entry => ['Presentation', 'Audio', 'Video'].includes(entry.descriptor.section));
 mountSettingsForm(element('settings-input'), window.ares.preferences, entry => entry.descriptor.id.startsWith('input.'));
 mountSettingsForm(element('settings-firmware'), window.ares.preferences, entry => entry.descriptor.id.startsWith('firmware.') || entry.descriptor.id === 'paths.importBml');
@@ -56,7 +69,7 @@ function updateWorkspaceSettings(): void {
     shortcutLabel.append(shortcut);
     const interaction = document.createElement('label'), checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = item.interactive; checkbox.onchange = () => workspace.updateFloating(item.id, { interactive: checkbox.checked });
     interaction.append(checkbox, ' Accept mouse input');
-    const toggle = document.createElement('button'); toggle.textContent = item.open ? 'Hide' : 'Show'; toggle.onclick = () => workspace.toggle(item.id);
+    const toggle = document.createElement('button'); toggle.textContent = item.open ? 'Hide' : 'Show'; toggle.setAttribute('aria-expanded', String(item.open)); toggle.onclick = () => workspace.toggle(item.id);
     const remove = document.createElement('button'); remove.textContent = 'Remove'; remove.onclick = () => workspace.removeFloating(item.id);
     card.append(title, mode, shortcutLabel, record, clear, interaction, toggle, remove); list.append(card);
   }

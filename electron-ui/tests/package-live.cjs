@@ -156,7 +156,7 @@ async function run() {
     const inventory = (await peer.request('tools/list', {})).result.tools.map(
       (t) => t.name,
     )
-    assert.equal(inventory.length, 68)
+    assert.equal(inventory.length, 85)
     for (const name of [
       'profiler_control',
       'profiler_clear',
@@ -463,6 +463,8 @@ async function run() {
     )
     const result = {
       result: 'PACKAGE_MCP_PASS',
+      namedSignals: await require('./signal-instance-check.cjs')(bundle),
+      helperSandboxWarnings: diagnostics.split('\n').filter(line=>/sandbox_extension_issue_file/.test(line)),
       runtime,
       system: status.system,
       frames: measurement.frames,
@@ -471,6 +473,7 @@ async function run() {
       pluginCLI: 'scaffold/build/list/add/enable/open/reload/command',
       checkoutReadDeniedFor: ['native loader', 'MCP adapter', 'plugin CLI'],
     }
+    fs.writeFileSync(path.resolve(__dirname, '../artifacts/copied-package-stderr.log'), diagnostics)
     fs.writeFileSync(
       path.resolve(__dirname, '../artifacts/package-mcp.json'),
       JSON.stringify(result, null, 2),

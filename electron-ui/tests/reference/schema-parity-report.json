@@ -7,9 +7,27 @@
   "signature_matching": 68,
   "signature_differences": [],
   "reference_count": 68,
-  "current_count": 68,
+  "current_count": 85,
   "missing": [],
-  "added": [],
+  "added": [
+    "memory_capture_freeze",
+    "memory_capture_read",
+    "memory_capture_release",
+    "memory_capture_status",
+    "memory_changes",
+    "memory_compare",
+    "memory_query_advance",
+    "memory_query_page",
+    "memory_query_release",
+    "memory_query_start",
+    "memory_record_start",
+    "memory_record_stop",
+    "memory_snapshot",
+    "plugin_logs",
+    "read_memory_many",
+    "read_memory_many_va",
+    "ui_screenshot"
+  ],
   "matching": 0,
   "differences": [
     {
@@ -305,7 +323,7 @@
                 }
               ]
             },
-            "maxItems": 32,
+            "maxItems": 256,
             "minItems": 1,
             "type": "array"
           }

@@ -1,3 +1,4 @@
+import { PLUGIN_REQUEST_LIMIT, PluginAdmissionError } from './admission.js'
 import type { PluginSettingsService } from '../settings/plugins.js'
 import type { PluginSettingsRequest } from '../settings/contracts.js'
 import { watch, type FSWatcher } from 'node:fs'
@@ -41,9 +42,13 @@ export class PluginRegistry {
   async settings(token: string, request: PluginSettingsRequest) {
     const r = this.lease(token)
     if (!this.settingsHost) throw new Error('settings_unavailable')
-    const snapshot = await this.settingsHost.request(token, r.manifest!, r.phase === 'active', request, () => { this.authorize(token) })
-    this.lease(token)
-    return snapshot
+    if (r.pending >= PLUGIN_REQUEST_LIMIT) throw new PluginAdmissionError(r.pending)
+    ++r.pending
+    try {
+      const snapshot = await this.settingsHost.request(token, r.manifest!, r.phase === 'active', request, () => { this.authorize(token) })
+      this.lease(token)
+      return snapshot
+    } finally { --r.pending }
   }
   private startupDisabled = false
   private records: Record[] = []
@@ -822,7 +827,8 @@ export class PluginRegistry {
     if (['n64.debug.lastStop', 'n64.debug.registers'].includes(method))
       capability = 'debug.read'
     if (method === 'session.status') capability = 'session.read'
-    if (['memory.regions', 'memory.read', 'n64.memory.read'].includes(method))
+    if (['memory.regions', 'memory.read',
+              'memory.readMany', 'memory.snapshot.capture', 'memory.recorder.start', 'memory.recorder.stop', 'memory.capture.status', 'memory.capture.read', 'memory.capture.release', 'memory.snapshot.compare', 'memory.capture.freeze', 'memory.query.start', 'memory.query.advance', 'memory.query.page', 'memory.query.release', 'memory.snapshot.changes', 'n64.memory.readMany', 'n64.memory.read'].includes(method))
       capability = 'memory.read'
     if (
       ['memory.write', 'n64.memory.write', 'n64.memory.writeMany'].includes(
@@ -850,14 +856,15 @@ export class PluginRegistry {
         'session.status',
         'memory.regions',
         'memory.read',
-        'n64.memory.read',
+              'memory.readMany', 'memory.snapshot.capture', 'memory.recorder.start', 'memory.recorder.stop', 'memory.capture.status', 'memory.capture.read', 'memory.capture.release', 'memory.snapshot.compare', 'memory.capture.freeze', 'memory.query.start', 'memory.query.advance', 'memory.query.page', 'memory.query.release', 'memory.snapshot.changes',
+        'n64.memory.readMany', 'n64.memory.read',
         'n64.debug.lastStop',
         'n64.debug.registers',
         'execution.status',
       ].includes(method)
     )
       throw new ServiceError('plugin_not_ready')
-    if (r.pending >= 8) throw new ServiceError('busy')
+    if (r.pending >= PLUGIN_REQUEST_LIMIT) throw new PluginAdmissionError(r.pending)
     ++r.pending
     try {
       const reply = await this.client.request(
@@ -919,6 +926,19 @@ export class PluginRegistry {
     r.state = 'error'
     this.changed(this.catalog())
   }
+  logs(id: string, cursor = 0, limit = 32, generation?: string) {
+    if (!Number.isSafeInteger(cursor) || cursor < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 32) throw new ServiceError('invalid_plugin_request');
+    const r = this.records.find(r => r.manifest?.id === id);
+    if (!r) throw new ServiceError('unknown_plugin');
+    const current = r.lease?.token ?? r.candidate?.lease.token ?? 'inactive';
+    if (generation && generation !== current) throw new ServiceError('stale_plugin_scope');
+    const next = this.logSequences.get(r) ?? 0, first = next - r.logs.length;
+    if (cursor > next) throw new ServiceError('invalid_log_cursor');
+    const offset = Math.max(first, cursor), entries = r.logs.slice(offset - first, offset - first + limit);
+    while (Buffer.byteLength(JSON.stringify(entries)) > 40000) entries.pop();
+    return { id, generation: current, entries, cursor: offset + entries.length, dropped: first, missed: Math.max(0, first - cursor), next_cursor: offset + entries.length < next ? offset + entries.length : null };
+  }
+  private logSequences = new WeakMap<Record, number>()
   log(token: string, level: string, message: string) {
     const r = this.lease(token)
     if (
@@ -926,6 +946,7 @@ export class PluginRegistry {
       typeof message !== 'string'
     )
       throw new Error('Invalid plugin log')
+    this.logSequences.set(r, (this.logSequences.get(r) ?? 0) + 1)
     r.logs.push({ level, message: message.slice(0, 2048) })
     if (r.logs.length > 128) r.logs.shift()
     this.changed(this.catalog())

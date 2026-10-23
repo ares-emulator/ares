@@ -71,6 +71,17 @@ test('real N64 batch: baseline/load/write/active-VI-run/crop sweep, partial effe
       assert.equal(result.results[4].data.hex, hex.repeat(8));
       const pixels = pngPixels(output); assert.equal(pixels.width, 4); assert.equal(pixels.height, 4); assert.deepEqual(pixels.rgb, Array.from({ length: 16 }, () => rgb).flat());
     }
+    const recordingRegion=unwrap(await native.request('memory.regions')).regions.find(r=>r.name==='RDRAM');
+    const cpuRanges=await peer.tool('read_memory_many_va',{reads:[{address:'0x80000000',view:'cpu',length:0x6000},{address:'0xa0000000',view:'cpu',length:1024}]});
+    assert.equal(cpuRanges.reads[0].length,0x6000);assert.equal(cpuRanges.reads[1].cache_aware,false);
+    const memoryRecording=await peer.tool('memory_record_start',{reads:[{region:recordingRegion.id,offset:0,length:0x6400}],capacity:4,duration:8});
+    assert.equal(memoryRecording.error,undefined);
+    assert.equal((await peer.tool('run_frames',{n:8})).stop_reason,'frames_done');
+    const memoryCost=await peer.tool('memory_capture_status',{handle:memoryRecording.handle});
+    assert.equal(memoryCost.next_sequence,8);assert.equal(memoryCost.copied_bytes,8*0x6400);assert.equal(memoryCost.transferred_bytes,0);
+    console.log('MEMORY_COPY_COST_N64',JSON.stringify({sample_bytes:0x6400,samples:8,max_copy_ns:memoryCost.max_copy_ns,last_copy_ns:memoryCost.last_copy_ns,transferred_bytes:memoryCost.transferred_bytes}));
+    const frameSnapshot=await peer.tool('memory_capture_freeze',{handle:memoryRecording.handle,sequence:memoryCost.first_sequence});assert.equal(frameSnapshot.first_frame,memoryCost.first_frame);
+    assert.equal((await peer.tool('memory_capture_release',{handle:frameSnapshot.handle})).released,true);assert.equal((await peer.tool('memory_capture_release',{handle:memoryRecording.handle})).released,true);
     const beforeOffline = unwrap(await native.request('n64.debug.registers')), epochBeforeOffline = native.identity.epoch;
     const offline = await peer.tool('state_peek', { path: baseline, addr: '0x2000', length: 16 });
     assert.equal(offline.hex, '00'.repeat(16)); assert.equal(native.identity.epoch, epochBeforeOffline);
@@ -84,6 +95,9 @@ test('real N64 batch: baseline/load/write/active-VI-run/crop sweep, partial effe
     assert.equal((await peer.tool('read_memory_va', { addr: '0x2000', length: 1 })).hex, 'aa');
     const keptGoing = await peer.tool('batch', { stop_on_error: false, steps: [{ kind: 'state_load', path: path.join(dir, 'missing.bs') }, { kind: 'read', addr: '0x2000', length: 1 }] });
     assert.equal(keptGoing.stop_reason, 'batch_done'); assert.equal(keptGoing.results[0].ok, false); assert.equal(keptGoing.results[1].data.hex, 'aa');
+    const samples = await peer.tool('batch', { steps: Array.from({length:50},()=>[{kind:'run',n:0},{kind:'read',addr:'0x2000',length:1}]).flat() });
+    assert.equal(samples.stop_reason, 'batch_done', JSON.stringify({reason:samples.stop_reason,count:samples.steps_completed,bytes:JSON.stringify(samples).length}));
+    assert.equal(samples.steps.length, 100); assert.deepEqual(samples.steps, samples.results);
     const timed = await peer.tool('batch', { max_seconds: 0.05, steps: [{ kind: 'run', n: 1000000 }, { kind: 'write', addr: '0x2000', hex: 'bb', view: 'rdram' }] });
     assert.equal(timed.stop_reason, 'timeout', JSON.stringify(timed)); assert.equal(timed.results.length, 1); assert.equal(timed.results[0].data.state, 'done'); assert.ok(timed.results[0].data.elapsed_frames < 1000000);
     // Interrupt a long run through UI; foreign mutations must remain excluded.

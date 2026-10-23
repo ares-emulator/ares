@@ -2349,3 +2349,84 @@ artifacts/workspace.png and artifacts/settings-window.png. Hosted CI, physical
 keyboard/gamepad, audible-output and existing private-media/fault/soak exclusions
 remain unclaimed. Opened the development app in the persistent workspace-preview
 profile for the user, without loading test ROMs or modifying existing play saves.
+
+## Kirby feedback implementation checkpoint — 2026-10-21
+
+Implemented overload admission, atomic ranged reads, 256-step batches, decoded
+RDP exports, stable named discovery, plugin diagnostics/UI screenshots, native
+snapshot/ring storage, paged comparisons and a manual RAM diff panel. Detailed
+contracts, compatibility differences, actual evidence and outstanding plan work
+are in KIRBY-FEEDBACK-HANDOFF.md. This is not completion of all nine slices.
+
+Build/SDK and native host/CPU fixture builds passed. Native N64/GBA ranged reads,
+64 KiB reply, typed immutable snapshot/ring behavior, reference decoder fixtures,
+named restart/no-replay and actual Electron overload/explorer checks passed.
+Measured 50-sample batching stopped after 39 steps under the prior output budget;
+with a bounded 128 KiB result budget all 100 run/read steps complete. Aggregate
+memory/frame/artifact/deadline bounds remain. Explicit output-limit testing passes.
+Initial acceptance run-ZxRWhK passed all 114 fixtures, native smoke and Electron
+session, then exposed an old 68-tool Electron inventory expectation. Updated it
+to the explicit 79-tool inventory and reran the lane; final result follows below.
+
+Final checkpoint acceptance **passed 18/18 gates and 113 fixture tests**, no
+failures/skips: `artifacts/acceptance/run-MADE3G/` (latest.json). Copied package
+passed its 79-tool inventory, real MCP/CLI/plugin-reload checks, denied-checkout
+isolation and 877 GB frames. New native snapshot/recorder, 50-sample batch,
+atomic-read and real Electron overload/explorer/diagnostic assertions participated.
+`git diff --check` passed. Screenshot artifacts/plugin-dock.png was visually
+inspected (current Settings with workspace panels behind it).
+
+Passing this lane does not close the outstanding items in the handoff: advanced
+candidate narrowing/content maps/recorded explorer windows, non-N64 frame
+scheduling, performance measurement, enriched reference envelopes, full fault and
+signal/named copied-package coverage, and private Kirby checks remain. The exact
+helper sandbox warning has no disposition yet because the package runner retains
+stderr only on failure; package success alone is not a warning reproduction test.
+
+## Kirby feedback continuation — 2026-10-22
+
+Added native incremental candidate queries/narrowing and grouped run/line/page
+content maps, aligned typed scans with explicit budget failure, ring-to-snapshot
+freezing and visible-page explorer navigation. Native candidate and capture pools
+are separately bounded and released on owner/epoch changes. Non-N64 primary-screen
+boundaries now schedule rings/snapshots; two GBA recorder owners pass concurrently.
+Native copy/transfer metrics measured 25 KiB fixture copies (GBA ~46–48 us maximum,
+N64 ~79 us maximum in focused runs), with zero sample bytes transferred before reads.
+No whole-game slowdown or Kirby latency claim is made.
+
+Auditing core debugger callbacks exposed N64 degraded RDRAM reads consuming guest
+RNG. Universal host raw regions now bypass chip mapping; atomic CPU-view reads fail
+before initialized mapping. MEMORY-SAMPLING-AUDIT.md records the callback audit and
+non-stopping interpreter/recompiler/write coverage investigation. Added frozen RDP
+ROM/renderer/start/end points and reference OSTask/batch association enrichment.
+Live RDP tests preserve end metadata after subsequent guest execution.
+
+Source and copied apps passed SIGTERM/SIGINT shutdown, SIGKILL recovery, duplicate
+names, fresh authentication, old-token rejection and MCP reconnect without mutation
+replay. Copied-package sandbox-extension warning is reproduced and retained in
+stderr evidence; no cause was proven and no sandbox bypass/filter was introduced.
+Explorer Electron checks cover candidate narrowing, changed runs, frame sequence
+navigation, overflow and labels surviving plugin reload. Inventory is 85 tools.
+
+Acceptance run-tAuKXa passed 118/119 fixtures; its only failure was the old RDP page
+mock missing newly required frozen metadata. Updated that fixture; focused checks
+passed. Acceptance run-w82yvM then passed all 18 gates and 119 fixtures, including
+copied-package signal/restart/auth checks. A final IPC error-contract correction
+preserves host code/pending/limit through both Electron boundaries; focused real
+Electron and native endpoint/query checks passed, including pending unload and
+successful fresh generation. Final full-lane result follows below.
+
+Final full acceptance **passed 18/18 gates and 119 tests, no failures/skips**:
+`artifacts/acceptance/run-Rx5bZL/`. Copied package: 85-tool inventory, named signal/
+restart/auth/nonreplay checks and 873 GB frames. Recorded 25600-byte copy maxima:
+N64 44875 ns (8 samples), GBA 45958 ns (6 samples), zero transferred sample bytes
+before explicit reads. Exact timings are fixture evidence, not a game benchmark.
+The reproduced macOS sandbox-extension warning remains in copied-package-stderr.log
+and package-mcp.json. No sandbox bypass or output suppression was used.
+
+After the lane, a small explorer abort-cleanup guard prevents touching removed DOM
+following async native release. Focused real Electron regression passed again;
+waited for compositor paint and visually inspected artifacts/memory-explorer.png.
+`git diff --check` passed. Remaining private reference/media and broader manual/
+fault/performance exclusions are explicit in the updated handoff; original full
+plan acceptance is not claimed beyond the commands/evidence recorded here.

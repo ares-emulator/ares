@@ -1,7 +1,7 @@
 import type { ExecutionOperation } from './contracts.js';
 export const GPR_NAMES = ['zero', 'at', 'v0', 'v1', 'a0', 'a1', 'a2', 'a3', 't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 't8', 't9', 'k0', 'k1', 'gp', 'sp', 's8', 'ra'];
 /** N64-only contracts. All architectural integers travel as lossless hex strings. */
-export const N64_METHODS = ['n64.debug.registers', 'n64.debug.lastStop', 'n64.debug.breakAdd', 'n64.debug.breakRemove', 'n64.debug.breakList', 'n64.debug.watchAdd', 'n64.debug.watchRemove', 'n64.debug.watchList', 'n64.debug.clear', 'n64.memory.read', 'n64.memory.write', 'n64.memory.writeMany'] as const;
+export const N64_METHODS = ['n64.debug.registers', 'n64.debug.lastStop', 'n64.debug.breakAdd', 'n64.debug.breakRemove', 'n64.debug.breakList', 'n64.debug.watchAdd', 'n64.debug.watchRemove', 'n64.debug.watchList', 'n64.debug.clear', 'n64.memory.read', 'n64.memory.readMany', 'n64.memory.write', 'n64.memory.writeMany'] as const;
 export type N64Method = typeof N64_METHODS[number];
 export interface Predicate { field: 'pc' | 'gpr' | 'hi' | 'lo' | 'value'; index: number; op: 'eq' | 'ne' | 'lt' | 'le' | 'gt' | 'ge'; value: string; mask: string }
 export interface Registers { pc: string; next_pc: string; delay_slot: boolean; lo: string; hi: string; gpr: string[]; cop0: (string | null)[]; fpr: string[]; fcr0: string; fcr31: string }
@@ -13,6 +13,7 @@ export interface N64Write extends MemoryBase { hazards: string[]; written: numbe
 export interface MemoryVerification { readbacks: N64Read[]; matches: boolean[] }
 export interface MemoryWrites { writes: N64Write[]; immediate_verification: MemoryVerification; side_effects_rolled_back: false; operation: ExecutionOperation | null }
 export interface N64ServiceMap {
+  'n64.memory.readMany': { params: { reads: { address: string; view: 'cpu' | 'rdram'; length: number }[] }; result: Omit<import('./contracts.js').MemorySample, 'reads'> & { reads: N64Read[] } };
   'n64.memory.writeMany': { params: { writes: { address: string; view: 'rdram' | 'cpu'; hex: string }[]; verifyAfterFrames: number; timeoutMs: number }; result: MemoryWrites };
   'n64.debug.registers': { params: undefined; result: Registers };
   'n64.debug.lastStop': { params: undefined; result: Stop };
@@ -35,6 +36,10 @@ const ops = ['eq', 'ne', 'lt', 'le', 'gt', 'ge'];
 /** Returns undefined on malformed input, including extra properties. */
 export function encodeN64(method: N64Method, params: unknown): string | undefined {
   const p = params as any;
+  if (method === 'n64.memory.readMany') {
+    if (!keys(p, ['reads']) || !Array.isArray(p.reads) || !p.reads.length || p.reads.length > 64 || p.reads.some((r: any) => !keys(r, ['address', 'view', 'length']) || !hex64(r.address) || !['cpu', 'rdram'].includes(r.view) || !integer(r.length) || r.length < 1 || r.length > 65536) || p.reads.reduce((n: number, r: any) => n + r.length, 0) > 65536) return;
+    return p.reads.map((r: any) => ` ${r.address} ${r.view} ${r.length}`).join('');
+  }
   if (['n64.debug.registers', 'n64.debug.lastStop', 'n64.debug.clear'].includes(method)) return p === undefined ? '' : undefined;
   if (method.endsWith('Remove')) return keys(p, ['id']) && integer(p.id) && p.id > 0 && p.id <= 0xffffffff ? ` ${p.id}` : undefined;
   if (method.endsWith('List')) return keys(p, ['offset']) && integer(p.offset) && p.offset <= 256 ? ` ${p.offset}` : undefined;

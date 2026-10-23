@@ -22,7 +22,7 @@ export function encodeBatch(method: string, p: any): string | undefined {
   if (method === 'experiment.cancelBatch') return keys(p,'token') && typeof p.token === 'string' && /^[a-f0-9-]{36}$/.test(p.token) ? '' : undefined;
   if (method === 'execution.batchBegin') return keys(p, 'timeoutMs') && integer(p.timeoutMs, 600000) && p.timeoutMs > 0 ? ` ${p.timeoutMs}` : undefined;
   if (method === 'execution.batchCheck') return keys(p, 'batchId') && integer(p.batchId) && p.batchId > 0 ? ` ${p.batchId}` : undefined;
-  if (!(keys(p,'steps,stopOnError,timeoutMs') || keys(p,'cancellationToken,steps,stopOnError,timeoutMs') && typeof p.cancellationToken === 'string' && /^[a-f0-9-]{36}$/.test(p.cancellationToken)) || !integer(p.timeoutMs, 600000) || p.timeoutMs < 1 || typeof p.stopOnError !== 'boolean' || !Array.isArray(p.steps) || !p.steps.length || p.steps.length > 32) return;
+  if (!(keys(p,'steps,stopOnError,timeoutMs') || keys(p,'cancellationToken,steps,stopOnError,timeoutMs') && typeof p.cancellationToken === 'string' && /^[a-f0-9-]{36}$/.test(p.cancellationToken)) || !integer(p.timeoutMs, 600000) || p.timeoutMs < 1 || typeof p.stopOnError !== 'boolean' || !Array.isArray(p.steps) || !p.steps.length || p.steps.length > 256) return;
   let bytes = 0, frames = 0, artifacts = 0;
   for (const s of p.steps) {
     if (s?.kind === 'write' || s?.kind === 'read') {
@@ -46,7 +46,7 @@ export function encodeBatch(method: string, p: any): string | undefined {
 export function validBatchResult(s: any): s is BatchResult {
   return !!s && integer(s.batch_id) && s.batch_id > 0 && s.state === 'done' && s.stopped === true && typeof s.stop_reason === 'string' &&
     integer(s.start_epoch) && s.start_epoch > 0 && integer(s.epoch) && s.epoch > 0 && integer(s.frame) && s.side_effects_rolled_back === false &&
-    Array.isArray(s.results) && s.results.length <= 32 && s.steps_attempted === s.results.length && s.steps_completed === s.results.filter((r: any) => r?.ok === true).length && s.results.every((r: any, i: number) => !!r && r.step === i &&
+    Array.isArray(s.results) && s.results.length <= 256 && s.steps_attempted === s.results.length && s.steps_completed === s.results.filter((r: any) => r?.ok === true).length && s.results.every((r: any, i: number) => !!r && r.step === i &&
       ['state_load', 'write', 'read', 'run', 'screenshot'].includes(r.kind) && typeof r.ok === 'boolean' && integer(r.epoch) && integer(r.frame) &&
-      (r.ok ? r.data !== undefined && r.error === undefined : typeof r.error === 'string')) && new TextEncoder().encode(JSON.stringify(s)).byteLength <= 49152;
+      (r.ok ? r.data !== undefined && r.error === undefined : typeof r.error === 'string')) && new TextEncoder().encode(JSON.stringify(s)).byteLength <= 131072;
 }

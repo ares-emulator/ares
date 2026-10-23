@@ -157,6 +157,15 @@ app.whenReady().then(async () => {
       .catalog()
       .plugins.find((p) => p.manifest?.id === 'local.agent-tool')
     assert.notEqual(fresh.lease.token, before)
+    for(let i=0;i<140;i++) plugins.log(fresh.lease.token,'info',`diagnostic ${i}`)
+    const logs=await client.manage({operation:'logs',id:'local.agent-tool',cursor:0,limit:4})
+    assert.equal(logs.entries.length,4);assert.ok(logs.dropped>=12);assert.ok(logs.missed>=12)
+    await assert.rejects(client.manage({operation:'logs',id:'local.agent-tool',generation:before}),/stale_plugin_scope/)
+    const ui=path.join(temporary,'window.png')
+    const captured=await client.manage({operation:'screenshot',path:ui})
+    assert.equal(captured.source,'window');assert.ok(fs.statSync(ui).size>0)
+    await assert.rejects(client.manage({operation:'screenshot',path:path.join(temporary,'missing.png'),panel:'missing:panel'}),/panel_not_open/)
+
     await until(
       () =>
         js(

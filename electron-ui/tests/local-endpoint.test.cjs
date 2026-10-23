@@ -81,3 +81,37 @@ test('operation polling can outlive the arbitrary-ID quota without reconnecting 
     } finally { client.close(); }
   });
 });
+test('named selection uses a kernel claim lock and fresh credentials across launches without replay', async () => {
+  const directory=fs.mkdtempSync('/tmp/ares-named-');fs.chmodSync(directory,0o700);
+  const binary=path.resolve(__dirname,'../../build-electron-make/bin/ares-electron-host');
+  let epoch=1,writes=0,complete;
+  const backend={request:async method=>{if(method==='session.pause'){writes++;await new Promise(r=>complete=r)};return {protocol:1,id:'native',session:'launch'+epoch,epoch:1,ok:true,result:{paused:true,system:'Fixture',synthetic:true,capabilities:['session.status']}}}};
+  const a=new LocalServiceHost(backend),b=new LocalServiceHost(backend),duplicate=new LocalServiceHost(backend),client=LocalServiceClient.named(directory,'kirby',1000);
+  try {
+    await a.listen(directory,'kirby',binary);const old={...a.info};
+    assert.equal((await client.request('session.status')).session,'launch1');
+    await assert.rejects(duplicate.listen(directory,'kirby',binary),/instance_name_in_use/);
+    const mutation=client.request('session.pause');await sleep(20);const rejected=assert.rejects(mutation,/app_disconnected/);await a.close();await rejected;complete();
+    assert.equal(client.identity,undefined);await assert.rejects(client.request('session.status'),/instance_not_running/);
+    epoch=2;await sleep(30);await b.listen(directory,'kirby',binary);
+    assert.notEqual(old.instance,b.info.instance);assert.notEqual(old.token,b.info.token);
+    assert.equal((await client.request('session.status')).session,'launch2');assert.equal(writes,1);
+    await assert.rejects(readConnection(b.metadataFile,old.instance),/wrong_instance/);
+    await b.close();
+    // A killed process leaves a valid private record; dead credentials cannot
+    // retain the name once the kernel has released its claim lock.
+    fs.writeFileSync(path.join(directory,'named-kirby.json'),JSON.stringify(old),{mode:0o600});
+    const recovered=new LocalServiceHost(backend);try{await sleep(30);await recovered.listen(directory,'kirby',binary);assert.equal((await client.request('session.status')).session,'launch2')}finally{await recovered.close()}
+  } finally {complete?.();client.close();await a.close();await b.close();await duplicate.close();fs.rmSync(directory,{recursive:true,force:true})}
+});
+test('named stale recovery fails closed when authenticated liveness is inconclusive',async()=>{
+ const directory=fs.mkdtempSync('/tmp/ares-live-');fs.chmodSync(directory,0o700);
+ const binary=path.resolve(__dirname,'../../build-electron-make/bin/ares-electron-host');
+ const backend={request:async()=>({protocol:1,id:'x',session:'live',epoch:1,ok:true,result:{paused:true,system:'Fixture',synthetic:true,capabilities:['session.status']}})};
+ const old=new LocalServiceHost(backend),next=new LocalServiceHost(backend);
+ try{
+  await old.listen(directory);const claim=path.join(directory,'named-kirby.json');const info={...old.info,token:'0'.repeat(64)};fs.writeFileSync(claim,JSON.stringify(info),{mode:0o600});
+  await assert.rejects(next.listen(directory,'kirby',binary),/instance_liveness_uncertain/);
+  assert.deepEqual(JSON.parse(fs.readFileSync(claim)),info,'inconclusive probe does not remove or replace the existing record');
+ }finally{await next.close();await old.close();fs.rmSync(directory,{recursive:true,force:true})}
+});

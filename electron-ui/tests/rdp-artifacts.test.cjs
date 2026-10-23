@@ -12,7 +12,8 @@ function page(kind, offset) {
     ? { value: '0x123456789abcdef0', address: '0x1000', batch: 0 }
     : kind === 'batches' ? { id: 0, source: 'RDRAM', dpc_start: '0x1000', current: '0x1000', end: '0x1410', words: 130, first_word: 0, captured_words: 130, cpu_pc: '0xffffffff80001000', rsp_pc: '0x0', rsp_running: false, task: 0 }
     : { id: 0, cpu_pc: '0xffffffff80001000', header: 'ab'.repeat(64), dmem_hash_xxh64: '0x1', imem_hash_xxh64: '0x2', dmem: 'ab'.repeat(4096) });
-  return { operation_id: 7, epoch: 1, frame: 4, kind, stop_reason: 'timeout', complete: false, truncated: false, dropped_words: 0, dropped_batches: 0, dropped_tasks: 0, batches_outside_interval: 0,
+  const point={pc:'0xffffffff80001000',frame:4,epoch:1,vi:{VI_ORIGIN:'0x2000'},dpc:{DPC_CURRENT:'0x1000'}};
+  return { rom:{sha256:'0'.repeat(64),size:4096},renderer:'software',start:point,end:point,rdram_size:8*1024*1024, operation_id: 7, epoch: 1, frame: 4, kind, stop_reason: 'timeout', complete: false, truncated: false, dropped_words: 0, dropped_batches: 0, dropped_tasks: 0, batches_outside_interval: 0,
     word_count: 130, batch_count: 1, task_count: 1, storage_word_limit: 65536, storage_batch_limit: 512, storage_task_limit: 64, dmem_snapshots: true,
     offset, total, records, next_offset: offset + records.length < total ? offset + records.length : null };
 }
@@ -31,6 +32,7 @@ test('RDP export streams every word, batch and task and cancels without replacin
   try {
     const artifact = await service.export(client, identity, { operationId: 7, path: destination, overwrite: false }, 'owner', () => true);
     const bytes = await fs.readFile(destination), output = JSON.parse(bytes);
+    assert.equal(output.rom.sha256,'0'.repeat(64));assert.equal(output.start.frame,4);assert.equal(output.end.frame,4);assert.equal(output.batches[0].dpc_current,'0x1000');
     assert.equal(output.words.length, 130); assert.equal(output.batches[0].captured_words, 130); assert.equal(output.tasks[0].dmem.length, 8192); assert.equal(output.summary.complete, false);
     decodeReply(JSON.stringify({ protocol: 1, id: 'x', ...identity, ok: true, result: artifact }), 'artifact.rdpExport');
     let release, entered; const wait = new Promise(r => release = r), started = new Promise(r => entered = r);

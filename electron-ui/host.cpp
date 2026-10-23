@@ -14,6 +14,9 @@
 #include <cmath>
 #ifndef _WIN32
 #include <unistd.h>
+#include <sys/file.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #endif
 #ifdef _WIN32
 #include <fcntl.h>
@@ -282,6 +285,19 @@ struct Host : ares::Platform {
 };
 
 int main(int argc, char** argv) {
+#ifndef _WIN32
+  // Kernel-owned claim lock: survives stale connection records, releases on death.
+  // Keep the inode in place; unlinking advisory locks permits split ownership.
+  if(argc == 3 && std::string(argv[1]) == "--service-lock") {
+    int fd = open(argv[2], O_CREAT | O_RDWR | O_NOFOLLOW, 0600);
+    struct stat st;
+    if(fd < 0 || fstat(fd, &st) || !S_ISREG(st.st_mode) || st.st_uid != getuid() || (st.st_mode & 077) || flock(fd, LOCK_EX | LOCK_NB)) return 3;
+    std::cout << "locked\n" << std::flush;
+    char byte;
+    while(read(STDIN_FILENO, &byte, 1) > 0) {}
+    close(fd); return 0;
+  }
+#endif
 #ifdef _WIN32
   _setmode(_fileno(stdout), _O_BINARY);
 #else
@@ -421,6 +437,11 @@ int main(int argc, char** argv) {
     absent->setSize(16);
   }
   host.memory.bind(memoryRoot, host.service.session, memoryRoot && memoryRoot->name() == "Nintendo 64");
+  // The core debugger's RDRAM callback follows chip initialization/degradation
+  // and can consume guest RNG. Universal host offsets mean raw physical storage.
+  if(memoryRoot && memoryRoot->name() == "Nintendo 64") for(auto& region : host.memory.regions) if(region.node->name() == "RDRAM") {
+    region.hostRead = [](uint32_t offset) -> uint8_t { return static_cast<ares::Nintendo64::Memory::Writable&>(ares::Nintendo64::rdram.ram).read<ares::Nintendo64::Byte>(offset); };
+  }
   std::thread reader([&] { host.readCommands(); });
   std::thread writer([&] { host.writeFrames(); });
   std::thread replies;
@@ -437,6 +458,15 @@ int main(int argc, char** argv) {
   TapService tapService;
   RspDebugService rspDebugService;
   RdpCaptureService rdpCaptureService;
+  rdpCaptureService.romIdentity = [&] {
+    MachineService::Object game;
+    game.add("sha256", controlQuote(host.contentHash.data())); game.number("size", host.contentSize);
+    if(emulator && emulator->game && emulator->game->pak) {
+      game.add("title", controlQuote(emulator->game->pak->attribute("title").data()));
+      game.add("id", controlQuote(emulator->game->pak->attribute("id").data()));
+    }
+    return game.end();
+  };
   InspectionService inspectionService;
   CallService callService;
   ViewerService viewerService;
@@ -482,7 +512,15 @@ int main(int argc, char** argv) {
   DmaService dmaService; dmaService.available = n64;
   execution.cpuSupported = n64;
   host.injectedInput.available = n64;
+  const void* memoryScreen = nullptr;
+  if(!n64 && !synthetic && memoryRoot) for(auto screen : memoryRoot->find<ares::Node::Video::Screen>()) { if(!memoryScreen) memoryScreen = screen.get(); }
+  if(memoryScreen) host.service.memoryTools.observedKind = "primary-screen-frame";
   ares::Video::frameSubmittedObserver = [&](const void* screen) {
+    if(screen == memoryScreen && memoryScreen) {
+      auto& tools = host.service.memoryTools;
+      tools.sync(host.service.epoch);
+      tools.boundary(host.service.epoch, ++tools.observedFrame);
+    }
     host.captures.submitted(screen, host.service.epoch, n64 ? ares::Nintendo64::executionCoordinate.frame : execution.frame);
   };
   host.captures.onCapture = [&](const uint8_t* pixels, uint32_t w, uint32_t h, uint64_t epoch, uint64_t frame) { host.recording.capture(pixels, w, h, epoch, frame); };
@@ -511,7 +549,7 @@ int main(int argc, char** argv) {
     static const std::vector<std::string> allowed = {
       "runtime.settings", "session.status", "session.pause", "session.resume", "session.reset", "execution.status", "execution.cancel", "execution.release", "execution.batchCheck",
       "n64.capture.control", "n64.capture.rsp", "n64.capture.rdp", "n64.cpu.stack", "n64.render.probe", "n64.dump.read", "n64.dump.release", "n64.cpu.disassemble", "n64.rsp.registers", "n64.rdp.state", "n64.peripheral.registers",
-      "memory.regions", "memory.read", "n64.memory.read", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
+      "memory.regions", "memory.read", "memory.readMany", "memory.snapshot.capture", "memory.recorder.start", "memory.recorder.stop", "memory.capture.status", "memory.capture.read", "memory.capture.release", "memory.snapshot.compare", "memory.capture.freeze", "memory.query.start", "memory.query.advance", "memory.query.page", "memory.query.release", "memory.snapshot.changes", "n64.memory.read", "n64.memory.readMany", "n64.debug.registers", "n64.debug.lastStop", "n64.debug.breakList", "n64.debug.watchList",
       "n64.input.state", "n64.profiler.top", "n64.dma.log", "n64.trace.page", "n64.state.format", "n64.state.layout", "n64.state.read", "n64.state.release",
       "video.begin", "video.read", "video.release", "video.record.status", "video.record.read", "video.record.release", "audio.status", "audio.read", "audio.release"
     };
@@ -540,7 +578,7 @@ int main(int argc, char** argv) {
       auto savedInput = host.injectedInput.pending; auto oldFrame = execution.frame;
       auto result = host.stateLoader.execute(method, args, owner, n64, bool(execution.active), host.service.paused, host.stateSnapshot);
       if(host.stateLoader.touched) {
-        ++host.service.epoch;
+        ++host.service.epoch; host.service.memoryTools.sync(host.service.epoch);
         host.injectedInput.releaseAll(); host.injectedInput.operationRunning = false;
         traceService.reset(); profilerService.reset(); rdpCaptureService.reset(); inspectionService.reset(); callService.reset(); viewerService.reset(); host.captures.reset(host.service.epoch);
         host.audioCapture.reset(); host.recording.reset(); host.stateSnapshot.reset();
@@ -691,6 +729,7 @@ int main(int argc, char** argv) {
       execution.frame = ares::Nintendo64::executionCoordinate.frame;
       execution.atBoundary = ares::Nintendo64::executionCoordinate.atBoundary;
     }
+    if(execution.atBoundary && execution.frame != frameBefore) host.service.memoryTools.boundary(host.service.epoch, execution.frame);
     if(n64) {
       auto& debug = ares::Nintendo64::cpu.debugControl;
       execution.instructions = debug.instructionsRetired;

@@ -109,6 +109,28 @@ struct N64Service {
       if(method == "n64.debug.breakList") list(d.breakpoints); else list(d.watchpoints);
       return {{}, out + "],\"total\":" + std::to_string(total) + "}"};
     }
+    if(method == "n64.memory.readMany") {
+      // Before normal chip mapping, cache misses can enter degraded-RDRAM reads
+      // that consume guest RNG. Raw region reads remain available in this state.
+      if(!rdram.mapIdentity) return {"rdram_not_initialized", {}};
+      if(args.empty() || args.size() % 3 || args.size() > 192) return {"invalid_request", {}};
+      uint32_t total = 0;
+      for(size_t i = 0; i < args.size(); i += 3) {
+        uint32_t length;
+        if(!MemoryService::number(args[i + 2], length) || !length || length > 65536 - total) return {"invalid_request", {}};
+        auto valid = memory("n64.memory.read", {args[i], args[i+1], args[i+2]}, false, true, 65536);
+        if(!valid.error.empty()) return valid;
+        total += length;
+      }
+      std::string out = "{\"reads\":[";
+      for(size_t i = 0; i < args.size(); i += 3) {
+        auto r = memory("n64.memory.read", {args[i], args[i+1], args[i+2]}, false, false, 65536);
+        if(!r.error.empty()) return r;
+        if(i) out += ',';
+        out += r.json;
+      }
+      return {{}, out + "]}"};
+    }
     if(method == "n64.memory.read" || method == "n64.memory.write") return memory(method, args, busy);
     if(busy) return {"busy", {}};
     if(nall::GDB::server.hasClient()) return {"busy", {}};
@@ -136,7 +158,7 @@ struct N64Service {
     }
     return {"unavailable", {}};
   }
-  static ControlResult memory(const std::string& method, const std::vector<std::string>& args, bool busy, bool dryRun = false) {
+  static ControlResult memory(const std::string& method, const std::vector<std::string>& args, bool busy, bool dryRun = false, uint32_t readLimit = MemoryService::maxTransfer) {
     using namespace ares::Nintendo64;
     bool write = method == "n64.memory.write";
     if(write && (busy || nall::GDB::server.hasClient())) return {"busy", {}};
@@ -151,7 +173,7 @@ struct N64Service {
         bytes.push_back(hi << 4 | lo);
       }
       length = bytes.size();
-    } else if(!MemoryService::number(args[2], length) || !length || length > MemoryService::maxTransfer) return {"invalid_request", {}};
+    } else if(!MemoryService::number(args[2], length) || !length || length > readLimit) return {"invalid_request", {}};
     if(!cpu.debugControl.normalizeAddress(addr, length, paddr, error)) return {"out_of_bounds", {}};
     // Until RDRAM initialization finishes, chip mapping can silently drop a write.
     if(write && !rdram.mapIdentity) return {"rdram_not_initialized", {}};

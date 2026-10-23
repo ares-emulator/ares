@@ -1,3 +1,4 @@
+import { MEMORY_TOOL_METHODS, encodeMemoryTools, validMemoryTools, type MemoryToolsMap } from './memory-tools-contracts.js';
 import { RUNTIME_METHODS, encodeRuntime, validRuntimeSettings, type RuntimeServiceMap } from './runtime-contracts.js';
 import { VIEWER_METHODS, encodeViewer, validViewer, type ViewerServiceMap } from './viewer-contracts.js';
 import { CALL_METHODS, encodeCall, validCallProgress, validCallRecovery, type CallServiceMap, type CallProgress } from './call-contracts.js';
@@ -20,7 +21,7 @@ import { validMemoryVerification, type MemoryVerification, N64_METHODS, encodeN6
 /** Shared contract for Electron routing, the inspector and the future MCP adapter. */
 export const PROTOCOL = 1 as const;
 export const MAX_TRANSFER = 1024;
-export const NATIVE_METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS.filter(m => m !== 'n64.input.tap'), ...TRACE_METHODS, 'n64.dma.log', ...PROFILER_METHODS, 'n64.input.tap', ...FRAME_METHODS, ...AUDIO_METHODS, ...RECORDING_METHODS, ...NATIVE_STATE_METHODS, ...NATIVE_BATCH_METHODS, ...MACHINE_METHODS, ...RSP_METHODS, ...RDP_CAPTURE_METHODS, ...INSPECTION_METHODS, ...CALL_METHODS, ...VIEWER_METHODS, ...RUNTIME_METHODS] as const;
+export const NATIVE_METHODS = ['session.status', 'session.pause', 'session.resume', 'session.reset', 'memory.regions', 'memory.read', 'memory.readMany', 'memory.write', 'execution.runFrames', 'execution.runUntilFrame', 'execution.status', 'execution.cancel', 'execution.release', 'execution.stepInstructions', ...N64_METHODS, ...INPUT_METHODS.filter(m => m !== 'n64.input.tap'), ...TRACE_METHODS, 'n64.dma.log', ...PROFILER_METHODS, 'n64.input.tap', ...FRAME_METHODS, ...AUDIO_METHODS, ...RECORDING_METHODS, ...NATIVE_STATE_METHODS, ...NATIVE_BATCH_METHODS, ...MACHINE_METHODS, ...RSP_METHODS, ...RDP_CAPTURE_METHODS, ...INSPECTION_METHODS, ...CALL_METHODS, ...VIEWER_METHODS, ...RUNTIME_METHODS, ...MEMORY_TOOL_METHODS] as const;
 export const METHODS = [...NATIVE_METHODS, ...ARTIFACT_METHODS, 'artifact.rdpExport', 'artifact.dump', ...SCREENSHOT_METHODS, 'artifact.audioSave', 'artifact.videoStop', ...STATE_METHODS, 'experiment.batch', 'experiment.cancelBatch'] as const;
 export type ServiceMethod = typeof METHODS[number];
 export type SessionMethod = Extract<ServiceMethod, `session.${string}`>;
@@ -38,8 +39,10 @@ export interface ExecutionOperation {
 }
 export interface MemoryRegion { id: string; name: string; size: number; readable: boolean; writable: boolean; addressing: 'region-offset'; unavailableReason?: string }
 export interface MemoryRead { region: string; offset: number; length: number; hex: string }
+export interface MemoryRange { region: string; offset: number; length: number }
+export interface MemorySample { reads: MemoryRead[]; epoch: number; frame: number; frame_kind: string; sample_id: number; at_frame_boundary: boolean }
 export interface MemoryWritten { region: string; offset: number; written: number }
-export interface ServiceMap extends RuntimeServiceMap, ViewerServiceMap, CallServiceMap, InspectionServiceMap, RdpCaptureServiceMap, RspServiceMap, MachineServiceMap, BatchServiceMap, StateServiceMap, RecordingServiceMap, AudioServiceMap, N64ServiceMap, InputServiceMap, TraceServiceMap, DmaServiceMap, ProfilerServiceMap, ArtifactServiceMap, FrameServiceMap, ScreenshotServiceMap {
+export interface ServiceMap extends MemoryToolsMap, RuntimeServiceMap, ViewerServiceMap, CallServiceMap, InspectionServiceMap, RdpCaptureServiceMap, RspServiceMap, MachineServiceMap, BatchServiceMap, StateServiceMap, RecordingServiceMap, AudioServiceMap, N64ServiceMap, InputServiceMap, TraceServiceMap, DmaServiceMap, ProfilerServiceMap, ArtifactServiceMap, FrameServiceMap, ScreenshotServiceMap {
   'execution.stepInstructions': { params: { count: number; timeoutMs: number }; result: ExecutionOperation };
   'session.status': { params: undefined; result: SessionStatus };
   'session.pause': { params: undefined; result: SessionStatus };
@@ -52,6 +55,7 @@ export interface ServiceMap extends RuntimeServiceMap, ViewerServiceMap, CallSer
   'execution.release': { params: undefined; result: { released: boolean } };
   'memory.regions': { params: undefined; result: { regions: MemoryRegion[] } };
   'memory.read': { params: { region: string; offset: number; length: number }; result: MemoryRead };
+  'memory.readMany': { params: { reads: MemoryRange[] }; result: MemorySample };
   'memory.write': { params: { region: string; offset: number; hex: string }; result: MemoryWritten };
 }
 export type ServiceParams<M extends ServiceMethod> = ServiceMap[M]['params'];
@@ -74,7 +78,11 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
       !METHODS.includes(method) || !token(owner)) throw new ServiceError('invalid_request');
   let suffix = '';
   // Main-only methods use this validator but never enter the native wire.
-  if (RUNTIME_METHODS.includes(method as typeof RUNTIME_METHODS[number])) {
+  if (MEMORY_TOOL_METHODS.includes(method as typeof MEMORY_TOOL_METHODS[number])) {
+    const encoded = encodeMemoryTools(method, params);
+    if (encoded === undefined) throw new ServiceError('invalid_request');
+    suffix = encoded;
+  } else if (RUNTIME_METHODS.includes(method as typeof RUNTIME_METHODS[number])) {
     const encoded = encodeRuntime(method, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
     suffix = encoded;
@@ -150,6 +158,10 @@ export function encodeRequest<M extends ServiceMethod>(id: string, identity: Ses
     const encoded = encodeN64(method as N64Method, params);
     if (encoded === undefined) throw new ServiceError('invalid_request');
     suffix = encoded;
+  } else if (method === 'memory.readMany') {
+    const p = params as ServiceParams<'memory.readMany'>;
+    if (!keys(p, ['reads']) || !Array.isArray(p.reads) || !p.reads.length || p.reads.length > 64 || p.reads.some(r => !keys(r, ['region', 'offset', 'length']) || !token(r.region) || !integer(r.offset) || r.offset > 0xffffffff || !integer(r.length) || r.length < 1 || r.length > 65536) || p.reads.reduce((n, r) => n + r.length, 0) > 65536) throw new ServiceError('invalid_request');
+    suffix = p.reads.map(r => ` ${r.region} ${r.offset} ${r.length}`).join('');
   } else if (method === 'memory.read') {
     const p = params as ServiceParams<'memory.read'>;
     if (!keys(p, ['region', 'offset', 'length']) || !token(p.region) || !integer(p.offset) || !integer(p.length) || p.length < 1 || p.length > MAX_TRANSFER) throw new ServiceError('invalid_request');
@@ -219,6 +231,9 @@ export function decodeReply<M extends ServiceMethod = 'session.status'>(line: st
     if (method === 'execution.batchCheck') valid = !!s && s.active === true;
     if (method === 'memory.regions') valid = !!s && Array.isArray(s.regions) && s.regions.length <= 128 && s.regions.every((region: MemoryRegion) => region && token(region.id) && typeof region.name === 'string' && integer(region.size) && typeof region.readable === 'boolean' && typeof region.writable === 'boolean' && region.addressing === 'region-offset' && (region.unavailableReason === undefined || typeof region.unavailableReason === 'string'));
     if (method === 'memory.read') valid = !!s && token(s.region) && integer(s.offset) && hex(s.hex) && s.length === s.hex.length / 2;
+    if (method === 'memory.readMany') valid = !!s && s.epoch === r.epoch && integer(s.frame) && typeof s.frame_kind === 'string' && integer(s.sample_id) && s.sample_id > 0 && typeof s.at_frame_boundary === 'boolean' && Array.isArray(s.reads) && s.reads.length > 0 && s.reads.length <= 64 && s.reads.every((v: any) => v && token(v.region) && integer(v.offset) && integer(v.length) && v.length > 0 && typeof v.hex === 'string' && v.hex.length === v.length * 2 && /^[0-9a-f]+$/i.test(v.hex)) && s.reads.reduce((n: number, v: any) => n + v.length, 0) <= 65536;
+    if (method === 'n64.memory.readMany') valid = !!s && s.epoch === r.epoch && integer(s.frame) && typeof s.frame_kind === 'string' && integer(s.sample_id) && s.sample_id > 0 && typeof s.at_frame_boundary === 'boolean' && Array.isArray(s.reads) && s.reads.length > 0 && s.reads.length <= 64 && s.reads.every((v: any) => v && typeof v.addr === 'string' && typeof v.paddr === 'string' && ['cpu', 'rdram'].includes(v.view) && typeof v.cache_aware === 'boolean' && integer(v.length) && v.length > 0 && typeof v.hex === 'string' && v.hex.length === v.length * 2 && /^[0-9a-f]+$/i.test(v.hex)) && s.reads.reduce((n: number, v: any) => n + v.length, 0) <= 65536;
+    if (MEMORY_TOOL_METHODS.includes(method as typeof MEMORY_TOOL_METHODS[number])) valid = validMemoryTools(method, s) && (s.epoch === undefined || s.epoch === r.epoch);
     if (method === 'memory.write') valid = !!s && token(s.region) && integer(s.offset) && integer(s.written) && s.written > 0 && s.written <= MAX_TRANSFER;
     if (valid && s.kind === 'controller_tap') valid = integer(s.port) && s.port >= 1 && s.port <= 4 && ['a', 'b', 'z', 'start', 'up', 'down', 'left', 'right', 'c_up', 'c_down', 'c_left', 'c_right', 'l', 'r'].includes(s.button) && s.held_frames === s.elapsed_frames && s.released === (s.state === 'done') && ['host', 'injected'].includes(s.ownership);
     if (!valid || r.error !== undefined) throw new ServiceError('invalid_reply');

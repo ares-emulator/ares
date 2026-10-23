@@ -27,6 +27,7 @@ Runtime evidence and historical checkpoints are in
 | This roadmap | Task order, dependencies, scope boundaries and completion gates. |
 | [MCP-PORT-PLAN.md](MCP-PORT-PLAN.md) | Source provenance, the 68-tool inventory, native debugging semantics and MCP parity. |
 | [PLUGIN-PLAN.md](PLUGIN-PLAN.md) | Plugin manifests, UI contributions, game matching, hot replacement and bundled settings. |
+| [KIRBY-FEEDBACK-PLAN.md](KIRBY-FEEDBACK-PLAN.md) | Follow-up plan for overload handling, universal batched reads, MCP/RDP compatibility, restart discovery, diagnostics, recording and RAM exploration. |
 
 Architecture decisions already made: native C++ emulation, Electron/web UI,
 TypeScript MCP adapter, shared typed service contracts and one native execution
