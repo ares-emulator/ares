@@ -30,6 +30,7 @@ auto Program::paletteUpdate() -> void {
 auto Program::runAheadUpdate() -> void {
   Program::Guard guard;
   runAhead = settings.general.runAhead;
+  if(retroAchievements.hardcore()) runAhead = false;
   if(!emulator) return;
   if(emulator->name == "Game Boy Advance") runAhead = false;  //crashes immediately
   if(emulator->name == "Neo Geo Pocket") runAhead = false;  //white screen

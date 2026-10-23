@@ -20,7 +20,7 @@ struct Program : ares::Platform {
   auto identify(const string& filename) -> std::shared_ptr<Emulator>;
   auto load(std::shared_ptr<Emulator> emulator, string location = {}) -> bool;
   auto load(string location) -> bool;
-  auto unload() -> void;
+  auto unload(bool confirm = true) -> bool;
 
   //states.cpp
   auto stateSave(u32 slot) -> bool;

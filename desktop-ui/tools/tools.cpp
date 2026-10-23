@@ -7,6 +7,7 @@
 #include "properties.cpp"
 #include "tracer.cpp"
 #include "tape.cpp"
+#include "retroachievements.cpp"
 
 namespace Instances { Instance<ToolsWindow> toolsWindow; }
 ToolsWindow& toolsWindow = Instances::toolsWindow();
@@ -18,6 +19,9 @@ StreamManager& streamManager = toolsWindow.streamManager;
 PropertiesViewer& propertiesViewer = toolsWindow.propertiesViewer;
 TraceLogger& traceLogger = toolsWindow.traceLogger;
 TapeViewer& tapeViewer = toolsWindow.tapeViewer;
+AchievementsViewer& achievementsViewer = toolsWindow.achievementsViewer;
+LeaderboardsViewer& leaderboardsViewer = toolsWindow.leaderboardsViewer;
+ChallengesViewer& challengesViewer = toolsWindow.challengesViewer;
 
 ToolsWindow::ToolsWindow() {
 
@@ -32,6 +36,9 @@ ToolsWindow::ToolsWindow() {
   panelList.append(ListViewItem().setText("Properties").setIcon(Icon::Emblem::Text));
   panelList.append(ListViewItem().setText("Tracer").setIcon(Icon::Emblem::Script));
   panelList.append(ListViewItem().setText("Tape").setIcon(Icon::Device::Tape));
+  panelList.append(ListViewItem().setText("Achievements").setIcon(Icon::Action::Bookmark));
+  panelList.append(ListViewItem().setText("Leaderboards").setIcon(Icon::Emblem::Text));
+  panelList.append(ListViewItem().setText("Challenges").setIcon(Icon::Emblem::Text));
   panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
 
@@ -43,8 +50,11 @@ ToolsWindow::ToolsWindow() {
   panelContainer.append(streamManager, Size{~0, ~0});
   panelContainer.append(propertiesViewer, Size{~0, ~0});
   panelContainer.append(traceLogger, Size{~0, ~0});
-  panelContainer.append(homePanel, Size{~0, ~0});
   panelContainer.append(tapeViewer, Size{~0, ~0});
+  panelContainer.append(achievementsViewer, Size{~0, ~0});
+  panelContainer.append(leaderboardsViewer, Size{~0, ~0});
+  panelContainer.append(challengesViewer, Size{~0, ~0});
+  panelContainer.append(homePanel, Size{~0, ~0});
 
   manifestViewer.construct();
   cheatEditor.construct();
@@ -55,6 +65,9 @@ ToolsWindow::ToolsWindow() {
   traceLogger.construct();
   homePanel.construct();
   tapeViewer.construct();
+  achievementsViewer.construct();
+  leaderboardsViewer.construct();
+  challengesViewer.construct();
 
   setDismissable();
   setTitle("Tools");
@@ -64,6 +77,10 @@ ToolsWindow::ToolsWindow() {
 }
 
 auto ToolsWindow::show(const string& panel) -> void {
+  if(retroAchievements.hardcore() && (panel == "Cheats" || panel == "Memory" || panel == "Tracer" || panel == "Graphics")) {
+    program.showMessage("[RA] Disable Hardcore to use this tool");
+    return;
+  }
   for(auto& item : panelList.items()) {
     if(item.text() == panel) {
       item.setSelected();
@@ -86,9 +103,17 @@ auto ToolsWindow::eventChange() -> void {
   traceLogger.setVisible(false);
   homePanel.setVisible(false);
   tapeViewer.setVisible(false);
+  achievementsViewer.setVisible(false);
+  leaderboardsViewer.setVisible(false);
+  challengesViewer.setVisible(false);
 
   bool found = false;
   if(auto item = panelList.selected()) {
+    if(retroAchievements.hardcore() && (item.text() == "Cheats" || item.text() == "Memory" || item.text() == "Tracer" || item.text() == "Graphics")) {
+      program.showMessage("[RA] Disable Hardcore to use this tool");
+      setVisible(false);
+      return;
+    }
     if(item.text() == "Manifest"  ) found = true, manifestViewer.setVisible();
     if(item.text() == "Cheats"    ) found = true, cheatEditor.setVisible();
     if(item.text() == "Memory"    ) found = true, memoryEditor.setVisible();
@@ -97,6 +122,9 @@ auto ToolsWindow::eventChange() -> void {
     if(item.text() == "Properties") found = true, propertiesViewer.setVisible();
     if(item.text() == "Tracer"    ) found = true, traceLogger.setVisible();
     if(item.text() == "Tape"      ) found = true, tapeViewer.setVisible();
+    if(item.text() == "Achievements") found = true, achievementsViewer.setVisible();
+    if(item.text() == "Leaderboards") found = true, leaderboardsViewer.setVisible();
+    if(item.text() == "Challenges"  ) found = true, challengesViewer.setVisible();
   }
   if(!found) homePanel.setVisible();
 

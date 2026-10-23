@@ -22,6 +22,10 @@ auto Program::stateSave(u32 slot) -> bool {
 auto Program::stateLoad(u32 slot) -> bool {
   Program::Guard guard;
   if(!emulator) return false;
+  if(retroAchievements.hardcore()) {
+    showMessage("[RA] Disable Hardcore to load a save state");
+    return false;
+  }
 
   //Store current state for undo
   auto undoLocation = emulator->locate(emulator->game->location, {".blu"}, settings.paths.saves);
@@ -61,6 +65,10 @@ auto Program::undoStateSave() -> bool {
 auto Program::undoStateLoad() -> bool {
   Program::Guard guard;
   if(!emulator) return false;
+  if(retroAchievements.hardcore()) {
+    showMessage("[RA] Disable Hardcore to undo a loaded state");
+    return false;
+  }
 
   auto undoLocation = emulator->locate(emulator->game->location, ".blu", settings.paths.saves);
   auto memory = file::read(undoLocation);

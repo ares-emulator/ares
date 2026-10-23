@@ -8,6 +8,7 @@ struct pLineEdit : pWidget {
   auto minimumSize() const -> Size override;
   auto setBackgroundColor(Color color) -> void;
   auto setEditable(bool editable) -> void;
+  auto setMasked(bool masked) -> void;
   auto setForegroundColor(Color color) -> void;
   auto setText(const string& text) -> void;
 

@@ -5,6 +5,11 @@ target_compile_definitions(sljit PUBLIC SLJIT_HAVE_CONFIG_PRE=1 SLJIT_HAVE_CONFI
 target_compile_options(sljit PRIVATE $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-conditional-uninitialized>)
 
 option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
+option(ARES_ENABLE_RCHEEVOS "Enable RetroAchievements support" OFF)
+
+if(NOT ARES_ENABLE_RCHEEVOS)
+  target_disable_feature(sljit "RetroAchievements support")
+endif()
 
 if(ARES_ENABLE_CHD)
   # lzma

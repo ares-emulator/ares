@@ -2,6 +2,7 @@ namespace Board {
 
 struct Interface {
   VFS::Pak pak;
+  Memory::Writable<n8>* saveRAM = nullptr;
 
   Interface(Cartridge& cartridge) : cartridge(cartridge) {}
   virtual ~Interface() = default;

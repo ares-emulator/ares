@@ -36,6 +36,10 @@ auto DeveloperSettings::construct() -> void {
     enabled.setText("Enabled");
     enabled.setChecked(settings.developer.debugServerEnabled);
     enabled.onToggle([&](){
+      if(enabled.checked() && retroAchievements.hardcore()) {
+        enabled.setChecked(false);
+        return program.showMessage("[RA] Disable Hardcore before enabling the debug server");
+      }
       settings.developer.debugServerEnabled = enabled.checked();
       serverRefresh();
       infoRefresh();
@@ -78,7 +82,7 @@ auto DeveloperSettings::infoRefresh() -> void {
 auto DeveloperSettings::serverRefresh() -> void {
   nall::GDB::server.close();
 
-  if(settings.developer.debugServerEnabled) {
+  if(settings.developer.debugServerEnabled && !retroAchievements.hardcore()) {
     nall::GDB::server.open(settings.developer.debugServerPort, settings.developer.debugServerUseIPv4);
   }
 }

@@ -56,7 +56,7 @@ auto Program::identify(const string& filename) -> std::shared_ptr<Emulator> {
 /// Loads an emulator and, optionally, a ROM from the given location.
 auto Program::load(std::shared_ptr<Emulator> emulator, string location) -> bool {
   Program::Guard guard;
-  unload();
+  if(!unload()) return false;
 
   ::emulator = emulator;
 
@@ -88,6 +88,13 @@ auto Program::load(string location) -> bool {
   }
   location = emulator->game->location;
 
+  if(retroAchievements.hardcore()) {
+    nall::GDB::server.close();
+    settings.developer.debugServerEnabled = false;
+    developerSettings.enabled.setChecked(false);
+    if(toolsWindowConstructed) toolsWindow.setVisible(false);
+  }
+
   //this is a safeguard warning in case the user loads their games from a read-only location:
   string savesPath = settings.paths.saves;
   if(!savesPath) savesPath = Location::path(location);
@@ -111,6 +118,9 @@ auto Program::load(string location) -> bool {
   presentation.showIcon(false);
   if(settings.video.adaptiveSizing  && !startPseudoFullScreen) presentation.resizeWindow();
   if(toolsWindowConstructed) {
+    achievementsViewer.reload();
+    leaderboardsViewer.reload();
+    challengesViewer.reload();
     manifestViewer.reload();
     cheatEditor.reload();
     memoryEditor.reload();
@@ -121,11 +131,11 @@ auto Program::load(string location) -> bool {
     tapeViewer.reload();
   }
   state = {};  //reset hotkey state slot to 1
-  if(settings.boot.debugger) {
+  if(settings.boot.debugger && !retroAchievements.hardcore()) {
     pause(true);
     if(toolsWindowConstructed) toolsWindow.show("Tracer");
     presentation.setFocused();
-  } else if (settings.boot.awaitGDBClient) {
+  } else if (settings.boot.awaitGDBClient && !retroAchievements.hardcore()) {
     pause(true);
   } else {
     pause(false);
@@ -133,7 +143,7 @@ auto Program::load(string location) -> bool {
 
   showMessage({"Loaded ", Location::prefix(location)});
 
-  if(settings.developer.debugServerEnabled) {
+  if(settings.developer.debugServerEnabled && !retroAchievements.hardcore()) {
     nall::GDB::server.open(settings.developer.debugServerPort, settings.developer.debugServerUseIPv4);
     nall::GDB::server.onClientConnectCallback = []() {
       if (settings.boot.awaitGDBClient)
@@ -149,6 +159,7 @@ auto Program::load(string location) -> bool {
   presentation.loadEmulators();
 
   configuration = emulator->root->attribute("configuration");
+  retroAchievements.gameLoaded();
 
   if(program.startSaveStateSlot) {
     if(stateLoad(program.startSaveStateSlot.integer())) {
@@ -159,15 +170,17 @@ auto Program::load(string location) -> bool {
   return true;
 }
 
-auto Program::unload() -> void {
+auto Program::unload(bool confirm) -> bool {
   Program::Guard guard;
-  if(!emulator) return;
+  if(!emulator) return true;
+  if(confirm && !retroAchievements.confirmDevelopmentUnload()) return false;
 
   nall::GDB::server.close();
   nall::GDB::server.reset();
 
   settings.save();
   clearUndoStates();
+  retroAchievements.gameUnloaded();
   showMessage({"Unloaded ", Location::prefix(emulator->game->location)});
   emulator->unload();
   screens.clear();
@@ -177,6 +190,9 @@ auto Program::unload() -> void {
   presentation.unloadEmulator();
   if(toolsWindowConstructed) {
     toolsWindow.setVisible(false);
+    achievementsViewer.unload();
+    leaderboardsViewer.unload();
+    challengesViewer.unload();
     manifestViewer.unload();
     cheatEditor.unload();
     memoryEditor.unload();
@@ -191,4 +207,5 @@ auto Program::unload() -> void {
   configuration = "";
   ruby::video.clear();
   ruby::audio.clear();
+  return true;
 }

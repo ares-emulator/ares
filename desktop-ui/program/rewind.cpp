@@ -1,5 +1,6 @@
 auto Program::rewindSetMode(Rewind::Mode mode) -> void {
   Program::Guard guard;
+  if(retroAchievements.hardcore() && mode == Rewind::Mode::Rewinding) return;
   rewind.mode = mode;
   rewind.counter = 0;
 }
@@ -13,6 +14,7 @@ auto Program::rewindReset() -> void {
 }
 
 auto Program::rewindRun() -> void {
+  if(retroAchievements.hardcore()) return;
   if(!settings.general.rewind) return;  //rewind disabled?
   Program::Guard guard;
 
