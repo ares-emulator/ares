@@ -4,6 +4,11 @@
 std::vector<std::shared_ptr<Emulator>> emulators;
 std::shared_ptr<Emulator> emulator;
 
+//normalize for the setting key. "LaserActive (NEC PAC)" => "LaserActiveNECPAC"
+static auto settingKey(string text) -> string {
+  return string{text}.replace(" ", "").replace("(", "").replace(")", "").replace("/", "").replace("\\", "");
+}
+
 auto Emulator::enumeratePorts(string name) -> std::vector<InputPort>& {
   for(auto& emulator : emulators) {
     if(emulator->name == name && !emulator->ports.empty()) return emulator->ports;
@@ -53,6 +58,8 @@ auto Emulator::applyPeripheralConfiguration() -> void {
       port->disconnect();
       continue;
     }
+
+    if(std::ranges::find(inputBlacklist, peripheral) != inputBlacklist.end()) continue;
 
     auto supported = port->supported();
     if(std::ranges::find(supported, peripheral) == supported.end()) continue;
@@ -188,16 +195,71 @@ auto Emulator::load(const string& location) -> bool {
   if(result != successful) {
     return false;
   }
+
   setBoolean("Color Emulation", settings.video.colorEmulation);
   setBoolean("Deep Black Boost", settings.superFamicom.deepBlackBoost);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
   setColorBleed(settings.video.colorBleed);
   applyPeripheralConfiguration();
+  applyPortSettings();
 
   latch = {};
   root->power();
   return true;
+}
+
+auto Emulator::applyPortSettings() -> void {
+  auto core = settingKey(name);
+  auto resolveSupported = [&](const std::vector<string>& supported, string value) -> string {
+    value = value.strip();
+    if(!value) return {};
+    auto normalizedValue = settingKey(value);
+    for(auto& option : supported) {
+      if(option == value) return option;
+    }
+    for(auto& option : supported) {
+      auto normalizedOption = settingKey(option);
+      if(normalizedOption.imatch(normalizedValue)) return option;
+    }
+    return {};
+  };
+
+  // apply Nintendo 64 controller pak/peripheral settings
+  if(core == "Nintendo64" || core == "Nintendo64DD") {
+    for(auto port : ares::Node::enumerate<ares::Node::Port>(root)) {
+      if(port->type() != "Controller") continue;
+
+      auto controller = port->connected();
+      if(!controller || controller->name() != "Gamepad") continue;
+
+      auto pakPort = controller->find<ares::Node::Port>("Pak");
+      if(!pakPort || !pakPort->hotSwappable()) continue;
+
+      auto peripheralKey = settingKey(port->name());
+      auto peripheralPath = string{"Peripherals/", core, "/", peripheralKey};
+
+      auto configured = settings.cliPeripheralSettings.find(peripheralPath);
+      if(configured == settings.cliPeripheralSettings.end()) continue;
+      string peripheral = string{configured->second}.strip();
+      if(!peripheral) continue;
+
+      if(settingKey(peripheral).imatch("None")) {
+        pakPort->disconnect();
+        continue;
+      }
+
+      auto supportedPeripherals = pakPort->supported();
+      peripheral = resolveSupported(supportedPeripherals, peripheral);
+      if(!peripheral) continue;
+
+      pakPort->disconnect();
+      if(peripheral == "Controller Pak") {
+        if(auto n64 = dynamic_cast<Nintendo64*>(this)) n64->createControllerPak(port);
+      }
+      if(pakPort->allocate(peripheral)) pakPort->connect();
+    }
+  }
 }
 
 auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
