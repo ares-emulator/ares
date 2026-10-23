@@ -23,6 +23,7 @@
     "test:reload": "npm run build && electron tests/electron-reload.mjs",
     "test:plugin-tools": "npm run build && electron tests/electron-plugin-tools.mjs",
     "test:kirby": "npm run build && electron tests/electron-kirby.mjs",
+    "test:kirby-feedback": "npm run build && node tests/kirby-feedback-live.cjs",
     "plugin": "node dist/plugins/cli.js",
     "test:profiles": "npm run build && node tests/profile-live.cjs",
     "test:launch": "node tests/launch-live.cjs",

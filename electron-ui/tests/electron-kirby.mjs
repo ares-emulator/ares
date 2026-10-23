@@ -72,6 +72,9 @@ app.whenReady().then(async () => {
     let identity = { session: status.session, epoch: status.epoch }
     // Optional original saved state is copied and loaded into this disposable host only.
     if (process.env.ARES_PLUGIN_TEST_STATE) {
+      const previousToken = plugins.catalog().plugins.find(
+        (p) => p.manifest?.id === 'ares.examples.kirby',
+      )?.lease?.token
       const copy = path.join(temporary, 'gameplay.bs')
       fs.copyFileSync(process.env.ARES_PLUGIN_TEST_STATE, copy)
       const loaded = await sessions.request('state.load', undefined, {
@@ -82,11 +85,12 @@ app.whenReady().then(async () => {
       assert.equal(loaded.ok, true, JSON.stringify(loaded))
       identity = { session: loaded.session, epoch: loaded.epoch }
       await until(
-        () =>
-          plugins
-            .catalog()
-            .plugins.find((p) => p.manifest?.id === 'ares.examples.kirby')
-            ?.phase === 'active',
+        () => {
+          const plugin = plugins.catalog().plugins.find(
+            (p) => p.manifest?.id === 'ares.examples.kirby',
+          )
+          return plugin?.phase === 'active' && plugin.lease.token !== previousToken
+        },
         'post-load plugin',
       )
     }

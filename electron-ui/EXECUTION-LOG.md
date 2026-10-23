@@ -2430,3 +2430,30 @@ waited for compositor paint and visually inspected artifacts/memory-explorer.png
 `git diff --check` passed. Remaining private reference/media and broader manual/
 fault/performance exclusions are explicit in the updated handoff; original full
 plan acceptance is not claimed beyond the commands/evidence recorded here.
+
+## Private Kirby validation and remote checkpoint — 2026-10-22
+
+Pushed implementation checkpoint `9a294ded2` and the preceding workspace history
+on `origin/spike/electron-native-canvas` to the requested bschlenk fork. The user
+will merge through GitHub; leave the branch in place until then.
+
+Private v153 gameplay-state Electron Kirby check passed all 36 powers/icons,
+readbacks, paused identity/frame retention, reload nonreplay and stale scopes.
+Its old active-only wait raced the outgoing plugin generation after state load;
+now it explicitly waits for a new token. No runtime change was needed.
+
+New opt-in `npm run test:kirby-feedback` harness passed the verified game's
+24652-byte atomic workload, 60-frame ordinary-play recording with eight retained
+slots/52 drops, consecutive frame pages and overwritten-cursor errors, particle
+content maps, native candidate query and narrowing. Final expanded run:
+`artifacts/kirby-feedback-h1A4qK/`, 1642 candidates narrowed to one; maximum native
+copy 55792 ns, zero sample bytes transferred until read. These are measurements
+for this workload, not an overall performance claim. Original media hashes unchanged.
+
+`artifacts/kirby-feedback-v7QPtb/` contains the earlier successful scene's RDP
+capture (429 textured triangles, nine rectangles) and adjacent 8 MiB dump. Original
+reference scripts parsed triangle counts, vertex/tile data and produced nine PNGs;
+particle parser found four emitters. No raw game data is tracked. Existing isolated
+cross-binary serializer test passed v153 in both directions and rejected incompatible
+4 MiB configuration (`artifacts/state-reference.json`). Handoff records exact scope
+and remaining exclusions. Final harness syntax and `git diff --check` passed.
