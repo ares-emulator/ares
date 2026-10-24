@@ -233,6 +233,12 @@ private:
       CWBorderPixel | CWColormap | CWOverrideRedirect, &attributes);
     XSelectInput(_display, _window, ExposureMask);
     XSetWindowBackground(_display, _window, 0);
+    // Set _NET_WM_PID on the GLX window so input backends can attribute focus to this process.
+    {
+      auto pid = (uint32_t)getpid();
+      Atom netWmPid = XInternAtom(_display, "_NET_WM_PID", False);
+      XChangeProperty(_display, _window, netWmPid, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&pid, 1);
+    }
     XMapWindow(_display, _window);
     XFlush(_display);
 
