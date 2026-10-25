@@ -42,6 +42,7 @@ namespace ares::Atari5200 {
   }
   #include "game-boy.cpp"
   #include "game-boy-color.cpp"
+  #include "mega-duck.cpp"
 #endif
 
 #ifdef CORE_GBA
@@ -225,6 +226,7 @@ auto Emulator::construct() -> void {
   #ifdef CORE_GB
   emulators.push_back(std::make_shared<GameBoy>());
   emulators.push_back(std::make_shared<GameBoyColor>());
+  emulators.push_back(std::make_shared<MegaDuck>());
   #endif
 
   #ifdef CORE_GBA

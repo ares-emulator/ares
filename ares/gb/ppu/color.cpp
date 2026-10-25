@@ -12,6 +12,19 @@ auto PPU::colorGameBoy(n32 color) -> n64 {
     return R << 32 | G << 16 | B << 0;
   }
 
+  if(colorEmulationDMG->value() == "Mega Duck") {
+    const n8 monochrome[4][3] = {
+      {0x6b, 0xa6, 0x4a},
+      {0x43, 0x7a, 0x63},
+      {0x25, 0x59, 0x55},
+      {0x12, 0x42, 0x4c},
+    };
+    n64 R = monochrome[color][0] * 0x0101;
+    n64 G = monochrome[color][1] * 0x0101;
+    n64 B = monochrome[color][2] * 0x0101;
+    return R << 32 | G << 16 | B << 0;
+  }
+
   if(colorEmulationDMG->value() == "Game Boy Pocket") {
     const n8 monochrome[4][3] = {
       {0xe0, 0xdb, 0xcd},

@@ -79,7 +79,7 @@ auto PPU::runDMG() -> void {
     color = bg.color;
   }
 
-  if(Model::GameBoy()) {
+  if(Model::GameBoy() || Model::MegaDuck()) {
     auto output = screen->pixels().data() + status.ly * 160 + px++;
     //LCD is still blank during the first frame
     if(!latch.displayEnable) *output = color;
