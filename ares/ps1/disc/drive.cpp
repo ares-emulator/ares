@@ -28,6 +28,7 @@ auto Disc::Drive::updateSubQ() -> void {
 
 auto Disc::Drive::clockSector() -> void {
   if(!likely(self.fd)) return;
+  if(seeking || self.ssr.reading) self.ssr.motorOn = 1;
   if(seekDelay) {
     --seekDelay;
     return;

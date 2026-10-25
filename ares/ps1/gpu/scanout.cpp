@@ -14,7 +14,6 @@ auto GPU::Scanout::queue() -> void {
   else
     self.screen->refreshRateHint(system.gpuFrequency() * self.htotalDenominator(), self.htotalNumerator(), self.vtotal());
 
-  depth = self.io.colorDepth;
   dotclock = self.display.dotclock;
   rangeY1 = self.io.displayRangeY1;
   rangeY2 = self.io.displayRangeY2;
@@ -53,6 +52,7 @@ auto GPU::Scanout::lineStart() -> void {
 
   if(!lineVisible) return;
 
+  depth = self.io.colorDepth;
   u32 row = signalY - rangeY1;
 
   bool displayField = self.io.field;

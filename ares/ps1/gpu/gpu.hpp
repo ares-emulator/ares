@@ -395,6 +395,7 @@ struct GPU : Thread, Memory::Interface {
 
   struct Render {
     auto weight(Point a, Point b, Point c) const -> s32;
+    auto drawableArea(Point a, Point b, Point c) const -> s32;
     auto delta(Point a, Point b, Point c, s32 d[3], s32 area) const -> Delta;
     auto loadCLUTCache() const -> void;
     auto texel(Point p) const -> u16;

@@ -40,6 +40,13 @@ auto GPU::Render::weight(Point a, Point b, Point c) const -> s32 {
   return (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
 }
 
+auto GPU::Render::drawableArea(Point a, Point b, Point c) const -> s32 {
+  Point vmin{min(a.x, b.x, c.x), min(a.y, b.y, c.y)};
+  Point vmax{max(a.x, b.x, c.x), max(a.y, b.y, c.y)};
+  if(vmax.x - vmin.x >= 1024 || vmax.y - vmin.y >= 512) return 0;
+  return weight(a, b, c);
+}
+
 auto GPU::Render::delta(Point a, Point b, Point c, s32 d[3], s32 area) const -> Delta {
   s64 x = s64(b.y - c.y) * d[0] + s64(c.y - a.y) * d[1] + s64(a.y - b.y) * d[2];
   s64 y = s64(c.x - b.x) * d[0] + s64(a.x - c.x) * d[1] + s64(b.x - a.x) * d[2];
@@ -373,12 +380,7 @@ auto GPU::Render::triangle() -> void {
   auto g1 = v1;
   auto g2 = v2;
 
-  Point vmin{min(g0.x, g1.x, g2.x), min(g0.y, g1.y, g2.y)};
-  Point vmax{max(g0.x, g1.x, g2.x), max(g0.y, g1.y, g2.y)};
-
-  if(vmax.x - vmin.x >= 1024 || vmax.y - vmin.y >= 512) return;
-
-  s32 signedArea = weight(g0, g1, g2);
+  s32 signedArea = drawableArea(g0, g1, g2);
   s32 area = signedArea;
   if(area == 0) return;  //do not render colinear triangles
   if(area < 0) swap(g1, g2), area = -area;
@@ -646,34 +648,24 @@ auto GPU::drawCycles(const Render& render) const -> u32 {
   u32 pixels = 0;
   u32 scanlines = 0;
 
-  auto area = [](const Vertex& a, const Vertex& b, const Vertex& c) -> u32 {
-    s32 v = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
-    return (u32)(v < 0 ? -v : v) >> 1;
-  };
-
   if(command == 0x02) {
     pixels = render.size.w * render.size.h;
     perPixel = 0.137;
   } else if(command >= 0x20 && command <= 0x3f) {
-    s32 xMin = min(render.v0.x, render.v1.x, render.v2.x);
-    s32 xMax = max(render.v0.x, render.v1.x, render.v2.x);
-    s32 yMin = min(render.v0.y, render.v1.y, render.v2.y);
-    s32 yMax = max(render.v0.y, render.v1.y, render.v2.y);
-    if(command & 8) {
-      xMin = min(xMin, render.v3.x); xMax = max(xMax, render.v3.x);
-      yMin = min(yMin, render.v3.y); yMax = max(yMax, render.v3.y);
-    }
-    if(!(command & 8) && (xMax - xMin >= 1024 || yMax - yMin >= 512)) return 0;
-    pixels = area(render.v0, render.v1, render.v2);
-    if(command & 8) pixels += area(render.v1, render.v2, render.v3);
+    s32 first = render.drawableArea(render.v0, render.v1, render.v2);
+    s32 second = command & 8 ? render.drawableArea(render.v1, render.v2, render.v3) : 0;
+    if(!first && !second) return 0;
+    pixels = (u32)abs(first) >> 1;
+    if(second) pixels += (u32)abs(second) >> 1;
     s32 ox = render.drawingAreaOffsetX, oy = render.drawingAreaOffsetY;
-    s32 x0 = render.v0.x + ox, x1 = x0, y0 = render.v0.y + oy, y1 = y0;
+    Point origin = first ? render.v0 : render.v1;
+    s32 x0 = origin.x + ox, x1 = x0, y0 = origin.y + oy, y1 = y0;
     auto extend = [&](const Vertex& v) {
       x0 = min(x0, v.x + ox); x1 = max(x1, v.x + ox);
       y0 = min(y0, v.y + oy); y1 = max(y1, v.y + oy);
     };
     extend(render.v1); extend(render.v2);
-    if(command & 8) extend(render.v3);
+    if(second) extend(render.v3);
     s64 full = (s64)(x1 - x0 + 1) * (y1 - y0 + 1);
     s32 cx0 = max(x0, render.drawingAreaOriginX1), cx1 = min(x1, render.drawingAreaOriginX2);
     s32 cy0 = max(y0, render.drawingAreaOriginY1), cy1 = min(y1, render.drawingAreaOriginY2);
@@ -701,6 +693,7 @@ auto GPU::drawCycles(const Render& render) const -> u32 {
     s32 y1 = y0 + render.size.h;
     u32 width = max(0, min(x1, render.drawingAreaOriginX2 + 1) - max(x0, render.drawingAreaOriginX1));
     u32 height = max(0, min(y1, render.drawingAreaOriginY2 + 1) - max(y0, render.drawingAreaOriginY1));
+    if(!width || !height) return 0;
     pixels = width * height;
     scanlines = height;
     perScanline = RectScanline;

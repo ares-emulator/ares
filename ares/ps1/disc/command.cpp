@@ -150,7 +150,10 @@ auto Disc::executeSecondResponse(u8 operation) -> void {
     break;
 
   case 0x08:
+    ssr.motorOn = 0;
     ssr.playingCDDA = 0;
+    drive.lba.current = 0;
+    drive.headerValid = 0;
     queueResponse(ResponseType::Complete, {status()});
     break;
 
@@ -379,8 +382,14 @@ auto Disc::commandStandby() -> void {
 //0x08
 auto Disc::commandStop() -> void {
   drive.standby = 0;
+  drive.seeking = 0;
+  drive.seekDelay = 0;
+  drive.seekType = Drive::SeekType::None;
+  drive.pendingOperation = Drive::PendingOperation::None;
+  fifo.deferred.ready = {};
+  ssr.reading = 0;
   command.secondResponse.command = 0x08;
-  command.secondResponse.counter = 50'000;
+  command.secondResponse.counter = ssr.motorOn ? system.frequency() * 2 / 5 : 50'000;
   command.secondResponse.pending = 1;
   ack();
 }

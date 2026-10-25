@@ -86,17 +86,17 @@ auto MDEC::decodeMacroblock() -> bool {
           break;
         case 1:
           rgb |= pixel(index) << 24;
-          fifo.output.write(rgb);
+          writeOutputFifo(rgb);
           rgb = pixel(index++) >> 8;
           break;
         case 2:
           rgb |= pixel(index) << 16;
-          fifo.output.write(rgb);
+          writeOutputFifo(rgb);
           rgb = pixel(index++) >> 16;
           break;
         case 3:
           rgb |= pixel(index++) << 8;
-          fifo.output.write(rgb);
+          writeOutputFifo(rgb);
           break;
       }
       state = state + 1 & 3;

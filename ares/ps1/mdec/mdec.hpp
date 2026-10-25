@@ -41,7 +41,7 @@ struct MDEC : Thread, Memory::Interface {
 
   struct FIFO {
     queue<u16[64]> input;
-    queue<u32[65536]> output;
+    queue<u32[32]> output;
   } fifo;
 
   struct Status {
