@@ -17,11 +17,13 @@ jobs:
           msystem: mingw64
           install: make git cmake ccache ninja mingw-w64-x86_64-toolchain
           target-cmake-preset: windows-ci-mingw-native
-        - name: windows-clang-cl-x64
+        - name: windows-mingw-clang64-x64
           os: windows-latest
-          windres: rc
-          shell: bash
-          target-cmake-preset: windows-ci-cl-native
+          compiler: clang++
+          shell: 'msys2 {0}'
+          msystem: clang64
+          install: make git cmake ccache ninja mingw-w64-clang-x86_64-clang
+          target-cmake-preset: windows-ci-mingw-native
         - name: windows-arm64
           os: windows-11-arm
           compiler: clang++
