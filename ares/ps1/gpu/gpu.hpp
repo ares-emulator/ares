@@ -465,6 +465,8 @@ struct GPU : Thread, Memory::Interface {
     queue_spsc<Render[65536]> fifo;
     std::atomic<bool> synchronized = true;
     std::atomic<u32> workSequence = 0;
+    u32 textureCycles = 0;
+    u32 textureBlendPixels = 0;
   } renderer{*this};
 
   struct TextureCache {

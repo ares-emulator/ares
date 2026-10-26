@@ -298,7 +298,6 @@ auto GPU::executeGP0(u32 value, bool isThread) -> void {
   auto scheduleRender = [&]() -> void {
     if(fill.active) stepFill(fill.clocks);
     u32 cost = drawCycles(render);
-    io.pcounter += cost;
     if(render.command == 0x02 && render.size.w && render.size.h) {
       renderer.synchronize();
       fill = {};
@@ -312,8 +311,17 @@ auto GPU::executeGP0(u32 value, bool isThread) -> void {
       fill.color = render.v0.to16();
       fill.clocks = max(1u, cost);
     } else {
+      u32 startCycles = renderer.textureCycles;
+      u32 startBlendPixels = renderer.textureBlendPixels;
       renderer.queue(render);
+      if((render.command & 4) && ((render.command >= 0x20 && render.command <= 0x3f)
+                             || (render.command >= 0x60 && render.command <= 0x7f))) {
+        renderer.synchronize();
+        cost += renderer.textureCycles - startCycles;
+        cost += (u32)((renderer.textureBlendPixels - startBlendPixels) * (1.298 - 0.858));
+      }
     }
+    io.pcounter += cost;
   };
 
   auto finishRender = [&]() -> void {

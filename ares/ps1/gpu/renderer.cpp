@@ -3,6 +3,8 @@ constexpr auto clip = [](auto x, auto lo, auto hi) {
   return std::clamp(x, lo <= hi ? lo : hi, hi >= lo ? hi : lo);
 };
 
+static constexpr double CpuToGpuClocks = 53'693'175.0 / 33'868'800.0;
+
 
 auto GPU::generateTables() -> void {
   static constexpr s8 table[4][4] = {
@@ -84,6 +86,7 @@ auto GPU::Render::loadCLUTCache() const -> void {
 
   u32 tag = (texturePaletteY << 6 | texturePaletteX >> 4) & 0x7fff;
   auto load = [&](u32 count) -> void {
+    gpu.renderer.textureCycles += (u32)(count * CpuToGpuClocks);
     for(u32 index : range(count)) {
       gpu.clutCache[index] = gpu.vram2D[texturePaletteY & 511][texturePaletteX + index & 1023];
     }
@@ -132,6 +135,7 @@ auto GPU::Render::texel(Point p) const -> u16 {
     u32 tag = (y << 11) | (byteX & 0x7f8);
 
     if(entry.tag != tag) {
+      gpu.renderer.textureCycles += 13;
       u32 base = byteX >> 1 & ~3u;
       if(tag >= 0x100000) {
         entry.data[0] = 0x7fff;
@@ -238,6 +242,9 @@ auto GPU::Render::pixel(Point point, Color rgb, Point uv, u16* destination) -> v
     if(!pixel) return;
 
     transparent = pixel >> 15;
+    if constexpr((Flags & Alpha) && (Flags & Rectangle)) {
+      if(transparent) gpu.renderer.textureBlendPixels++;
+    }
     maskBit |= transparent;
     if constexpr(Flags & Raw) {
       above = Color::from16(pixel);
@@ -634,7 +641,6 @@ auto GPU::Render::fill() -> void {
 //io.pcounter += cost<Flags>(size.width * size.height);
 }
 
-static constexpr double CpuToGpuClocks = 53'693'175.0 / 33'868'800.0;
 static constexpr double FittedWidth = 320.0;
 static constexpr double RectScanline = 5.00 * CpuToGpuClocks;
 static constexpr double PolyScanline = 4.75 * CpuToGpuClocks;
@@ -674,7 +680,7 @@ auto GPU::drawCycles(const Render& render) const -> u32 {
     if(full > 0) pixels = (u32)((s64)pixels * clipped / full);
     scanlines = max(0, min(cy1, y1) - max(cy0, y0) + 1);
     perScanline = PolyScanline;
-    perPixel = (textured ? 4.628 : (semi ? 1.314 : 0.873)) - PolyScanline / FittedWidth;
+    perPixel = (textured || (command & 0x10) ? 1.746 : (semi ? 1.314 : 0.873)) - PolyScanline / FittedWidth;
   } else if(command >= 0x40 && command <= 0x5f) {
     s32 dx = render.v1.x - render.v0.x, dy = render.v1.y - render.v0.y;
     if(abs(dx) >= 1024 || abs(dy) >= 512) return 0;
@@ -697,7 +703,7 @@ auto GPU::drawCycles(const Render& render) const -> u32 {
     pixels = width * height;
     scanlines = height;
     perScanline = RectScanline;
-    perPixel = (textured ? 1.717 : (semi ? 1.298 : 0.858)) - RectScanline / FittedWidth;
+    perPixel = (!textured && semi ? 1.298 : 0.858) - RectScanline / FittedWidth;
   } else {
     return 0;
   }
