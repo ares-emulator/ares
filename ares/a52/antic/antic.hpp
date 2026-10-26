@@ -196,6 +196,8 @@ struct ANTIC : Thread {
     auto serialize(serializer&) -> void;
 
     n8 dmaClock;
+    n2 startPending;
+    n2 stopPending;
     n8 dmaName[8];
     n6 lineWrite;
     n6 lineRead;
@@ -227,6 +229,7 @@ struct ANTIC : Thread {
     auto serialize(serializer&) -> void;
 
     n1 active;
+    n2 stallDelay;
     n9 scanline;
   } wsync{*this};
 

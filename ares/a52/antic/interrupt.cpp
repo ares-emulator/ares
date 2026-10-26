@@ -35,19 +35,23 @@ auto ANTIC::Interrupt::clock() -> void {
 
 auto ANTIC::WSYNC::power() -> void {
   active = 0;
+  stallDelay = 0;
   scanline = 0;
 }
 
 auto ANTIC::WSYNC::clock() -> void {
   if(active && scanline == self.counter.scanline && self.counter.machineCycle == Timing::WSYNCReleaseCycle) {
     active = 0;
+    stallDelay = 0;
     cpu.rdyLine(1);
+  } else if(active && stallDelay && !--stallDelay) {
+    cpu.rdyLine(0);
   }
 }
 
 auto ANTIC::WSYNC::wait() -> void {
   active = 1;
+  stallDelay = 2;
   scanline = self.counter.scanline + (self.counter.machineCycle >= 104);
   if(scanline == Timing::ScanlinesPerFrame) scanline = 0;
-  cpu.rdyLine(0);
 }

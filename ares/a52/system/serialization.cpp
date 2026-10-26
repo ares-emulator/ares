@@ -1,4 +1,4 @@
-static const string SerializerVersion = "v148";
+static const string SerializerVersion = "v149";
 
 auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
@@ -29,10 +29,8 @@ auto System::unserialize(serializer& s) -> bool {
   s(version);
   s(description);
 
-  char expectedVersion[16] = {};
-  memory::copy(&expectedVersion, (const char*)SerializerVersion, SerializerVersion.size());
   if(signature != SerializerSignature) return false;
-  if(memory::compare(version, expectedVersion, sizeof(version))) return false;
+  if(string{version} != SerializerVersion) return false;
 
   if(synchronize) power(/* reset = */ false);
   serialize(s, synchronize);

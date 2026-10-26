@@ -51,6 +51,8 @@ auto ANTIC::DMA::serialize(serializer& s) -> void {
 
 auto ANTIC::Playfield::serialize(serializer& s) -> void {
   s(dmaClock);
+   s(startPending);
+  s(stopPending);
   for(auto& name : dmaName) s(name);
   s(lineWrite);
   s(lineRead);
@@ -70,6 +72,7 @@ auto ANTIC::Playfield::serialize(serializer& s) -> void {
 
 auto ANTIC::WSYNC::serialize(serializer& s) -> void {
   s(active);
+  s(stallDelay);
   s(scanline);
 }
 

@@ -1,5 +1,7 @@
 auto ANTIC::Playfield::power() -> void {
   dmaClock = 0;
+  startPending = 0;
+  stopPending = 0;
   for(auto& name : dmaName) name = 0;
   lineWrite = 0;
   lineRead = 0;
@@ -163,19 +165,33 @@ auto ANTIC::Playfield::dmaStop() const -> u8 {
 
 auto ANTIC::Playfield::clearDMARing() -> void {
   dmaClock = 0;
+  startPending = 0;
+  stopPending = 0;
   for(auto& name : dmaName) name = 0;
 }
 
 auto ANTIC::Playfield::clockDMARing() -> void {
+  bool startPulse = startPending.bit(0);
+  bool stopPulse = stopPending.bit(0);
+  startPending >>= 1;
+  stopPending >>= 1;
+
   auto start = dmaStart();
   auto stop = dmaStop();
+  auto cycle = (u8)self.counter.machineCycle;
+  if(start != 0xff && cycle + 2 == start) startPending.bit(1) = 1;
+  if(stop != 0xff && cycle + 2 == stop) stopPending.bit(1) = 1;
 
-  if(self.counter.machineCycle == start) {
+  auto width = fetchWidth();
+  auto wideStop = 106 + (self.displayList.instruction.bit(4) ? (u8)self.io.hscroll >> 1 : 0);
+  if(width && cycle + 2 == wideStop) stopPending.bit(1) = 1;
+
+  if(startPulse) {
     dmaClock.bit(0) = 1;
     lineWrite = 0;
     lineRead = 0;
   }
-  if(self.counter.machineCycle == stop) {
+  if(stopPulse) {
     dmaClock.bit(0) = 0;
     dmaName[0] = 0;
   }
@@ -264,13 +280,14 @@ auto ANTIC::Playfield::queueDMA(DMA::Requests& requests) -> void {
 
   clockDMARing();
   bool enabled = (self.io.dmactl & 3) != 0;
-  auto physical = enabled && self.counter.machineCycle >= 10 && self.counter.machineCycle <= 105;
+  bool earlyAbnormal = self.counter.machineCycle < 10;
+   auto physical = earlyAbnormal || (enabled && self.counter.machineCycle >= 10 && self.counter.machineCycle <= 105);
   auto& properties = Modes[mode];
 
   if(properties.character && dmaClock.bit(0)) {
     auto readPhase = lineRead;
     auto name = lineBufferRead(readPhase);
-    if(self.displayList.firstScanline) {
+    if(self.displayList.firstScanline || earlyAbnormal) {
       auto writePhase = lineWrite;
       requests.append(
         self.displayList.memoryScan,
@@ -287,7 +304,7 @@ auto ANTIC::Playfield::queueDMA(DMA::Requests& requests) -> void {
   if(!properties.character && dmaClock.bit(2)) {
     bool next = dmaClock.bit(1);
     auto readPhase = bitmapLineBufferPhase(next);
-    if(self.displayList.firstScanline) {
+    if(self.displayList.firstScanline || earlyAbnormal) {
       auto writePhase = lineWrite;
       requests.append(
         self.displayList.memoryScan,

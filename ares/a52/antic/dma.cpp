@@ -75,11 +75,11 @@ auto ANTIC::DMA::arbitrate(Requests& requests) -> void {
     cpu.rdyLine(0);
     data = cpu.readDMA(address);
     self.step(Timing::ColorClocksPerMachineCycle);
-    cpu.rdyLine(!self.wsync.active);
+    cpu.rdyLine(!self.wsync.active || self.wsync.stallDelay);
   } else if(refreshPending) {
     cpu.rdyLine(0);
     self.step(Timing::ColorClocksPerMachineCycle);
-    cpu.rdyLine(!self.wsync.active);
+    cpu.rdyLine(!self.wsync.active || self.wsync.stallDelay);
     refreshPending = 0;
     data = cpu.dataBus();
   } else {
