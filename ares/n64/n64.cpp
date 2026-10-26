@@ -3,6 +3,7 @@
 #include <n64/memory/memory.cpp>
 #include <n64/system/system.cpp>
 #include <n64/cartridge/cartridge.cpp>
+#include <n64/sc64/sc64.cpp>
 #include <n64/cic/cic.cpp>
 #include <n64/controller/controller.cpp>
 #include <n64/dd/dd.cpp>
