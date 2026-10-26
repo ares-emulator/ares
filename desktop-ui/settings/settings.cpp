@@ -77,6 +77,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/ColorBleed", video.colorBleed);
   bind(boolean, "Video/ColorEmulation", video.colorEmulation);
   bind(boolean, "Video/InterframeBlending", video.interframeBlending);
+  bind(string,  "Video/Deinterlacing", video.deinterlacing);
   bind(boolean, "Video/Overscan", video.overscan);
   bind(boolean, "Video/PixelAccuracy", video.pixelAccuracy);
 

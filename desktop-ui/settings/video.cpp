@@ -52,6 +52,22 @@ auto VideoSettings::construct() -> void {
   });
   interframeBlendingLayout.setAlignment(1).setPadding(12_sx, 0);
   interframeBlendingHint.setText("Emulates LCD translucency effects, but increases motion blur").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  deinterlacingLabel.setText("Deinterlacing:");
+  deinterlacingLayout.setAlignment(0.5).setPadding(12_sx, 0);
+  for(auto& mode : array<string[4]>{"Weave", "Bob", "Blend", "Phosphor"}) {
+    ComboButtonItem item{&deinterlacingOption};
+    item.setText(mode);
+    if(mode == settings.video.deinterlacing) item.setSelected();
+  }
+  deinterlacingOption.onChange([&] {
+    Program::Guard guard;
+    if(auto item = deinterlacingOption.selected()) {
+      settings.video.deinterlacing = item.text();
+      if(emulator) emulator->setDeinterlacing(settings.video.deinterlacing);
+    }
+  });
+  deinterlacingNotesLayout.setPadding(12_sx, 0);
+  deinterlacingHint.setText("Does not apply to Nintendo 64/Aleck 64.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   overscanOption.setText("Overscan").setChecked(settings.video.overscan).onToggle([&] {
     Program::Guard guard;
     settings.video.overscan = overscanOption.checked();

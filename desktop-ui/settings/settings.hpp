@@ -38,6 +38,7 @@ struct Settings : Markup::Node {
     bool colorBleed = false;
     bool colorEmulation = true;
     bool interframeBlending = true;
+    string deinterlacing = "Weave";
     bool overscan = true;
     bool pixelAccuracy = false;
   } video;
@@ -167,6 +168,11 @@ struct VideoSettings : VerticalLayout {
     HorizontalLayout interframeBlendingLayout{this, Size{~0, 0}, 5};
       CheckLabel interframeBlendingOption{&interframeBlendingLayout, Size{0, 0}, 5};
       Label interframeBlendingHint{&interframeBlendingLayout, Size{~0, layoutVertSize}};
+    HorizontalLayout deinterlacingLayout{this, Size{~0, 0}, 5};
+      Label deinterlacingLabel{&deinterlacingLayout, Size{0, 0}};
+      ComboButton deinterlacingOption{&deinterlacingLayout, Size{130_sx, 0}};
+    HorizontalLayout deinterlacingNotesLayout{this, Size{~0, 0}, 5};
+      Label deinterlacingHint{&deinterlacingNotesLayout, Size{~0, layoutVertSize}};
     HorizontalLayout overscanLayout{this, Size{~0, 0}};
       CheckLabel overscanOption{&overscanLayout, Size{0, 0}, 5};
       Label overscanHint{&overscanLayout, Size{~0, layoutVertSize}};

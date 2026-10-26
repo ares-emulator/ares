@@ -29,6 +29,7 @@ struct Screen : Video {
   auto phosphor() const -> bool { return _phosphor; }
   auto interframeBlending() const -> bool { return _interframeBlending; }
   auto rotation() const -> u32 { return _rotation; }
+  auto deinterlace() const -> string { return _deinterlace; }
 
   auto resetPalette() -> void;
   auto resetSprites() -> void;
@@ -56,6 +57,7 @@ struct Screen : Video {
 
   auto setProgressive(bool progressiveDouble = false) -> void;
   auto setInterlace(bool interlaceField) -> void;
+  auto setDeinterlace(string deinterlace) -> void;
 
   auto attach(Node::Video::Sprite) -> void;
   auto detach(Node::Video::Sprite) -> void;
@@ -100,6 +102,7 @@ protected:
   std::unique_ptr<u32[]> _output;
   std::unique_ptr<u32[]> _rotate;
   std::unique_ptr<u32[]> _palette;
+  std::unique_ptr<u32[]> _deinterlaceHistory;
   std::vector<n1> _lineOverrideActive;
   std::vector<const u32*> _lineOverride;
   std::vector<Node::Video::Sprite> _sprites;
@@ -116,6 +119,8 @@ protected:
   bool _progressiveDouble = false;
   bool _interlace = false;
   bool _interlaceField = false;
+  string _deinterlace = "Weave";
+  bool _deinterlaceHistoryValid = false;
   u32  _viewportX = 0;
   u32  _viewportY = 0;
   u32  _viewportWidth = 0;

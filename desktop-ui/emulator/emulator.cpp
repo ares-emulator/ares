@@ -193,6 +193,7 @@ auto Emulator::load(const string& location) -> bool {
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
   setColorBleed(settings.video.colorBleed);
+  setDeinterlacing(settings.video.deinterlacing);
   applyPeripheralConfiguration();
 
   latch = {};
@@ -314,6 +315,18 @@ auto Emulator::setColorBleed(bool value) -> bool {
   }
 
   return false;
+}
+
+auto Emulator::setDeinterlacing(const string& value) -> bool {
+  Program::Guard guard;
+  if(!root) return false;
+  if(name == "Nintendo 64" || name == "Nintendo 64DD") return false;
+  if(name == "Arcade" && game->pak->attribute("board") == "nintendo/aleck64") return false;
+
+  for(auto& screen : root->find<ares::Node::Video::Screen>()) {
+    screen->setDeinterlace(value);
+  }
+  return true;
 }
 
 auto Emulator::error(const string& text) -> void {
