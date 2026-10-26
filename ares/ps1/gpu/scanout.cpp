@@ -25,17 +25,21 @@ auto GPU::Scanout::queue() -> void {
 
   u32 activeX1 = 488;
   u32 activeY1 = pal ? 20 : 16;
+  u32 activeX2 = pal ? 3300 : 3288;
+  u32 activeY2 = pal ? 308 : 256;
   u32 viewX1 = self.screen->overscan() ? activeX1 : 608;
-  u32 viewX2 = self.screen->overscan() ? (pal ? 3300 : 3288) : 3168;
+  u32 viewX2 = self.screen->overscan() ? activeX2 : 3168;
   u32 viewY1 = self.screen->overscan() ? activeY1 : (pal ? 31 : 24);
-  u32 viewY2 = self.screen->overscan() ? (pal ? 308 : 256) : (pal ? 295 : 248);
+  u32 viewY2 = self.screen->overscan() ? activeY2 : (pal ? 295 : 248);
+  u32 activeWidth = (activeX2 - activeX1 + ClockScale - 1) / ClockScale;
+  u32 activeHeight = (activeY2 - activeY1) * LineScale;
   u32 viewWidth = (viewX2 - viewX1 + ClockScale - 1) / ClockScale;
   u32 viewHeight = (viewY2 - viewY1) * LineScale;
 
   if(interleaved) self.screen->setInterlace(field);
   else self.screen->setProgressive(1);
   self.screen->setScale(1.0, 1.0);
-  self.screen->setAspect(4.0 * viewHeight, 3.0 * viewWidth);
+  self.screen->setAspect(4.0 * activeHeight, 3.0 * activeWidth);
   self.screen->setSize(viewWidth, viewHeight);
   self.screen->setViewport((viewX1 - activeX1) / ClockScale, (viewY1 - activeY1) * LineScale, viewWidth, viewHeight);
   self.screen->frame();
