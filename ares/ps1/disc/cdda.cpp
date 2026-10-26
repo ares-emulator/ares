@@ -30,9 +30,8 @@ auto Disc::CDDA::clockSample() -> void {
     sample.left  = 0;
     sample.right = 0;
   } else {
-    //each channel is saturated; but the combination of each channel is not and may overflow
-    sample.left  = sclamp<16>(left * self.audio.volume[0] >> 7) + sclamp<16>(right * self.audio.volume[2] >> 7);
-    sample.right = sclamp<16>(left * self.audio.volume[1] >> 7) + sclamp<16>(right * self.audio.volume[3] >> 7);
+    sample.left  = sclamp<16>((left * self.audio.volume[0] >> 7) + (right * self.audio.volume[2] >> 7));
+    sample.right = sclamp<16>((left * self.audio.volume[1] >> 7) + (right * self.audio.volume[3] >> 7));
   }
 
 //stream->sample(sample.left / 32768.0, sample.right / 32768.0);
