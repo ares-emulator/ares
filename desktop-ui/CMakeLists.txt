@@ -1,3 +1,9 @@
+if(ARES_ENABLE_RCHEEVOS)
+  set(retroachievements_source retroachievements/retroachievements.cpp)
+else()
+  set(retroachievements_source retroachievements/retroachievements-disabled.cpp)
+endif()
+
 add_executable(
   desktop-ui
   desktop-ui.cpp
@@ -7,6 +13,7 @@ add_executable(
   game-browser/game-browser.cpp
   program/program.cpp
   presentation/presentation.cpp
+  ${retroachievements_source}
   settings/settings.cpp
   tools/tools.cpp
 )
@@ -28,6 +35,7 @@ set_source_files_properties(
   game-browser/game-browser.cpp
   program/program.cpp
   presentation/presentation.cpp
+  ${retroachievements_source}
   settings/settings.cpp
   tools/tools.cpp
   PROPERTIES HEADER_FILE_ONLY FALSE
@@ -53,6 +61,33 @@ target_link_libraries(
 
 if(ARES_ENABLE_CHD)
   target_link_libraries(desktop-ui PRIVATE chdr-static)
+endif()
+
+if(ARES_ENABLE_RCHEEVOS)
+  find_package(CURL CONFIG REQUIRED)
+  find_package(rcheevos CONFIG REQUIRED)
+
+  # The FDS adapter reads cartridge RAM through the Famicom core header.
+  target_include_directories(desktop-ui PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/ymfm/src)
+
+  target_sources(
+    desktop-ui
+    PRIVATE
+      retroachievements/platform/adapter.cpp
+      retroachievements/platform/adapters/nintendo.cpp
+      retroachievements/platform/adapters/sega.cpp
+      retroachievements/platform/adapters/nec.cpp
+      retroachievements/platform/adapters/sony.cpp
+      retroachievements/platform/adapters/misc.cpp
+      retroachievements/platform/adapters/snk.cpp
+      retroachievements/platform/hash_chd.cpp
+  )
+  if(OS_WINDOWS)
+    target_sources(desktop-ui PRIVATE retroachievements/raintegration.cpp)
+  endif()
+  target_compile_definitions(desktop-ui PRIVATE ARES_ENABLE_RCHEEVOS)
+  target_link_libraries(desktop-ui PRIVATE rcheevos::rcheevos CURL::libcurl)
+  target_enable_feature(desktop-ui "RetroAchievements support")
 endif()
 
 set_target_properties(desktop-ui PROPERTIES OUTPUT_NAME ares)

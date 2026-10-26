@@ -11,9 +11,12 @@ struct Presentation : Window {
   auto showIcon(bool visible) -> void;
   auto loadShaders() -> void;
   auto refreshSystemMenu() -> void;
+  auto refreshRetroAchievementsMenu() -> void;
 
   std::vector<string> shaderDirectories;
   static inline bool shaderArgApplied = false;
+  bool retroAchievementsMenuVisible = false;
+  u64 retroAchievementsMenuVersion = 0;
 
   MenuBar menuBar{this};
     Menu loadMenu{&menuBar};
@@ -59,6 +62,9 @@ struct Presentation : Window {
       MenuItem hotkeySettingsAction{&settingsMenu};
       MenuItem emulatorSettingsAction{&settingsMenu};
       MenuItem optionSettingsAction{&settingsMenu};
+#if defined(ARES_ENABLE_RCHEEVOS)
+      MenuItem retroAchievementsSettingsAction{&settingsMenu};
+#endif
       MenuItem firmwareSettingsAction{&settingsMenu};
       MenuItem pathSettingsAction{&settingsMenu};
       MenuItem coreSettingsAction{&settingsMenu};
@@ -75,6 +81,10 @@ struct Presentation : Window {
       MenuItem frameAdvance{&toolsMenu};
       MenuItem reloadGame{&toolsMenu};
       MenuSeparator toolsMenuSeparatorB{&toolsMenu};
+      MenuItem achievementsViewerAction{&toolsMenu};
+      MenuItem leaderboardsViewerAction{&toolsMenu};
+      MenuItem challengesViewerAction{&toolsMenu};
+      MenuSeparator toolsMenuSeparatorC{&toolsMenu};
       MenuItem manifestViewerAction{&toolsMenu};
       MenuItem cheatEditorAction{&toolsMenu};
       MenuItem memoryEditorAction{&toolsMenu};
@@ -83,6 +93,7 @@ struct Presentation : Window {
       MenuItem propertiesViewerAction{&toolsMenu};
       MenuItem traceLoggerAction{&toolsMenu};
       MenuItem tapeViewerAction{&toolsMenu};
+    Menu retroAchievementsMenu{&menuBar};
     Menu helpMenu{&menuBar};
       MenuItem aboutAction{&helpMenu};
 

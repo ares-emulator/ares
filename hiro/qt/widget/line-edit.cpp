@@ -10,6 +10,7 @@ auto pLineEdit::construct() -> void {
   pWidget::construct();
   setBackgroundColor(state().backgroundColor);
   setEditable(state().editable);
+  setMasked(state().masked);
   setForegroundColor(state().foregroundColor);
   setText(state().text);
 }
@@ -35,6 +36,10 @@ auto pLineEdit::setBackgroundColor(Color color) -> void {
 
 auto pLineEdit::setEditable(bool editable) -> void {
   qtLineEdit->setReadOnly(!state().editable);
+}
+
+auto pLineEdit::setMasked(bool masked) -> void {
+  qtLineEdit->setEchoMode(masked ? QLineEdit::Password : QLineEdit::Normal);
 }
 
 auto pLineEdit::setForegroundColor(Color color) -> void {

@@ -62,6 +62,7 @@ auto MemoryEditor::eventChange() -> void {
       });
       memoryEditor.onWrite([=](u32 address, u8 data) -> void {
         Program::Guard guard;
+        if(retroAchievements.hardcore()) return;
         return memory->write(address, data);
       });
     }

@@ -38,11 +38,24 @@ auto Cartridge::connect() -> void {
   if(!board) board = std::make_unique<Board::Interface>(*this);
   board->pak = pak;
   board->load();
+  if(board->saveRAM && board->saveRAM->size()) {
+    ramMemory = node->append<Node::Debugger::Memory>("Cartridge RAM");
+    ramMemory->setSize(board->saveRAM->size());
+    ramMemory->setRead([this](u32 address) -> u8 {
+      if(!board || !board->saveRAM || address >= board->saveRAM->size()) return 0xff;
+      return board->saveRAM->read(address);
+    });
+    ramMemory->setWrite([this](u32 address, u8 data) -> void {
+      if(!board || !board->saveRAM || address >= board->saveRAM->size()) return;
+      board->saveRAM->write(address, data);
+    });
+  }
   power();
 }
 
 auto Cartridge::disconnect() -> void {
   if(!node || !board) return;
+  ramMemory.reset();
   board->unload();
   board->pak.reset();
   board.reset();

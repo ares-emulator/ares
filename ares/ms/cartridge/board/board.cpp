@@ -23,6 +23,7 @@ auto Interface::load(Memory::Writable<n8>& memory, string name) -> bool {
   if(auto fp = pak->read(name)) {
     memory.allocate(fp->size());
     memory.load(fp);
+    if(name == "save.ram") saveRAM = &memory;
     return true;
   }
   return false;

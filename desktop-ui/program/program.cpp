@@ -22,9 +22,10 @@ auto Program::create() -> void {
     if(startPseudoFullScreen) videoPseudoFullScreenToggle();
   }
 
+  program.rewindReset();
+  retroAchievements.initialize();
   _isRunning = true;
   worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
-  program.rewindReset();
 
   if(!startGameLoad.empty()) {
     Program::Guard guard;
@@ -73,6 +74,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
       continue;
     }
     if(!emulator) {
+      retroAchievements.idle();
       usleep(20 * 1000);
       continue;
     }
@@ -80,6 +82,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
     if(emulator && nall::GDB::server.isHalted()) {
       ruby::audio.clear();
       nall::GDB::server.updateLoop(); // sleeps internally
+      retroAchievements.idle();
       continue;
     }
 
@@ -88,6 +91,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
     if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
       ruby::audio.clear();
       nall::GDB::server.updateLoop();
+      retroAchievements.idle();
       usleep(20 * 1000);
       continue;
     }
@@ -96,8 +100,12 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
 
     nall::GDB::server.updateLoop();
 
+    if(retroAchievements.hardcore() && program.requestFrameAdvance) {
+      program.requestFrameAdvance = false;
+      continue;
+    }
     program.requestFrameAdvance = false;
-    if(!runAhead || fastForwarding || rewinding) {
+    if(!runAhead || fastForwarding || rewinding || retroAchievements.hardcore()) {
       emulator->root->run();
     } else {
       ares::setRunAhead(true);
@@ -108,6 +116,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
       state.setReading();
       emulator->root->unserialize(state);
     }
+    retroAchievements.frame();
 
     nall::GDB::server.updateLoop();
 
@@ -128,6 +137,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
 }
 
 auto Program::main() -> void {
+  retroAchievements.pumpUi();
   if(Application::modal()) {
     ruby::audio.clear();
     return;
@@ -153,6 +163,8 @@ auto Program::main() -> void {
   }
 
   if(toolsWindowConstructed) {
+    achievementsViewer.liveRefresh();
+    leaderboardsViewer.liveRefresh();
     memoryEditor.liveRefresh();
     graphicsViewer.liveRefresh();
     propertiesViewer.liveRefresh();
@@ -170,6 +182,7 @@ auto Program::quit() -> void {
   }
   Program::Guard guard;
   _quitRequested = false;
+  if(!retroAchievements.confirmDevelopmentUnload()) return;
   _quitting = true;
   if(lock.owns_lock()) {
     lock.unlock();
@@ -177,7 +190,7 @@ auto Program::quit() -> void {
   _programConditionVariable.notify_all();
   worker.join();
   program._isRunning = false;
-  unload();
+  unload(false);
   Application::processEvents();
   Application::quit();
 

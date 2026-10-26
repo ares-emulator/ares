@@ -323,6 +323,11 @@ Presentation::Presentation() {
   optionSettingsAction.setText("Options" ELLIPSIS).setIcon(Icon::Action::Settings).onActivate([&] {
     settingsWindow.show("Options");
   });
+#if defined(ARES_ENABLE_RCHEEVOS)
+  retroAchievementsSettingsAction.setText("Achievements" ELLIPSIS).setIcon(Icon::Action::Bookmark).onActivate([&] {
+    settingsWindow.show("Achievements");
+  });
+#endif
   firmwareSettingsAction.setText("Firmware" ELLIPSIS).setIcon(Icon::Emblem::Binary).onActivate([&] {
     settingsWindow.show("Firmware");
   });
@@ -386,8 +391,18 @@ Presentation::Presentation() {
   });
   frameAdvance.setText("Frame Advance").setIcon(Icon::Media::Play).onActivate([&] {
     Program::Guard guard;
+    if(retroAchievements.hardcore()) return program.showMessage("[RA] Frame advance is disabled in Hardcore mode");
     if (!program.paused) program.pause(true);
     program.requestFrameAdvance = true;
+  });
+  achievementsViewerAction.setText("Achievements").setIcon(Icon::Action::Bookmark).onActivate([&] {
+    toolsWindow.show("Achievements");
+  });
+  leaderboardsViewerAction.setText("Leaderboards").setIcon(Icon::Emblem::Text).onActivate([&] {
+    toolsWindow.show("Leaderboards");
+  });
+  challengesViewerAction.setText("Challenges").setIcon(Icon::Emblem::Text).onActivate([&] {
+    toolsWindow.show("Challenges");
   });
   manifestViewerAction.setText("Manifest").setIcon(Icon::Emblem::Binary).onActivate([&] {
     toolsWindow.show("Manifest");
@@ -413,6 +428,7 @@ Presentation::Presentation() {
   tapeViewerAction.setText("Tape").setIcon(Icon::Device::Tape).onActivate([&] {
     toolsWindow.show("Tape");
   });
+  retroAchievementsMenu.setVisible(false).setText("RetroAchievements");
 
   helpMenu.setText("Help");
   aboutAction.setText("About" ELLIPSIS).setIcon(Icon::Prompt::Question).onActivate([&] {
@@ -977,6 +993,7 @@ auto Presentation::refreshSystemMenu() -> void {
   reset.setText("Reset").setIcon(Icon::Action::Refresh).onActivate([&] {
     Program::Guard guard;
     emulator->root->power(true);
+    retroAchievements.reset();
     program.showMessage("System reset");
   });
   systemMenu.append(MenuSeparator());
@@ -984,10 +1001,40 @@ auto Presentation::refreshSystemMenu() -> void {
   MenuItem unload{&systemMenu};
   unload.setText("Unload").setIcon(Icon::Media::Eject).onActivate([&] {
     Program::Guard guard;
-    program.unload();
+    if(!program.unload()) return;
     if(settings.video.adaptiveSizing) presentation.resizeWindow();
     presentation.showIcon(true);
   });
+}
+
+auto Presentation::refreshRetroAchievementsMenu() -> void {
+  auto visible = retroAchievements.developmentMenuSupported();
+  auto version = retroAchievements.developmentMenuVersion();
+  if(retroAchievementsMenuVisible == visible && retroAchievementsMenuVersion == version) return;
+
+  retroAchievementsMenuVisible = visible;
+  retroAchievementsMenuVersion = version;
+  retroAchievementsMenu.reset();
+  retroAchievementsMenu.setVisible(visible);
+  if(!visible) return;
+
+  auto items = retroAchievements.developmentMenuItems();
+  retroAchievementsMenu.setEnabled(!items.empty());
+  for(auto& entry : items) {
+    if(entry.separator) {
+      MenuSeparator{&retroAchievementsMenu};
+    } else if(entry.toggle) {
+      MenuCheckItem item{&retroAchievementsMenu};
+      item.setText(entry.label).setChecked(entry.checked).setEnabled(entry.enabled).onToggle([id = entry.id] {
+        retroAchievements.activateDevelopmentMenuItem(id);
+      });
+    } else {
+      MenuItem item{&retroAchievementsMenu};
+      item.setText(entry.label).setEnabled(entry.enabled).onActivate([id = entry.id] {
+        retroAchievements.activateDevelopmentMenuItem(id);
+      });
+    }
+  }
 }
 
 auto Presentation::unloadEmulator(bool reloading) -> void {

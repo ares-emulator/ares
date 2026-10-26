@@ -78,6 +78,7 @@ auto InputManager::createHotkeys() -> void {
   hotkeys.push_back(InputHotkey("Rewind").onPress([&] {
     Program::Guard guard;
     if(!emulator || program.fastForwarding) return;
+    if(retroAchievements.hardcore()) return program.showMessage("[RA] Rewind is disabled in Hardcore mode");
     if(settings.general.rewind == false) {
       return program.showMessage("Please enable rewind support in the emulator settings first.");
     }
@@ -101,6 +102,7 @@ auto InputManager::createHotkeys() -> void {
   hotkeys.push_back(InputHotkey("Frame Advance").onPress([&] {
     Program::Guard guard;
     if(!emulator) return;
+    if(retroAchievements.hardcore()) return program.showMessage("[RA] Frame advance is disabled in Hardcore mode");
     if(!program.paused) program.pause(true);
     program.requestFrameAdvance = true;
   }));
@@ -147,6 +149,7 @@ auto InputManager::createHotkeys() -> void {
     Program::Guard guard;
     if(!emulator) return;
     emulator->root->power(true);
+    retroAchievements.reset();
   }));
 
   hotkeys.push_back(InputHotkey("Reload Current Game").onPress([&] {

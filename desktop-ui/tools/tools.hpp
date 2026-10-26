@@ -1,3 +1,5 @@
+#include <chrono>
+
 struct ManifestViewer : VerticalLayout {
   auto construct() -> void;
   auto reload() -> void;
@@ -153,6 +155,73 @@ struct TapeViewer : VerticalLayout {
   Button stopButton{&tapeLayout, Size{~0, 0}};
 };
 
+struct AchievementsViewer : VerticalLayout {
+  auto construct() -> void;
+  auto reload() -> void;
+  auto unload() -> void;
+  auto refresh() -> void;
+  auto liveRefresh() -> void;
+  auto eventSubsetChange() -> void;
+  auto setVisible(bool visible = true) -> AchievementsViewer&;
+
+  Label title{this, Size{~0, 0}, 5};
+  HorizontalLayout subsetLayout{this, Size{~0, 0}, 5};
+    Label subsetLabel{&subsetLayout, Size{0, 0}, 2};
+    ComboButton subsetList{&subsetLayout, Size{~0, 0}};
+  Label summary{this, Size{~0, 0}, 2};
+  ProgressBar progress{this, Size{~0, 12}};
+  TableView list{this, Size{~0, ~0}};
+  RetroAchievementsGameView lastView;
+  std::vector<RetroAchievementsGameView::Achievement> rows;
+  u32 selectedSetId = 0;
+  u64 lastImageVersion = 0;
+  std::chrono::steady_clock::time_point lastPoll{};
+  bool updating = false;
+};
+
+struct LeaderboardsViewer : VerticalLayout {
+  auto construct() -> void;
+  auto reload() -> void;
+  auto unload() -> void;
+  auto refresh() -> void;
+  auto liveRefresh() -> void;
+  auto eventLeaderboardChange() -> void;
+  auto setVisible(bool visible = true) -> LeaderboardsViewer&;
+
+  Label title{this, Size{~0, 0}, 5};
+  Label status{this, Size{~0, 0}, 2};
+  HorizontalLayout content{this, Size{~0, ~0}, 5};
+    ListView list{&content, Size{220_sx, ~0}};
+    VerticalLayout detail{&content, Size{~0, ~0}, 5};
+      Label selectedTitle{&detail, Size{~0, 0}};
+      Label description{&detail, Size{~0, 0}};
+      Label mode{&detail, Size{~0, 0}};
+      HorizontalLayout controls{&detail, Size{~0, 0}, 5};
+        Label fetchStatus{&controls, Size{~0, 0}};
+        Button aroundButton{&controls, Size{100, 0}};
+        Button topButton{&controls, Size{100, 0}};
+      TableView entries{&detail, Size{~0, ~0}};
+  RetroAchievementsGameView lastView;
+  RetroAchievementsLeaderboardView lastEntries;
+  u32 selectedId = 0;
+  u32 requestedId = 0;
+  bool topEntries = false;
+  bool updating = false;
+  u64 lastImageVersion = 0;
+  std::chrono::steady_clock::time_point lastPoll{};
+};
+
+struct ChallengesViewer : VerticalLayout {
+  auto construct() -> void;
+  auto reload() -> void;
+  auto unload() -> void;
+  auto refresh() -> void;
+  auto setVisible(bool visible = true) -> ChallengesViewer&;
+
+  Label title{this, Size{~0, 0}, 5};
+  TextEdit view{this, Size{~0, ~0}};
+};
+
 struct ToolsWindow : Window {
   ToolsWindow();
   auto show(const string& panel) -> void;
@@ -169,6 +238,9 @@ struct ToolsWindow : Window {
       PropertiesViewer propertiesViewer;
       TraceLogger traceLogger;
       TapeViewer tapeViewer;
+      AchievementsViewer achievementsViewer;
+      LeaderboardsViewer leaderboardsViewer;
+      ChallengesViewer challengesViewer;
       HomePanel homePanel;
 };
 
@@ -182,3 +254,6 @@ extern StreamManager& streamManager;
 extern PropertiesViewer& propertiesViewer;
 extern TraceLogger& traceLogger;
 extern TapeViewer& tapeViewer;
+extern AchievementsViewer& achievementsViewer;
+extern LeaderboardsViewer& leaderboardsViewer;
+extern ChallengesViewer& challengesViewer;

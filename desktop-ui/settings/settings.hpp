@@ -136,6 +136,14 @@ struct Settings : Markup::Node {
   struct MegaDrive {
     bool tmss = false;
   } megadrive;
+
+  struct RetroAchievements {
+    bool enabled = false;
+    bool hardcore = false;
+    bool encore = false;
+    string username;
+    string token;
+  } retroAchievements;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -470,6 +478,43 @@ struct DeveloperSettings : VerticalLayout {
     Label forceInterpreterHint{&forceInterpreterLayout, Size{0, layoutVertSize}};
 };
 
+struct RetroAchievementsSettings : VerticalLayout {
+  auto construct() -> void;
+  auto refresh() -> void;
+  auto acceptAvatar(const string& url, const std::vector<u8>& bytes) -> void;
+  auto setVisible(bool visible = true) -> RetroAchievementsSettings&;
+
+  Label accountLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout enabledLayout{this, Size{~0, 0}, 5};
+    CheckLabel enabled{&enabledLayout, Size{~0, 0}};
+  HorizontalLayout hardcoreLayout{this, Size{~0, 0}, 5};
+    CheckLabel hardcore{&hardcoreLayout, Size{0, 0}, 5};
+    Label hardcoreHint{&hardcoreLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout encoreLayout{this, Size{~0, 0}, 5};
+    CheckLabel encore{&encoreLayout, Size{0, 0}, 5};
+    Label encoreHint{&encoreLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout usernameLayout{this, Size{~0, 0}, 5};
+    Label usernameLabel{&usernameLayout, Size{80, layoutVertSize}};
+    LineEdit usernameValue{&usernameLayout, Size{~0, 0}};
+  HorizontalLayout passwordLayout{this, Size{~0, 0}, 5};
+    Label passwordLabel{&passwordLayout, Size{80, layoutVertSize}};
+    LineEdit passwordValue{&passwordLayout, Size{~0, 0}};
+  HorizontalLayout actionLayout{this, Size{~0, 0}, 5};
+    Label statusLabel{&actionLayout, Size{~0, layoutVertSize}};
+    Button loginButton{&actionLayout, Size{80, 0}};
+    Button clearButton{&actionLayout, Size{80, 0}};
+  HorizontalLayout profileLayout{this, Size{~0, 0}, 5};
+    Canvas profileAvatar{&profileLayout, Size{48, 48}};
+    VerticalLayout profileTextLayout{&profileLayout, Size{~0, 0}, 2};
+      Label profileName{&profileTextLayout, Size{~0, 0}};
+      Label profilePoints{&profileTextLayout, Size{~0, 0}};
+    Canvas profileSpacer{&profileLayout, Size{1, 0}};
+    Button profileLogoutButton{&profileLayout, Size{80, 0}};
+
+  string cachedAvatarUrl;
+  image cachedAvatarImage;
+};
+
 struct ImportExportSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
@@ -509,6 +554,7 @@ struct SettingsWindow : Window {
       PathSettings pathSettings;
       CoreSettings coreSettings;
       DeveloperSettings developerSettings;
+      RetroAchievementsSettings retroAchievementsSettings;
       ImportExportSettings importExportSettings;
       HomePanel homePanel;
   
@@ -531,4 +577,5 @@ extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
 extern CoreSettings& coreSettings;
 extern DeveloperSettings& developerSettings;
+extern RetroAchievementsSettings& retroAchievementsSettings;
 extern ImportExportSettings& importExportSettings;

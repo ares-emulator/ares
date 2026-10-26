@@ -505,6 +505,7 @@ struct LineEdit : sLineEdit {
   auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
   auto setEditable(bool editable = true) { return self().setEditable(editable), *this; }
+  auto setMasked(bool masked = false) { return self().setMasked(masked), *this; }
   auto setForegroundColor(SystemColor color) { return self().setForegroundColor(color), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
