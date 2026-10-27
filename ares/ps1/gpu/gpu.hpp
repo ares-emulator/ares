@@ -447,7 +447,12 @@ struct GPU : Thread, Memory::Interface {
   };
 
   auto drawCycles(const Render& render) const -> u32;
-  auto drawBusy() const -> bool { return io.pcounter > 0; }
+  auto drawBusy() const -> bool { return io.pcounter > 0 || pendingTextureTiming; }
+  auto finishPendingRender() -> void;
+
+  bool pendingTextureTiming = false;
+  u32 textureCyclesAtQueue = 0;
+  u32 textureBlendPixelsAtQueue = 0;
 
 //unserialized:
   //renderer.cpp
@@ -463,8 +468,8 @@ struct GPU : Thread, Memory::Interface {
 
     nall::thread handle;
     queue_spsc<Render[65536]> fifo;
-    std::atomic<bool> synchronized = true;
     std::atomic<u32> workSequence = 0;
+    std::atomic<u32> completedSequence = 0;
     u32 textureCycles = 0;
     u32 textureBlendPixels = 0;
   } renderer{*this};

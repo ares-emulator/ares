@@ -828,11 +828,8 @@ auto GPU::Renderer::queue(Render& render) -> void {
 
 auto GPU::Renderer::synchronize() -> void {
   if constexpr(Accuracy::GPU::Threaded) {
-    Render render;
-    render.command = 0x101;
-    synchronized = false;
-    queue(render);
-    while(!synchronized) spinloop();
+    u32 target = workSequence.load(std::memory_order_acquire);
+    while(completedSequence.load(std::memory_order_acquire) != target) spinloop();
   }
 }
 
@@ -844,13 +841,10 @@ auto GPU::Renderer::main(uintptr_t) -> void {
       if(fifo.empty()) workSequence.wait(sequence, std::memory_order_acquire);
     }
     auto render = fifo.await_read();
-    if(render.command == 0x101) {
-      synchronized = true;
-      continue;
-    }
     self.vram.mutex.lock();
     render.execute();
     self.vram.mutex.unlock();
+    completedSequence.fetch_add(1, std::memory_order_release);
     if(render.command == 0x100) thread::exit();
   }
 }
@@ -868,6 +862,8 @@ auto GPU::Renderer::power() -> void {
   if constexpr(Accuracy::GPU::Threaded) {
     kill();
     fifo.flush();
+    workSequence = 0;
+    completedSequence = 0;
     handle = thread::create(std::bind_front(&GPU::Renderer::main, &self.renderer));
   }
 }

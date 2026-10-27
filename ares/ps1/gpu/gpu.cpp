@@ -243,6 +243,7 @@ auto GPU::step(u32 clocks) -> void {
       if(scanout.lineVisible) dma.skipBusWait(clock(), skipDMAWait);
       io.pcounter -= stepClocks;
       if(io.pcounter < 0) io.pcounter = 0;
+      if(io.pcounter == 0) finishPendingRender();
       if(io.pcounter == 0 && (latch.ready || !fifo.empty())) {
         stepFifo();
         if(scanout.lineVisible) syncClocks = stepClocks;
@@ -283,6 +284,7 @@ auto GPU::step(u32 clocks) -> void {
     Thread::step(stepClocks);
     io.pcounter -= stepClocks;
     if(io.pcounter < 0) io.pcounter = 0;
+    if(io.pcounter == 0) finishPendingRender();
     if(io.pcounter == 0 && (latch.ready || !fifo.empty())) stepFifo();
     Thread::synchronize();
   }
@@ -303,6 +305,7 @@ auto GPU::power(bool reset) -> void {
   display.previous.width = 0;
   display.previous.height = 0;
   io = {};
+  pendingTextureTiming = false;
   fill = {};
   fifo = {};
   ingress = {};

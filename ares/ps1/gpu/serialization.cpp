@@ -1,4 +1,5 @@
 auto GPU::serialize(serializer& s) -> void {
+  if(s.writing()) finishPendingRender();
   Thread::serialize(s);
 
   s(vram);
@@ -128,6 +129,7 @@ auto GPU::serialize(serializer& s) -> void {
   s(scanout.prevPixelStart);
   s(scanout.prevPixelColor);
   if(s.reading()) {
+    pendingTextureTiming = false;
     scanout.accurate = pixelAccuracySetting->value();
     scanout.disabled = io.displayDisable;
     scanout.rangeX1 = io.displayRangeX1;

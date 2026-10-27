@@ -97,6 +97,14 @@ auto GPU::stepFifo() -> void {
   }
 }
 
+auto GPU::finishPendingRender() -> void {
+  if(!pendingTextureTiming) return;
+  renderer.synchronize();
+  io.pcounter += renderer.textureCycles - textureCyclesAtQueue;
+  io.pcounter += (u32)((renderer.textureBlendPixels - textureBlendPixelsAtQueue) * (1.298 - 0.858));
+  pendingTextureTiming = false;
+}
+
 auto GPU::executeLatch() -> void {
   u32 length = latch.length;
   latch.ready = 0;
@@ -311,17 +319,19 @@ auto GPU::executeGP0(u32 value, bool isThread) -> void {
       fill.color = render.v0.to16();
       fill.clocks = max(1u, cost);
     } else {
-      u32 startCycles = renderer.textureCycles;
-      u32 startBlendPixels = renderer.textureBlendPixels;
-      renderer.queue(render);
-      if((render.command & 4) && ((render.command >= 0x20 && render.command <= 0x3f)
-                             || (render.command >= 0x60 && render.command <= 0x7f))) {
-        renderer.synchronize();
-        cost += renderer.textureCycles - startCycles;
-        cost += (u32)((renderer.textureBlendPixels - startBlendPixels) * (1.298 - 0.858));
+      bool textured = (render.command & 4) && ((render.command >= 0x20 && render.command <= 0x3f)
+                                                 || (render.command >= 0x60 && render.command <= 0x7f));
+      if(textured) {
+        //Rendering runs alongside the emulated base draw time. Its counters
+        //are read only when the draw engine would otherwise become ready.
+        textureCyclesAtQueue = renderer.textureCycles;
+        textureBlendPixelsAtQueue = renderer.textureBlendPixels;
+        pendingTextureTiming = true;
       }
+      renderer.queue(render);
     }
     io.pcounter += cost;
+    if(pendingTextureTiming && io.pcounter == 0) finishPendingRender();
   };
 
   auto finishRender = [&]() -> void {
