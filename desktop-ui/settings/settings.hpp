@@ -422,7 +422,7 @@ struct CoreSettings : VerticalLayout {
   Label playstationSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout playstationExpansionLayout{this, Size{~0, 0}, 5};
       Label playstationExpansionLabel{&playstationExpansionLayout, Size{0, layoutVertSize}};
-      ComboButton playstationExpansionOption{&playstationExpansionLayout, Size{130_sx, 0}};
+      ComboButton playstationExpansionOption{&playstationExpansionLayout, Size{0, 0}, 5};
       Label playstationFirmwareHint{&playstationExpansionLayout, Size{0, layoutVertSize}};
     VerticalLayout playstationExpansionNotesLayout{this, Size{~0, 0}, 5};
       Label playstationEEPROMHint{&playstationExpansionNotesLayout, Size{~0, 0}};
