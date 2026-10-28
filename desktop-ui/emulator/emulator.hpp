@@ -21,6 +21,7 @@ struct Emulator {
   auto load(const string& location) -> bool;
   auto load(std::shared_ptr<mia::Pak> pak, string& path) -> string;
   auto loadFirmware(const Firmware&) -> std::shared_ptr<vfs::file>;
+  auto applyPortSettings() -> void;
   virtual auto unload() -> void;
   auto refresh() -> void;
   auto setBoolean(const string& name, bool value) -> bool;
@@ -59,7 +60,6 @@ struct Emulator {
   std::vector<Firmware> firmware;
   std::shared_ptr<mia::Pak> system;
   std::shared_ptr<mia::Pak> game;
-  std::shared_ptr<mia::Pak> gamepad;
   std::shared_ptr<mia::Pak> gb;
   std::vector<InputPort> ports;
   std::vector<string> inputBlacklist;
