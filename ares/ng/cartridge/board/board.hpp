@@ -15,6 +15,7 @@ struct Interface {
   virtual auto readS(n32 address) -> n8 { return 0xff; }
   virtual auto readVA(n32 address) -> n8 { return 0xff; }
   virtual auto readVB(n32 address) -> n8 { return 0xff; }
+  virtual auto fixBankType() -> u32 { return 0; }
   virtual auto power() -> void {}
   virtual auto serialize(serializer&) -> void {}
 

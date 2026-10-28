@@ -1,4 +1,4 @@
-ares_components(sm5k)
+ares_components(sm5k arcadedip)
 
 ares_add_sources(
   CORE #
@@ -67,12 +67,6 @@ ares_add_sources(
     aleck64/io.cpp
     aleck64/vdp.cpp
     aleck64/game-config/11beat.hpp
-    aleck64/game-config/doncdoon.hpp
-    aleck64/game-config/kurufev.hpp
-    aleck64/game-config/mayjin3.hpp
-    aleck64/game-config/starsldr.hpp
-    aleck64/game-config/twrshaft.hpp
-    aleck64/game-config/vivdolls.hpp
     aleck64/game-config/hipai.hpp
     aleck64/game-config/hipai2.hpp
     aleck64/game-config/srmvs.hpp

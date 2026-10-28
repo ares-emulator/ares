@@ -18,6 +18,10 @@ auto Cartridge::connect() -> void {
   information.title  = pak->attribute("title");
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
+  information.cpu    = pak->attribute("cpu");
+  if(Model::SG1000A()) system.dips.load(system.node, pak, {"DSW"});
+  cpu.encryption.reset();
+  if(information.cpu == "Sega 315-5033") cpu.encryption = std::make_unique<S315_5114>();
   information.expansionRam = pak->attribute("expansionRam").integer();
 
   if(information.board == "Linear"   ) board = std::make_unique<Board::Linear>(*this);
@@ -33,6 +37,8 @@ auto Cartridge::connect() -> void {
 
 auto Cartridge::disconnect() -> void {
   if(!node || !board) return;
+  cpu.encryption.reset();
+  if(Model::SG1000A()) system.dips.unload();
   board->unload();
   board->pak.reset();
   board.reset();

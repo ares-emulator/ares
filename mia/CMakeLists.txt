@@ -36,7 +36,6 @@ target_sources(
     medium/msx.cpp
     medium/msx2.cpp
     medium/myvision.cpp
-    medium/neo-geo-crypt.hpp
     medium/neo-geo-pocket-color.cpp
     medium/neo-geo-pocket.cpp
     medium/neo-geo.cpp

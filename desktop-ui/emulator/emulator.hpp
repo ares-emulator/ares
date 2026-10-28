@@ -6,6 +6,7 @@ struct Emulator {
   struct GameBrowserCategory {
     string name;
     string board;
+    string release;
   };
 
   virtual ~Emulator() = default;
@@ -17,6 +18,7 @@ struct Emulator {
   auto applyPeripheralConfiguration() -> void;
   auto location() -> string;
   auto locate(const string& location, const string& suffix, const string& path = "", maybe<string> system = {}) -> string;
+  auto locateArcadeBios(string location, string board, string filename) -> string;
   auto region() -> string;
   auto load(const string& location) -> bool;
   auto load(std::shared_ptr<mia::Pak> pak, string& path) -> string;
@@ -31,6 +33,7 @@ struct Emulator {
   auto load(mia::Pak& node, string name) -> bool;
   auto save(mia::Pak& node, string name) -> bool;
   virtual auto input(ares::Node::Input::Input) -> void;
+  auto input(ares::Node::Input::Input, string port, string device, string name) -> void;
   auto inputKeyboard(string name) -> bool;
   auto handleLoadResult(LoadResult result) -> void;
   virtual auto load(Menu) -> void {}

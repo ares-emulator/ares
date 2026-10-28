@@ -137,6 +137,11 @@ struct Settings : Markup::Node {
   struct MegaDrive {
     bool tmss = false;
   } megadrive;
+
+  struct NeoGeo {
+    string aesBios = "neo-po.bin";
+    string mvsBios = "vs-bios.rom";
+  } neoGeo;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -394,54 +399,69 @@ struct CoreSettings : VerticalLayout {
   auto construct() -> void;
 
   HorizontalLayout settingsLayout{this, Size{~0, 0}};
-      Label settingsHint{&settingsLayout, Size{0, layoutVertSize}};
-  //
-  Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
-      CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
-      Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, layoutVertSize}};
-    HorizontalLayout nintendo64ControllerPakBankLayout{this, Size{~0, 0}, 5};
-      Label nintendo64ControllerPakBankLabel{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
-      ComboButton nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{0, 0}};
-      Label nintendo64ControllerPakBankHint{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
-    HorizontalLayout disableVideoInterfaceProcessingLayout{this, Size{~0, 0}, 5};
-      CheckLabel disableVideoInterfaceProcessingOption{&disableVideoInterfaceProcessingLayout, Size{0, 0}, 5};
-      Label disableVideoInterfaceProcessingHint{&disableVideoInterfaceProcessingLayout, Size{0, layoutVertSize}};
-    HorizontalLayout weaveDeinterlacingLayout{this, Size{~0, 0}, 5};
-      CheckLabel weaveDeinterlacingOption{&weaveDeinterlacingLayout, Size{0, 0}, 5};
-      Label weaveDeinterlacingHint{&weaveDeinterlacingLayout, Size{0, layoutVertSize}};
-    HorizontalLayout renderQualityLayout{this, Size{~0, 0}, 5};
-      RadioLabel renderQuality1x{&renderQualityLayout, Size{0, 0}};
-      RadioLabel renderQuality2x{&renderQualityLayout, Size{0, 0}};
-      RadioLabel renderQuality4x{&renderQualityLayout, Size{0, 0}};
-      Group renderQualityGroup{&renderQuality1x, &renderQuality2x, &renderQuality4x};
-    HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 5};
-      CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
-      Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, layoutVertSize}};
+    Label settingsHint{&settingsLayout, Size{0, layoutVertSize}};
+  TabFrame coreTabs{this, Size{~0, ~0}};
+  TabFrameItem gameBoyAdvanceTab{&coreTabs};
+    VerticalLayout gameBoyAdvancePanel{&gameBoyAdvanceTab};
+  TabFrameItem megaDriveTab{&coreTabs};
+    VerticalLayout megaDrivePanel{&megaDriveTab};
+  TabFrameItem neoGeoTab{&coreTabs};
+    VerticalLayout neoGeoPanel{&neoGeoTab};
+  TabFrameItem nintendo64Tab{&coreTabs};
+    VerticalLayout nintendo64Panel{&nintendo64Tab};
+  TabFrameItem playstationTab{&coreTabs};
+    VerticalLayout playstationPanel{&playstationTab};
+  TabFrameItem superFamicomTab{&coreTabs};
+    VerticalLayout superFamicomPanel{&superFamicomTab};
 
-  Label playstationSettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout playstationExpansionLayout{this, Size{~0, 0}, 5};
-      Label playstationExpansionLabel{&playstationExpansionLayout, Size{0, layoutVertSize}};
-      ComboButton playstationExpansionOption{&playstationExpansionLayout, Size{0, 0}, 5};
-      Label playstationFirmwareHint{&playstationExpansionLayout, Size{0, layoutVertSize}};
-    VerticalLayout playstationExpansionNotesLayout{this, Size{~0, 0}, 5};
-      Label playstationEEPROMHint{&playstationExpansionNotesLayout, Size{~0, 0}};
-      Label playstationCompatibilityHint{&playstationExpansionNotesLayout, Size{~0, 0}};
+  HorizontalLayout nintendo64ExpansionPakLayout{&nintendo64Panel, Size{~0, 0}, 5};
+    CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
+    Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, layoutVertSize}};
+  HorizontalLayout nintendo64ControllerPakBankLayout{&nintendo64Panel, Size{~0, 0}, 5};
+    Label nintendo64ControllerPakBankLabel{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
+    ComboButton nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{0, 0}};
+    Label nintendo64ControllerPakBankHint{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
+  HorizontalLayout disableVideoInterfaceProcessingLayout{&nintendo64Panel, Size{~0, 0}, 5};
+    CheckLabel disableVideoInterfaceProcessingOption{&disableVideoInterfaceProcessingLayout, Size{0, 0}, 5};
+    Label disableVideoInterfaceProcessingHint{&disableVideoInterfaceProcessingLayout, Size{0, layoutVertSize}};
+  HorizontalLayout weaveDeinterlacingLayout{&nintendo64Panel, Size{~0, 0}, 5};
+    CheckLabel weaveDeinterlacingOption{&weaveDeinterlacingLayout, Size{0, 0}, 5};
+    Label weaveDeinterlacingHint{&weaveDeinterlacingLayout, Size{0, layoutVertSize}};
+  HorizontalLayout renderQualityLayout{&nintendo64Panel, Size{~0, 0}, 5};
+    RadioLabel renderQuality1x{&renderQualityLayout, Size{0, 0}};
+    RadioLabel renderQuality2x{&renderQualityLayout, Size{0, 0}};
+    RadioLabel renderQuality4x{&renderQualityLayout, Size{0, 0}};
+    Group renderQualityGroup{&renderQuality1x, &renderQuality2x, &renderQuality4x};
+  HorizontalLayout renderSupersamplingLayout{&nintendo64Panel, Size{~0, 0}, 5};
+    CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
+    Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, layoutVertSize}};
 
-  Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};
-      CheckLabel gameBoyPlayerOption{&gameBoyPlayerLayout, Size{0, 0}, 5};
-      Label gameBoyPlayerHint{&gameBoyPlayerLayout, Size{0, layoutVertSize}};
+  HorizontalLayout playstationExpansionLayout{&playstationPanel, Size{~0, 0}, 5};
+    Label playstationExpansionLabel{&playstationExpansionLayout, Size{0, layoutVertSize}};
+    ComboButton playstationExpansionOption{&playstationExpansionLayout, Size{0, 0}, 5};
+    Label playstationFirmwareHint{&playstationExpansionLayout, Size{0, layoutVertSize}};
+    VerticalLayout playstationExpansionNotesLayout{&playstationPanel, Size{~0, 0}, 5};
+    Label playstationEEPROMHint{&playstationExpansionNotesLayout, Size{~0, 0}};
+    Label playstationCompatibilityHint{&playstationExpansionNotesLayout, Size{~0, 0}};
 
-  Label superFamicomSettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout superFamicomDeepBlackBoostLayout{this, Size{~0, 0}, 5};
-      CheckLabel superFamicomDeepBlackBoostOption{&superFamicomDeepBlackBoostLayout, Size{0, 0}, 5};
-      Label superFamicomDeepBlackBoostHint{&superFamicomDeepBlackBoostLayout, Size{0, layoutVertSize}};
+  HorizontalLayout gameBoyPlayerLayout{&gameBoyAdvancePanel, Size{~0, 0}, 5};
+    CheckLabel gameBoyPlayerOption{&gameBoyPlayerLayout, Size{0, 0}, 5};
+    Label gameBoyPlayerHint{&gameBoyPlayerLayout, Size{0, layoutVertSize}};
 
-  Label megaDriveSettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};
-      CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};
-      Label megaDriveTmssHint{&megaDriveTmssLayout, Size{0, layoutVertSize}};
+  HorizontalLayout superFamicomDeepBlackBoostLayout{&superFamicomPanel, Size{~0, 0}, 5};
+    CheckLabel superFamicomDeepBlackBoostOption{&superFamicomDeepBlackBoostLayout, Size{0, 0}, 5};
+    Label superFamicomDeepBlackBoostHint{&superFamicomDeepBlackBoostLayout, Size{0, layoutVertSize}};
+
+  HorizontalLayout megaDriveTmssLayout{&megaDrivePanel, Size{~0, 0}, 5};
+    CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};
+    Label megaDriveTmssHint{&megaDriveTmssLayout, Size{0, layoutVertSize}};
+
+  HorizontalLayout neoGeoAesBiosLayout{&neoGeoPanel, Size{~0, 0}, 5};
+    Label neoGeoAesBiosLabel{&neoGeoAesBiosLayout, Size{0, layoutVertSize}};
+    ComboButton neoGeoAesBiosOption{&neoGeoAesBiosLayout, Size{260_sx, 0}};
+  HorizontalLayout neoGeoMvsBiosLayout{&neoGeoPanel, Size{~0, 0}, 5};
+    Label neoGeoMvsBiosLabel{&neoGeoMvsBiosLayout, Size{0, layoutVertSize}};
+    ComboButton neoGeoMvsBiosOption{&neoGeoMvsBiosLayout, Size{260_sx, 0}};
 };
 
 struct DeveloperSettings : VerticalLayout {

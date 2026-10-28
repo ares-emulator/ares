@@ -38,12 +38,8 @@ struct Mame : Medium {
     explicit operator bool() const { return status == AssemblyStatus::Successful; }
   };
 
-  using ManifestResolver = std::function<Markup::Node (string)>;
-
-  auto loadRoms(string location, Markup::Node& info, string sectionName,
-    ManifestResolver resolver = {}) -> AssemblyResult;
-  auto loadRomFile(string location, string filename, string region, Markup::Node currentInfo,
-    const ManifestResolver& resolver) -> AssemblyResult;
+  auto loadRoms(string location, Markup::Node& info, string sectionName, std::function<Markup::Node (string)> resolver = {}) -> AssemblyResult;
+  auto loadRomFile(string location, string filename, string region, Markup::Node currentInfo, std::function<Markup::Node (string)> resolver, maybe<u32> checksum = nothing, bool extract = true) -> AssemblyResult;
   auto parseNatural(Markup::Node node, u64& value) const -> bool;
   auto assemblyError(const AssemblyResult& result) const -> string;
   auto endianSwap(std::vector<u8>& memory, u64 address = 0, u64 size = std::numeric_limits<u64>::max()) -> bool;
@@ -77,15 +73,9 @@ auto Mame::parseNatural(Markup::Node node, u64& value) const -> bool {
   return true;
 }
 
-auto Mame::loadRoms(string location, Markup::Node& info, string sectionName,
-  ManifestResolver resolver) -> AssemblyResult {
+auto Mame::loadRoms(string location, Markup::Node& info, string sectionName, std::function<Markup::Node (string)> resolver) -> AssemblyResult {
   if(!location.iendsWith(".zip")) {
     return {AssemblyStatus::InvalidArchive, sectionName, {}, location, "expected a .zip archive", {}};
-  }
-
-  Decode::ZIP archive;
-  if(!archive.open(location)) {
-    return {AssemblyStatus::InvalidArchive, sectionName, {}, location, "could not open the ZIP archive", {location}};
   }
 
   if(!resolver) {
@@ -121,8 +111,24 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName,
     && type != "load16_byte"
     && type != "load16_word_swap"
     && type != "load32_byte"
-    && type != "load32_word_swap") {
+    && type != "load32_word_swap"
+    && type != "copy") {
       return assemblyFailure(AssemblyStatus::MalformedMetadata, {"unsupported ROM load type: ", type});
+    }
+
+    //copy duplicates data already assembled in this region (MAME's ROM_COPY)
+    if(type == "copy") {
+      u64 from = 0, to = 0, size = 0;
+      if(section["name"] || !parseNatural(section["from"], from)
+      || !parseNatural(section["offset"], to) || !parseNatural(section["size"], size)) {
+        return assemblyFailure(AssemblyStatus::MalformedMetadata, "ROM copy record needs from, offset and size");
+      }
+      if(from > result.data.size() || size > result.data.size() - from) {
+        return assemblyFailure(AssemblyStatus::MalformedMetadata, "ROM copy source is outside the region");
+      }
+      if(result.data.size() < to + size) result.data.resize(to + size);
+      memmove(result.data.data() + to, result.data.data() + from, size);
+      continue;
     }
 
     u64 fillValue = 0;
@@ -131,7 +137,6 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName,
       if(section["name"] || section["value"]) {
         return assemblyFailure(AssemblyStatus::MalformedMetadata, "ROM reuse record must only contain offset and size");
       }
-      if(type == "ignore") loadType = type;
     } else if(fillRecord) {
       if(section["name"] || !parseNatural(section["value"], fillValue) || fillValue > 0xff) {
         return assemblyFailure(AssemblyStatus::MalformedMetadata, "ROM fill record has an invalid name or value");
@@ -148,7 +153,9 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName,
       }
       loadType = type;
 
-      auto file = loadRomFile(location, filename, sectionName, info, resolver);
+      maybe<u32> checksum;
+      if(section["crc"]) checksum = (u32)section["crc"].string().hex();
+      auto file = loadRomFile(location, filename, sectionName, info, resolver, checksum);
       if(!file) return file;
       input = std::move(file.data);
       inputArchive = std::move(file.archive);
@@ -185,6 +192,30 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName,
       }
     }
 
+    if(loadType == "load32_byte") {
+      if(sourceSize > std::numeric_limits<u64>::max() / 4) {
+        return assemblyFailure(AssemblyStatus::MalformedMetadata, "interleaved ROM size overflows");
+      }
+      outputSize = sourceSize * 4;
+      increment = 4;
+      startIndex = writeOffset & 3;
+      writeOffset -= startIndex;
+    }
+
+    //load32_word_swap: each source word is byte-swapped into the first or second half of a 32-bit group
+    bool wordInterleave = loadType == "load32_word_swap";
+    if(wordInterleave) {
+      if(sourceSize & 1) {
+        return assemblyFailure(AssemblyStatus::MalformedMetadata, "word-interleaved ROM size must be even");
+      }
+      if(sourceSize > std::numeric_limits<u64>::max() / 2) {
+        return assemblyFailure(AssemblyStatus::MalformedMetadata, "interleaved ROM size overflows");
+      }
+      outputSize = sourceSize * 2;
+      startIndex = writeOffset & 3;
+      writeOffset -= startIndex;
+    }
+
     if(writeOffset > std::numeric_limits<u64>::max() - outputSize) {
       return assemblyFailure(AssemblyStatus::MalformedMetadata, "ROM destination range overflows");
     }
@@ -200,7 +231,9 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName,
       }
 
       u64 bytesRequired = 0;
-      if(outputSize > startIndex) {
+      if(wordInterleave) {
+        bytesRequired = sourceSize;
+      } else if(outputSize > startIndex) {
         bytesRequired = (outputSize - startIndex + increment - 1) / increment;
       }
       if(readOffset > input.size()
@@ -217,7 +250,21 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName,
       }
     }
 
+    //ignore skips source data without writing it
+    if(type == "ignore") {
+      readOffset += sourceSize;
+      continue;
+    }
+
     if(result.data.size() < outputEnd) result.data.resize(outputEnd);
+
+    if(wordInterleave) {
+      for(u64 index = startIndex; index < outputSize; index += 4) {
+        result.data[index + writeOffset + 1] = input[readOffset++];
+        result.data[index + writeOffset + 0] = input[readOffset++];
+      }
+      continue;
+    }
 
     for(u64 index = startIndex; index < outputSize; index += increment) {
       if(fillRecord) {
@@ -235,10 +282,14 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName,
   return result;
 }
 
-auto Mame::loadRomFile(string location, string filename, string region, Markup::Node currentInfo,
-  const ManifestResolver& resolver) -> AssemblyResult {
+auto Mame::loadRomFile(string location, string filename, string region, Markup::Node currentInfo, std::function<Markup::Node (string)> resolver, maybe<u32> checksum, bool extract) -> AssemblyResult {
+  auto romRoot = Location::path(location);
+  auto board = currentInfo["game/board"].string();
+  auto system = Location::file(board);
+  if(system && Location::prefix(romRoot).iequals(system)) romRoot = Location::dir(romRoot);
   std::vector<string> visited;
   std::vector<string> archiveChain;
+  bool openedArchive = false;
   auto assemblyFailure = [&](AssemblyStatus status, string detail) {
     return AssemblyResult{status, region, filename, location, std::move(detail), std::move(archiveChain)};
   };
@@ -248,46 +299,76 @@ auto Mame::loadRomFile(string location, string filename, string region, Markup::
     if(!currentName) {
       return assemblyFailure(AssemblyStatus::MalformedParent, "manifest is missing game/name");
     }
-
     for(auto& name : visited) {
       if(name.iequals(currentName)) {
         return assemblyFailure(AssemblyStatus::ParentCycle, {"parent cycle repeats ", currentName});
       }
     }
     visited.push_back(currentName);
-    archiveChain.push_back(location);
 
-    Decode::ZIP archive;
-    if(!archive.open(location)) {
-      return assemblyFailure(AssemblyStatus::InvalidArchive, "could not open a ZIP archive in the parent chain");
-    }
+    std::vector<string> candidates{location};
+    if(system) candidates.push_back({romRoot, system, "/", currentName, ".zip"});
+    candidates.push_back({romRoot, currentName, ".zip"});
+    for(auto& candidate : candidates) {
+      bool alreadyTried = false;
+      for(auto& previous : archiveChain) {
+        if(previous.iequals(candidate)) alreadyTried = true;
+      }
+      if(alreadyTried) continue;
+      archiveChain.push_back(candidate);
+      if(!inode::exists(candidate)) continue;  //Merged sets need no separate clone ZIP.
+      location = candidate;
+      Decode::ZIP archive;
+      if(!archive.open(candidate)) {
+        return assemblyFailure(AssemblyStatus::InvalidArchive, "could not open a ZIP archive in the parent chain");
+      }
+      openedArchive = true;
 
-    for(auto& file : archive.file) {
-      if(!file.name.iequals(filename)) continue;
-
-      auto data = archive.extract(file);
-      if(data.size() != file.size) {
-        auto extractedSize = data.size();
+      const Decode::ZIP::File* member = nullptr;
+      //A merged parent may contain clone-specific files alongside shared ROMs.
+      std::vector<string> memberNames;
+      for(auto& name : visited) memberNames.push_back({name, "/", filename});
+      memberNames.push_back(filename);
+      for(auto& memberName : memberNames) {
+        for(auto& file : archive.file) {
+          if(!file.name.iequals(memberName)) continue;
+          if(checksum && file.crc32 != checksum()) continue;
+          member = &file;
+          break;
+        }
+        if(member) break;
+      }
+      //MAME ROM names can change between machine and software-list definitions.
+      if(!member && checksum) {
+        for(auto& file : archive.file) {
+          if(file.crc32 != checksum()) continue;
+          member = &file;
+          break;
+        }
+      }
+      if(!member) continue;
+      if(!extract) return {AssemblyStatus::Successful, {}, {}, filename, candidate, {}, std::move(archiveChain)};
+      auto data = archive.extract(*member);
+      if(data.size() != member->size || (checksum && Hash::CRC32(data).value() != checksum())) {
         return {
-          AssemblyStatus::ExtractionFailed, std::move(data),
-          region, filename, location,
-          {"expected ", file.size, " extracted bytes, got ", extractedSize}, std::move(archiveChain)
+          AssemblyStatus::ExtractionFailed, std::move(data), region, filename, candidate,
+          "extracted ROM does not match its size or checksum", std::move(archiveChain)
         };
       }
-      return {AssemblyStatus::Successful, std::move(data), {}, filename, location, {}, std::move(archiveChain)};
+      return {AssemblyStatus::Successful, std::move(data), {}, filename, candidate, {}, std::move(archiveChain)};
     }
 
     auto parent = currentInfo["game/parent"].string();
     if(!parent) {
-      return assemblyFailure(AssemblyStatus::MissingMember, "member was not found in the archive chain");
+      return assemblyFailure(openedArchive ? AssemblyStatus::MissingMember : AssemblyStatus::InvalidArchive,
+        openedArchive ? "member was not found in the archive chain" : "no ZIP archive was found in the parent chain");
     }
-
     auto parentInfo = resolver(parent);
     if(!parentInfo || !parentInfo["game/name"].string()) {
       return assemblyFailure(AssemblyStatus::MalformedParent, {"database manifest is missing for parent ", parent});
     }
-
-    location = {Location::path(location), "/", parentInfo["game/name"].string(), ".zip"};
+    auto parentName = parentInfo["game/name"].string();
+    location = {Location::path(location), parentName, ".zip"};
     currentInfo = parentInfo;
   }
 }

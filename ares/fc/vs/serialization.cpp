@@ -6,10 +6,6 @@ auto VsUniSystem::Controls::serialize(serializer& s) -> void {
   if(input) input->serialize(s);
 }
 
-auto VsUniSystem::DIPSwitches::serialize(serializer& s) -> void {
-  s(value);
-}
-
 auto VsUniSystem::IO::serialize(serializer& s) -> void {
   s(streams);
   s(positions);
@@ -24,6 +20,5 @@ auto VsUniSystem::IO::serialize(serializer& s) -> void {
 
 auto VsUniSystem::serialize(serializer& s) -> void {
   s(controls);
-  s(dipSwitches);
   s(io);
 }

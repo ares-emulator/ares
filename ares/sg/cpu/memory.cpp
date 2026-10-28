@@ -1,6 +1,16 @@
 auto CPU::read(n16 address) -> n8 {
-  if(auto result = platform->cheat(address)) return *result;
+  if(auto result = cheat(address)) return *result;
+  n8 data = readMapped(address);
+  return encryption ? encryption->decrypt(address, data, false) : data;
+}
 
+auto CPU::fetch(n16 address) -> n8 {
+  if(auto result = cheat(address)) return *result;
+  n8 data = readMapped(address);
+  return encryption ? encryption->decrypt(address, data, true) : data;
+}
+
+auto CPU::readMapped(n16 address) -> n8 {
   n8 data = 0xff;
   if(auto result = cartridge.read(address)) {
     data = result();
@@ -8,6 +18,11 @@ auto CPU::read(n16 address) -> n8 {
     data = ram.read(address);
   }
   return data;
+}
+
+auto CPU::cheat(n16 address) -> maybe<n8> {
+  if(auto result = platform->cheat(address)) return (n8)*result;
+  return nothing;
 }
 
 auto CPU::write(n16 address, n8 data) -> void {

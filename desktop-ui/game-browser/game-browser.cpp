@@ -49,13 +49,20 @@ auto GameBrowserWindow::show(std::shared_ptr<Emulator> emulator) -> void {
   }
 
   auto categories = emulator->gameBrowserCategories();
-  ListViewItem all{&categoryList};
-  all.setText("All");
-  all.setAttribute("board", "");
-  for(auto& category : categories) {
-    ListViewItem item{&categoryList};
-    item.setText(category.name);
-    item.setAttribute("board", category.board);
+  if(categories.size() > 1) {
+    ListViewItem all{&categoryList};
+    all.setText("All");
+    all.setAttribute("board", "");
+    for(auto& category : categories) {
+      ListViewItem item{&categoryList};
+      item.setText(category.name);
+      item.setAttribute("board", category.board);
+    }
+    categoryList.setCollapsible(false);
+    categoryList.setVisible(true);
+  } else {
+    categoryList.setCollapsible(true);
+    categoryList.setVisible(false);
   }
 
   auto romRoot = settings.paths.arcadeRoms;
@@ -71,16 +78,31 @@ auto GameBrowserWindow::show(std::shared_ptr<Emulator> emulator) -> void {
     });
     if(supported == categories.end()) continue;
 
+    if(supported->release) {
+      auto platforms = node["release"].string();
+      bool released = false;
+      for(auto platform : nall::split(platforms, ",")) {
+        if(platform.strip() == supported->release) released = true;
+      }
+      if(!released) continue;
+    }
+
     auto path = string{romRoot, "/", node["name"].string(), ".zip"};
-    games.push_back({node["title"].string(), node["name"].string(), board, path, inode::exists(path)});
+    auto softwarePath = string{romRoot, "/", Location::file(board), "/", node["name"].string(), ".zip"};
+    if(inode::exists(softwarePath)) path = softwarePath;
+    bool available = inode::exists(path);
+    if(!available) available = tmp->arcadeRomAvailable(path, BML::unserialize(BML::serialize(node)));
+    games.push_back({node["title"].string(), node["name"].string(), board, path, available});
   }
 
   std::ranges::sort(games, [](const auto& x, const auto& y) {
     return string::icompare(x.title, y.title) < 0;
   });
 
-  all.setSelected();
-  categoryList.resizeColumn();
+  if(categoryList.visible()) {
+    if(auto item = categoryList.item(0)) item.setSelected();
+    categoryList.resizeColumn();
+  }
 
   setVisible();
   setFocused();
@@ -94,9 +116,10 @@ auto GameBrowserWindow::show(std::shared_ptr<Emulator> emulator) -> void {
 auto GameBrowserWindow::refresh() -> void {
   gameList.reset();
 
+  bool showBoard = categoryList.visible();
   gameList.append(TableViewColumn().setText("Game Title").setExpandable());
-  gameList.append(TableViewColumn().setText("Board").setExpandable());
-  gameList.append(TableViewColumn().setText("MAME Name"));
+  if(showBoard) gameList.append(TableViewColumn().setText("Board").setWidth(120_sx));
+  gameList.append(TableViewColumn().setText("MAME Name").setWidth(100_sx));
 
   auto board = string{};
   if(auto category = categoryList.selected()) board = category.attribute("board");
@@ -113,7 +136,7 @@ auto GameBrowserWindow::refresh() -> void {
     TableViewItem item{&gameList};
     item.setAttribute("name", game.name);
     item.append(TableViewCell().setText(game.title));
-    item.append(TableViewCell().setText(game.board));
+    if(showBoard) item.append(TableViewCell().setText(game.board));
     item.append(TableViewCell().setText(game.name));
     if(!game.available) {
       for(auto cell : item.cells()) cell.setForegroundColor(Color{255, 0, 0});

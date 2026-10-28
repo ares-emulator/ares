@@ -8,14 +8,15 @@ auto VsUniSystem::IO::read(n16 address, n8 data) -> n8 {
   data.bit(0) = readStream(address == 0x4017);
   data.bit(1) = 0;
 
+  n8 dips = vsUniSystem.dips.read("DSW0");
   if(address == 0x4016) {
     data.bit(2) = servicePulse.frames != 0;
-    data.bit(3, 4) = vsUniSystem.dipSwitches.value.bit(0, 1);
+    data.bit(3, 4) = dips.bit(0, 1);
     data.bit(5) = coinPulses[0].frames != 0;
     data.bit(6) = coinPulses[1].frames != 0;
     data.bit(7) = 0;
   } else {
-    data.bit(2, 7) = vsUniSystem.dipSwitches.value.bit(2, 7);
+    data.bit(2, 7) = dips.bit(2, 7);
   }
 
   return data;

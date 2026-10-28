@@ -9,6 +9,7 @@ struct Medium : Pak {
   virtual auto database() -> Database;
   auto manifestDatabase(string sha256) -> string;
   auto manifestDatabaseArcade(string name) -> string;
+  auto arcadeRomAvailable(string location, Markup::Node info) -> bool;
 
   string sha256;
 };

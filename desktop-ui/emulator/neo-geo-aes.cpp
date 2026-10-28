@@ -4,14 +4,13 @@ struct NeoGeoAES : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto arcade() -> bool override { return true; }
+  auto gameBrowserCategories() -> std::vector<GameBrowserCategory> override { return {{"Neo Geo", "snk/neogeo", "AES"}}; }
 };
 
 NeoGeoAES::NeoGeoAES() {
   manufacturer = "SNK";
   name = "Neo Geo AES";
   medium = "Neo Geo";
-
-  firmware.push_back({"BIOS", "World"});
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -42,13 +41,11 @@ auto NeoGeoAES::load() -> LoadResult {
   if(result != successful) return result;
 
   system = mia::System::create("Neo Geo AES");
-  result = system->load(firmware[0].location);
+  system->biosName = settings.neoGeo.aesBios;
+  auto bios = locateArcadeBios(location, "neogeo", "aes.zip");
+  result = system->load(bios);
   if(result != successful) {
-    result.firmwareSystemName = "Neo Geo AES";
-    result.firmwareType = firmware[0].type;
-    result.firmwareRegion = firmware[0].region;
-    result.result = noFirmware;
-    return result;
+    return {romNotFound, {"Neo Geo AES requires ", settings.neoGeo.aesBios, " in aes.zip: ", bios}};
   }
 
   if(!ares::NeoGeo::load(root, "[SNK] Neo Geo AES")) return otherError;

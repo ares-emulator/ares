@@ -35,8 +35,7 @@ auto Aleck64::readPort1() -> u32 {
     value.bit(15) = !aleck64.controls.p2start->value();
   }
 
-  value.bit(16, 23) = dipSwitch[1];
-  value.bit(24, 31) = dipSwitch[0];
+  value.bit(16, 31) = dips.read("IN0") >> 16;
 
   return value;
 }

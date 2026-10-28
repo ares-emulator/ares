@@ -1,4 +1,5 @@
 ares_components(
+  arcadedip
   mos6502
   ym2149
   ym2413
@@ -33,7 +34,6 @@ ares_add_sources(
   INCLUDED #
     vs/unisystem.hpp
     vs/controls.cpp
-    vs/dip-switches.cpp
     vs/io.cpp
     vs/standard-input.cpp
     vs/zapper-input.cpp

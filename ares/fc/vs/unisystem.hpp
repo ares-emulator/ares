@@ -67,37 +67,7 @@ struct VsUniSystem {
     std::unique_ptr<Input> input;
   } controls;
 
-  struct DIPSwitches {
-    struct Option {
-      string name;
-      u8 value = 0;
-    };
-
-    struct Setting {
-      Node::Setting::String node;
-      u8 mask = 0;
-      std::vector<Option> options;
-    };
-
-    Node::Object node;
-    std::vector<Setting> settings;
-    n8 value = 0;
-
-    auto load(Node::Object parent) -> bool;
-    auto unload() -> void;
-    auto update(u32 index, string value) -> void;
-    auto serialize(serializer&) -> void;
-
-  private:
-    struct Definition {
-      string name;
-      u8 mask = 0;
-      u8 defaultValue = 0;
-      std::vector<Option> options;
-    };
-
-    auto create(Node::Object parent, std::vector<Definition> definitions) -> void;
-  } dipSwitches;
+  Arcade::Dip dips;
 
   struct IO {
     struct Pulse {

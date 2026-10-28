@@ -94,7 +94,6 @@ namespace ares::Atari5200 {
     auto load(Node::System& node, string name) -> bool;
   }
   #include "neo-geo-aes.cpp"
-  #include "neo-geo-mvs.cpp"
 #endif
 
 #ifdef CORE_NGP
@@ -255,7 +254,6 @@ auto Emulator::construct() -> void {
 
   #ifdef CORE_NG
   emulators.push_back(std::make_shared<NeoGeoAES>());
-  emulators.push_back(std::make_shared<NeoGeoMVS>());
   #endif
 
   #ifdef CORE_NGP

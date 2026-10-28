@@ -74,6 +74,7 @@ auto PPI::readPortB() -> n8 {
 }
 
 auto PPI::readPortC() -> n8 {
+  if(Model::SG1000A()) return system.dips.read("DSW");
   debug(unimplemented, "PPI::readPortC()");
   return 0xff;
 }

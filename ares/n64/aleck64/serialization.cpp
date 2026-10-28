@@ -4,5 +4,4 @@ auto Aleck64::serialize(serializer& s) -> void {
   s(pram);
 
   s(vdp.io.enable);
-  s(dipSwitch);
 }

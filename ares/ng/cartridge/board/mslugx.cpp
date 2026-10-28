@@ -99,6 +99,12 @@ struct MSlugX : Interface {
     command = 0;
   }
 
+  auto serialize(serializer& s) -> void override {
+    s(romBank);
+    s(counter);
+    s(command);
+  }
+
   n8 romBank;
   u16 counter;
   u16 command;

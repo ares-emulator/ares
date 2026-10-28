@@ -7,6 +7,7 @@ namespace ares {
 struct Z80 {
   struct Bus {
     virtual auto read(n16 address) -> n8 = 0;
+    virtual auto fetch(n16 address) -> n8 { return read(address); }
     virtual auto write(n16 address, n8 data) -> void = 0;
 
     virtual auto in(n16 address) -> n8 = 0;

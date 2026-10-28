@@ -13,7 +13,7 @@ auto NeoGeoAES::load(string location) -> LoadResult {
     Decode::ZIP archive;
     if(archive.open(location)) {
       for(auto& file : archive.file) {
-        if(file.name == "neo-epo.bin") {
+        if(file.name == (biosName ? biosName : string{"neo-po.bin"})) {
           auto extracted = archive.extract(file);
           std::vector<u8> memory;
           memory.resize(extracted.size());
@@ -39,7 +39,7 @@ auto NeoGeoAES::save(string location) -> bool {
 }
 
 auto NeoGeoAES::endianSwap(std::vector<u8>& memory) -> void {
-  for(u32 offset = 0; offset < memory.size(); offset += 2) {
+  for(u32 offset = 0; offset + 1 < memory.size(); offset += 2) {
     swap(memory[offset + 0], memory[offset + 1]);
   }
 }

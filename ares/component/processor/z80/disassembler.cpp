@@ -4,11 +4,11 @@ auto Z80::disassembleInstruction(maybe<n16> _pc) -> string {
   string s, output;
 
   n8 prefix = 0x00;
-  auto code = bus->read(pc++);
+  auto code = bus->fetch(pc++);
   if(code == 0xdd || code == 0xfd) {
     prefix = code;
 
-    code = bus->read(pc++);
+    code = bus->fetch(pc++);
     if(code == 0xdd || code == 0xfd) {
       if(prefix == 0xdd) {
         s.append("ix:");
@@ -23,13 +23,13 @@ auto Z80::disassembleInstruction(maybe<n16> _pc) -> string {
 
   if(code == 0xcb && prefix) {
     auto d = (i8)bus->read(pc++);
-    code = bus->read(pc++);
+    code = bus->read(pc++);  //DD/FD CB's final byte is fetched without M1
     output = disassembleCBd(pc, prefix, d, code);
   } else if(code == 0xcb) {
-    code = bus->read(pc++);
+    code = bus->fetch(pc++);
     output = disassembleCB(pc, prefix, code);
   } else if(code == 0xed) {
-    code = bus->read(pc++);
+    code = bus->fetch(pc++);
     output = disassembleED(pc, prefix, code);
   } else {
     output = disassemble(pc, prefix, code);

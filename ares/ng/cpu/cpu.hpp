@@ -29,6 +29,7 @@ struct CPU : M68000, Thread {
   auto main() -> void;
   auto idle(u32 clocks) -> void override;
   auto wait(u32 clocks) -> void override;
+  auto watchdog(u32 clocks) -> void;
 
   auto raise(Interrupt) -> void;
   auto lower(Interrupt) -> bool;
@@ -49,6 +50,7 @@ struct CPU : M68000, Thread {
     n32 interruptPending;
     n1  vectorSelect;  //0 = BIOS; 1 = cartridge
     n1  fixSelect;     //0 = embedded SFIX + SM1 ROM; 1 = cartridge SROM + M1 ROM
+    u32 watchdog;      //CPU clocks since the watchdog was last kicked
   } io;
 };
 

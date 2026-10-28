@@ -23,6 +23,7 @@ struct Cartridge {
   auto readS(n32 address) -> n8;
   auto readVA(n32 address) -> n8;
   auto readVB(n32 address) -> n8;
+  auto fixBankType() -> u32;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

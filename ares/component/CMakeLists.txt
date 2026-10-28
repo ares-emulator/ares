@@ -25,6 +25,15 @@ endmacro()
 
 component_sources(
   COMPONENT
+    arcadedip
+  PRIMARY
+    arcade/dip-switches.cpp
+  INCLUDED
+    arcade/dip-switches.hpp
+)
+
+component_sources(
+  COMPONENT
     ay38910
   PRIMARY
     audio/ay38910/ay38910.cpp
@@ -448,6 +457,9 @@ component_sources(
     processor/z80/registers.hpp
     processor/z80/serialization.cpp
     processor/z80/z80.hpp
+    processor/z80/sega/base.hpp
+    processor/z80/sega/s315-5114.hpp
+    processor/z80/sega/s315-5114.cpp
 )
 
 component_sources(
@@ -458,6 +470,16 @@ component_sources(
   INCLUDED
     rtc/s3511a/s3511a.hpp
     rtc/s3511a/serialization.cpp
+)
+
+component_sources(
+  COMPONENT
+    upd4990a
+  PRIMARY
+    rtc/upd4990a/upd4990a.cpp
+  INCLUDED
+    rtc/upd4990a/upd4990a.hpp
+    rtc/upd4990a/serialization.cpp
 )
 
 component_sources(

@@ -4,12 +4,21 @@ auto CoreSettings::construct() -> void {
 
   settingsHint.setText("Note: Settings changes require a game reload to take effect").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  nintendo64SettingsLabel.setText("Nintendo 64 Settings").setFont(Font().setBold());
+  gameBoyAdvanceTab.setText("Game Boy Advance");
+  megaDriveTab.setText("Mega Drive");
+  neoGeoTab.setText("Neo Geo");
+  nintendo64Tab.setText("Nintendo 64");
+  playstationTab.setText("PlayStation");
+  superFamicomTab.setText("Super Famicom");
+  for(auto panel : array<VerticalLayout[6]>{gameBoyAdvancePanel, megaDrivePanel, neoGeoPanel, nintendo64Panel, playstationPanel, superFamicomPanel}) {
+    panel.setPadding(12_sx, 12_sy);
+  }
+
 
   nintendo64ExpansionPakOption.setText("4MB Expansion Pak").setChecked(settings.nintendo64.expansionPak).onToggle([&] {
     settings.nintendo64.expansionPak = nintendo64ExpansionPakOption.checked();
   });
-  nintendo64ExpansionPakLayout.setAlignment(1).setPadding(12_sx, 0);
+  nintendo64ExpansionPakLayout.setAlignment(1);
     nintendo64ExpansionPakHint.setText("Enable/Disable the 4MB Expansion Pak").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   for(auto& opt : array<string[4]>{"32KiB (Default)", "128KiB (Datel 1Meg)", "512KiB (Datel 4Meg)", "1984KiB (Maximum)"}) {
@@ -46,18 +55,17 @@ auto CoreSettings::construct() -> void {
       }
     }
   });
-  nintendo64ControllerPakBankLayout.setAlignment(0.5).setPadding(12_sx, 0);
+  nintendo64ControllerPakBankLayout.setAlignment(0.5);
     nintendo64ControllerPakBankLabel.setText("Controller Pak Size:");
     nintendo64ControllerPakBankHint.setText("Sets the size of a newly created Controller Pak's available memory").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-    renderQualityLayout.setPadding(12_sx, 0);
 
   disableVideoInterfaceProcessingOption.setText("Disable Video Interface Processing").setChecked(settings.nintendo64.disableVideoInterfaceProcessing).onToggle([&] {
     Program::Guard guard;
     settings.nintendo64.disableVideoInterfaceProcessing = disableVideoInterfaceProcessingOption.checked();
     if(emulator) emulator->setBoolean("Disable Video Interface Processing", settings.nintendo64.disableVideoInterfaceProcessing);
   });
-  disableVideoInterfaceProcessingLayout.setAlignment(1).setPadding(12_sx, 0);
+  disableVideoInterfaceProcessingLayout.setAlignment(1);
   disableVideoInterfaceProcessingHint.setText("Disables Video Interface post processing to render image from VRAM directly").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   weaveDeinterlacingOption.setText("Weave Deinterlacing").setChecked(settings.nintendo64.weaveDeinterlacing).onToggle([&] {
@@ -71,7 +79,7 @@ auto CoreSettings::construct() -> void {
       if(settings.nintendo64.quality != "SD") renderSupersamplingOption.setEnabled(true);
     }
   });
-  weaveDeinterlacingLayout.setAlignment(1).setPadding(12_sx, 0);
+  weaveDeinterlacingLayout.setAlignment(1);
   weaveDeinterlacingHint.setText("Doubles the perceived vertical resolution; incompatible with supersampling").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   renderQuality1x.setText("1x Native").onActivate([&] {
@@ -100,7 +108,7 @@ auto CoreSettings::construct() -> void {
       weaveDeinterlacingOption.setEnabled(true);
     }
   });
-  renderSupersamplingLayout.setAlignment(1).setPadding(12_sx, 0);
+  renderSupersamplingLayout.setAlignment(1);
   renderSupersamplingHint.setText("Scales 2x and 4x resolutions back down to native.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   #if !defined(VULKAN)
@@ -111,10 +119,8 @@ auto CoreSettings::construct() -> void {
   weaveDeinterlacingLayout.setCollapsible(true).setVisible(false);
   #endif
 
-  playstationSettingsLabel.setText("Sony PlayStation Settings").setFont(Font().setBold());
   playstationExpansionLabel.setText("Parallel Port:");
-  playstationExpansionLayout.setAlignment(0.5).setPadding(12_sx, 0);
-  playstationExpansionNotesLayout.setPadding(12_sx, 0);
+  playstationExpansionLayout.setAlignment(0.5);
   { ComboButtonItem item{&playstationExpansionOption};
     item.setText("None");
     item.setAttribute<string>("device", "None");
@@ -136,26 +142,64 @@ auto CoreSettings::construct() -> void {
   playstationEEPROMHint.setText("EEPROM changes are stored in save data.\nChanging the assigned firmware resets saved EEPROM changes.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   playstationCompatibilityHint.setText("Warning: Some copy-protected games may not boot with a cheat device connected,\neven when its switch is off.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  gameBoyAdvanceSettingsLabel.setText("Game Boy Advance Settings").setFont(Font().setBold());
   gameBoyPlayerOption.setText("Game Boy Player").setChecked(settings.gameBoyAdvance.player).onToggle([&] {
     settings.gameBoyAdvance.player = gameBoyPlayerOption.checked();
   });
-  gameBoyPlayerLayout.setAlignment(1).setPadding(12_sx, 0);
+  gameBoyPlayerLayout.setAlignment(1);
     gameBoyPlayerHint.setText("Enable/Disable Game Boy Player rumble").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  superFamicomSettingsLabel.setText("Super Famicom Settings").setFont(Font().setBold());
   superFamicomDeepBlackBoostOption.setText("Deep Black Boost").setChecked(settings.superFamicom.deepBlackBoost).onToggle([&] {
     Program::Guard guard;
     settings.superFamicom.deepBlackBoost = superFamicomDeepBlackBoostOption.checked();
     if(emulator) emulator->setBoolean("Deep Black Boost", settings.superFamicom.deepBlackBoost);
   });
-  superFamicomDeepBlackBoostLayout.setAlignment(1).setPadding(12_sx, 0);
+  superFamicomDeepBlackBoostLayout.setAlignment(1);
   superFamicomDeepBlackBoostHint.setText("Applies a gamma ramp to crush black levels").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  megaDriveSettingsLabel.setText("Mega Drive Settings").setFont(Font().setBold());
   megaDriveTmssOption.setText("TMSS Boot Rom").setChecked(settings.megadrive.tmss).onToggle([&] {
     settings.megadrive.tmss = megaDriveTmssOption.checked();
   });
-  megaDriveTmssLayout.setAlignment(1).setPadding(12_sx, 0);
+  megaDriveTmssLayout.setAlignment(1);
     megaDriveTmssHint.setText("Enable/Disable the TMSS Boot Rom at system initialization").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
+  neoGeoAesBiosLabel.setText("AES BIOS (aes.zip):");
+  neoGeoMvsBiosLabel.setText("MVS BIOS (neogeo.zip):");
+  neoGeoAesBiosLayout.setAlignment(0.5);
+  neoGeoMvsBiosLayout.setAlignment(0.5);
+
+  auto database = BML::unserialize(file::read(locate("Database/Arcade.bml")));
+  auto populateBios = [&](string setName, ComboButton& selector, string& selection) {
+    for(auto game : database.find("game")) {
+      if(game["name"].string() != setName) continue;
+      string defaultRom;
+      bool selected = false;
+      for(auto bios : game.find("bios")) {
+        auto label = bios["name"].string();
+        auto rom = bios["rom"].string();
+        if(!label || !rom) continue;
+        ComboButtonItem item{&selector};
+        item.setText(label).setAttribute<string>("bios", rom);
+        if(rom == selection) item.setSelected(), selected = true;
+        if(bios["default"].boolean()) defaultRom = rom;
+      }
+      if(!selected) {
+        for(auto item : selector.items()) {
+          if(item.attribute<string>("bios") != defaultRom) continue;
+          item.setSelected();
+          selection = defaultRom;
+          break;
+        }
+      }
+      break;
+    }
+  };
+  populateBios("aes", neoGeoAesBiosOption, settings.neoGeo.aesBios);
+  neoGeoAesBiosOption.onChange([&] {
+    if(auto item = neoGeoAesBiosOption.selected()) settings.neoGeo.aesBios = item.attribute<string>("bios");
+  });
+
+  populateBios("neogeo", neoGeoMvsBiosOption, settings.neoGeo.mvsBios);
+  neoGeoMvsBiosOption.onChange([&] {
+    if(auto item = neoGeoMvsBiosOption.selected()) settings.neoGeo.mvsBios = item.attribute<string>("bios");
+  });
 }

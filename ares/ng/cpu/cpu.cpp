@@ -49,11 +49,20 @@ auto CPU::main() -> void {
 
 auto CPU::idle(u32 clocks) -> void {
   Thread::step(clocks);
+  watchdog(clocks);
 }
 
 auto CPU::wait(u32 clocks) -> void {
   Thread::step(clocks);
+  watchdog(clocks);
   Thread::synchronize();
+}
+
+auto CPU::watchdog(u32 clocks) -> void {
+  if((io.watchdog += clocks) < 1'622'015) return;
+  io.watchdog = 0;
+  system.watchdogReset = true;
+  scheduler.exit(Event::Step);
 }
 
 auto CPU::raise(Interrupt interrupt) -> void {

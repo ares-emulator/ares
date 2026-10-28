@@ -1,5 +1,6 @@
 struct System {
   Node::System node;
+  Arcade::Dip dips;
 
   struct ArcadeControls {
     Node::Object node;

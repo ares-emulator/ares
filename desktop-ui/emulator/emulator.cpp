@@ -82,6 +82,16 @@ auto Emulator::locate(const string& location, const string& suffix, const string
   return {pathname, Location::prefix(location), suffix};
 }
 
+auto Emulator::locateArcadeBios(string location, string board, string filename) -> string {
+  auto root = Location::dir(location);
+  if(Location::prefix(root).iequals(board)) root = Location::dir(root);
+  string bios = {root, filename};
+  if(inode::exists(bios)) return bios;
+  string alternate = {root, board, "/", filename};
+  if(inode::exists(alternate)) return alternate;
+  return bios;
+}
+
 //handles region selection when games support multiple regions
 auto Emulator::region() -> string {
   auto preferredRegions = nall::split_and_strip(settings.boot.prefer, ",");
@@ -180,7 +190,7 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
 
 auto Emulator::load(const string& location) -> bool {
   Program::Guard guard;
-  if(inode::exists(location)) locationQueue.push_back(location);
+  if(location && (arcade() || inode::exists(location))) locationQueue.push_back(location);
 
   peripheralConfigurationBlacklist.clear();
   LoadResult result = load();
@@ -334,6 +344,14 @@ auto Emulator::error(const string& text) -> void {
 }
 
 auto Emulator::input(ares::Node::Input::Input input) -> void {
+  auto device = ares::Node::parent(input);
+  if(!device) return;
+  auto port = ares::Node::parent(device);
+  if(!port) return;
+  return Emulator::input(input, port->name(), device->name(), input->name());
+}
+
+auto Emulator::input(ares::Node::Input::Input input, string portName, string deviceName, string inputName) -> void {
   //looking up inputs is very time-consuming; skip call if input was called too recently
   //note: allow rumble to be polled at full speed to prevent missed motor events
   if(!input->cast<ares::Node::Input::Rumble>()) {
@@ -343,18 +361,13 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
   }
 
   lock_guard<recursive_mutex> programinputLock(program.inputMutex);
-  auto device = ares::Node::parent(input);
-  if(!device) return;
-
-  auto port = ares::Node::parent(device);
-  if(!port) return;
   
   for(auto& inputPort : ports) {
-    if(inputPort.name != port->name()) continue;
+    if(inputPort.name != portName) continue;
     for(auto& inputDevice : inputPort.devices) {
-      if(inputDevice.name != device->name()) continue;
+      if(inputDevice.name != deviceName) continue;
       for(auto& inputNode : inputDevice.inputs) {
-        if(inputNode.name != input->name()) continue;
+        if(inputNode.name != inputName) continue;
         if(auto button = input->cast<ares::Node::Input::Button>()) {
           auto pressed = inputNode.effectiveMapping().pressed();
           return button->setValue(pressed);
@@ -375,7 +388,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
         }
       }
       for(auto& inputPair : inputDevice.pairs) {
-        if(inputPair.name != input->name()) continue;
+        if(inputPair.name != inputName) continue;
         if(auto axis = input->cast<ares::Node::Input::Axis>()) {
           auto value = inputPair.value();
           return axis->setValue(value);

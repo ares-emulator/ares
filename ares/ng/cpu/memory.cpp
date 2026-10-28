@@ -103,7 +103,13 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //backup RAM (MVS only)
   if(address <= 0xdfffff) {
-    if(Model::NeoGeoMVS()) system.sram[address >> 1] = data;
+    //writes are ignored while REG_SRAMLOCK is set
+    if(Model::NeoGeoMVS() && !system.io.sramLock) {
+      n16 word = system.sram[address >> 1];
+      if(upper) word.byte(1) = data.byte(1);
+      if(lower) word.byte(0) = data.byte(0);
+      system.sram[address >> 1] = word;
+    }
     return;
   }
 
@@ -121,19 +127,14 @@ auto CPU::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //REG_DIPSW
   if((address & 0xfe0080) == 0x300000 && lower) {
-    data.bit(0)   = 1;  //settings mode
-    data.bit(1)   = 1;  //0 = 1 chute; 1 = 2 chutes (TODO: Verify)
-    data.bit(2)   = 1;  //1 = normal controller; 0 = mahjong keyboard
-    data.bit(3,4) = 1;  //communication ID code
-    data.bit(5)   = 1;  //enable multiplayer
-    data.bit(6)   = 1;  //freeplay
-    data.bit(7)   = 1;  //freeze
+    data.byte(0) = system.dips.read("DSW");
   }
 
   //REG_SYSTYPE
   if((address & 0xfe0080) == 0x300080 && lower) {
+    if(Model::NeoGeoMVS()) system.arcadeControls.poll();
     data.bit(6) = 0;  //0 = 2 slots; 1 = 4 or 6 slots
-    data.bit(7) = 1;  //test button
+    data.bit(7) = Model::NeoGeoMVS() ? !system.arcadeControls.test->value() : 1;
   }
 
   //REG_SOUND
@@ -143,14 +144,15 @@ auto CPU::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //REG_STATUS_A
   if((address & 0xfe0000) == 0x320000 && lower) {
-    data.bit(0) = Model::NeoGeoMVS();  //coin 1 (MVS: active low, AES: always 0)
-    data.bit(1) = Model::NeoGeoMVS();  //coin 2 (MVS: active low, AES: always 0)
-    data.bit(2) = 1;  //service button
+    if(Model::NeoGeoMVS()) system.arcadeControls.poll();
+    data.bit(0) = Model::NeoGeoMVS() ? !system.arcadeControls.coin[0]->value() : 0;
+    data.bit(1) = Model::NeoGeoMVS() ? !system.arcadeControls.coin[1]->value() : 0;
+    data.bit(2) = Model::NeoGeoMVS() ? !system.arcadeControls.service->value() : 1;
     data.bit(3) = Model::NeoGeoMVS();  //coin 3 (MVS: active low, AES: always 0)
     data.bit(4) = Model::NeoGeoMVS();  //coin 3 (MVS: active low, AES: always 0)
     data.bit(5) = 0;  //0 = 4-slot; 1 = 6-slot
-    data.bit(6) = 0;  //RTC time pulse
-    data.bit(7) = 0;  //RTC data bit
+    data.bit(6) = system.rtc.timePulse();
+    data.bit(7) = system.rtc.dataOut();
   }
 
   //REG_P2CNT
@@ -194,9 +196,9 @@ auto CPU::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 }
 
 auto CPU::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
-  //REG_DIPSW
-  if((address & 0xfe0080) == 0x300000 && lower) {
-    //todo: kick watchdog
+  //REG_DIPSW (watchdog kick)
+  if((address & 0xfe0000) == 0x300000 && lower) {
+    io.watchdog = 0;
   }
 
   //REG_SOUND
@@ -242,9 +244,7 @@ auto CPU::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //REG_RTCCTRL
   if((address & 0xfe00f0) == 0x380050 && lower) {
-    //rtc.din    = data.bit(0);
-    //rtc.clock  = data.bit(1);
-    //rtc.strobe = data.bit(2);
+    system.rtc.write(data.bit(0), data.bit(1), data.bit(2));
   }
 
   //REG_RESETCC1
@@ -418,9 +418,9 @@ auto CPU::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   //REG_IRQACK
   if((address & 0xfe000e) == 0x3c000c) {
     if(lower) {
-      lspc.irq.powerAcknowledge  = data.bit(0);
-      lspc.irq.timerAcknowledge  = data.bit(1);
-      lspc.irq.vblankAcknowledge = data.bit(2);
+      if(data.bit(0)) lspc.irq.powerAcknowledge  = 1;
+      if(data.bit(1)) lspc.irq.timerAcknowledge  = 1;
+      if(data.bit(2)) lspc.irq.vblankAcknowledge = 1;
     }
   }
 

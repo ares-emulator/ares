@@ -4,4 +4,5 @@ auto CPU::serialize(serializer& s) -> void {
   s(io.interruptPending);
   s(io.vectorSelect);
   s(io.fixSelect);
+  s(io.watchdog);
 }

@@ -143,21 +143,26 @@ auto Medium::manifestDatabase(string sha256) -> string {
 
 //search game database for manifest, if one exists
 auto Medium::manifestDatabaseArcade(string rom) -> string {
-  loadDatabase();
+  auto source = database();
+  for(auto node : source.list) {
+    if(node["name"].string().iequals(rom)) return BML::serialize(node);
+  }
+  return {};
+}
 
-  //search the database for a given named game entry
-  for(auto& database : Media::databases) {
-    if(database.name == name()) {
-      for(auto node : database.list) {
-        if(node["name"].string().iequals(rom)) {
-          return BML::serialize(node);
-        }
-      }
+auto Medium::arcadeRomAvailable(string location, Markup::Node info) -> bool {
+  Media::Mame loader;
+  auto resolver = [&](string parent) { return BML::unserialize(manifestDatabaseArcade(parent)); };
+  for(auto region : {"maincpu", "cslot1-maincpu", "prg", "user1"}) {
+    for(auto rom : info[{"game/", region}].find("rom")) {
+      auto filename = rom["name"].string();
+      if(!filename) continue;
+      maybe<u32> checksum;
+      if(rom["crc"]) checksum = (u32)rom["crc"].string().hex();
+      return bool(loader.loadRomFile(location, filename, region, info, resolver, checksum, false));
     }
   }
-
-  //database or game entry not found
-  return {};
+  return false;
 }
 
 //

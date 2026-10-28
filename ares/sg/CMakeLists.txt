@@ -1,4 +1,4 @@
-ares_components(z80 tms9918 sn76489 i8255)
+ares_components(arcadedip z80 tms9918 sn76489 i8255)
 
 ares_add_sources(
   CORE #

@@ -2,6 +2,13 @@ namespace Board {
 
 #include "rom.cpp"
 #include "mslugx.cpp"
+#include "cmc.cpp"
+#include "sma.cpp"
+#include "pcm2.cpp"
+#include "pvc.cpp"
+#include "k2k2.cpp"
+#include "fatfury2.cpp"
+#include "kof98.cpp"
 #include "jockey-gp.cpp"
 
 auto Interface::load(Memory::Readable<n8>& memory, string name) -> bool {

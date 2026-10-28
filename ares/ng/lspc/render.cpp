@@ -81,12 +81,31 @@ auto LSPC::render(n9 y) -> void {
     }
   }
 
+  u32 fixBankType = cartridge.fixBankType();
+  n2  fixBankRows[32] = {};
+  if(fixBankType == 1) {
+    n2 bank = 0;
+    for(u32 row = 0, k = 0; row < 32; k += 2) {
+      if(vram[0x7500 + k] == 0x0200 && (vram[0x7580 + k] & 0xff00) == 0xff00) {
+        bank = vram[0x7580 + k] & 3;
+        fixBankRows[row++] = bank;
+      }
+      if(row < 32) fixBankRows[row++] = bank;
+    }
+  }
+
   for(u32 x : range(320)) {
     n16 attributes  = vram[0x7000 + (x >> 3) * 0x20 + (y >> 3)];
     n12 tileNumber  = attributes.bit( 0,11);
     n4  palette     = attributes.bit(12,15);
     n13 pramAddress = io.pramBank << 12 | palette << 4;
-    n17 tileAddress = tileNumber << 5 | x << 2 & 24 ^ 16 | y & 7;
+    n2  fixBank     = 0;
+    if(fixBankType == 1) fixBank = fixBankRows[(y >> 3) - 2 & 31] ^ 3;
+    if(fixBankType == 2) {
+      u32 column = x >> 3;
+      fixBank = (vram[0x7500 + ((y >> 3) - 1 & 31) + 32 * (column / 6)] >> (5 - column % 6) * 2 & 3) ^ 3;
+    }
+    n19 tileAddress = fixBank << 17 | tileNumber << 5 | x << 2 & 24 ^ 16 | y & 7;
     n8  tileData    = cartridge.readS(tileAddress);
     n4  color       = tileData >> (x & 1) * 4;
     if(color) {

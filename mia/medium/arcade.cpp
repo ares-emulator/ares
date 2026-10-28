@@ -93,7 +93,26 @@ auto Arcade::load(string location) -> LoadResult {
   if(manifest) {
     auto document = BML::unserialize(manifest);
     if(!document) return couldNotParseManifest;
-    return loadGeneric(location, document);
+    if(document["game/board"].string() == "snk/neogeo") {
+      auto arcadeManifest = manifest;
+      auto neoGeo = Medium::create("Neo Geo");
+      auto result = neoGeo->load(location);
+      if(result != successful) return result;
+      neoGeo->pak->setAttribute("arcade", "neogeo");
+      neoGeo->pak->append("arcade.bml", arcadeManifest);
+      neoGeo->pak->append("dips.bml", 0);
+      this->location = neoGeo->location;
+      this->manifest = arcadeManifest;
+      this->pak = neoGeo->pak;
+      Pak::load("dips.bml", ".dip");
+      return successful;
+    }
+    auto result = loadGeneric(location, document);
+    if(result == successful) {
+      pak->append("dips.bml", 0);
+      Pak::load("dips.bml", ".dip");
+    }
+    return result;
   }
 
   VsSystemDatabase vsDatabase;
@@ -107,7 +126,12 @@ auto Arcade::load(string location) -> LoadResult {
     if(manifest) {
       auto document = BML::unserialize(manifest);
       if(!document) return couldNotParseManifest;
-      return loadVs(location, document);
+      auto result = loadVs(location, document);
+      if(result == successful) {
+        pak->append("dips.bml", 0);
+        Pak::load("dips.bml", ".dip");
+      }
+      return result;
     }
   }
 
@@ -137,6 +161,7 @@ auto Arcade::loadGeneric(string location, Markup::Node& document) -> LoadResult 
     pak->setAttribute("name",   document["game/name" ].string());
     pak->setAttribute("title",  document["game/title"].string());
     pak->setAttribute("region", document["game/region"].string());
+    pak->setAttribute("cpu",    document["game/cpu"].string());
     pak->append("manifest.bml", manifest);
     pak->append("program.rom",  rom.data);
 
@@ -231,5 +256,6 @@ auto Arcade::loadVs(string location, Markup::Node& document) -> LoadResult {
 }
 
 auto Arcade::save(string location) -> bool {
+  Pak::save("dips.bml", ".dip");
   return true;
 }

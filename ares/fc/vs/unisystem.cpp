@@ -7,7 +7,6 @@ VsUniSystem vsUniSystem;
 #include "standard-input.cpp"
 #include "zapper-input.cpp"
 #include "controls.cpp"
-#include "dip-switches.cpp"
 #include "io.cpp"
 #include "serialization.cpp"
 
@@ -17,7 +16,7 @@ auto VsUniSystem::load(Node::Object parent) -> void {
 }
 
 auto VsUniSystem::unload() -> void {
-  dipSwitches.unload();
+  dips.unload();
   controls.unload();
   io.power();
   node.reset();
@@ -29,10 +28,7 @@ auto VsUniSystem::power(bool reset) -> void {
   if(reset) return;
 
   if(!controls.load(node)) return;
-  if(!dipSwitches.load(parent)) {
-    controls.unload();
-    return;
-  }
+  dips.load(parent, cartridge.pak, {"DSW0"});
 }
 
 auto VsUniSystem::frame() -> void {

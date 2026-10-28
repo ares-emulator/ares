@@ -1,10 +1,29 @@
+struct RTC : uPD4990A, Thread {
+  auto main() -> void;
+  auto step(u32 clocks) -> void;
+  auto power() -> void;
+
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+};
+
 struct System {
   Node::System node;
   VFS::Pak pak;
+  Arcade::Dip dips;
   Memory::Readable<n16> bios;
   Memory::Readable<n16> srom;
   Memory::Writable<n16> wram;
   Memory::Writable<n16> sram;  //MVS only
+  RTC rtc;
+
+  struct ArcadeControls {
+    Node::Object port, device;
+    Node::Input::Button coin[2], service, test;
+    auto load(Node::Object) -> void;
+    auto unload() -> void;
+    auto poll() -> void;
+  } arcadeControls;
 
   struct Debugger {
     //debugger.cpp
@@ -45,6 +64,8 @@ struct System {
     n1 ledLatch2;
     n8 ledData;
   } io;
+
+  bool watchdogReset = false;
 
 private:
   struct Information {

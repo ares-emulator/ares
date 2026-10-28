@@ -104,7 +104,7 @@ Arcade::Arcade() {
 }
 
 auto Arcade::available() -> bool {
-#if defined(CORE_SG) || defined(CORE_N64) || defined(CORE_FC)
+#if defined(CORE_SG) || defined(CORE_N64) || defined(CORE_FC) || defined(CORE_NG)
   return true;
 #endif
   return false;
@@ -112,6 +112,9 @@ auto Arcade::available() -> bool {
 
 auto Arcade::gameBrowserCategories() -> std::vector<GameBrowserCategory> {
   std::vector<GameBrowserCategory> categories;
+#ifdef CORE_NG
+  categories.push_back({"Neo Geo MVS", "snk/neogeo", "MVS"});
+#endif
 #ifdef CORE_FC
   categories.push_back({"Nintendo Vs. System", "nintendo/vs"});
 #endif
@@ -132,6 +135,37 @@ auto Arcade::load() -> LoadResult {
   if(!location) return noFileSelected;
   LoadResult result = game->load(location);
   if(result != successful) return result;
+
+#ifdef CORE_NG
+  if(game->pak->attribute("arcade") == "neogeo") {
+    system = mia::System::create("Neo Geo MVS");
+    system->biosName = settings.neoGeo.mvsBios;
+    auto bios = locateArcadeBios(location, "neogeo", "neogeo.zip");
+    result = system->load(bios);
+    if(result != successful) {
+      return {romNotFound, {"Neo Geo MVS requires ", settings.neoGeo.mvsBios, " in neogeo.zip: ", bios}};
+    }
+
+    systemPakName = "Neo Geo MVS";
+    gamePakName = "Neo Geo Cartridge";
+    if(!ares::NeoGeo::load(root, "[SNK] Neo Geo MVS")) return otherError;
+    if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
+      port->allocate();
+      port->connect();
+    }
+    for(auto id : range(2)) {
+      if(auto port = root->find<ares::Node::Port>(string{"Controller Port ", id + 1})) {
+        port->allocate("Arcade Stick");
+        port->connect();
+      }
+    }
+    if(auto port = root->find<ares::Node::Port>("Memory Card Slot")) {
+      port->allocate("Memory Card");
+      port->connect();
+    }
+    return successful;
+  }
+#endif
 
   system = mia::System::create("Arcade");
   result = system->load();
@@ -229,7 +263,15 @@ auto Arcade::input(ares::Node::Input::Input input) -> void {
 
   auto port = ares::Node::parent(device);
   if(!port) return;
-
+  if(device->name() == "Arcade Stick" && (port->name() == "Controller Port 1" || port->name() == "Controller Port 2")) {
+    auto player = port->name() == "Controller Port 1" ? 1 : 2;
+    auto name = input->name();
+    if(name == "A") name = "Button 1";
+    if(name == "B") name = "Button 2";
+    if(name == "C") name = "Button 3";
+    if(name == "D") name = "Button 4";
+    if(name == "Select") name = "Coin";
+    return Emulator::input(input, "Arcade", "Controls", {"Player ", player, " ", name});
+  }
   return Emulator::input(input);
-
 }

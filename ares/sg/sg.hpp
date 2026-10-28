@@ -5,9 +5,11 @@
 #include <vector>
 
 #include <component/processor/z80/z80.hpp>
+#include <component/processor/z80/sega/s315-5114.hpp>
 #include <component/video/tms9918/tms9918.hpp>
 #include <component/audio/sn76489/sn76489.hpp>
 #include <component/io/i8255/i8255.hpp>
+#include <component/arcade/dip-switches.hpp>
 
 namespace ares::SG1000 {
   #include <ares/inline.hpp>

@@ -21,6 +21,44 @@ System system;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
+auto RTC::main() -> void {
+  tick();
+  step(1);
+}
+
+auto RTC::step(u32 clocks) -> void {
+  Thread::step(clocks);
+  synchronize(cpu);
+}
+
+auto RTC::power() -> void {
+  uPD4990A::power();
+  Thread::create(32'768, std::bind_front(&RTC::main, this));
+}
+
+auto System::ArcadeControls::load(Node::Object parent) -> void {
+  port = parent->append<Node::Object>("Arcade");
+  device = port->append<Node::Object>("Controls");
+  coin[0] = device->append<Node::Input::Button>("Player 1 Coin");
+  coin[1] = device->append<Node::Input::Button>("Player 2 Coin");
+  service = device->append<Node::Input::Button>("Service");
+  test = device->append<Node::Input::Button>("Test");
+}
+
+auto System::ArcadeControls::unload() -> void {
+  for(auto& button : coin) button.reset();
+  service.reset();
+  test.reset();
+  device.reset();
+  port.reset();
+}
+
+auto System::ArcadeControls::poll() -> void {
+  for(auto& button : coin) platform->input(button);
+  platform->input(service);
+  platform->input(test);
+}
+
 auto System::game() -> string {
   if(cartridge.node) {
     return cartridge.title();
@@ -31,6 +69,11 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   scheduler.enter();
+  while(watchdogReset) {
+    watchdogReset = false;
+    power(true);
+    scheduler.enter();
+  }
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -64,6 +107,13 @@ auto System::load(Node::System& root, string name) -> bool {
   }
 
   scheduler.reset();
+  for(auto& byte : rtc.data) byte = 0;
+  if(NeoGeo::Model::NeoGeoMVS()) {
+    if(auto fp = pak->read("time.rtc")) {
+      for(auto& byte : rtc.data) byte = fp->read();
+    }
+  }
+  rtc.load();
   cpu.load(node);
   apu.load(node);
   lspc.load(node);
@@ -71,6 +121,7 @@ auto System::load(Node::System& root, string name) -> bool {
   cartridgeSlot.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
+  if(NeoGeo::Model::NeoGeoMVS()) arcadeControls.load(node);
   cardSlot.load(node);
   debugger.load(node);
   return true;
@@ -79,6 +130,7 @@ auto System::load(Node::System& root, string name) -> bool {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  dips.unload();
   debugger.unload(node);
   cpu.unload();
   apu.unload();
@@ -87,6 +139,7 @@ auto System::unload() -> void {
   cartridgeSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
+  arcadeControls.unload();
   cardSlot.unload();
   wram.reset();
   sram.reset();
@@ -96,6 +149,12 @@ auto System::unload() -> void {
 
 auto System::save() -> void {
   if(!node) return;
+  rtc.save();
+  if(NeoGeo::Model::NeoGeoMVS()) {
+    if(auto fp = pak->write("time.rtc")) {
+      for(auto byte : rtc.data) fp->write(byte);
+    }
+  }
   cartridge.save();
   cardSlot.save();
 }
@@ -119,6 +178,7 @@ auto System::power(bool reset) -> void {
     }
   }
 
+  if(!reset) rtc.power();
   if(cartridge.node) cartridge.power();
   cardSlot.power(reset);
   cpu.power(reset);

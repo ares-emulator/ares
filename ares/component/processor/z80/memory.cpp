@@ -4,7 +4,7 @@ auto Z80::wait(u32 clocks) -> void {
 
 auto Z80::opcode() -> n8 {
   step(4);
-  return bus->read(PC++);
+  return bus->fetch(PC++);
 }
 
 auto Z80::operand() -> n8 {

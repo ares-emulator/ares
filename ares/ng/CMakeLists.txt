@@ -1,4 +1,4 @@
-ares_components(m68000 z80)
+ares_components(m68000 z80 arcadedip upd4990a)
 
 target_link_libraries(ares PRIVATE ymfm)
 
@@ -57,6 +57,18 @@ ares_add_sources(
     cartridge/slot.hpp
     cartridge/board/board.cpp
     cartridge/board/board.hpp
+    cartridge/board/cmc.cpp
+    cartridge/board/cmc-tables.hpp
+    cartridge/board/fatfury2.cpp
+    cartridge/board/k2k2.cpp
+    cartridge/board/k2k2-tables.hpp
+    cartridge/board/kof98.cpp
+    cartridge/board/pcm2.cpp
+    cartridge/board/pcm2-tables.hpp
+    cartridge/board/pvc.cpp
+    cartridge/board/pvc-tables.hpp
+    cartridge/board/sma.cpp
+    cartridge/board/sma-tables.hpp
     cartridge/board/jockey-gp.cpp
     cartridge/board/mslugx.cpp
     cartridge/board/rom.cpp

@@ -1,4 +1,9 @@
-static const string SerializerVersion = "v134";
+auto RTC::serialize(serializer& s) -> void {
+  uPD4990A::serialize(s);
+  Thread::serialize(s);
+}
+
+static const string SerializerVersion = "v136";
 
 auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
@@ -55,4 +60,5 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(io.ledLatch1);
   s(io.ledLatch2);
   s(io.ledData);
+  s(rtc);
 }

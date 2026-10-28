@@ -1,5 +1,6 @@
 struct Aleck64 {
   Node::Object dipSwitchNode;
+  Arcade::Dip dips;
   enum BoardType { E90, E92 };
 
   struct Writable : public Memory::Writable {
@@ -235,13 +236,10 @@ struct Aleck64 {
     } io;
   } vdp;
 
-  n8 dipSwitch[2];
-
   struct GameConfig {
     virtual ~GameConfig() = default;
     virtual auto type() -> BoardType { return BoardType::E92; }
     virtual auto dpadDisabled() -> n1 { return 0; }
-    virtual auto dipSwitches(Node::Object parent) -> void {};
     virtual auto readExpansionPort() -> u32 { return 0xffff'ffff; }
     virtual auto writeExpansionPort(n32 data) -> void {};
   };

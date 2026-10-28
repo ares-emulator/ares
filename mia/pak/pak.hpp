@@ -22,5 +22,6 @@ struct Pak {
 
   string location;
   string manifest;
+  string biosName;
   std::shared_ptr<vfs::directory> pak;
 };

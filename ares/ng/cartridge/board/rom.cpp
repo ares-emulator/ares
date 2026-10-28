@@ -26,18 +26,26 @@ struct Rom : Interface {
     vromB.reset();
   }
 
+  virtual auto programWord(u32 address) -> n16 {
+    return prom[address >> 1];
+  }
+
+  virtual auto bankAddress(n24 address) -> u32 {
+    return (romBank + 1) * 0x100000 | n20(address);
+  }
+
   auto readP(n1 upper, n1 lower, n24 address, n16 data) -> n16 override {
-    if(address <= 0x0fffff) return prom[address >> 1];
-    if(address >= 0x200000 && address <= 0x2fffff) {
-      address = ((romBank + 1) * 0x100000) | n20(address);
-      return prom[address >> 1];
-    }
+    if(address <= 0x0fffff) return programWord(address);
+    if(address >= 0x200000 && address <= 0x2fffff) return programWord(bankAddress(address));
     return data;
   }
 
   auto writeP(n1 upper, n1 lower, n24 address, n16 data) -> void override {
-    if(lower && address >= 0x200000 && address <= 0x2fffff)  {
+    if(lower && address >= 0x2ffff0 && address <= 0x2fffff) {
+      u32 size = prom.size() * 2;
+      if(size <= 0x100000) return;
       romBank = data.bit(0, 2);
+      if((romBank + 1) * 0x100000 >= size) romBank = 0;
     }
   }
 
@@ -58,11 +66,15 @@ struct Rom : Interface {
   }
 
   auto readVB(n32 address) -> n8 override {
-    return vromB ? vromB[address] : vromA[address];
+    return vromB ? vromB[address] : readVA(address);
   }
 
   auto power() -> void override {
     romBank = 0;
+  }
+
+  auto serialize(serializer& s) -> void override {
+    s(romBank);
   }
 
   n8 romBank;
