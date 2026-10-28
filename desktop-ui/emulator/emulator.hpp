@@ -25,6 +25,9 @@ struct Emulator {
   auto loadFirmware(const Firmware&) -> std::shared_ptr<vfs::file>;
   virtual auto unload() -> void;
   auto refresh() -> void;
+  auto loadGameInputMappings() -> void;
+  auto processGameInputMappings(bool load) -> void;
+  auto clearGameInputMappings() -> void;
   auto setBoolean(const string& name, bool value) -> bool;
   auto setOverscan(bool value) -> bool;
   auto setColorBleed(bool value) -> bool;
@@ -65,6 +68,8 @@ struct Emulator {
   std::shared_ptr<mia::Pak> gamepad;
   std::shared_ptr<mia::Pak> gb;
   std::vector<InputPort> ports;
+  std::vector<InputPort> gameInputPorts;
+  string gameInputKey, gameInputTitle;
   std::vector<string> inputBlacklist;
   std::vector<string> portBlacklist;
   std::vector<string> peripheralConfigurationBlacklist;

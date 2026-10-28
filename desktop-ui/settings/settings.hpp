@@ -10,6 +10,7 @@ struct Settings : Markup::Node {
   auto load() -> void;
   auto save() -> void;
   auto process(bool load) -> void;
+  static auto inputKey(string name, bool input = false) -> string;
 
   string filePath;
 
@@ -232,6 +233,11 @@ struct AudioSettings : VerticalLayout {
 
 struct InputSettings : VerticalLayout {
   auto construct() -> void;
+  auto refreshTargets(bool selectCurrentGame = false) -> void;
+  auto selectedPorts() -> std::vector<InputPort>&;
+  auto editingGame() -> bool;
+  auto cancelAssignment() -> void;
+  auto resetGameMappings() -> void;
   auto refreshDigitalToAnalog() -> void;
   auto systemChange() -> void;
   auto portChange() -> void;
@@ -271,9 +277,11 @@ struct InputSettings : VerticalLayout {
   HorizontalLayout controlLayout{this, Size{~0, 0}};
     Label assignLabel{&controlLayout, Size{~0, 0}};
     Canvas spacer{&controlLayout, Size{1, 0}};
+    Button resetGameButton{&controlLayout, Size{0, 0}};
     Button assignButton{&controlLayout, Size{80, 0}};
-    Button clearButton{&controlLayout, Size{80, 0}};
+    Button clearButton{&controlLayout, Size{0, 0}};
 
+  bool updatingTargets = false;
   maybe<InputNode&> activeMapping;
   u32 activeBinding = 0;
   Timer timer;

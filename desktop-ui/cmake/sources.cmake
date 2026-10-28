@@ -5,7 +5,7 @@ target_sources(
 
 target_sources(desktop-ui PRIVATE game-browser/game-browser.hpp)
 
-target_sources(desktop-ui PRIVATE input/hotkeys.cpp input/input.hpp)
+target_sources(desktop-ui PRIVATE input/hotkeys.cpp input/input.hpp input/game-input.hpp)
 
 target_sources(desktop-ui PRIVATE presentation/presentation.hpp)
 

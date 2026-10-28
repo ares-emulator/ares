@@ -82,6 +82,8 @@ auto Program::load(string location) -> bool {
 
   if(!emulator->load(location)) {
     emulator.reset();
+    inputSettings.refreshTargets();
+    if(inputSettings.visible()) inputSettings.systemChange();
     if(settings.video.adaptiveSizing) presentation.resizeWindow();
     presentation.showIcon(true);
     return false;
@@ -148,6 +150,9 @@ auto Program::load(string location) -> bool {
   settings.recent.game[0] = {emulator->name, ";", location};
   presentation.loadEmulators();
 
+  inputSettings.refreshTargets(true);
+  if(inputSettings.visible()) inputSettings.systemChange();
+
   configuration = emulator->root->attribute("configuration");
 
   if(program.startSaveStateSlot) {
@@ -173,6 +178,8 @@ auto Program::unload() -> void {
   screens.clear();
   streams.clear();
   emulator.reset();
+  inputSettings.refreshTargets();
+  if(inputSettings.visible()) inputSettings.systemChange();
   rewindReset();
   presentation.unloadEmulator();
   if(toolsWindowConstructed) {

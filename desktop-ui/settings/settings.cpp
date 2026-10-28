@@ -29,14 +29,42 @@ CoreSettings& coreSettings = settingsWindow.coreSettings;
 ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
 auto Settings::load() -> void {
-  Markup::Node::operator=(BML::unserialize(string::read(filePath), " "));
+  auto content = string::read(filePath);
+  auto document = BML::unserialize(content, " ");
+  if(content && !document) {
+    MessageDialog().setText({"Unable to read settings file: ", filePath, "\nThe file has been preserved. Settings will not be saved over it."}).error();
+    process(true);
+    return;
+  }
+  Markup::Node::operator=(document);
   process(true);
   save();
 }
 
 auto Settings::save() -> void {
   process(false);
-  file::write(filePath, BML::serialize(*this, " "));
+  auto content = BML::serialize(*this, " ");
+  if(!BML::unserialize(content, " ")) return;
+  auto existing = string::read(filePath);
+  if(existing && !BML::unserialize(existing, " ")) return;
+  file::write(filePath, content);
+}
+
+auto Settings::inputKey(string name, bool input) -> string {
+  name.replace(" ", ".").replace("[", "").replace("]", "")
+    .replace("(", input ? "." : "").replace(")", "")
+    .replace("*", "Star").replace("#", "Pound");
+  string key;
+  for(u32 index : range(name.size())) {
+    auto byte = (u8)name[index];
+    if(byte >= 0x80 || (byte >= 'A' && byte <= 'Z') || (byte >= 'a' && byte <= 'z')
+    || (byte >= '0' && byte <= '9') || (byte >= '+' && byte <= '.')) {
+      key.append((char)byte);
+    } else {
+      key.append("+", hex(byte, 2L));
+    }
+  }
+  return key;
 }
 
 auto Settings::process(bool load) -> void {
@@ -182,11 +210,11 @@ auto Settings::process(bool load) -> void {
     for(auto& port : emulator->ports) {
       for(auto& device : port.devices) {
         if(!device.hasDirectMappings()) continue;
-        string portName = string{port.name}.replace(" ", ".").replace("[", "").replace("]", "").replace("(", "").replace(")", "").replace("*", "Star").replace("#", "Pound");
-        string deviceName = string{device.name}.replace(" ", ".").replace("[", "").replace("]", "").replace("(", "").replace(")", "").replace("*", "Star").replace("#", "Pound");
+        string portName = port.settingsKey ? port.settingsKey : Settings::inputKey(port.name);
+        string deviceName = Settings::inputKey(device.name);
         for(auto& input : device.inputs) {
           auto& mapping = input.configuredMapping();
-          string inputName = string{input.name}.replace(" ", ".").replace("[", "").replace("]", "").replace("(", ".").replace(")", "").replace("*", "Star").replace("#", "Pound");
+          string inputName = Settings::inputKey(input.name, true);
           string name = {base, "/Input/", portName, "/", deviceName, "/", inputName}, value;
           if(load == 0) for(auto& assignment : mapping.assignments) value.append(assignment, ";");
           if(load == 0) value.trimRight(";", 1L);
@@ -198,7 +226,7 @@ auto Settings::process(bool load) -> void {
           }
         }
         for(auto& pair : device.pairs) {
-          string pairName = string{pair.name}.replace(" ", ".").replace("[", "").replace("]", "").replace("(", ".").replace(")", "").replace("*", "Star").replace("#", "Pound");
+          string pairName = Settings::inputKey(pair.name, true);
           for(auto index : range(2)) {
             string suffix = index == 0 ? "Lo" : "Hi";
             auto& mapping = index == 0 ? pair.configuredMappingLo() : pair.configuredMappingHi();
@@ -216,6 +244,8 @@ auto Settings::process(bool load) -> void {
       }
     }
   }
+
+  for(auto& emulator : emulators) emulator->processGameInputMappings(load);
 
   for(auto& mapping : inputManager.hotkeys) {
     string name = {"Hotkey/", string{mapping.name}.replace(" ", "")}, value;
@@ -242,6 +272,7 @@ auto Settings::process(bool load) -> void {
       string portName = string{emulator->ports[index].name}
         .replace(" ", "").replace("[", "").replace("]", "").replace("(", "").replace(")", "")
         .replace("*", "Star").replace("#", "Pound").replace("/", "");
+      portName = Settings::inputKey(portName);
       name = {base, "/", portName};
       bind(string, name, emulator->configuration.peripherals[index]);
     }

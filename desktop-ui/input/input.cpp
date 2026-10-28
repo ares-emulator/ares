@@ -76,14 +76,6 @@ auto InputMapping::unbind(u32 binding) -> void {
   assignments[binding] = {};
 }
 
-auto InputMapping::assigned() -> bool {
-  for(auto& assignment : assignments) {
-    if(assignment) return true;
-  }
-
-  return false;
-}
-
 auto InputMapping::Binding::icon() -> multiFactorImage {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   if(!device && (deviceID || deviceIdentifier)) return Icon::Device::Joypad;
@@ -603,13 +595,15 @@ auto InputManager::bind() -> void {
     for(auto& input : port.mouse.inputs) input.mapping->bind();
   }
   for(auto& emulator : emulators) {
-    for(auto& port : emulator->ports) {
-      for(auto& device : port.devices) {
-        if(!device.hasDirectMappings()) continue;
-        for(auto& input : device.inputs) input.configuredMapping().bind();
-        for(auto& pair : device.pairs) {
-          pair.configuredMappingLo().bind();
-          pair.configuredMappingHi().bind();
+    for(auto* ports : {&emulator->ports, &emulator->gameInputPorts}) {
+      for(auto& port : *ports) {
+        for(auto& device : port.devices) {
+          if(!device.hasDirectMappings()) continue;
+          for(auto& input : device.inputs) input.configuredMapping().bind();
+          for(auto& pair : device.pairs) {
+            pair.configuredMappingLo().bind();
+            pair.configuredMappingHi().bind();
+          }
         }
       }
     }
@@ -644,12 +638,14 @@ auto InputManager::synchronize() -> void {
     }
   }
   for(auto& emulator : emulators) {
-    for(auto& port : emulator->ports) {
-      for(auto& device : port.devices) {
-        if(!device.hasDirectMappings()) continue;
-        for(auto& input : device.inputs) {
-          if(input.type == InputNode::Type::Relative) {
-            static_cast<InputRelative&>(input.configuredMapping()).synchronize();
+    for(auto* ports : {&emulator->ports, &emulator->gameInputPorts}) {
+      for(auto& port : *ports) {
+        for(auto& device : port.devices) {
+          if(!device.hasDirectMappings()) continue;
+          for(auto& input : device.inputs) {
+            if(input.type == InputNode::Type::Relative) {
+              static_cast<InputRelative&>(input.configuredMapping()).synchronize();
+            }
           }
         }
       }

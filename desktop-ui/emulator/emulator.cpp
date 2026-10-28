@@ -1,5 +1,6 @@
 #include "../desktop-ui.hpp"
 #include "emulators.cpp"
+#include "../input/game-input.hpp"
 
 std::vector<std::shared_ptr<Emulator>> emulators;
 std::shared_ptr<Emulator> emulator;
@@ -198,6 +199,7 @@ auto Emulator::load(const string& location) -> bool {
   if(result != successful) {
     return false;
   }
+  loadGameInputMappings();
   setBoolean("Color Emulation", settings.video.colorEmulation);
   setBoolean("Deep Black Boost", settings.superFamicom.deepBlackBoost);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
@@ -264,6 +266,7 @@ auto Emulator::loadFirmware(const Firmware& firmware) -> std::shared_ptr<vfs::fi
 auto Emulator::unload() -> void {
   Program::Guard guard;
   save();
+  clearGameInputMappings();
   root->unload();
   game = {};
   system = {};
@@ -362,7 +365,8 @@ auto Emulator::input(ares::Node::Input::Input input, string portName, string dev
 
   lock_guard<recursive_mutex> programinputLock(program.inputMutex);
   
-  for(auto& inputPort : ports) {
+  auto& activePorts = gameInputPorts.empty() ? ports : gameInputPorts;
+  for(auto& inputPort : activePorts) {
     if(inputPort.name != portName) continue;
     for(auto& inputDevice : inputPort.devices) {
       if(inputDevice.name != deviceName) continue;
@@ -413,4 +417,68 @@ auto Emulator::inputKeyboard(string name) -> bool {
   }
 
   return false;
+}
+
+auto Emulator::loadGameInputMappings() -> void {
+  if(name == "Arcade") return;  //Arcade builds game inputs from the manifest.
+  clearGameInputMappings();
+  if(!game || !game->pak || ports.empty()) return;
+
+  gameInputTitle = GameInput::profileTitle(game->location, game->pak->attribute("title"));
+  if(!gameInputTitle) gameInputTitle = "Game";
+  gameInputKey = Settings::inputKey(string{gameInputTitle}.downcase());
+
+  gameInputPorts = ports;
+  for(u32 port = 0; port < ports.size(); port++) {
+    for(u32 device = 0; device < ports[port].devices.size(); device++) {
+      gameInputPorts[port].devices[device].inheritMappings(ports[port].devices[device]);
+    }
+  }
+  processGameInputMappings(true);
+  inputManager.bind();
+}
+
+auto Emulator::processGameInputMappings(bool load) -> void {
+  if(!gameInputKey) return;
+  string base = string{name}.replace(" ", "").replace("(", "").replace(")", "");
+  string path = {base, "/GameInputs"};
+  auto document = load ? settings[{path, "/", gameInputKey}] : Markup::Node{gameInputKey};
+  auto mapping = [&](string key, InputMapping& input) {
+    if(load) {
+      if(auto node = document[key]) {
+        input.setAssignments(node.string());
+      }
+    } else if(input.assigned()) {
+      document(key).setValue(input.assignmentString());
+    }
+  };
+  for(auto& port : gameInputPorts) {
+    for(auto& device : port.devices) {
+      string prefix = {Settings::inputKey(port.name), "/", Settings::inputKey(device.name), "/"};
+      for(auto& input : device.inputs) mapping({prefix, Settings::inputKey(input.name, true)}, input.configuredMapping());
+      for(auto& pair : device.pairs) {
+        string key = {prefix, Settings::inputKey(pair.name, true)};
+        mapping({key, "/Lo"}, pair.configuredMappingLo());
+        mapping({key, "/Hi"}, pair.configuredMappingHi());
+      }
+    }
+  }
+  if(!load) {
+    if(auto parent = settings[path]) {
+      if(auto previous = parent[gameInputKey]) parent.remove(previous);
+    }
+    if(document.size()) {
+      document("title").setValue(gameInputTitle);
+      settings(path).append(document);
+    }
+  }
+}
+
+auto Emulator::clearGameInputMappings() -> void {
+  if(!gameInputKey) return;
+  inputSettings.cancelAssignment();
+  processGameInputMappings(false);
+  gameInputPorts.clear();
+  gameInputKey.reset();
+  gameInputTitle.reset();
 }
