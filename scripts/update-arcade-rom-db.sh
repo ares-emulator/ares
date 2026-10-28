@@ -2,60 +2,72 @@
 
 # Updates the Arcade ROM database to the latest version from MAME.
 # This script requires MAME to be in your PATH, or you can pass the path to MAME as an argument.
-# mame2bml is also required to be present and up-to-date.
+# Requires Python 3.9 or higher
 
-CORES="sega/sg1000a.cpp nintendo/aleck64.cpp" # Mame arcade systems to include
-SOFTWARE="neogeo:neogeo:Neo Geo" # Mame software list to include (format: "mame_name:ares_name:database_name") comma separated
+set -eu
 
-PATH=$PATH:$(pwd)/tools/mame2bml/out
-SCRIPT_CWD=$(pwd)
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
-if ! command -v mame2bml &> /dev/null
-then
-    echo "mame2bml could not be found. Please build it first."
+if [ -n "${1:-}" ]; then
+    if [ -d "$1" ]; then
+        mame="$1/mame"
+        if [ ! -x "$mame" ]; then
+            mame="$1/mame.exe"
+        fi
+    else
+        mame="$1"
+    fi
+else
+    mame=$(command -v mame || command -v mame.exe || true)
+fi
+
+if [ -z "$mame" ] || [ ! -f "$mame" ] || [ ! -x "$mame" ]; then
+    echo "MAME could not be found. Please install it, or pass its executable or directory." >&2
+    exit 1
+fi
+MAME_DIR=$(cd "$(dirname "$mame")" && pwd)
+mame="$MAME_DIR/$(basename "$mame")"
+
+if ! command -v python > /dev/null 2>&1; then
+    echo "Python could not be found. Please install Python 3.9 or higher." >&2
+    exit 1
+fi
+if ! python -c 'import sys; sys.exit(sys.version_info < (3, 9))'; then
+    echo "Python 3.9 or higher is required." >&2
     exit 1
 fi
 
-if [ -z "$1" ]
-then
-    if ! command -v mame &> /dev/null
-    then
-        echo "MAME could not be found. Please install it first, or pass the path to MAME as an argument."
-        exit 1
-    fi
-else
-    PATH=$PATH:$1
-fi
-
-MAME_CMD=$(command -v mame)
-MAME_DIR=$(dirname $MAME_CMD)
-
-# Determine MAME hash directory
-if [ -z "$HASH_PATH" ]; then
+# Determine MAME hash directory.
+if [ -z "${HASH_PATH:-}" ]; then
     if [ -d "$MAME_DIR/hash" ]; then
         HASH_PATH="$MAME_DIR/hash"
     elif [ -d "/usr/share/games/mame/hash" ]; then
         HASH_PATH="/usr/share/games/mame/hash"
+    elif [ -d "/usr/share/mame/hash" ]; then
+        HASH_PATH="/usr/share/mame/hash"
     else
-        echo "Could not determine the MAME hash directory. Please set HASH_PATH manually and re-run the script."
+        echo "Could not determine the MAME hash directory. Please set HASH_PATH." >&2
         exit 1
     fi
 fi
+if [ ! -d "$HASH_PATH" ]; then
+    echo "MAME hash directory does not exist: $HASH_PATH" >&2
+    exit 1
+fi
+HASH_PATH=$(cd "$HASH_PATH" && pwd)
 
-# Extract mame.xml
+MAME_XML=$(mktemp "${TMPDIR:-/tmp}/ares-mame.xml.XXXXXXXX")
+trap 'rm -f -- "$MAME_XML"' 0
+trap 'exit 1' HUP INT TERM
+
 echo "Extracting MAME XML..."
-mame -listxml > mame.xml
+"$mame" -listxml > "$MAME_XML"
 
-echo "Converting mame.xml to BML..."
-mame2bml mame.xml mia/Database/Arcade.bml $CORES
-rm mame.xml
+echo "Generating Arcade.bml..."
+(cd "$REPO_ROOT" && python -m tools.mamedb arcade "$MAME_XML" "$HASH_PATH")
 
-IFS=',' read -r -a software_array <<< "$SOFTWARE"
-for i in "${software_array[@]}"
-do
-    IFS=':' read -r -a pair <<< "$i"
-    echo "Converting ${pair[0]}.xml to BML..."
-    mame2bml "$HASH_PATH/${pair[0]}.xml" "mia/Database/${pair[2]}.bml" ${pair[1]}
-done
+echo "Generating VsSystem.bml..."
+(cd "$REPO_ROOT" && python -m tools.mamedb vsnes "$mame")
 
 echo "Done."

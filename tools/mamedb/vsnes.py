@@ -198,6 +198,30 @@ def dips_for(machine_element: ET.Element) -> List[str]:
     return result
 
 
+def inputs_for(machine_element: ET.Element) -> List[str]:
+    result: List[str] = []
+    machine_name = machine_element.get("name", "<unnamed>")
+    for inp in machine_element.findall("input"):
+        result.append("  input\n")
+        players = optional_text(inp.get("players"), "input players", machine_name)
+        coins = optional_text(inp.get("coins"), "input coins", machine_name)
+        if players is not None:
+            result.append(f"    players: {players}\n")
+        if coins is not None:
+            result.append(f"    coins: {coins}\n")
+        if inp.get("service") == "yes":
+            result.append("    service: yes\n")
+        if inp.get("tilt") == "yes":
+            result.append("    tilt: yes\n")
+        for control in inp.findall("control"):
+            result.append("    control\n")
+            for attr in ("type", "player", "buttons", "ways", "minimum", "maximum"):
+                value = optional_text(control.get(attr), f"control {attr}", machine_name)
+                if value is not None:
+                    result.append(f"      {attr}: {value}\n")
+    return result
+
+
 def hardware_lines(name: str, ppu_devices: Iterable[str] = ()) -> List[str]:
     if name in UNSUPPORTED:
         return [
@@ -346,6 +370,7 @@ def process_root(root: ET.Element) -> str:
         output.extend(hardware_lines(name, ppu_devices))
         if name in SUPPORTED:
             output.extend(dips_for(element))
+            output.extend(inputs_for(element))
         output.extend(roms)
     return "".join(output)
 

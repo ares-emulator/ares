@@ -6,10 +6,14 @@ import concurrent.futures
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import xml.etree.ElementTree as ET
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set, Tuple
+from urllib.error import HTTPError, URLError
+from urllib.request import urlopen
 
 
 class MameError(RuntimeError):
@@ -189,3 +193,15 @@ def load_source(
     for name in sorted(results):
         root.append(results[name][1])
     return root
+
+
+@lru_cache(maxsize=None)
+def fetch_source(path: str) -> str:
+    url = f"https://raw.githubusercontent.com/mamedev/mame/master/{path}"
+    print(f"  Fetching {path} ...", file=sys.stderr)
+    try:
+        with urlopen(url, timeout=30) as response:
+            return response.read().decode("utf-8")
+    except (HTTPError, URLError, OSError) as error:
+        print(f"  Warning: could not fetch {url}: {error}", file=sys.stderr)
+        return ""
