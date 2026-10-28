@@ -30,7 +30,7 @@ auto VDP::Background::graphics1(n8 hoffset, n9 voffset) -> void {
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
   nameTableAddress.bit(10,13) = io.nameTableAddress;
-  n8 pattern = self.vram[nameTableAddress];
+  n8 pattern = self.readVRAM(nameTableAddress);
 
   n14 patternAddress;
   patternAddress.bit( 0, 2) = voffset.bit(0,2);
@@ -41,9 +41,9 @@ auto VDP::Background::graphics1(n8 hoffset, n9 voffset) -> void {
   colorAddress.bit(0, 4) = pattern.bit(3,7);
   colorAddress.bit(6,13) = io.colorTableAddress;
 
-  n8 color = self.vram[colorAddress];
+  n8 color = self.readVRAM(colorAddress);
   n3 index = hoffset ^ 7;
-  if(!self.vram[patternAddress].bit(index)) {
+  if(!self.readVRAM(patternAddress).bit(index)) {
     output.color = color.bit(0,3);
   } else {
     output.color = color.bit(4,7);
@@ -55,7 +55,7 @@ auto VDP::Background::graphics2(n8 hoffset, n9 voffset) -> void {
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
   nameTableAddress.bit(10,13) = io.nameTableAddress;
-  n8 pattern = self.vram[nameTableAddress];
+  n8 pattern = self.readVRAM(nameTableAddress);
 
   n14 patternAddress;
   patternAddress.bit(0, 2) = voffset.bit(0,2);
@@ -67,9 +67,9 @@ auto VDP::Background::graphics2(n8 hoffset, n9 voffset) -> void {
   colorAddress.bit(13) = io.colorTableAddress.bit(7);
 
   n8 colorMask = io.colorTableAddress.bit(0,6) << 1 | 1;
-  n8 color = self.vram[colorAddress];
+  n8 color = self.readVRAM(colorAddress);
   n3 index = hoffset ^ 7;
-  if(!self.vram[patternAddress].bit(index)) {
+  if(!self.readVRAM(patternAddress).bit(index)) {
     output.color = color.bit(0,3);
   } else {
     output.color = color.bit(4,7);
@@ -100,8 +100,8 @@ auto VDP::Background::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
   }
 
   n16 pattern;
-  pattern.byte(0) = self.vram[nameTableAddress | 0];
-  pattern.byte(1) = self.vram[nameTableAddress | 1];
+  pattern.byte(0) = self.readVRAM(nameTableAddress | 0);
+  pattern.byte(1) = self.readVRAM(nameTableAddress | 1);
 
   if(pattern.bit( 9)) hoffset ^= 7;  //hflip
   if(pattern.bit(10)) voffset ^= 7;  //vflip
@@ -113,10 +113,10 @@ auto VDP::Background::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
   patternAddress.bit(5,13) = pattern.bit(0,8);
 
   n3 index = hoffset ^ 7;
-  output.color.bit(0) = self.vram[patternAddress | 0].bit(index);
-  output.color.bit(1) = self.vram[patternAddress | 1].bit(index);
-  output.color.bit(2) = self.vram[patternAddress | 2].bit(index);
-  output.color.bit(3) = self.vram[patternAddress | 3].bit(index);
+  output.color.bit(0) = self.readVRAM(patternAddress | 0).bit(index);
+  output.color.bit(1) = self.readVRAM(patternAddress | 1).bit(index);
+  output.color.bit(2) = self.readVRAM(patternAddress | 2).bit(index);
+  output.color.bit(3) = self.readVRAM(patternAddress | 3).bit(index);
 
   if(output.color == 0) output.priority = 0;
 }

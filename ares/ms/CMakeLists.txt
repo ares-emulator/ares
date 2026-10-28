@@ -1,4 +1,4 @@
-ares_components(z80 sn76489 ym2413)
+ares_components(arcadedip z80 sn76489 ym2413 i8255)
 
 ares_add_sources(
   CORE #
@@ -10,6 +10,8 @@ ares_add_sources(
     vdp/vdp.cpp
     psg/psg.cpp
     opll/opll.cpp
+    systeme/ppi.cpp
+    systeme/memory.cpp
     system/system.cpp
     cartridge/cartridge.cpp
     controller/controller.cpp
@@ -48,6 +50,7 @@ ares_add_sources(
     cartridge/board/korea.cpp
     cartridge/board/pak4.cpp
     cartridge/board/sega.cpp
+    cartridge/board/system-e.cpp
     cartridge/board/zemina.cpp
 )
 
@@ -149,6 +152,14 @@ ares_add_sources(
   INCLUDED #
     opll/opll.hpp
     opll/serialization.cpp
+)
+
+ares_add_sources(
+  CORE #
+    ms
+  INCLUDED #
+    systeme/ppi.hpp
+    systeme/memory.hpp
 )
 
 ares_add_sources(

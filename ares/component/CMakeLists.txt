@@ -460,6 +460,10 @@ component_sources(
     processor/z80/sega/base.hpp
     processor/z80/sega/s315-5114.hpp
     processor/z80/sega/s315-5114.cpp
+    processor/z80/sega/s315-5177.hpp
+    processor/z80/sega/s315-5177.cpp
+    processor/z80/sega/mc8123.hpp
+    processor/z80/sega/mc8123.cpp
 )
 
 component_sources(

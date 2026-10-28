@@ -1,9 +1,26 @@
+auto CPU::read(n16 address) -> n8 {
+  if(auto result = cheat(address)) return *result;
+  n8 data = readMapped(address);
+  return encryption ? encryption->decrypt(address, data, false) : data;
+}
+
+auto CPU::fetch(n16 address) -> n8 {
+  if(auto result = cheat(address)) return *result;
+  n8 data = readMapped(address);
+  return encryption ? encryption->decrypt(address, data, true) : data;
+}
+
 auto CPU::mdr() const -> n8 {
   return (bus.mdr | bus.pullup) & ~bus.pulldown;
 }
 
-auto CPU::read(n16 address) -> n8 {
-  if(auto result = platform->cheat(address)) return *result;
+auto CPU::cheat(n16 address) -> maybe<n8> {
+  if(auto result = platform->cheat(address)) return (n8)*result;
+  return nothing;
+}
+
+auto CPU::readMapped(n16 address) -> n8 {
+  if(Model::SystemE()) return SystemE::memory.read(address);
   n8 data = mdr();
   if(address >= 0xc000 && bus.ramEnable) data = ram.read(address);
   if(Device::MasterSystem() && bus.biosEnable) data = bios.read(address, data);
@@ -14,6 +31,7 @@ auto CPU::read(n16 address) -> n8 {
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
+  if(Model::SystemE()) return SystemE::memory.write(address, data);
   bus.mdr = data;
   if(address >= 0xc000 && bus.ramEnable) ram.write(address, data);
   if(Device::MasterSystem() && bus.biosEnable) bios.write(address, data);
@@ -26,6 +44,7 @@ auto CPU::write(n16 address, n8 data) -> void {
 //since I don't have explicit confirmation of this, I haven't implemented this yet.
 
 auto CPU::in(n16 address) -> n8 {
+  if(Model::SystemE()) return SystemE::memory.in(address);
   n8 data = mdr();
   if(0);
 
@@ -81,7 +100,7 @@ auto CPU::in(n16 address) -> n8 {
     data = mdr();
   }
 
-  else if((address & 0xc1) == 0x01) {
+  else if((address & 0xc1) == 0x01 && Device::MasterSystem()) {
     if(bus.ioEnable && Display::CRT() && !Region::NTSCJ()) {
       data.bit(0) = controllerPort1.trDirection;
       data.bit(1) = controllerPort1.thDirection;
@@ -174,6 +193,7 @@ auto CPU::in(n16 address) -> n8 {
 }
 
 auto CPU::out(n16 address, n8 data) -> void {
+  if(Model::SystemE()) return SystemE::memory.out(address, data);
   if(0);
 
   else if((address & 0xff) == 0x00 && Display::LCD()) {
@@ -219,7 +239,7 @@ auto CPU::out(n16 address, n8 data) -> void {
     bus.expansionEnable = !data.bit(7);
   }
 
-  else if((address & 0xc1) == 0x01) {
+  else if((address & 0xc1) == 0x01 && Device::MasterSystem()) {
     auto thLevel1 = controllerPort1.thLevel;
     auto thLevel2 = controllerPort2.thLevel;
 

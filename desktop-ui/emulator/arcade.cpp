@@ -12,6 +12,7 @@ struct Arcade : Emulator {
   auto labelInputs(InputPort& port) -> void;
   auto reloadInputBindings() -> void;
   auto buildInputScopes(string game, string title) -> void;
+  InputDigital unmapped;
   string systemPakName = "Arcade";
   string gamePakName = "Arcade";
   string currentPortName = "Arcade";
@@ -215,29 +216,35 @@ auto Arcade::buildInputs(string manifest) -> void {
         auto binding = action["default"].string();
         if(!token || !name) continue;
 
-        auto* mapping = resolveMapping(binding, player);
-        if(!mapping) mapping = &virtualPorts[0].pad.south;
+        u32 p = player >= 1 && player <= 5 ? player - 1 : 0;
+        auto& pad = virtualPorts[p].pad;
+        bool pedal = token.endsWith("_PEDAL");
+        bool axisY = token.endsWith("_TRACKBALL_Y") || token.endsWith("_LIGHTGUN_Y");
+        bool axisX = token.endsWith("_PADDLE") || token.endsWith("_DIAL")
+          || token.endsWith("_TRACKBALL_X") || token.endsWith("_LIGHTGUN_X") || token.endsWith("_POSITIONAL");
+        if(pedal) {
+          device.analog(name, pad.r_trigger);
+          device.inputs.back().label = {"P", p + 1, " Accelerator"};
+          continue;
+        }
+        if(axisX || axisY) {
+          auto& lo = axisY ? pad.lstick_up : pad.lstick_left;
+          auto& hi = axisY ? pad.lstick_down : pad.lstick_right;
+          bool steering = games.front()["name"].string() == "hangonjr" && axisX;
+          string axisLabel = steering ? string{"P", p + 1, " Steering"} : label ? label : name;
+          device.analog({name, " -"}, lo);
+          device.inputs.back().label = {axisLabel, axisY ? " Up" : " Left"};
+          device.analog({name, " +"}, hi);
+          device.inputs.back().label = {axisLabel, axisY ? " Down" : " Right"};
+          device.analog(name, lo, hi);
+          continue;
+        }
 
+        auto* mapping = resolveMapping(binding, player);
+        if(!mapping) mapping = &unmapped;
         device.digital(name, *mapping);
         auto& input = device.inputs.back();
         input.label = label;
-      }
-
-      // Add analog axes for games with analog controls.
-      for(auto& def : controls) {
-        u32 p = def.player ? def.player - 1 : 0;
-        if(p > 1) p = 0;
-        if(def.type == "paddle" || def.type == "dial" || def.type == "trackball") {
-          device.analog({"Player ", p + 1, " X-Axis -"}, virtualPorts[p].pad.lstick_left);
-          device.analog({"Player ", p + 1, " X-Axis +"}, virtualPorts[p].pad.lstick_right);
-          device.analog({"Player ", p + 1, " Y-Axis -"}, virtualPorts[p].pad.lstick_up);
-          device.analog({"Player ", p + 1, " Y-Axis +"}, virtualPorts[p].pad.lstick_down);
-          device.analog({"Player ", p + 1, " X-Axis"  }, virtualPorts[p].pad.lstick_left, virtualPorts[p].pad.lstick_right);
-          device.analog({"Player ", p + 1, " Y-Axis"  }, virtualPorts[p].pad.lstick_up,   virtualPorts[p].pad.lstick_down);
-        } else if(def.type == "lightgun" || def.type == "positional") {
-          device.relative({"Player ", p + 1, " X-Axis"}, virtualPorts[p].mouse.x);
-          device.relative({"Player ", p + 1, " Y-Axis"}, virtualPorts[p].mouse.y);
-        }
       }
     } else {
       device.digital("Service", virtualPorts[0].pad.lstick_click);
@@ -409,7 +416,7 @@ auto Arcade::reloadInputBindings() -> void {
 }
 
 auto Arcade::available() -> bool {
-#if defined(CORE_SG) || defined(CORE_N64) || defined(CORE_FC) || defined(CORE_NG)
+#if defined(CORE_SG) || defined(CORE_N64) || defined(CORE_FC) || defined(CORE_MS) || defined(CORE_NG)
   return true;
 #endif
   return false;
@@ -428,6 +435,9 @@ auto Arcade::gameBrowserCategories() -> std::vector<GameBrowserCategory> {
 #endif
 #ifdef CORE_SG
   categories.push_back({"Sega SG-1000 Arcade", "sega/sg1000a"});
+#endif
+#ifdef CORE_MS
+  categories.push_back({"Sega System E", "sega/segae"});
 #endif
   return categories;
 }
@@ -479,6 +489,18 @@ auto Arcade::load() -> LoadResult {
   if(result != successful) return result;
 
   //Determine from the game manifest which core to use for the given arcade rom
+#ifdef CORE_MS
+  if(game->pak->attribute("board") == "sega/segae") {
+    systemPakName = "System E";
+    gamePakName = "System E Cartridge";
+    if(!ares::MasterSystem::load(root, "[Sega] System E")) return otherError;
+    if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
+      port->allocate();
+      port->connect();
+    }
+    return successful;
+  }
+#endif
 #ifdef CORE_FC
   if(game->pak->attribute("board") == "nintendo/vs") {
     if(game->pak->attribute("system") != "Vs. UniSystem") return otherError;

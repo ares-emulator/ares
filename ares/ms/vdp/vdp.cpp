@@ -3,6 +3,7 @@
 namespace ares::MasterSystem {
 
 VDP vdp;
+VDP vdp2;
 #include "io.cpp"
 #include "irq.cpp"
 #include "background.cpp"
@@ -13,17 +14,25 @@ VDP vdp;
 #include "serialization.cpp"
 
 auto VDP::load(Node::Object parent) -> void {
-  vram.allocate(16_KiB);
+  vram.allocate(Model::SystemE() ? 32_KiB : 16_KiB);
   cram.allocate(32);
 
-  node = parent->append<Node::Object>("VDP");
+  node = parent->append<Node::Object>(backLayer ? "Back VDP" : "VDP");
+
+  if(backLayer) {
+    revision = node->append<Node::Setting::Natural>("Revision", 1);
+    revision->setAllowedValues({1});
+    debugger.load(node);
+    return;
+  }
 
   screen = node->append<Node::Video::Screen>("Screen", 284, screenHeight());
 
   u32 defaultRevision = 2;
-  if((Model::MarkIII() || Model::MasterSystemI()) && Region::NTSCJ()) defaultRevision = 1;
+  if(((Model::MarkIII() || Model::MasterSystemI()) && Region::NTSCJ()) || Model::SystemE()) defaultRevision = 1;
   revision = node->append<Node::Setting::Natural>("Revision", defaultRevision);
-  revision->setAllowedValues({1, 2});
+  if(Model::SystemE()) revision->setAllowedValues({1});
+  else revision->setAllowedValues({1, 2});
   screen->refreshRateHint(system.colorburst() * 15, 3420, Region::PAL() ? 313 : 262);
 
   if(Display::CRT()) {
@@ -55,11 +64,12 @@ auto VDP::load(Node::Object parent) -> void {
 }
 
 auto VDP::unload() -> void {
-  debugger = {};
+  debugger.memory = {};
+  debugger.tracer = {};
   interframeBlending.reset();
   revision.reset();
-  screen->quit();
-  node->remove(screen);
+  if(screen) screen->quit();
+  if(screen) node->remove(screen);
   screen.reset();
   node.reset();
   vram.reset();
@@ -84,11 +94,34 @@ auto VDP::main() -> void {
 
   //684 clocks/scanline
   dac.setup(io.vcounter);
+  if(Model::SystemE()) {
+    vdp2.io.vcounter = io.vcounter;
+    vdp2.io.hcounter = io.hcounter;
+    if(vdp2.io.vcounter <= vdp2.vlines()) {
+      if(vdp2.irq.line.counter-- == 0) {
+        vdp2.irq.line.counter = vdp2.irq.line.coincidence;
+        vdp2.irq.line.pending = 1;
+      }
+    } else {
+      vdp2.irq.line.counter = vdp2.irq.line.coincidence;
+    }
+    if(vdp2.io.vcounter == vdp2.vlines() + 1) vdp2.irq.frame.pending = 1;
+    vdp2.dac.setup(io.vcounter);
+  }
   if(io.vcounter < vlines()) {
     u8 y = io.vcounter;
     background.setup(y);
     sprite.setup(y);
+    if(Model::SystemE()) {
+      vdp2.background.setup(y);
+      vdp2.sprite.setup(y);
+    }
     for(u8 x : range(256)) {
+      if(Model::SystemE()) {
+        vdp2.background.run(x, y);
+        vdp2.sprite.run(x, y);
+        vdp2.dac.run(x, y);
+      }
       background.run(x, y);
       sprite.run(x, y);
       dac.run(x, y);
@@ -164,8 +197,10 @@ auto VDP::vblank() -> bool {
 }
 
 auto VDP::power() -> void {
-  Thread::create(system.colorburst() * 15.0 / 5.0, std::bind_front(&VDP::main, this));
-  screen->power();
+  if(!backLayer) {
+    Thread::create(system.colorburst() * 15.0 / 5.0, std::bind_front(&VDP::main, this));
+    screen->power();
+  }
 
   for(auto& byte : vram) byte = 0x00;
   for(auto& byte : cram) byte = 0x00;
@@ -176,6 +211,7 @@ auto VDP::power() -> void {
   irq.power();
   io = {};
   latch = {};
+  vramBank = 0;
 }
 
 }

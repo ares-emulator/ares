@@ -4,7 +4,10 @@
 #include <ares/ares.hpp>
 #include <vector>
 
-#include <component/processor/z80/z80.hpp>
+#include <component/processor/z80/sega/s315-5177.hpp>
+#include <component/processor/z80/sega/mc8123.hpp>
+#include <component/io/i8255/i8255.hpp>
+#include <component/arcade/dip-switches.hpp>
 #include <component/audio/sn76489/sn76489.hpp>
 #include <component/audio/ym2413/ym2413.hpp>
 
@@ -18,6 +21,7 @@ namespace ares::MasterSystem {
     inline static auto MasterSystemI() -> bool;
     inline static auto MasterSystemII() -> bool;
     inline static auto GameGear() -> bool;
+    inline static auto SystemE() -> bool;
   };
 
   struct Device {
@@ -48,6 +52,8 @@ namespace ares::MasterSystem {
   #include <ms/vdp/vdp.hpp>
   #include <ms/psg/psg.hpp>
   #include <ms/opll/opll.hpp>
+  #include <ms/systeme/ppi.hpp>
+  #include <ms/systeme/memory.hpp>
 
   #include <ms/system/system.hpp>
   #include <ms/cartridge/cartridge.hpp>

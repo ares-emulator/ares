@@ -19,7 +19,29 @@ auto Cartridge::connect() -> void {
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
 
+  cpu.encryption.reset();
+  if(Model::SystemE()) {
+    system.dips.load(system.node, pak, {"f2", "f3"});
+    auto rotation = pak->attribute("rotation").natural();
+    vdp.screen->setRotation(rotation ? 360 - rotation : 0);  // MAME rotates clockwise; ares rotates counter-clockwise.
+    ppi.game = pak->attribute("name");
+    auto cpuName = pak->attribute("cpu");
+    if(cpuName == "Sega 315-5177") cpu.encryption = std::make_unique<S315_5177>();
+    if(cpuName == "MC-8123") {
+      if(auto fp = pak->read("cpu.key")) {
+        if(fp->size() == 0x2000) {
+          auto chip = std::make_unique<MC8123>();
+          // Fantasy Zone II encrypts only its fixed ROM.
+          chip->encryptedSize = pak->attribute("name") == "fantzn2" ? 0x8000 : 0xc000;
+          fp->read(chip->keyData, sizeof(chip->keyData));
+          cpu.encryption = std::move(chip);
+        }
+      }
+    }
+  }
+
   if(information.board == "Sega") board = std::make_unique<Board::Sega>(*this);
+  if(information.board == "sega/segae") board = std::make_unique<Board::SystemE>(*this);
   if(information.board == "Codemasters") board = std::make_unique<Board::Codemasters>(*this);
   if(information.board == "Korea") board = std::make_unique<Board::Korea>(*this);
   if(information.board == "Zemina") board = std::make_unique<Board::Zemina>(*this, 0); // Zemina made games
@@ -43,6 +65,11 @@ auto Cartridge::connect() -> void {
 
 auto Cartridge::disconnect() -> void {
   if(!node || !board) return;
+  cpu.encryption.reset();
+  if(Model::SystemE()) {
+    system.dips.unload();
+    ppi.game = {};
+  }
   board->unload();
   board->pak.reset();
   board.reset();
@@ -65,6 +92,10 @@ auto Cartridge::read(n16 address, n8 data) -> n8 {
 
 auto Cartridge::write(n16 address, n8 data) -> void {
   if(board) return board->write(address, data);
+}
+
+auto Cartridge::out(n16 address, n8 data) -> void {
+  if(board) board->out(address, data);
 }
 
 }

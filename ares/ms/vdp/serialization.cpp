@@ -1,6 +1,7 @@
 auto VDP::serialize(serializer& s) -> void {
   Thread::serialize(s);
   s(vram);
+  s(vramBank);
   s(cram);
   s(background);
   s(sprite);

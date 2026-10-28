@@ -1,6 +1,8 @@
 #include <ares/ares.hpp>
 #include "z80.hpp"
 #include <component/processor/z80/sega/s315-5114.hpp>
+#include <component/processor/z80/sega/s315-5177.hpp>
+#include <component/processor/z80/sega/mc8123.hpp>
 
 namespace ares {
 
@@ -12,6 +14,8 @@ namespace ares {
 #include "instructions.cpp"
 #include "serialization.cpp"
 #include <component/processor/z80/sega/s315-5114.cpp>
+#include <component/processor/z80/sega/s315-5177.cpp>
+#include <component/processor/z80/sega/mc8123.cpp>
 
 auto Z80::power(MOSFET mosfet) -> void {
   this->mosfet = mosfet;

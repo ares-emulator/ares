@@ -1,20 +1,20 @@
 auto VDP::Debugger::load(Node::Object parent) -> void {
   memory.vram = parent->append<Node::Debugger::Memory>("VDP VRAM");
-  memory.vram->setSize(vdp.vram.size());
+  memory.vram->setSize(self.vram.size());
   memory.vram->setRead([&](u32 address) -> u8 {
-    return vdp.vram[address];
+    return self.vram[address];
   });
   memory.vram->setWrite([&](u32 address, u8 data) -> void {
-    vdp.vram[address] = data;
+    self.vram[address] = data;
   });
 
   memory.cram = parent->append<Node::Debugger::Memory>("VDP CRAM");
-  memory.cram->setSize(vdp.cram.size());
+  memory.cram->setSize(self.cram.size());
   memory.cram->setRead([&](u32 address) -> u8 {
-    return vdp.cram[address];
+    return self.cram[address];
   });
   memory.cram->setWrite([&](u32 address, u8 data) -> void {
-    vdp.cram[address] = data;
+    self.cram[address] = data;
   });
 
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "VDP");
@@ -42,7 +42,7 @@ auto VDP::Debugger::io(n4 register, n8 data) -> void {
     };
     tracer.io->notify({
       "$", hex(register, 2L), " = #$", hex(data, 2L),
-      " @ ", pad(vdp.vcounter(), 3L), ",", pad(vdp.hcounter(), 3L),
+      " @ ", pad(self.vcounter(), 3L), ",", pad(self.hcounter(), 3L),
       " ", name[register]
     });
   }

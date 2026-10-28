@@ -8,7 +8,7 @@ CPU cpu;
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
-  ram.allocate(8_KiB);
+  ram.allocate(Model::SystemE() ? 16_KiB : 8_KiB);
 
   node = parent->append<Node::Object>("CPU");
 
@@ -56,7 +56,9 @@ auto CPU::setIRQ(bool value) -> void {
 auto CPU::power() -> void {
   Z80::bus = this;
   Z80::power();
-  Thread::create(system.colorburst(), std::bind_front(&CPU::main, this));
+  auto frequency = system.colorburst();
+  if(Model::SystemE()) frequency *= 1.5;
+  Thread::create(frequency, std::bind_front(&CPU::main, this));
   PC = 0x0000;  //reset vector address
   SP = 0xfffd;  //initial stack pointer location
 

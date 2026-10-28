@@ -1,7 +1,7 @@
 database
   revision: 2026-10-28
   romset: 0.289 (mame0289)
-  drivers: sega/sg1000a.cpp, nintendo/aleck64.cpp, snk/neogeo.cpp
+  drivers: sega/sg1000a.cpp, sega/segae.cpp, nintendo/aleck64.cpp, snk/neogeo.cpp
 game
   name:    11beat
   title:   Eleven Beat
@@ -6372,6 +6372,303 @@ game
       size:   2097152
       crc:    9a34f99c
       sha1:   fca72d95ec42790a7f1e771a1e25dbc5bec5fc19
+game
+  name:    astrofl
+  title:   Astro Flash (Japan)
+  board:   sega/segae
+  cpu:     Sega 315-5177
+  type:    game
+  parent:  transfrm
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+  dip
+    name:    1 Player Only
+    port:    f3
+    mask:    1
+    default: 0
+    option
+      name:  Off
+      value: 0
+    option
+      name:  On
+      value: 1
+  dip
+    name:    Demo Sounds
+    port:    f3
+    mask:    2
+    default: 0
+    option
+      name:  Off
+      value: 2
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Lives
+    port:    f3
+    mask:    12
+    default: 12
+    option
+      name:  3
+      value: 12
+    option
+      name:  4
+      value: 8
+    option
+      name:  5
+      value: 4
+    option
+      name:  Infinite (Cheat)
+      value: 0
+  dip
+    name:    Bonus Life
+    port:    f3
+    mask:    48
+    default: 48
+    option
+      name:  10k, 30k, 50k and 70k
+      value: 32
+    option
+      name:  20k, 60k, 100k and 140k
+      value: 48
+    option
+      name:  30k, 80k, 130k and 180k
+      value: 16
+    option
+      name:  50k, 150k and 250k
+      value: 0
+  dip
+    name:    Difficulty
+    port:    f3
+    mask:    192
+    default: 192
+    option
+      name:  Easy
+      value: 64
+    option
+      name:  Medium
+      value: 192
+    option
+      name:  Hard
+      value: 128
+    option
+      name:  Hardest
+      value: 0
+  input
+    players: 1
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      buttons:  2
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+  maincpu
+    rom
+      name:   epr-7723.ic7
+      offset: 0x0
+      size:   32768
+      crc:    66061137
+      sha1:   cb6a2c7864f9f87bbedfd4b1448ad6c2de65d6ca
+    rom
+      name:   epr-7347.ic5
+      offset: 0x10000
+      size:   32768
+      crc:    df0f639f
+      sha1:   a09a9841b66de246a585be63d911b9a42a323503
+    rom
+      name:   epr-7348.ic4
+      offset: 0x18000
+      size:   32768
+      crc:    0f38ea96
+      sha1:   d4d421c5d93832e2bc1f22f39dffb6b80f2750bd
+    rom
+      name:   epr-7349.ic3
+      offset: 0x20000
+      size:   32768
+      crc:    f8c352d5
+      sha1:   e59565ab6928c67706c6f82f6ea9a64cdfc65a21
+    rom
+      name:   epr-7350.ic2
+      offset: 0x28000
+      size:   32768
+      crc:    0052165d
+      sha1:   cf4b5dffa54238e513515b3fc90faa7ce0b65d34
 game
   name:    b2b
   title:   Bang Bang Busters (2010 NCI release)
@@ -16568,6 +16865,309 @@ game
       crc:    e3eca67b
       sha1:   88154cbc1a261c2f425430119ebc08a30adc9675
 game
+  name:    fantzn2
+  title:   Fantasy Zone II - The Tears of Opa-Opa (MC-8123, 317-0057)
+  board:   sega/segae
+  cpu:     MC-8123
+  type:    game
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+  dip
+    name:    Unused
+    port:    f3
+    mask:    1
+    default: 1
+    option
+      name:  Off
+      value: 1
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Demo Sounds
+    port:    f3
+    mask:    2
+    default: 0
+    option
+      name:  Off
+      value: 2
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Lives
+    port:    f3
+    mask:    12
+    default: 12
+    option
+      name:  2
+      value: 0
+    option
+      name:  3
+      value: 12
+    option
+      name:  4
+      value: 8
+    option
+      name:  5
+      value: 4
+  dip
+    name:    Timer
+    port:    f3
+    mask:    48
+    default: 48
+    option
+      name:  90
+      value: 32
+    option
+      name:  80
+      value: 48
+    option
+      name:  70
+      value: 16
+    option
+      name:  60
+      value: 0
+  dip
+    name:    Difficulty
+    port:    f3
+    mask:    192
+    default: 192
+    option
+      name:  Easy
+      value: 128
+    option
+      name:  Normal
+      value: 192
+    option
+      name:  Hard
+      value: 64
+    option
+      name:  Hardest
+      value: 0
+  input
+    players: 1
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      buttons:  2
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+  maincpu
+    rom
+      name:   epr-11416.ic7
+      offset: 0x0
+      size:   32768
+      crc:    76db7b7b
+      sha1:   d60e2961fc893dcb4445aed5f67515cbd25b610f
+    rom
+      name:   epr-11415.ic5
+      offset: 0x10000
+      size:   65536
+      crc:    57b45681
+      sha1:   1ae6d0d58352e246a4ec4e1ce02b0417257d5d20
+    rom
+      name:   epr-11413.ic3
+      offset: 0x20000
+      size:   65536
+      crc:    a231dc85
+      sha1:   45b94fdbde28c02e88546178ef3e8f9f3a96ab86
+    rom
+      name:   epr-11414.ic4
+      offset: 0x30000
+      size:   65536
+      crc:    6f7a9f5f
+      sha1:   b53aa2eded781c80466a79b7d81383b9a875d0be
+    rom
+      name:   epr-11412.ic2
+      offset: 0x40000
+      size:   65536
+      crc:    b14db5af
+      sha1:   04c7fb659385438b3d8f9fb66800eb7b6373bda9
+  maincpu-key
+    rom
+      name:   317-0057.key
+      offset: 0x0
+      size:   8192
+      crc:    ee43d0f0
+      sha1:   72cb75a4d8352fe372db12046a59ea044360d5c3
+game
   name:    fatfursp
   title:   Fatal Fury Special / Garou Densetsu Special (NGM-058 ~ NGH-058, set 1)
   board:   snk/neogeo
@@ -26245,6 +26845,279 @@ game
       size:   2097152
       crc:    9db64084
       sha1:   68a43c12f63f5e98d68ad0902a6551c5d30f8543
+game
+  name:    hangonjr
+  title:   Hang-On Jr. (Rev. B)
+  board:   sega/segae
+  cpu:     Zilog Z80
+  type:    game
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+  dip
+    name:    Unused
+    port:    f3
+    mask:    1
+    default: 1
+    option
+      name:  Off
+      value: 1
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Enemies
+    port:    f3
+    mask:    6
+    default: 6
+    option
+      name:  Easy
+      value: 6
+    option
+      name:  Medium
+      value: 4
+    option
+      name:  Hard
+      value: 2
+    option
+      name:  Hardest
+      value: 0
+  dip
+    name:    Time Adj.
+    port:    f3
+    mask:    24
+    default: 24
+    option
+      name:  Easy
+      value: 24
+    option
+      name:  Medium
+      value: 16
+    option
+      name:  Hard
+      value: 8
+    option
+      name:  Hardest
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    32
+    default: 32
+    option
+      name:  Off
+      value: 32
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    64
+    default: 64
+    option
+      name:  Off
+      value: 64
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    128
+    default: 128
+    option
+      name:  Off
+      value: 128
+    option
+      name:  On
+      value: 0
+  input
+    players: 1
+    coins:   2
+    service: yes
+    control
+      type:     paddle
+      minimum:  32
+      maximum:  224
+    control
+      type:     pedal
+      minimum:  0
+      maximum:  255
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 X-Axis
+      label: P1 Paddle
+      token: P1_PADDLE
+      player: 1
+    action
+      name: Player 1 Accelerator
+      label: P1 Pedal 1
+      token: P1_PEDAL
+      player: 1
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+  maincpu
+    rom
+      name:   epr-7257b.ic7
+      offset: 0x0
+      size:   32768
+      crc:    d63925a7
+      sha1:   699f222d9712fa42651c753fe75d7b60e016d3ad
+    rom
+      name:   epr-7258.ic5
+      offset: 0x10000
+      size:   32768
+      crc:    ee3caab3
+      sha1:   f583cf92c579d1ca235e8b300e256ba58a04dc90
+    rom
+      name:   epr-7259.ic4
+      offset: 0x18000
+      size:   32768
+      crc:    d2ba9bc9
+      sha1:   85cf2a801883bf69f78134fc4d5075134f47dc03
+    rom
+      name:   epr-7260.ic3
+      offset: 0x20000
+      size:   32768
+      crc:    e14da070
+      sha1:   f8781f65be5246a23c1f492905409775bbf82ea8
+    rom
+      name:   epr-7261.ic2
+      offset: 0x28000
+      size:   32768
+      crc:    3810cbf5
+      sha1:   c8d5032522c0c903ab3d138f62406a66e14a5c69
 game
   name:    hipai
   title:   Hi Pai Paradise
@@ -52497,6 +53370,294 @@ game
       crc:    4f2ae525
       sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
 game
+  name:    megrescu
+  title:   Megumi Rescue
+  board:   sega/segae
+  cpu:     Zilog Z80
+  rotation: 90
+  type:    game
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+    option
+      name:  Free Play
+      value: 0
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+    option
+      name:  Free Play
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    1
+    default: 1
+    option
+      name:  Off
+      value: 1
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    2
+    default: 2
+    option
+      name:  Off
+      value: 2
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Lives
+    port:    f3
+    mask:    12
+    default: 12
+    option
+      name:  Cheat
+      value: 0
+    option
+      name:  2
+      value: 12
+    option
+      name:  3
+      value: 8
+    option
+      name:  4
+      value: 4
+  dip
+    name:    Cabinet
+    port:    f3
+    mask:    16
+    default: 0
+    option
+      name:  Upright
+      value: 0
+    option
+      name:  Cocktail
+      value: 16
+  dip
+    name:    Unused
+    port:    f3
+    mask:    32
+    default: 32
+    option
+      name:  Off
+      value: 32
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    64
+    default: 64
+    option
+      name:  Off
+      value: 64
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    128
+    default: 128
+    option
+      name:  Off
+      value: 128
+    option
+      name:  On
+      value: 0
+  input
+    players: 2
+    coins:   2
+    control
+      type:     dial
+      player:   1
+      buttons:  2
+      minimum:  0
+      maximum:  4095
+    control
+      type:     dial
+      player:   2
+      minimum:  0
+      maximum:  4095
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 X-Axis
+      label: P1 Dial
+      token: P1_DIAL
+      player: 1
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+  maincpu
+    rom
+      name:   megumi_rescue_version_10.30_final_version_ic-7.ic7
+      offset: 0x0
+      size:   32768
+      crc:    490d0059
+      sha1:   de4e23eb862ef3c29b2fbdceba14360eb6e2a8ef
+    rom
+      name:   megumi_rescue_version_10.30_final_version_ic-5.ic5
+      offset: 0x10000
+      size:   32768
+      crc:    278caba8
+      sha1:   809e504f6c680f742f0a5968d6bb16c2f67f851c
+    rom
+      name:   megumi_rescue_version_10.30_final_version_ic-4.ic4
+      offset: 0x18000
+      size:   32768
+      crc:    bda242d1
+      sha1:   3704da98fe91d9e7f4380ea5e1f897b6b7049466
+    rom
+      name:   megumi_rescue_version_10.30_final_version_ic-3.ic3
+      offset: 0x20000
+      size:   32768
+      crc:    56e36f85
+      sha1:   84aa78bc628bce64b1b990a8c9fcca25e5940bd3
+    rom
+      name:   megumi_rescue_version_10.30_final_version_ic-2.ic2
+      offset: 0x28000
+      size:   32768
+      crc:    5b74c767
+      sha1:   dbc82a4e046f01130c72bbd7a81190d7f0ca209c
+game
   name:    miexchng
   title:   Money Puzzle Exchanger / Money Idol Exchanger
   board:   snk/neogeo
@@ -66371,6 +67532,690 @@ game
       crc:    d2b04b0d
       sha1:   ce4322e6cfacb627fe997efe81018861e21d3c27
 game
+  name:    opaopa
+  title:   Opa Opa (MC-8123, 317-0042)
+  board:   sega/segae
+  cpu:     MC-8123
+  type:    game
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+  dip
+    name:    Unused
+    port:    f3
+    mask:    1
+    default: 1
+    option
+      name:  Off
+      value: 1
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Demo Sounds
+    port:    f3
+    mask:    2
+    default: 0
+    option
+      name:  Off
+      value: 2
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Lives
+    port:    f3
+    mask:    12
+    default: 12
+    option
+      name:  2
+      value: 0
+    option
+      name:  3
+      value: 12
+    option
+      name:  4
+      value: 8
+    option
+      name:  5
+      value: 4
+  dip
+    name:    Bonus Life
+    port:    f3
+    mask:    48
+    default: 48
+    option
+      name:  25k, 45k and 70k
+      value: 32
+    option
+      name:  40k, 60k and 90k
+      value: 48
+    option
+      name:  50k and 90k
+      value: 16
+    option
+      name:  None
+      value: 0
+  dip
+    name:    Difficulty
+    port:    f3
+    mask:    192
+    default: 192
+    option
+      name:  Easy
+      value: 128
+    option
+      name:  Normal
+      value: 192
+    option
+      name:  Hard
+      value: 64
+    option
+      name:  Hardest
+      value: 0
+  input
+    players: 2
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  2
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  2
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+  maincpu
+    rom
+      name:   epr-11054.ic7
+      offset: 0x0
+      size:   32768
+      crc:    024b1244
+      sha1:   59a522ac3d98982cc4ddb1c81f9584d3da453649
+    rom
+      name:   epr-11053.ic5
+      offset: 0x10000
+      size:   32768
+      crc:    6bc41d6e
+      sha1:   8997a4ac2a9704f1400d0ec16b259ee496a7efef
+    rom
+      name:   epr-11052.ic4
+      offset: 0x18000
+      size:   32768
+      crc:    395c1d0a
+      sha1:   1594bad13e78c5fad4db644cd85a6bac1eaddbad
+    rom
+      name:   epr-11051.ic3
+      offset: 0x20000
+      size:   32768
+      crc:    4ca132a2
+      sha1:   cb4e4c01b6ab070eef37c0603190caafe6236ccd
+    rom
+      name:   epr-11050.ic2
+      offset: 0x28000
+      size:   32768
+      crc:    a165e2ef
+      sha1:   498ff4c5d3a2658567393378c56be6ed86ac0384
+  maincpu-key
+    rom
+      name:   317-0042.key
+      offset: 0x0
+      size:   8192
+      crc:    d6312538
+      sha1:   494ac7f080775c21dc7d369e6ea78f3299e6975a
+game
+  name:    opaopan
+  title:   Opa Opa (Rev A, unprotected)
+  board:   sega/segae
+  cpu:     Zilog Z80
+  type:    game
+  parent:  opaopa
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+  dip
+    name:    Unused
+    port:    f3
+    mask:    1
+    default: 1
+    option
+      name:  Off
+      value: 1
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Demo Sounds
+    port:    f3
+    mask:    2
+    default: 0
+    option
+      name:  Off
+      value: 2
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Lives
+    port:    f3
+    mask:    12
+    default: 12
+    option
+      name:  2
+      value: 0
+    option
+      name:  3
+      value: 12
+    option
+      name:  4
+      value: 8
+    option
+      name:  5
+      value: 4
+  dip
+    name:    Bonus Life
+    port:    f3
+    mask:    48
+    default: 48
+    option
+      name:  25k, 45k and 70k
+      value: 32
+    option
+      name:  40k, 60k and 90k
+      value: 48
+    option
+      name:  50k and 90k
+      value: 16
+    option
+      name:  None
+      value: 0
+  dip
+    name:    Difficulty
+    port:    f3
+    mask:    192
+    default: 192
+    option
+      name:  Easy
+      value: 128
+    option
+      name:  Normal
+      value: 192
+    option
+      name:  Hard
+      value: 64
+    option
+      name:  Hardest
+      value: 0
+  input
+    players: 2
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  2
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  2
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+  maincpu
+    rom
+      name:   epr-11023a.ic7
+      offset: 0x0
+      size:   32768
+      crc:    101c5c6a
+      sha1:   5862c6b8d9e1fc8dc9cd26d87f36fde5ce9484ac
+    rom
+      name:   epr-11022.ic5
+      offset: 0x10000
+      size:   32768
+      crc:    15203a42
+      sha1:   41cfb9a884ed313d4dc3a36696a63a87e49b3b34
+    rom
+      name:   epr-11021.ic4
+      offset: 0x18000
+      size:   32768
+      crc:    b4e83340
+      sha1:   57955b2b1e5c55b50ed6b53f1b52787442fe716b
+    rom
+      name:   epr-11020.ic3
+      offset: 0x20000
+      size:   32768
+      crc:    c51aad27
+      sha1:   b6828d7f7283d00964bde7c93f67f4b7f3b9dd87
+    rom
+      name:   epr-11019.ic2
+      offset: 0x28000
+      size:   32768
+      crc:    bd0a6248
+      sha1:   6b313809dffdb50ee1dc4d83e0567811dc2f1a67
+game
   name:    overtop
   title:   Over Top
   board:   snk/neogeo
@@ -78803,6 +80648,283 @@ game
       size:   524288
       crc:    205e3208
       sha1:   aa2acf2c6f48ffffdcc0c94ddc031acc9e4a2e68
+game
+  name:    ridleofp
+  title:   Riddle of Pythagoras (Japan)
+  board:   sega/segae
+  cpu:     Zilog Z80
+  rotation: 90
+  type:    game
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+    option
+      name:  Free Play
+      value: 0
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+    option
+      name:  Free Play
+      value: 0
+  dip
+    name:    Lives
+    port:    f3
+    mask:    3
+    default: 2
+    option
+      name:  3
+      value: 3
+    option
+      name:  4
+      value: 2
+    option
+      name:  5
+      value: 1
+    option
+      name:  100 (Cheat)
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    4
+    default: 4
+    option
+      name:  Off
+      value: 4
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Ball Speed
+    port:    f3
+    mask:    8
+    default: 8
+    option
+      name:  Easy
+      value: 8
+    option
+      name:  Difficult
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    16
+    default: 16
+    option
+      name:  Off
+      value: 16
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Bonus Life
+    port:    f3
+    mask:    96
+    default: 96
+    option
+      name:  50K 100K 200K 1M 2M 10M 20M 50M
+      value: 96
+    option
+      name:  100K 200K 1M 2M 10M 20M 50M
+      value: 64
+    option
+      name:  200K 1M 2M 10M 20M 50M
+      value: 32
+    option
+      name:  None
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    128
+    default: 128
+    option
+      name:  Off
+      value: 128
+    option
+      name:  On
+      value: 0
+  input
+    players: 2
+    coins:   2
+    control
+      type:     dial
+      player:   1
+      buttons:  2
+      minimum:  0
+      maximum:  4095
+    control
+      type:     dial
+      player:   2
+      minimum:  0
+      maximum:  4095
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 X-Axis
+      label: P1 Dial
+      token: P1_DIAL
+      player: 1
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+  maincpu
+    rom
+      name:   epr-10426.bin
+      offset: 0x0
+      size:   32768
+      crc:    4404c7e7
+      sha1:   555f44786976a009d96a6395c9173929ad6138a7
+    rom
+      name:   epr-10425.bin
+      offset: 0x10000
+      size:   32768
+      crc:    35964109
+      sha1:   a7bc64a87b23139b0edb9c3512f47dcf73feb854
+    rom
+      name:   epr-10424.bin
+      offset: 0x18000
+      size:   32768
+      crc:    fcda1dfa
+      sha1:   b8497b04de28fc0d6b7cb0206ad50948cff07840
+    rom
+      name:   epr-10423.bin
+      offset: 0x20000
+      size:   32768
+      crc:    0b87244f
+      sha1:   c88041614735a9b6cba1edde0a11ed413e115361
+    rom
+      name:   epr-10422.bin
+      offset: 0x28000
+      size:   32768
+      crc:    14781e56
+      sha1:   f15d9d89e1ebff36c3867cfc8f0bdf7f6b3c96bc
 game
   name:    roboarmy
   title:   Robo Army
@@ -92132,6 +94254,317 @@ game
       crc:    1c7c2efb
       sha1:   b055ee43cbdaf9a3cb19e4e1f9dd2c40bde69d70
 game
+  name:    slapshtr
+  title:   Slap Shooter
+  board:   sega/segae
+  cpu:     Zilog Z80
+  type:    game
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+  dip
+    name:    Unused
+    port:    f3
+    mask:    1
+    default: 1
+    option
+      name:  Off
+      value: 1
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    2
+    default: 2
+    option
+      name:  Off
+      value: 2
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    4
+    default: 4
+    option
+      name:  Off
+      value: 4
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    8
+    default: 8
+    option
+      name:  Off
+      value: 8
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    16
+    default: 16
+    option
+      name:  Off
+      value: 16
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    32
+    default: 32
+    option
+      name:  Off
+      value: 32
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    64
+    default: 64
+    option
+      name:  Off
+      value: 64
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    128
+    default: 128
+    option
+      name:  Off
+      value: 128
+    option
+      name:  On
+      value: 0
+  input
+    players: 1
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      buttons:  2
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+  maincpu
+    rom
+      name:   epr-7351.ic7
+      offset: 0x0
+      size:   32768
+      crc:    894adb04
+      sha1:   e38d296aa56c531985cde75423ae03f0d9cc8f5d
+    rom
+      name:   epr-7352.ic5
+      offset: 0x10000
+      size:   32768
+      crc:    61c938b6
+      sha1:   bdce617050371c7b2880967c7c7356f34b91911d
+    rom
+      name:   epr-7353.ic4
+      offset: 0x18000
+      size:   32768
+      crc:    8ee2951a
+      sha1:   562fef28e6358cbbb4889cc7cd592ca659c238fb
+    rom
+      name:   epr-7354.ic3
+      offset: 0x20000
+      size:   32768
+      crc:    41482aa0
+      sha1:   280d5a1c5685c692a924c62ed928fc25fec2352a
+    rom
+      name:   epr-7355.ic2
+      offset: 0x28000
+      size:   32768
+      crc:    c67e1aef
+      sha1:   121bc40d652449c7b1b5f66a837baeaffb7af0b9
+game
   name:    socbrawl
   title:   Soccer Brawl (NGM-031)
   board:   snk/neogeo
@@ -98927,6 +101360,342 @@ game
       crc:    2570b71b
       sha1:   99266e1c2ffcf324793fb5c55325fbc7e6265ac0
 game
+  name:    tetrisse
+  title:   Tetris (Japan, System E)
+  board:   sega/segae
+  cpu:     Zilog Z80
+  type:    game
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+  dip
+    name:    Unused
+    port:    f3
+    mask:    1
+    default: 1
+    option
+      name:  Off
+      value: 1
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Demo Sounds
+    port:    f3
+    mask:    2
+    default: 0
+    option
+      name:  Off
+      value: 2
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    4
+    default: 4
+    option
+      name:  Off
+      value: 4
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    8
+    default: 8
+    option
+      name:  Off
+      value: 8
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Difficulty
+    port:    f3
+    mask:    48
+    default: 48
+    option
+      name:  Easy
+      value: 32
+    option
+      name:  Normal
+      value: 48
+    option
+      name:  Hard
+      value: 16
+    option
+      name:  Hardest
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    64
+    default: 64
+    option
+      name:  Off
+      value: 64
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Unused
+    port:    f3
+    mask:    128
+    default: 128
+    option
+      name:  Off
+      value: 128
+    option
+      name:  On
+      value: 0
+  input
+    players: 2
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  2
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  2
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+  maincpu
+    rom
+      name:   epr-12213.7
+      offset: 0x0
+      size:   32768
+      crc:    ef3c7a38
+      sha1:   cbb91aef330ab1a37d3e21ecf1d008143d0dd7ec
+    rom
+      name:   epr-12212.5
+      offset: 0x10000
+      size:   32768
+      crc:    28b550bf
+      sha1:   445922a62e8a7360335c754ad70dabbe0208207b
+    rom
+      name:   epr-12211.4
+      offset: 0x18000
+      size:   32768
+      crc:    5aa114e9
+      sha1:   f9fc7fe4d0444a264185e74d2abc8475f0976534
+game
   name:    tophuntr
   title:   Top Hunter - Roddy & Cathy (NGM-046)
   board:   snk/neogeo
@@ -100684,6 +103453,302 @@ game
       size:   524288
       crc:    a4513ecf
       sha1:   934aa103c226eac55157b44d7b4dfa35515322c3
+game
+  name:    transfrm
+  title:   Transformer
+  board:   sega/segae
+  cpu:     Zilog Z80
+  type:    game
+  dip
+    name:    Coin A
+    port:    f2
+    mask:    15
+    default: 15
+    option
+      name:  4 Coins/1 Credit
+      value: 7
+    option
+      name:  3 Coins/1 Credit
+      value: 8
+    option
+      name:  2 Coins/1 Credit
+      value: 9
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 5
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 4
+    option
+      name:  1 Coin/1 Credit
+      value: 15
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 3
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 2
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 1
+    option
+      name:  2 Coins/3 Credits
+      value: 6
+    option
+      name:  1 Coin/2 Credits
+      value: 14
+    option
+      name:  1 Coin/3 Credits
+      value: 13
+    option
+      name:  1 Coin/4 Credits
+      value: 12
+    option
+      name:  1 Coin/5 Credits
+      value: 11
+    option
+      name:  1 Coin/6 Credits
+      value: 10
+  dip
+    name:    Coin B
+    port:    f2
+    mask:    240
+    default: 240
+    option
+      name:  4 Coins/1 Credit
+      value: 112
+    option
+      name:  3 Coins/1 Credit
+      value: 128
+    option
+      name:  2 Coins/1 Credit
+      value: 144
+    option
+      name:  2 Coins/1 Credit, 5/3, 6/4
+      value: 80
+    option
+      name:  2 Coins/1 Credit, 4/3
+      value: 64
+    option
+      name:  1 Coin/1 Credit
+      value: 240
+    option
+      name:  1 Coin/1 Credit
+      value: 0
+    option
+      name:  1 Coin/1 Credit, 5/6
+      value: 48
+    option
+      name:  1 Coin/1 Credit, 4/5
+      value: 32
+    option
+      name:  1 Coin/1 Credit, 2/3
+      value: 16
+    option
+      name:  2 Coins/3 Credits
+      value: 96
+    option
+      name:  1 Coin/2 Credits
+      value: 224
+    option
+      name:  1 Coin/3 Credits
+      value: 208
+    option
+      name:  1 Coin/4 Credits
+      value: 192
+    option
+      name:  1 Coin/5 Credits
+      value: 176
+    option
+      name:  1 Coin/6 Credits
+      value: 160
+  dip
+    name:    1 Player Only
+    port:    f3
+    mask:    1
+    default: 0
+    option
+      name:  Off
+      value: 0
+    option
+      name:  On
+      value: 1
+  dip
+    name:    Demo Sounds
+    port:    f3
+    mask:    2
+    default: 0
+    option
+      name:  Off
+      value: 2
+    option
+      name:  On
+      value: 0
+  dip
+    name:    Lives
+    port:    f3
+    mask:    12
+    default: 12
+    option
+      name:  3
+      value: 12
+    option
+      name:  4
+      value: 8
+    option
+      name:  5
+      value: 4
+    option
+      name:  Infinite (Cheat)
+      value: 0
+  dip
+    name:    Bonus Life
+    port:    f3
+    mask:    48
+    default: 48
+    option
+      name:  10k, 30k, 50k and 70k
+      value: 32
+    option
+      name:  20k, 60k, 100k and 140k
+      value: 48
+    option
+      name:  30k, 80k, 130k and 180k
+      value: 16
+    option
+      name:  50k, 150k and 250k
+      value: 0
+  dip
+    name:    Difficulty
+    port:    f3
+    mask:    192
+    default: 192
+    option
+      name:  Easy
+      value: 64
+    option
+      name:  Medium
+      value: 192
+    option
+      name:  Hard
+      value: 128
+    option
+      name:  Hardest
+      value: 0
+  input
+    players: 1
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      buttons:  2
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+  maincpu
+    rom
+      name:   epr-7605.ic7
+      offset: 0x0
+      size:   32768
+      crc:    ccf1d123
+      sha1:   5ade9b00e2a36d034fafdf1902d47a9a00e96fc4
+    rom
+      name:   epr-7347.ic5
+      offset: 0x10000
+      size:   32768
+      crc:    df0f639f
+      sha1:   a09a9841b66de246a585be63d911b9a42a323503
+    rom
+      name:   epr-7348.ic4
+      offset: 0x18000
+      size:   32768
+      crc:    0f38ea96
+      sha1:   d4d421c5d93832e2bc1f22f39dffb6b80f2750bd
+    rom
+      name:   epr-7606.ic3
+      offset: 0x20000
+      size:   32768
+      crc:    9d485df6
+      sha1:   b25f04803c8f7188021f3039aa13aac80d480823
+    rom
+      name:   epr-7350.ic2
+      offset: 0x28000
+      size:   32768
+      crc:    0052165d
+      sha1:   cf4b5dffa54238e513515b3fc90faa7ce0b65d34
 game
   name:    turfmast
   title:   Neo Turf Masters / Big Tournament Golf

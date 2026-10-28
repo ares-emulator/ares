@@ -36,7 +36,7 @@ auto VDP::data() -> n8 {
   latch.control = 0;
 
   auto data = latch.vram;
-  latch.vram = vram[io.address++];
+  latch.vram = readVRAM(io.address++);
   return data;
 }
 
@@ -66,7 +66,7 @@ auto VDP::data(n8 data) -> void {
   latch.vram = data;
 
   if(io.code <= 2) {
-    vram[io.address] = data;
+    writeVRAM(io.address, data);
   } else {
     if(Mode::MasterSystem()) {
       //writes immediate store 6-bits into CRAM
@@ -96,7 +96,7 @@ auto VDP::control(n8 data) -> void {
   io.code.bit(0,1)     = data.bit(6,7);
 
   if(io.code == 0) {
-    latch.vram = vram[io.address++];
+    latch.vram = readVRAM(io.address++);
   }
 
   if(io.code == 2) {

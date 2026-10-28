@@ -1,5 +1,6 @@
 struct CPU : Z80, Z80::Bus, Thread {
   Node::Object node;
+  std::unique_ptr<SegaZ80> encryption;
   Memory::Writable<n8> ram;  //8KB
 
   struct Debugger {
@@ -38,10 +39,13 @@ struct CPU : Z80, Z80::Bus, Thread {
   //memory.cpp
   auto mdr() const -> n8;
   auto read(n16 address) -> n8 override;
+  auto fetch(n16 address) -> n8 override;
   auto write(n16 address, n8 data) -> void override;
 
   auto in(n16 address) -> n8 override;
   auto out(n16 address, n8 data) -> void override;
+  auto cheat(n16 address) -> maybe<n8>;
+  auto readMapped(n16 address) -> n8;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

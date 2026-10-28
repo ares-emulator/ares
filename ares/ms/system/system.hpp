@@ -17,6 +17,7 @@ struct BIOS {
 struct System {
   Node::System node;
   VFS::Pak pak;
+  Arcade::Dip dips;
 
   struct Controls {
     Node::Object node;
@@ -46,7 +47,18 @@ struct System {
     n1 rightLatch;
   } controls;
 
-  enum class Model : u32 { MarkIII, MasterSystemI, MasterSystemII, GameGear };
+  struct ArcadeControls {
+    Node::Object node;
+    Node::Input::Button coin[2], start[2], service;
+    Node::Input::Button up[2], down[2], left[2], right[2], button1[2], button2[2];
+    Node::Input::Axis analogX, analogY, accelerator;
+    auto load(Node::Object) -> void;
+    auto poll() -> void;
+    auto coinPort() const -> n8;
+    auto playerPort(u32 player) const -> n8;
+  } arcadeControls;
+
+  enum class Model : u32 { MarkIII, MasterSystemI, MasterSystemII, GameGear, SystemE };
   enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
   auto name() const -> string { return information.name; }
@@ -88,6 +100,7 @@ auto Model::MarkIII() -> bool { return system.model() == System::Model::MarkIII;
 auto Model::MasterSystemI() -> bool { return system.model() == System::Model::MasterSystemI; }
 auto Model::MasterSystemII() -> bool { return system.model() == System::Model::MasterSystemII; }
 auto Model::GameGear() -> bool { return system.model() == System::Model::GameGear; }
+auto Model::SystemE() -> bool { return system.model() == System::Model::SystemE; }
 
 auto Device::MasterSystem() -> bool { return system.model() != System::Model::GameGear; }
 auto Device::GameGear() -> bool { return system.model() == System::Model::GameGear; }

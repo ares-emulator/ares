@@ -13,6 +13,7 @@ auto enumerate() -> std::vector<string> {
     "[Sega] Master System II (PAL)",
     "[Sega] Game Gear (NTSC-J)",
     "[Sega] Game Gear (NTSC-U)",
+    "[Sega] System E",
   };
 }
 
@@ -43,7 +44,8 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   scheduler.enter();
-  controls.poll();
+  if(MasterSystem::Model::SystemE()) arcadeControls.poll();
+  else controls.poll();
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -65,6 +67,12 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.find("Game Gear")) {
     information.name = "Game Gear";
     information.model = Model::GameGear;
+  }
+  if(name == "[Sega] System E") {
+    information.name = "System E";
+    information.model = Model::SystemE;
+    information.region = Region::NTSCU;
+    information.colorburst = Constants::Colorburst::NTSC;
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;
@@ -92,14 +100,21 @@ auto System::load(Node::System& root, string name) -> bool {
   if(!node->setPak(pak = platform->pak(node))) return false;
 
   scheduler.reset();
-  controls.load(node);
-  bios.load(node);
+  if(MasterSystem::Model::SystemE()) arcadeControls.load(node->append<Node::Object>("Arcade"));
+  else controls.load(node);
+  if(!MasterSystem::Model::SystemE()) bios.load(node);
   cartridgeSlot.load(node);
   cpu.load(node);
   vdp.load(node);
+  if(MasterSystem::Model::SystemE()) {
+    vdp2.backLayer = true;
+    vdp2.load(node);
+  }
   psg.load(node);
-  controllerPort1.load(node);
-  controllerPort2.load(node);
+  if(Device::MasterSystem() && !MasterSystem::Model::SystemE()) {
+    controllerPort1.load(node);
+    controllerPort2.load(node);
+  }
   if(Device::MasterSystem()) {
     if(MasterSystem::Region::NTSCJ()) {
       if(MasterSystem::Model::MarkIII()) {
@@ -127,9 +142,12 @@ auto System::unload() -> void {
   cartridgeSlot.unload();
   cpu.unload();
   vdp.unload();
+  if(MasterSystem::Model::SystemE()) vdp2.unload();
   psg.unload();
-  controllerPort1.unload();
-  controllerPort2.unload();
+  if(Device::MasterSystem() && !MasterSystem::Model::SystemE()) {
+    controllerPort1.unload();
+    controllerPort2.unload();
+  }
   if(Device::MasterSystem()) {
     if(MasterSystem::Region::NTSCJ()) {
       if(MasterSystem::Model::MarkIII()) {
@@ -143,7 +161,7 @@ auto System::unload() -> void {
       }
     }
   }
-  bios.unload();
+  if(!MasterSystem::Model::SystemE()) bios.unload();
   node.reset();
 }
 
@@ -154,13 +172,17 @@ auto System::power(bool reset) -> void {
     information.ms = cartridge.pak->attribute("ms").boolean();
   }
 
-  bios.power();
+  if(!MasterSystem::Model::SystemE()) bios.power();
   cartridge.power();
   cpu.power();
   vdp.power();
+  if(MasterSystem::Model::SystemE()) vdp2.power();
   psg.power();
-  controllerPort1.power();
-  controllerPort2.power();
+  if(MasterSystem::Model::SystemE()) ppi.power();
+  if(Device::MasterSystem() && !MasterSystem::Model::SystemE()) {
+    controllerPort1.power();
+    controllerPort2.power();
+  }
   if(Device::MasterSystem()) {
     if(MasterSystem::Region::NTSCJ()) {
       if(MasterSystem::Model::MarkIII()) {

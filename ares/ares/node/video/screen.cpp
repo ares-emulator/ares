@@ -401,6 +401,9 @@ auto Screen::refresh() -> void {
       }
     }
     output = _rotate.get();
+    auto x = viewX;
+    viewX = viewY;
+    viewY = width - x - viewWidth;
     swap(width, height);
     swap(viewWidth, viewHeight);
   }
@@ -415,6 +418,8 @@ auto Screen::refresh() -> void {
       }
     }
     output = _rotate.get();
+    viewX = width - viewX - viewWidth;
+    viewY = height - viewY - viewHeight;
   }
 
   if(_rotation == 270) {
@@ -427,6 +432,9 @@ auto Screen::refresh() -> void {
       }
     }
     output = _rotate.get();
+    auto y = viewY;
+    viewY = viewX;
+    viewX = height - y - viewHeight;
     swap(width, height);
     swap(viewWidth, viewHeight);
   }

@@ -10,6 +10,7 @@ struct Interface {
   virtual auto unload() -> void {}
   virtual auto read(n16 address, n8 data) -> n8 { return data; }
   virtual auto write(n16 address, n8 data) -> void {}
+  virtual auto out(n16 address, n8 data) -> void {}
   virtual auto power() -> void {}
   virtual auto serialize(serializer&) -> void {}
 

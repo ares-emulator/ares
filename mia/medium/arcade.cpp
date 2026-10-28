@@ -146,6 +146,27 @@ auto Arcade::loadGeneric(string location, Markup::Node& document) -> LoadResult 
     return BML::unserialize(manifestDatabaseArcade(parent));
   };
 
+  if(document["game/board"].string() == "sega/segae") {
+    auto rom = loadRoms(location, document, "maincpu", resolver);
+    if(!rom) return {invalidROM, assemblyError(rom)};
+    if(rom.data.empty()) return {invalidROM, "Ensure your ROM is in a MAME-compatible .zip format."};
+
+    auto key = loadRoms(location, document, "maincpu-key", resolver);
+    if(!key) return {invalidROM, assemblyError(key)};
+
+    this->location = location;
+    pak = std::make_shared<vfs::directory>();
+    pak->setAttribute("board", document["game/board"].string());
+    pak->setAttribute("name", document["game/name"].string());
+    pak->setAttribute("title", document["game/title"].string());
+    pak->setAttribute("cpu", document["game/cpu"].string());
+    pak->setAttribute("rotation", document["game/rotation"].string());
+    pak->append("manifest.bml", manifest);
+    pak->append("program.rom", rom.data);
+    if(!key.data.empty()) pak->append("cpu.key", key.data);
+    return successful;
+  }
+
   // Sega SG-1000 based arcade
   if(document["game/board"].string() == "sega/sg1000a") {
     auto rom = loadRoms(location, document, "maincpu", resolver);

@@ -18,6 +18,7 @@ struct Cartridge {
 
   auto read(n16 address, n8 data) -> n8;
   auto write(n16 address, n8 data) -> void;
+  auto out(n16 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

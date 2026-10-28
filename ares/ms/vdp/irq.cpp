@@ -1,4 +1,5 @@
 auto VDP::IRQ::poll() -> void {
+  if(self.backLayer) return;
   if(line.pending && line.enable) return cpu.setIRQ(1);
   if(frame.pending && frame.enable) return cpu.setIRQ(1);
   return cpu.setIRQ(0);

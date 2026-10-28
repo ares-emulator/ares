@@ -8,10 +8,16 @@ struct VDP : Thread {
   Node::Setting::Boolean colorEmulation;
   Node::Setting::Natural revision;
   Node::Setting::Boolean interframeBlending;  //Game Gear only
-  Memory::Writable<n8 > vram;  //16KB
+  Memory::Writable<n8 > vram;  //16KB; 32KB on System E
+  n1 vramBank;
+  bool backLayer = false;
+  u32 backPixels[284] = {};
+  auto readVRAM(n14 address) const -> n8 { return vram[(Model::SystemE() ? (u32)vramBank << 14 : 0) | address]; }
+  auto writeVRAM(n14 address, n8 data) -> void { vram[(Model::SystemE() ? (u32)vramBank << 14 : 0) | address] = data; }
   Memory::Writable<n12> cram;  //Master System = 6-bit; Game Gear = 12-bit
 
   struct Debugger {
+    VDP& self;
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto io(n4 register, n8 data) -> void;
@@ -24,7 +30,7 @@ struct VDP : Thread {
     struct Tracer {
       Node::Debugger::Tracer::Notification io;
     } tracer;
-  } debugger;
+  } debugger{*this};
 
   auto displayEnable() const -> n1 { return io.displayEnable; }
   auto videoMode() const -> n4 { return io.videoMode; }
@@ -207,3 +213,4 @@ private:
 };
 
 extern VDP vdp;
+extern VDP vdp2;

@@ -1,7 +1,7 @@
 auto VDP::DAC::setup(n9 y) -> void {
   auto offset = Region::PAL() ? 48 : 27;
   y = (y + offset) % vdp.screenHeight();
-  output = self.screen->pixels().data() + y * 284;
+  output = self.backLayer ? self.backPixels : self.screen->pixels().data() + y * 284;
 
   for (u32 x : range(284)) output[x] = palette(16 | io.backdropColor);
 }
@@ -18,6 +18,11 @@ auto VDP::DAC::run(n8 x, n8 y) -> void {
     }
   }
 
+  if(Model::SystemE() && !self.backLayer) {
+    bool opaque = self.displayEnable() && (!io.leftClip || x >= 8)
+      && (self.sprite.output.color || self.background.output.color);
+    if(!opaque) color = vdp2.backPixels[(x + 13) % 284];
+  }
   output[(x + 13) % 284] = color;
 }
 

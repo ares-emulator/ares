@@ -7,13 +7,13 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
     n14 attributeAddress;
     attributeAddress.bit(7,13) = io.attributeTableAddress;
     for(u32 index : range(32)) {
-      i9 y = self.vram[attributeAddress++];
+      i9 y = self.readVRAM(attributeAddress++);
       if(y == 0xd0) break;
       if(y >= 0xe0) y -= 0x100;
 
-      i9 x = self.vram[attributeAddress++];
-      n8 pattern = self.vram[attributeAddress++];
-      n8 extra = self.vram[attributeAddress++];
+      i9 x = self.readVRAM(attributeAddress++);
+      n8 pattern = self.readVRAM(attributeAddress++);
+      n8 extra = self.readVRAM(attributeAddress++);
 
       if(extra.bit(7)) x -= 32;
       y += 1;
@@ -35,12 +35,12 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
     attributeAddress.bit(8,13) = io.attributeTableAddress.bit(1,6);
 
     for(u32 index : range(64)) {
-      i9 y = self.vram[attributeAddress + index];
+      i9 y = self.readVRAM(attributeAddress + index);
       if(self.vlines() == 192 && y == 0xd0) break;
       if(y >= 0xf0) y -= 0x100;
 
-      i9 x = self.vram[attributeAddress + 0x80 + (index << 1)];
-      n8 pattern = self.vram[attributeAddress + 0x81 + (index << 1)];
+      i9 x = self.readVRAM(attributeAddress + 0x80 + (index << 1));
+      n8 pattern = self.readVRAM(attributeAddress + 0x81 + (index << 1));
 
       if(io.shift) x -= 8;
       y += 1;
@@ -102,7 +102,7 @@ auto VDP::Sprite::graphics2(n8 hoffset, n9 voffset) -> void {
     address.bit(11,13) = io.patternTableAddress;
 
     n3 index = x ^ 7;
-    if(self.vram[address].bit(index)) {
+    if(self.readVRAM(address).bit(index)) {
       if(output.color && self.displayEnable()) { io.collision = 1; break; }
       output.color = o.color;
     }
@@ -126,10 +126,10 @@ auto VDP::Sprite::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
 
     n3 index = x ^ 7;
     n4 color;
-    color.bit(0) = self.vram[address | 0].bit(index);
-    color.bit(1) = self.vram[address | 1].bit(index);
-    color.bit(2) = self.vram[address | 2].bit(index);
-    color.bit(3) = self.vram[address | 3].bit(index);
+    color.bit(0) = self.readVRAM(address | 0).bit(index);
+    color.bit(1) = self.readVRAM(address | 1).bit(index);
+    color.bit(2) = self.readVRAM(address | 2).bit(index);
+    color.bit(3) = self.readVRAM(address | 3).bit(index);
     if(color == 0) continue;
 
     if(output.color && self.displayEnable()) { io.collision = 1; break; }
