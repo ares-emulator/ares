@@ -1,11 +1,11 @@
-auto Video::clock(i16 x, n7 pixel, n1 hblank, n1 vblank) -> void {
+auto Video::clock(s16 x, n7 pixel, n1 hblank, n1 vblank) -> void {
   auto outputY = y();
   if(x < 0 || x >= 160 || outputY <= 0 || outputY >= displayHeight()) return;
   if(hblank || vblank) pixel = 0;
   screen->pixels().data()[outputY * 180 + x + 10] = pixel;
 }
 
-auto Video::fill(i16 x, n7 pixel) -> void {
+auto Video::fill(s16 x, n7 pixel) -> void {
   auto outputY = y();
   if(x >= 160 || outputY <= 0 || outputY >= displayHeight()) return;
   auto output = screen->pixels().data() + outputY * 180 + 10;

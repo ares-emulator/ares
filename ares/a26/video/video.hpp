@@ -9,7 +9,7 @@ struct Video {
   auto verticalOffset() const -> s32 { return Region::NTSC() ? 20 : 40; }
 
   auto line() const -> u32 { return lineCounter; }
-  auto y() const -> i32 { return (i32)lineCounter - verticalOffset(); }
+  auto y() const -> s32 { return (s32)lineCounter - verticalOffset(); }
 
   //video.cpp
   auto load(Node::Object) -> void;
@@ -18,8 +18,8 @@ struct Video {
   auto setPhosphor(bool) -> void;
 
   //receiver.cpp
-  auto clock(i16 x, n7 pixel, n1 hblank, n1 vblank) -> void;
-  auto fill(i16 x, n7 pixel) -> void;
+  auto clock(s16 x, n7 pixel, n1 hblank, n1 vblank) -> void;
+  auto fill(s16 x, n7 pixel) -> void;
   auto endScanline() -> void;
   auto vsync(n1 level) -> void;
   auto frame() -> void;
