@@ -1,4 +1,5 @@
 #include <nall/tcptext/tcp-socket.hpp>
+#include <nall/tcptext/send-all.hpp>
 
 #include <inttypes.h>
 #include <memory>
@@ -134,6 +135,8 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
 
       // scan for new connections
       while(fdClient < 0) {
+        // Change the client identity before publishing a newly accepted descriptor.
+        ++clientGeneration;
         fdClient = ::accept(fdServer, nullptr, nullptr);
         if(fdClient < 0) {
           if(errno != EAGAIN) {
@@ -181,6 +184,8 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
   {
     std::vector<u8> localSendBuffer{};
     u32 cycles = 0;
+    u64 generation = 0;
+    s32 destination = -1;
 
     while(!stopServer) 
     {
@@ -193,16 +198,31 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
         std::lock_guard guard{sendBufferMutex};
         if(sendBuffer.size() > 0) {
           localSendBuffer = sendBuffer;
+          generation = clientGeneration;
+          destination = fdClient;
           sendBuffer.resize(0);
         }
       }
 
       // send data
       if(localSendBuffer.size() > 0) {
-        auto bytesWritten = send(fdClient, localSendBuffer.data(), localSendBuffer.size(), 0);
-        if(bytesWritten < localSendBuffer.size()) {
-          printf("Error sending data! (%s)\n", strerror(errno));
-        }
+        // A partially sent batch must stay with the client that owned it when copied.
+        auto valid = [&] {
+          return !stopServer && !wantKickClient && fdClient == destination && clientGeneration == generation;
+        };
+        bool complete = sendAll(localSendBuffer.data(), localSendBuffer.size(),
+          [&](const uint8_t* data, size_t size) -> int64_t {
+            auto count = send(destination, (const char*)data, size, 0);
+            if(count > 0) return count;
+            #if defined(PLATFORM_WINDOWS)
+            auto error = WSAGetLastError();
+            if(count < 0 && (error == WSAEINTR || error == WSAEWOULDBLOCK || error == WSAETIMEDOUT)) return -1;
+            #else
+            if(count < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) return -1;
+            #endif
+            return 0;
+          }, valid, [] { std::this_thread::sleep_for(std::chrono::milliseconds(1)); });
+        if(!complete && valid()) disconnectClient();
 
         if constexpr(TCP_LOG_MESSAGES) {
           printf("%.4f | TCP >: [%" PRIu64 "]: %.*s\n", (f64)chrono::millisecond() / 1000.0, localSendBuffer.size(), localSendBuffer.size() > 100 ? 100 : (int)localSendBuffer.size(), (char*)localSendBuffer.data());

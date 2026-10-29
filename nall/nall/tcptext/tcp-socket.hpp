@@ -50,6 +50,8 @@ class Socket {
 
     std::atomic<s32> fdServer{-1};
     std::atomic<s32> fdClient{-1};
+    // Socket descriptors can be reused after a client disconnects.
+    std::atomic<u64> clientGeneration{0};
 
     std::vector<u8> receiveBuffer{};
     std::mutex receiveBufferMutex{};
