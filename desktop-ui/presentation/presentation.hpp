@@ -2,7 +2,7 @@ struct Presentation : Window {
   enum : u32 { StatusHeight = 24 };
 
   Presentation();
-  auto resizeWindow() -> void;
+  auto resizeWindow(bool preservePlacement = false) -> void;
   auto refreshWindowSizeMenu() -> void;
   auto refreshFixedScaleMenu() -> void;
   auto loadEmulators() -> void;

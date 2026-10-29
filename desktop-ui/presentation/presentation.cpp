@@ -494,7 +494,8 @@ Presentation::Presentation() {
   #endif
 }
 
-auto Presentation::resizeWindow() -> void {
+auto Presentation::resizeWindow(bool preservePlacement) -> void {
+  if(preservePlacement && fullScreen()) return;
   if(fullScreen()) setFullScreen(false);
   if(maximized()) return;
 
@@ -559,7 +560,9 @@ auto Presentation::resizeWindow() -> void {
     }
   }
 
-  if(settings.video.autoCentering) {
+  // The first frame can arrive after a debugger pause, after the user has moved the window.
+  // Automatic resolution updates must not replay the explicit window-size centering policy.
+  if(settings.video.autoCentering && !preservePlacement) {
     setGeometry(Alignment::Center, {viewportWidth, viewportHeight + statusHeight});
   } else {
     setSize({viewportWidth, viewportHeight + statusHeight});
