@@ -6,6 +6,11 @@ struct Nintendo64 : Cartridge {
   auto analyze(std::vector<u8>& rom) -> string;
   auto cic_detect(std::span<const u8> ipl3) -> string;
   auto ipl2checksum(u32 seed, std::span<const u8> rom) -> u64;
+
+protected:
+  auto label() const -> string;
+
+  std::vector<u8> rom; 
 };
 
 auto Nintendo64::ipl2checksum(u32 seed, std::span<const u8> rom) -> u64 {
@@ -84,7 +89,6 @@ auto Nintendo64::ipl2checksum(u32 seed, std::span<const u8> rom) -> u64 {
 }
 
 auto Nintendo64::load(string location) -> LoadResult {
-  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
@@ -841,6 +845,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   s += "game\n";
   s +={"  name:     ", Medium::name(location), "\n"};
   s +={"  title:    ", Medium::name(location), "\n"};
+  s +={"  label:    ", label(), "\n"};
   s +={"  sha256:   ", sha256, "\n"};
   s +={"  region:   ", region, "\n"};
   s +={"  id:       ", id, region_code, "\n"};
@@ -888,4 +893,106 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   s += "      content: Save\n";
   }
   return s;
+}
+
+auto Nintendo64::label() const -> string {
+  string label;
+
+  for(u32 n = 0; n < 0x14; n++) {
+    auto x = rom[0x20 + n];
+    auto y = n == 0x13 ? 0 : rom[0x21 + n];
+
+    //null terminator (padding)
+    if(x == 0x00 || x == 0xff);
+
+    //ASCII
+    else if(x >= 0x20 && x <= 0x7e) label.append((char)x);
+
+    //Shift-JIS (half-width katakana)
+    else if(x == 0xa1) label.append("。");
+    else if(x == 0xa2) label.append("「");
+    else if(x == 0xa3) label.append("」");
+    else if(x == 0xa4) label.append("、");
+    else if(x == 0xa5) label.append("・");
+    else if(x == 0xa6) label.append("ヲ");
+    else if(x == 0xa7) label.append("ァ");
+    else if(x == 0xa8) label.append("ィ");
+    else if(x == 0xa9) label.append("ゥ");
+    else if(x == 0xaa) label.append("ェ");
+    else if(x == 0xab) label.append("ォ");
+    else if(x == 0xac) label.append("ャ");
+    else if(x == 0xad) label.append("ュ");
+    else if(x == 0xae) label.append("ョ");
+    else if(x == 0xaf) label.append("ッ");
+    else if(x == 0xb0) label.append("ー");
+
+    else if(x == 0xb1) label.append(                 "ア");
+    else if(x == 0xb2) label.append(                 "イ");
+    else if(x == 0xb3) label.append(y == 0xde ? "ヴ" : "ウ");
+    else if(x == 0xb4) label.append(                 "エ");
+    else if(x == 0xb5) label.append(                 "オ");
+
+    else if(x == 0xb6) label.append(y == 0xde ? "ガ" : "カ");
+    else if(x == 0xb7) label.append(y == 0xde ? "ギ" : "キ");
+    else if(x == 0xb8) label.append(y == 0xde ? "グ" : "ク");
+    else if(x == 0xb9) label.append(y == 0xde ? "ゲ" : "ケ");
+    else if(x == 0xba) label.append(y == 0xde ? "ゴ" : "コ");
+
+    else if(x == 0xbb) label.append(y == 0xde ? "ザ" : "サ");
+    else if(x == 0xbc) label.append(y == 0xde ? "ジ" : "シ");
+    else if(x == 0xbd) label.append(y == 0xde ? "ズ" : "ス");
+    else if(x == 0xbe) label.append(y == 0xde ? "ゼ" : "セ");
+    else if(x == 0xbf) label.append(y == 0xde ? "ゾ" : "ソ");
+
+    else if(x == 0xc0) label.append(y == 0xde ? "ダ" : "タ");
+    else if(x == 0xc1) label.append(y == 0xde ? "ヂ" : "チ");
+    else if(x == 0xc2) label.append(y == 0xde ? "ヅ" : "ツ");
+    else if(x == 0xc3) label.append(y == 0xde ? "デ" : "テ");
+    else if(x == 0xc4) label.append(y == 0xde ? "ド" : "ト");
+
+    else if(x == 0xc5) label.append("ナ");
+    else if(x == 0xc6) label.append("ニ");
+    else if(x == 0xc7) label.append("ヌ");
+    else if(x == 0xc8) label.append("ネ");
+    else if(x == 0xc9) label.append("ノ");
+
+    else if(x == 0xca) label.append(y == 0xdf ? "パ" : y == 0xde ? "バ" : "ハ");
+    else if(x == 0xcb) label.append(y == 0xdf ? "ピ" : y == 0xde ? "ビ" : "ヒ");
+    else if(x == 0xcc) label.append(y == 0xdf ? "プ" : y == 0xde ? "ブ" : "フ");
+    else if(x == 0xcd) label.append(y == 0xdf ? "ペ" : y == 0xde ? "ベ" : "ヘ");
+    else if(x == 0xce) label.append(y == 0xdf ? "ポ" : y == 0xde ? "ボ" : "ホ");
+
+    else if(x == 0xcf) label.append("マ");
+    else if(x == 0xd0) label.append("ミ");
+    else if(x == 0xd1) label.append("ム");
+    else if(x == 0xd2) label.append("メ");
+    else if(x == 0xd3) label.append("モ");
+
+    else if(x == 0xd4) label.append("ヤ");
+    else if(x == 0xd5) label.append("ユ");
+    else if(x == 0xd6) label.append("ヨ");
+
+    else if(x == 0xd7) label.append("ラ");
+    else if(x == 0xd8) label.append("リ");
+    else if(x == 0xd9) label.append("ル");
+    else if(x == 0xda) label.append("レ");
+    else if(x == 0xdb) label.append("ロ");
+
+    else if(x == 0xdc) label.append("ワ");
+    else if(x == 0xdd) label.append("ン");
+
+    else if(x == 0xde) label.append("\xef\xbe\x9e");  //dakuten
+    else if(x == 0xdf) label.append("\xef\xbe\x9f");  //handakuten
+
+    //unknown
+    else label.append("?");
+
+    //(han)dakuten skip
+    if(y == 0xde && x == 0xb3) n++;
+    if(y == 0xde && x >= 0xb6 && x <= 0xc4) n++;
+    if(y == 0xde && x >= 0xca && x <= 0xce) n++;
+    if(y == 0xdf && x >= 0xca && y <= 0xce) n++;
+  }
+
+  return label.strip();
 }
