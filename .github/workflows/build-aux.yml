@@ -118,7 +118,7 @@ jobs:
       if: matrix.platform.name == 'freebsd'
       run: |
         sudo pkg upgrade -y
-        sudo pkg install -y cmake pkgconf ccache ninja gtk3 sdl3 librashader
+        sudo pkg install -y cmake-core pkgconf ccache ninja gtk3 sdl3 librashader
     - name: "Build: FreeBSD"
       if: matrix.platform.name == 'freebsd'
       env:
