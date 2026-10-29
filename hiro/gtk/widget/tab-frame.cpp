@@ -51,8 +51,7 @@ auto pTabFrame::construct() -> void {
   gtk_notebook_set_show_border(GTK_NOTEBOOK(gtkWidget), false);
   gtk_notebook_set_tab_pos(GTK_NOTEBOOK(gtkWidget), GTK_POS_TOP);
 
-  tabs.clear();  //todo: memory leak, need to release each tab
-  for(auto& item : state().items) append(item);
+  tabs.clear();
   setNavigation(state().navigation);
 
   g_signal_connect(G_OBJECT(gtkWidget), "page-reordered", G_CALLBACK(TabFrame_move), (gpointer)this);
@@ -253,7 +252,7 @@ auto pTabFrame::_synchronizeTab(u32 position) -> void {
 auto pTabFrame::_tabHeight() -> u32 {
   s32 height = 1;
 
-  for(auto n : range(self().itemCount())) {
+  for(auto n : range(tabs.size())) {
     GtkAllocation imageAllocation, titleAllocation, closeAllocation;
     gtk_widget_get_allocation(tabs[n].image, &imageAllocation);
     gtk_widget_get_allocation(tabs[n].title, &titleAllocation);
@@ -270,7 +269,7 @@ auto pTabFrame::_tabHeight() -> u32 {
 auto pTabFrame::_tabWidth() -> u32 {
   s32 width = 1;
 
-  for(auto n : range(self().itemCount())) {
+  for(auto n : range(tabs.size())) {
     GtkAllocation imageAllocation, titleAllocation, closeAllocation;
     gtk_widget_get_allocation(tabs[n].image, &imageAllocation);
     gtk_widget_get_allocation(tabs[n].title, &titleAllocation);
