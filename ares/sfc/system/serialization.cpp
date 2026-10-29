@@ -38,6 +38,11 @@ auto System::unserialize(serializer& s) -> bool {
 
   if(synchronize) power(/* reset = */ false);
   serialize(s, synchronize);
+  // Keep the acknowledged stop at the restored boundary.
+  // Otherwise stepping from a loaded breakpoint compares against the PC from before the load.
+  if(synchronize && nall::GDB::server.isHalted()) {
+    nall::GDB::server.reportPC(cpu.r.pc.d, !cpu.r.wai && !cpu.r.stp);
+  }
   return true;
 }
 

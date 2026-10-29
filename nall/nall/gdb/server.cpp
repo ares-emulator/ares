@@ -83,18 +83,26 @@ namespace nall::GDB {
     }
   }
 
-  auto Server::reportPC(u64 pc) -> bool {
+  auto Server::reportPC(u64 pc, bool instruction) -> bool {
     if(!hasActiveClient)return true;
 
+    bool skipBreakpoint = skipBreakpointOnce && currentPC == pc;
     currentPC = pc;
-    bool needHalts = forceHalt || std::ranges::find(breakpoints, pc) != breakpoints.end();
+    bool needHalts = forceHalt || (instruction && !skipBreakpoint && std::ranges::find(breakpoints, pc) != breakpoints.end());
+    skipBreakpointOnce = false;
+    stoppedAtInstructionBoundary = hooks.instructionBoundaryStop && needHalts;
 
     if(needHalts) {
       forceHalt = true; // breakpoints may get deleted after a signal, but we have to stay stopped
 
       if(!haltSignalSent) {
         haltSignalSent = true;
-        sendSignal(Signal::TRAP);
+        if(pendingResetReply) {
+          pendingResetReply = false;
+          sendPayload("OK");
+        } else {
+          sendSignal(Signal::TRAP);
+        }
       }
     }
 
@@ -129,11 +137,20 @@ namespace nall::GDB {
       printf("GDB <: %s\n", cmdBuffer.data());
     }
 
+    if(hooks.instructionBoundaryStop && isStopPending()
+    && (cmdPrefix == 'g' || cmdPrefix == 'G' || cmdPrefix == 'p' || cmdPrefix == 'P'
+    || cmdPrefix == 'm' || cmdPrefix == 'M')) return "E00";
+
     switch(cmdPrefix)
     {
       case '!': return "OK"; // informs us that "extended remote-debugging" is used
 
       case '?': // handshake: why did we halt?
+        if(hooks.instructionBoundaryStop && !stoppedAtInstructionBoundary) {
+          haltProgram();
+          shouldReply = false; // reportPC replies only after the core reaches a safe stop
+          return "";
+        }
         haltProgram();
         haltSignalSent = true;
         return "T05"; // needs to be faked, otherwise the GDB-client hangs up and eats 100% CPU
@@ -161,7 +178,12 @@ namespace nall::GDB {
 
       case 'G': // set all general registers
         if(hooks.regWriteGeneral) {
-          hooks.regWriteGeneral(cmd.slice(1));
+          auto data = cmd.slice(1);
+          if(hooks.registersLittleEndian) {
+            if(!hooks.regReadGeneral || data.size() != hooks.regReadGeneral().size()) return "E00";
+            for(char c : data) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
+          }
+          hooks.regWriteGeneral(data);
           return "OK";
         }
       break;
@@ -184,33 +206,47 @@ namespace nall::GDB {
             return "";
           }
 
-          auto sepIdxMaybe = cmdName.find(",");
-          u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
-
-          u64 address = cmdName.slice(1, sepIdx-1).hex();
-          u64 count = cmdName.slice(sepIdx+1, cmdName.size()-sepIdx).hex();
+          // Reject invalid or overflowing input before integer conversion can alias it.
+          auto arguments = cmdName.slice(1);
+          auto fields = nall::split(arguments, ",");
+          if(cmdParts.size() != 1 || fields.size() != 2) return "E00";
+          for(auto& field : fields) {
+            if(!field || field.size() > 16) return "E00";
+            for(char c : field) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
+          }
+          u64 address = fields[0].hex();
+          u64 count = fields[1].hex();
+          if(count > MAX_PACKET_SIZE / 2) return "E00";
           return hooks.read(address, count);
         }
       break;
 
       case 'M': // write memory (e.g.: "M801ef90a,4:01000000")
         {
-          if(!hooks.write) {
+          if(!hooks.write && !hooks.checkedWrite) {
             return "";
           }
 
-          auto sepIdxMaybe = cmdName.find(",");
-          u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
-
-          u64 address = cmdName.slice(1, sepIdx-1).hex();
-          u64 byteSize = cmdName.slice(sepIdx+1, 1).hex();
-          string hexvalue = cmdParts.size() > 1 ? cmdParts[1] : string{};
+          // Validate the complete packet before decoding so malformed input cannot partly write storage.
+          auto arguments = cmdName.slice(1);
+          auto fields = nall::split(arguments, ",");
+          if(cmdParts.size() != 2 || fields.size() != 2) return "E00";
+          for(auto& field : fields) {
+            if(!field || field.size() > 16) return "E00";
+            for(char c : field) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
+          }
+          u64 address = fields[0].hex();
+          u64 byteSize = fields[1].hex();
+          auto& hexvalue = cmdParts[1];
+          if(byteSize > MAX_PACKET_SIZE / 2 || hexvalue.size() != byteSize * 2) return "E00";
+          for(char c : hexvalue) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
           std::vector<u8> value;
           string hexbyte;
           for (int i=0; i<hexvalue.size(); i+=2) {
             hexbyte = hexvalue.slice(i, 2);
             value.push_back((u8)toHex(hexbyte.data()));
           }
+          if(hooks.checkedWrite) return hooks.checkedWrite(address, value);
           hooks.write(address, value);
           return "OK";
         }
@@ -231,14 +267,53 @@ namespace nall::GDB {
           auto sepIdxMaybe = cmdName.find("=");
           u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
 
-          u32 regIdx = static_cast<u32>(cmdName.slice(1, sepIdx-1).hex());
-          u64 regValue = cmdName.slice(sepIdx+1).hex();
+          auto index = cmdName.slice(1, sepIdx-1);
+          if(hooks.registersLittleEndian) {
+            if(!sepIdxMaybe || !index || index.size() > 8) return "E00";
+            for(char c : index) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
+          }
+          u32 regIdx = static_cast<u32>(index.hex());
+          auto data = cmdName.slice(sepIdx+1);
+          u64 regValue = data.hex();
+          if(hooks.registersLittleEndian) {
+            if(!sepIdxMaybe || !hooks.regRead || data.size() == 0 || data.size() > 16
+            || data.size() % 2 || data.size() != hooks.regRead(regIdx).size()) return "E00";
+            for(char c : data) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
+            regValue = 0;
+            for(u32 byte : range(data.size() / 2)) {
+              regValue |= data.slice(byte * 2, 2).hex() << (byte * 8);
+            }
+          }
 
           return hooks.regWrite(regIdx, regValue) ? "OK" : "E00";
         }
       break;
 
       case 'q':
+        if(cmdName.beginsWith("qRcmd,")) {
+          if(!hooks.emuReset) return "";
+          auto encoded = cmdName.slice(6);
+          if(!encoded || encoded.size() % 2 || encoded.size() > 256) return "E00";
+          for(char c : encoded) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
+          string monitor;
+          for(u32 byte : range(encoded.size() / 2)) monitor.append(char(encoded.slice(byte * 2, 2).hex()));
+          bool run = monitor == "reset run";
+          if(!run && monitor != "reset" && monitor != "reset halt") return "E00";
+          if(!hooks.instructionBoundaryStop || pendingResetReply) return "E00";
+          singleStepActive = false;
+          stoppedAtInstructionBoundary = false;
+          skipBreakpointOnce = false;
+          pcOverride.reset();
+          hooks.emuReset(); // called by the frontend, outside the emulated CPU stack
+          if(run) {
+            resumeProgram();
+            return "OK";
+          }
+          haltProgram();
+          pendingResetReply = true;
+          shouldReply = false; // complete monitor reset halt at the reset-vector boundary
+          return "";
+        }
         // This tells the client what we can and can't do
         if(cmdName == "qSupported"){ return {
           "PacketSize=", hex(MAX_PACKET_SIZE),
@@ -267,7 +342,20 @@ namespace nall::GDB {
           if(cmdParts[1] == "features" && cmdParts[2] == "read") {
             // informs the client about arch/registers (https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format)
             if(cmdParts[3] == "target.xml") {
-              return hooks.targetXML ? string{"l", hooks.targetXML()} : string{""};
+              if(!hooks.targetXML) return "";
+              auto bounds = nall::split(cmdParts[4], ",");
+              if(bounds.size() != 2) return "E00";
+              for(auto& bound : bounds) {
+                if(!bound || bound.size() > 16) return "E00";
+                for(char c : bound) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
+              }
+              auto offset = bounds[0].hex();
+              auto length = bounds[1].hex();
+              if(!length) return "E00";
+              auto xml = hooks.targetXML();
+              if(offset >= xml.size()) return "l";
+              length = min<u64>(length, min<u64>(xml.size() - offset, MAX_PACKET_SIZE - 1));
+              return {offset + length < xml.size() ? "m" : "l", xml.slice(offset, length)};
             }
           }
         }
@@ -520,6 +608,8 @@ namespace nall::GDB {
   }
 
   auto Server::resumeProgram() -> void {
+    skipBreakpointOnce = hooks.instructionBoundaryStop && stoppedAtInstructionBoundary;
+    stoppedAtInstructionBoundary = false;
     pcOverride.reset();
     forceHalt = false;
     haltSignalSent = false;
@@ -527,10 +617,9 @@ namespace nall::GDB {
 
   auto Server::onConnect() -> void {
     printf("GDB client connected\n");
-    if (onClientConnectCallback)
-      onClientConnectCallback();
     resetClientData();
     hasActiveClient = true;
+    if(onClientConnectCallback) onClientConnectCallback();
   }
 
   auto Server::onDisconnect() -> void {
@@ -543,11 +632,15 @@ namespace nall::GDB {
   auto Server::reset() -> void {
     hooks.read = nullptr;
     hooks.write = nullptr;
+    hooks.checkedWrite = nullptr;
     hooks.normalizeAddress = nullptr;
+    hooks.registersLittleEndian = false;
     hooks.regReadGeneral = nullptr;
     hooks.regWriteGeneral = nullptr;
     hooks.regRead = nullptr;
     hooks.regWrite = nullptr;
+    hooks.instructionBoundaryStop = false;
+    hooks.emuReset = nullptr;
     hooks.emuCacheInvalidate = nullptr;
     hooks.targetXML = nullptr;
 
@@ -572,6 +665,9 @@ namespace nall::GDB {
     haltSignalSent = false;
     forceHalt = false;
     singleStepActive = false;
+    stoppedAtInstructionBoundary = false;
+    skipBreakpointOnce = false;
+    pendingResetReply = false;
     nonStopMode = false;
     noAckMode = false;
 
