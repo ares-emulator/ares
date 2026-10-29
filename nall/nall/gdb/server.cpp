@@ -223,22 +223,30 @@ namespace nall::GDB {
 
       case 'M': // write memory (e.g.: "M801ef90a,4:01000000")
         {
-          if(!hooks.write) {
+          if(!hooks.write && !hooks.checkedWrite) {
             return "";
           }
 
-          auto sepIdxMaybe = cmdName.find(",");
-          u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
-
-          u64 address = cmdName.slice(1, sepIdx-1).hex();
-          u64 byteSize = cmdName.slice(sepIdx+1, 1).hex();
-          string hexvalue = cmdParts.size() > 1 ? cmdParts[1] : string{};
+          // Validate the complete packet before decoding so malformed input cannot partly write storage.
+          auto arguments = cmdName.slice(1);
+          auto fields = nall::split(arguments, ",");
+          if(cmdParts.size() != 2 || fields.size() != 2) return "E00";
+          for(auto& field : fields) {
+            if(!field || field.size() > 16) return "E00";
+            for(char c : field) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
+          }
+          u64 address = fields[0].hex();
+          u64 byteSize = fields[1].hex();
+          auto& hexvalue = cmdParts[1];
+          if(byteSize > MAX_PACKET_SIZE / 2 || hexvalue.size() != byteSize * 2) return "E00";
+          for(char c : hexvalue) if(!std::isxdigit(static_cast<unsigned char>(c))) return "E00";
           std::vector<u8> value;
           string hexbyte;
           for (int i=0; i<hexvalue.size(); i+=2) {
             hexbyte = hexvalue.slice(i, 2);
             value.push_back((u8)toHex(hexbyte.data()));
           }
+          if(hooks.checkedWrite) return hooks.checkedWrite(address, value);
           hooks.write(address, value);
           return "OK";
         }
@@ -624,6 +632,7 @@ namespace nall::GDB {
   auto Server::reset() -> void {
     hooks.read = nullptr;
     hooks.write = nullptr;
+    hooks.checkedWrite = nullptr;
     hooks.normalizeAddress = nullptr;
     hooks.registersLittleEndian = false;
     hooks.regReadGeneral = nullptr;
