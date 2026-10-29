@@ -19,6 +19,8 @@ target_sources(
 )
 
 target_sources(ruby PRIVATE cmake/os-macos.cmake ruby.mm ruby.cpp)
+# Match the Xcode ownership mode when another generator compiles the Objective-C++ entry as CXX.
+set_source_files_properties(ruby.mm PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 
 target_link_libraries(
   ruby
