@@ -19,6 +19,9 @@ set_source_files_properties(hiro ${hiro_SOURCES} PROPERTIES HEADER_FILE_ONLY TRU
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
   set_source_files_properties(hiro hiro.mm PROPERTIES HEADER_FILE_ONLY FALSE)
+  # Cocoa objects use ARC ownership throughout hiro. Xcode sets this globally,
+  # but Makefiles / Ninja classify this .mm entry as CXX and will otherwise silently use manual ownership.
+  set_source_files_properties(hiro.mm PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 else()
   set_source_files_properties(hiro hiro.cpp PROPERTIES HEADER_FILE_ONLY FALSE)
 endif()
