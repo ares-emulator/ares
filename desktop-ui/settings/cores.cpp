@@ -202,4 +202,8 @@ auto CoreSettings::construct() -> void {
   neoGeoMvsBiosOption.onChange([&] {
     if(auto item = neoGeoMvsBiosOption.selected()) settings.neoGeo.mvsBios = item.attribute<string>("bios");
   });
+
+  neoGeoShowAllGamesOption.setText("Allow loading MVS/AES only games on both systems").setChecked(settings.neoGeo.showAllGames).onToggle([&] {
+    settings.neoGeo.showAllGames = neoGeoShowAllGamesOption.checked();
+  });
 }

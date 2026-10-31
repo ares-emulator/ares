@@ -172,6 +172,7 @@ auto Settings::process(bool load) -> void {
 
   bind(string, "NeoGeo/AESBIOS", neoGeo.aesBios);
   bind(string, "NeoGeo/MVSBIOS", neoGeo.mvsBios);
+  bind(boolean, "NeoGeo/ShowAllGames", neoGeo.showAllGames);
 
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};

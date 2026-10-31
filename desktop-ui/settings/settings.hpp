@@ -142,6 +142,7 @@ struct Settings : Markup::Node {
   struct NeoGeo {
     string aesBios = "neo-po.bin";
     string mvsBios = "vs-bios.rom";
+    bool showAllGames = false;
   } neoGeo;
 };
 
@@ -470,6 +471,8 @@ struct CoreSettings : VerticalLayout {
   HorizontalLayout neoGeoMvsBiosLayout{&neoGeoPanel, Size{~0, 0}, 5};
     Label neoGeoMvsBiosLabel{&neoGeoMvsBiosLayout, Size{0, layoutVertSize}};
     ComboButton neoGeoMvsBiosOption{&neoGeoMvsBiosLayout, Size{260_sx, 0}};
+  HorizontalLayout neoGeoShowAllGamesLayout{&neoGeoPanel, Size{~0, 0}, 5};
+    CheckLabel neoGeoShowAllGamesOption{&neoGeoShowAllGamesLayout, Size{0, 0}, 5};
 };
 
 struct DeveloperSettings : VerticalLayout {

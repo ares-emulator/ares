@@ -78,8 +78,8 @@ auto GameBrowserWindow::show(std::shared_ptr<Emulator> emulator) -> void {
     });
     if(supported == categories.end()) continue;
 
-    if(supported->release) {
-      auto platforms = node["release"].string();
+    if(supported->release && !settings.neoGeo.showAllGames) {
+      string platforms = node["release"].string();
       bool released = false;
       for(auto platform : nall::split(platforms, ",")) {
         if(platform.strip() == supported->release) released = true;
