@@ -194,6 +194,7 @@ auto RDP::IO::writeWord(u32 address, u32 data_, Thread& thread) -> void {
 
 auto RDP::flushCommands() -> void {
   if(command.freeze || command.crashed) return;
+  if(command.end <= command.current) return;
   command.bufferBusy = 1;
   command.pipeBusy = 1;
   command.startGclk = 1;
