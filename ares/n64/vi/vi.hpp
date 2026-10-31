@@ -8,6 +8,9 @@ struct VI : Thread, Memory::RCP<VI> {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto io(bool mode, u32 address, u32 data) -> void;
+    auto updateGraphicsSize() -> void;
+
+    Node::Debugger::Graphics framebuffer;
 
     struct Tracer {
       Node::Debugger::Tracer::Notification io;

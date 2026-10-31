@@ -1,4 +1,5 @@
 //Reality Display Processor
+#include <n64/rdp/capture.hpp>
 
 struct RDP : Thread, Memory::RCP<RDP> {
   Node::Object node;
@@ -9,6 +10,79 @@ struct RDP : Thread, Memory::RCP<RDP> {
     auto command(string_view) -> void;
     auto ioDPC(bool mode, u32 address, u32 data) -> void;
     auto ioDPS(bool mode, u32 address, u32 data) -> void;
+    auto updateGraphicsSize() -> void;
+    auto observeCommand(u32 code, const u32* words, u32 wordCount) -> void;
+
+    //capture.cpp
+    auto requestCapture() -> void;
+    auto captureActive() const -> bool;
+    auto captureReady() const -> bool;
+    auto frameBoundary() -> void;
+    auto presentBoundary(u32 origin) -> void;
+    auto beginCapture() -> void;
+    auto endCapture() -> void;
+    auto commandBatch() -> void;
+    auto captureCommand(const u32* words, u32 wordCount) -> void;
+    auto captureViRegister(u32 address, u32 value) -> void;
+    auto captureScanout(bool field) -> void;
+    auto resetCapture() -> void;
+    auto frameCapture() const -> const RDPFrameCapture*;
+    auto captureCommandCount() const -> u32;
+    auto capturedCommandWords(u32 index) const -> const std::vector<u32>*;
+    auto captureCommandText(u32 index) const -> string;
+    auto captureCommandArguments(u32 index) const -> string;
+    auto captureCommandDetail(u32 index) const -> string;
+    auto captureCommandOpcode(u32 index) const -> u32;
+    auto captureCommandType(u32 index) const -> u32;
+    auto captureSummary() const -> string;
+    auto captureStateAt(u32 command) const -> RDPCaptureState;
+    auto captureStateText(u32 command) const -> string;
+    auto captureViews() const -> std::vector<string>;
+    auto captureTicks() -> std::vector<u32>;
+    auto renderCapture(u32 command, u32 view) -> Core::Debugger::GraphicsFrame::Image;
+    auto renderCaptureTile(
+      const u8* tmem, const RDPCaptureState& state, u32 tile
+    ) const -> Core::Debugger::GraphicsFrame::Image;
+
+    struct Capture {
+      std::atomic<bool> armed = false;
+      std::atomic<bool> ready = false;
+      bool active = false;
+      //Set once a command list has been diffed; cleared by Sync Full. RDRAM is
+      //only sampled between command lists, where the RDP is idle.
+      bool inCommandList = false;
+      //Fields seen while armed and while capturing, counted only to drive the
+      //fallback for content that never presents a different framebuffer.
+      u32 armedFields = 0;
+      u32 activeFields = 0;
+      RDPFrameCapture frame;
+      std::vector<u8> shadowRdram;
+    };
+    std::unique_ptr<Capture> capture;
+    u64 nextCaptureIdentifier = 1;
+    //Framebuffer the VI is presenting, in 4 KiB units; changes mark a buffer flip.
+    u32 presentBuffer = ~0u;
+
+    //captureTicks() replays the whole capture, so its result is cached against
+    //the capture it was computed from.
+    u64 tickIdentifier = 0;
+    std::vector<u32> tickCommands;
+
+    struct CachedCommand {
+      u64 sequence = 0;
+      std::vector<u32> words;
+    };
+    std::vector<CachedCommand> cachedCommands;
+    u64 cachedCommandSequence = 0;
+
+    struct Graphics {
+      Node::Debugger::Graphics color;
+      Node::Debugger::Graphics depth;
+      Node::Debugger::Graphics coverage;
+    } graphics;
+
+    Node::Debugger::Memory tmem;
+    Node::Debugger::GraphicsFrame frame;
 
     struct Tracer {
       Node::Debugger::Tracer::Notification command;

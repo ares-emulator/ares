@@ -145,6 +145,7 @@ public:
 	size_t get_rdram_size() const;
 	size_t get_hidden_rdram_size() const;
 	void *get_tmem();
+	void set_tmem(const void *data, size_t size);
 
 	// Sets VI register
 	void set_vi_register(VIRegister reg, uint32_t value);
