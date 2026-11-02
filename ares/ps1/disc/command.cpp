@@ -146,6 +146,7 @@ auto Disc::executeCommand(u8 operation) -> void {
 auto Disc::executeSecondResponse(u8 operation) -> void {
   switch(operation) {
   case 0x07:
+    ssr.motorOn = 1;
     queueResponse(ResponseType::Complete, {status()});
     break;
 
@@ -370,8 +371,13 @@ auto Disc::commandReadN() -> void {
   drive.lba.pending = 0;
 }
 
-//0x07
+//0x07: MotorOn (historically called Standby)
 auto Disc::commandStandby() -> void {
+  if(ssr.motorOn) {
+    //Hardware uses error 0x20 for an already running motor as well.
+    error(ErrorCode_InvalidParameterCount);
+    return;
+  }
   drive.standby = 1;
   command.secondResponse.command = 0x07;
   command.secondResponse.counter = 50'000;
