@@ -34,6 +34,14 @@ auto Program::stateLoad(u32 slot) -> bool {
   if(!memory.empty()) {
     serializer state{memory.data(), (u32)memory.size()};
     if(emulator->root->unserialize(state)) {
+      if(emulator->name == "WonderSwan" || emulator->name == "WonderSwan Color") {
+        if(auto orientation = emulator->root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
+          auto value = orientation->value();
+          orientation->setValue(value);
+          orientation->modify(value);
+        }
+      }
+
       showMessage({"Loaded state from slot ", slot});
       return true;
     }
