@@ -237,6 +237,11 @@ auto GameBoy::analyze(std::vector<u8>& rom) -> string {
     rumble = true;
     break;
 
+  case 0xbe:
+    //Bung Pocket Voice; the ASIC has no SRAM, only the flash it boots from
+    mapper = "PocketVoice";
+    break;
+
   case 0xfc:
     mapper = "CAMERA";
     break;

@@ -12,6 +12,7 @@ namespace Board {
 #include "mbc6.cpp"
 #include "mbc7.cpp"
 #include "mmm01.cpp"
+#include "pocketvoice.cpp"
 #include "tama.cpp"
 
 auto Interface::main() -> void {
