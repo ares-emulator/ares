@@ -60,6 +60,7 @@ struct MDEC : Thread, Memory::Interface {
 
   struct IO {
     Mode mode;
+    n1   resetPending;
     n32  offset;
     n32  outputWord;
   } io;

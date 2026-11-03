@@ -165,6 +165,7 @@ auto MDEC::writeWord(u32 address, u32 value) -> void {
       io.outputWord = 0;
       fifo.input.flush();
       fifo.output.flush();
+      io.resetPending = 1;
 
       status.remaining     = 0;
       status.currentBlock  = 4;
@@ -184,17 +185,17 @@ auto MDEC::writeWord(u32 address, u32 value) -> void {
 }
 
 auto MDEC::readInputFifo() -> maybe<u16> {
-  if(status.remaining == 0) {
+  if(io.resetPending || status.remaining == 0) {
     return nothing;
   }
 
   while(fifo.input.empty()) {
     step(128);
-    if(status.remaining == 0) return nothing;
+    if(io.resetPending || status.remaining == 0) return nothing;
   }
 
   step(1);
-  if(status.remaining == 0 || fifo.input.empty()) return nothing;
+  if(io.resetPending || status.remaining == 0 || fifo.input.empty()) return nothing;
   auto data = *fifo.input.read();
   --status.remaining;
   return data;
@@ -202,6 +203,6 @@ auto MDEC::readInputFifo() -> maybe<u16> {
 
 
 auto MDEC::writeOutputFifo(u32 data) -> void {
-  while(!fifo.output.write(data)) step(128);
+  while(!io.resetPending && !fifo.output.write(data)) step(128);
 }
 
