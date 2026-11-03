@@ -148,6 +148,7 @@ struct CPU : Thread {
 
   template<u32 Size> auto read(u32 address) -> u32;
   template<u32 Size> auto readBus(u32 address) -> u32;
+  template<u32 Size> auto readIO(u32 address) -> u32;
   auto readWordPartial(u32 address, u32 lanes) -> u32;
   auto readBusWordPartial(u32 address, u32 lanes) -> u32;
   template<u32 Size> auto write(u32 address, u32 data, u32 lanes = (1u << Size) - 1) -> void;

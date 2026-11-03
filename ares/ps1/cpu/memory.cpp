@@ -79,6 +79,18 @@ inline auto CPU::peek(u32 address) -> u32 {
   return 0;
 }
 
+template<u32 Size>
+inline auto CPU::readIO(u32 address) -> u32 {
+  beginBusTransaction(address, Size);
+  if(!bus.busConfiguration(address).width) {
+    auto data = bus.read<Size>(address);
+    endBusTransaction();
+    return data;
+  }
+  endBusTransaction();
+  return bus.read<Size>(address);
+}
+
 //read data from the bus
 template<u32 Size>
 inline auto CPU::readBus(u32 address) -> u32 {
@@ -118,11 +130,7 @@ inline auto CPU::readBus(u32 address) -> u32 {
       return data;
     }
     if(likely(address >= 0x1f00'0000)) {
-      beginBusTransaction(address, Size);
-      address &= 0x1fff'ffff;
-      auto data = bus.read<Size>(address);
-      endBusTransaction();
-      return data;
+      return readIO<Size>(address);
     }
     if constexpr(Accuracy::CPU::BusErrors) {
       exception.busData();
@@ -154,11 +162,7 @@ inline auto CPU::readBus(u32 address) -> u32 {
       return data;
     }
     if(likely(address >= 0x9f00'0000)) {
-      beginBusTransaction(address, Size);
-      address &= 0x1fff'ffff;
-      auto data = bus.read<Size>(address);
-      endBusTransaction();
-      return data;
+      return readIO<Size>(address);
     }
     if constexpr(Accuracy::CPU::BusErrors) {
       exception.busData();
@@ -181,11 +185,7 @@ inline auto CPU::readBus(u32 address) -> u32 {
       return data;
     }
     if(likely(address >= 0xbf00'0000)) {
-      beginBusTransaction(address, Size);
-      address &= 0x1fff'ffff;
-      auto data = bus.read<Size>(address);
-      endBusTransaction();
-      return data;
+      return readIO<Size>(address);
     }
     if constexpr(Accuracy::CPU::BusErrors) {
       exception.busData();
@@ -288,10 +288,7 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
         endBusTransaction();
         return read16BitBus();
       }
-      beginBusTransaction(virtualAddress, Word);
-      auto data = bus.read<Word>(address);
-      endBusTransaction();
-      return data;
+      return readIO<Word>(virtualAddress);
     }
     if constexpr(Accuracy::CPU::BusErrors) {
       exception.busData();
@@ -328,10 +325,7 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
         endBusTransaction();
         return read16BitBus();
       }
-      beginBusTransaction(virtualAddress, Word);
-      auto data = bus.read<Word>(address);
-      endBusTransaction();
-      return data;
+      return readIO<Word>(virtualAddress);
     }
     if constexpr(Accuracy::CPU::BusErrors) {
       exception.busData();
@@ -359,10 +353,7 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
         endBusTransaction();
         return read16BitBus();
       }
-      beginBusTransaction(virtualAddress, Word);
-      auto data = bus.read<Word>(address);
-      endBusTransaction();
-      return data;
+      return readIO<Word>(virtualAddress);
     }
     if constexpr(Accuracy::CPU::BusErrors) {
       exception.busData();
