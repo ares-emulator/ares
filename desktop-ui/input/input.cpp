@@ -15,6 +15,46 @@ auto digitalAxisMode(const string& name) -> DigitalAxisMode {
   return DigitalAxisMode::Immediate;
 }
 
+auto InputMapping::qualifier(string_view name) -> Qualifier {
+  if(name == "Lo") return Qualifier::Lo;
+  if(name == "Hi") return Qualifier::Hi;
+  if(name == "Rumble") return Qualifier::Rumble;
+  return Qualifier::None;
+}
+
+auto InputMapping::assignment(string_view mapping) -> maybe<Binding> {
+  auto token = nall::split(mapping, "/");
+  if(token.size() < 3) return {};
+
+  Binding binding;
+  u32 qualifierIndex = 3;
+  if(token[0].beginsWith("0x")) {
+    binding.deviceID = token[0].natural();
+    binding.groupID = token[1].natural();
+    binding.inputID = token[2].natural();
+  } else {
+    if(token.size() < 4) return {};
+    binding.deviceIdentifier = {token[0], "/", token[1]};
+    binding.groupID = token[2].natural();
+    binding.inputID = token[3].natural();
+    qualifierIndex = 4;
+  }
+  if(token.size() > qualifierIndex) binding.qualifier = qualifier(token[qualifierIndex]);
+
+  for(auto& device : inputManager.devices) {
+    if(binding.deviceIdentifier && binding.deviceIdentifier == device->identifier()) {
+      binding.device = device;
+      binding.deviceID = device->id();
+      break;
+    } else if(!binding.deviceIdentifier && binding.deviceID == device->id()) {
+      binding.device = device;
+      break;
+    }
+  }
+
+  return binding;
+}
+
 auto InputMapping::bind() -> void {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   for(auto& binding : bindings) binding = {};
@@ -22,38 +62,7 @@ auto InputMapping::bind() -> void {
   for(u32 index : range(BindingLimit)) {
     auto& assignment = assignments[index];
     auto& binding = bindings[index];
-
-    auto token = nall::split(assignment, "/");
-    if(token.size() < 3) continue;  //ignore invalid mappings
-
-    u32 qualifierIndex = 3;
-    if(token[0].beginsWith("0x")) {
-      binding.deviceID = token[0].natural();
-      binding.groupID = token[1].natural();
-      binding.inputID = token[2].natural();
-    } else {
-      if(token.size() < 4) continue;  //ignore invalid mappings
-      binding.deviceIdentifier = {token[0], "/", token[1]};
-      binding.groupID = token[2].natural();
-      binding.inputID = token[3].natural();
-      qualifierIndex = 4;
-    }
-
-    binding.qualifier = Qualifier::None;
-    if(token.size() > qualifierIndex && token[qualifierIndex] == "Lo") binding.qualifier = Qualifier::Lo;
-    if(token.size() > qualifierIndex && token[qualifierIndex] == "Hi") binding.qualifier = Qualifier::Hi;
-    if(token.size() > qualifierIndex && token[qualifierIndex] == "Rumble") binding.qualifier = Qualifier::Rumble;
-
-    for(auto& device : inputManager.devices) {
-      if(binding.deviceIdentifier && binding.deviceIdentifier == device->identifier()) {
-        binding.device = device;
-        binding.deviceID = device->id();
-        break;
-      } else if(!binding.deviceIdentifier && binding.deviceID == device->id()) {
-        binding.device = device;
-        break;
-      }
-    }
+    if(auto parsed = InputMapping::assignment(assignment)) binding = *parsed;
   }
 }
 
