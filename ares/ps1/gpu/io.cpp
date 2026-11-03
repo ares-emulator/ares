@@ -1,6 +1,5 @@
 inline auto GPU::writeFifoEmpty() const -> bool {
   if(io.mode == Mode::CopyFromVRAM) return true;
-  if(drawBusy()) return false;
   bool collectingPrimitive = !queue.gp0.empty() && queue.gp0.command >= 0x20 && queue.gp0.command <= 0x5f;
   bool latchOccupied = latch.ready || (latch.length && (latch.data[0] >> 24) >= 0x20 && (latch.data[0] >> 24) <= 0x5f);
   return fifo.empty() && !latchOccupied && !collectingPrimitive;
