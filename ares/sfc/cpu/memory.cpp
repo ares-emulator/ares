@@ -1,4 +1,13 @@
 auto CPU::idle() -> void {
+  // WAI/STP loop inside the processor core and may never return to CPU::main.
+  // Stop at an idle boundary without treating the following PC as executed.
+  if(r.wai || r.stp) {
+    while(!nall::GDB::server.reportPC(r.pc.d, false)) {
+      scheduler.exit(Event::Step);
+      // WAI/STP state can be restored at this idle boundary, before any bus work.
+      scheduler.synchronize();
+    }
+  }
   status.clockCount = 6;
   dmaEdge();
   step(6);

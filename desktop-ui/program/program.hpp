@@ -77,6 +77,7 @@ struct Program : ares::Platform {
   std::vector<ares::Node::Audio::Stream> streams;
 
   bool paused = false;
+  bool awaitGdbHandshake = false;
   bool fastForwarding = false;
   bool rewinding = false;
   bool runAhead = false;

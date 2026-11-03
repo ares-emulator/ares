@@ -1,4 +1,5 @@
 #include <sfc/sfc.hpp>
+#include <nall/gdb/server.hpp>
 #include <algorithm>
 
 namespace ares::SuperFamicom {
@@ -27,6 +28,8 @@ Scheduler scheduler;
 System system;
 #include "controls.cpp"
 #include "serialization.cpp"
+#include "gdb.cpp"
+#include "gdb-memory.cpp"
 
 auto System::game() -> string {
   #if defined(CORE_GB)
@@ -97,6 +100,8 @@ auto System::load(Node::System& root, string name) -> bool {
   bus.reset();
   controls.load(node);
   cpu.load(node);
+  installGdbHooks();
+  installGdbMemoryHooks();
   smp.load(node);
   dsp.load(node);
   ppu.load(node);
