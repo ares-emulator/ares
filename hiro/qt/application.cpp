@@ -90,6 +90,8 @@ auto pApplication::initialize() -> void {
   #endif
 
   #if defined(DISPLAY_XORG)
+  // If running on Wayland, force usage of XWayland
+  setenv("QT_QPA_PLATFORM", "xcb", 1);
   XInitThreads();
   state().display = XOpenDisplay(nullptr);
   state().screenSaverXDG = (bool)execute("xdg-screensaver", "--version").output.find("xdg-screensaver");
