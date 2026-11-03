@@ -190,6 +190,18 @@ auto RDP::render() -> void {
   };
 
   while(command.current < command.end) {
+    if(unlikely(debugger.captureActive())) {
+      u32 commandAddress = command.current;
+      u32 firstWord = memory.read<Word>(commandAddress);
+      u32 wordCount = rdpCommandLength(firstWord >> 24) * 2;
+      std::vector<u32> capturedWords(wordCount);
+      for(u32 index : range(wordCount)) {
+        capturedWords[index] = memory.read<Word>(commandAddress + index * 4);
+      }
+      debugger.commandBatch();
+      debugger.captureCommand(capturedWords.data(), capturedWords.size());
+    }
+
     u64 op = fetch();
     auto opCode = op >> 56 & 0x3f;
 
@@ -350,6 +362,7 @@ auto RDP::render() -> void {
       scissor.odd   = n1 (op >> 24);
       scissor.x.lo  = n12(op >> 12);
       scissor.y.lo  = n12(op >>  0);
+      debugger.updateGraphicsSize();
       setScissor();
     } break;
 
@@ -546,6 +559,7 @@ auto RDP::render() -> void {
       set.color.size        = n2 (op >> 51);
       set.color.width       = n10(op >> 32);
       set.color.dramAddress = n26(op >>  0);
+      debugger.updateGraphicsSize();
       setColorImage();
     } break;
 
