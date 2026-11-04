@@ -4,7 +4,7 @@ struct PeripheralDevice {
   virtual ~PeripheralDevice() = default;
   virtual auto save() -> void {}
   virtual auto reset() -> void {}
-  virtual auto acknowledge() -> bool { return 0; }
+  virtual auto acknowledge() -> u32 { return 0; }
   virtual auto active() -> bool { return 0; }
   virtual auto bus(u8 data) -> u8 { return 0xff; }
 };
@@ -21,9 +21,9 @@ struct Peripheral : Memory::Interface {
   auto nextEvent() const -> u32;
   auto baudrateReload() const -> u32;
   auto stepBaudrateTimer(u32 clocks) -> u32;
+  auto startTransfer() -> void;
+  auto pollInterrupt() -> void;
 
-  static constexpr s32 controllerAckDelay = 338;
-  static constexpr s32 memoryCardAckDelay = 1500;
   static constexpr s32 ackPulseWidth = 96;
   auto power(bool reset) -> void;
 
@@ -80,6 +80,10 @@ struct Peripheral : Memory::Interface {
     n16 sioBaudrateReloadValue;
 
     //internal
+    n8 transmitData;
+    n8 receiveShift;
+    n1 transmitPending;
+    n1 transmitEnableLatched;
     u32 baudrateTimer;
     u32 transferElapses;
     i32 ackDelayCounter;

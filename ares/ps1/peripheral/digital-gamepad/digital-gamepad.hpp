@@ -16,7 +16,7 @@ struct DigitalGamepad : PeripheralDevice {
 
   DigitalGamepad(Node::Port);
   auto reset() -> void override;
-  auto acknowledge() -> bool override;
+  auto acknowledge() -> u32 override;
   auto bus(u8 data) -> u8 override;
   auto invalid(u8 data) -> u8;
   auto active() -> bool override;

@@ -6,7 +6,7 @@ struct MemoryCard : PeripheralDevice {
   ~MemoryCard();
   auto save() -> void override;
   auto reset() -> void override;
-  auto acknowledge() -> bool override;
+  auto acknowledge() -> u32 override;
   auto active() -> bool override;
   auto bus(u8 data) -> u8 override;
 

@@ -1,44 +1,41 @@
 auto Peripheral::receive() -> u8 {
-  u8 data = 0xff;
-  if(io.receiveSize) {
-    data = io.receiveData;
-    io.receiveData = 0xff;
-    io.receiveSize--;
-  }
+  u8 data = io.receiveData;
+  io.receiveData >>= 8;
+  if(io.receiveSize) io.receiveSize--;
   return data;
 }
 
 auto Peripheral::transmit(u8 data) -> void {
-  if(!io.joyOutput) return;
+  io.transmitData = data;
+  io.transmitPending = 1;
+  io.transmitEnableLatched = io.transmitEnable;
+  io.transmitStarted = 0;
+  startTransfer();
+}
 
+auto Peripheral::startTransfer() -> void {
+  if(io.transferElapses || !io.transmitPending) return;
+  if(!io.transmitEnable && !io.transmitEnableLatched) return;
+
+  u8 data = io.transmitData;
+  io.transmitPending = 0;
   io.transmitFinished = 0;
 
-  io.transferElapses = 2 * (5 + io.characterLength);
+  io.transferElapses = 2 * (5 + io.characterLength + io.parityEnable);
 
-  if(io.slotNumber == 0) {
-    if(!memoryCardPort1.active()) {
-      io.receiveData = controllerPort1.bus(data);
-      if(controllerPort1.acknowledge()) io.ackDelayCounter = controllerAckDelay;
-    }
+  auto transfer = [&](PeripheralPort& port) {
+    io.receiveShift = port.bus(data);
+    if(u32 clocks = port.acknowledge()) io.ackDelayCounter = clocks;
+  };
 
-    if(!controllerPort1.active()) {
-      io.receiveData = memoryCardPort1.bus(data);
-      if(memoryCardPort1.acknowledge()) io.ackDelayCounter = memoryCardAckDelay;
-    }
+  auto& controller = io.slotNumber ? controllerPort2 : controllerPort1;
+  auto& memoryCard = io.slotNumber ? memoryCardPort2 : memoryCardPort1;
+  io.receiveShift = 0xff;
+  if(io.joyOutput) {
+    if(!memoryCard.active()) transfer(controller);
+    if(!controller.active()) transfer(memoryCard);
   }
-
-  if(io.slotNumber == 1) {
-    if(!memoryCardPort2.active()) {
-      io.receiveData = controllerPort2.bus(data);
-      if(controllerPort2.acknowledge()) io.ackDelayCounter = controllerAckDelay;
-    }
-
-    if(!controllerPort2.active()) {
-      io.receiveData = memoryCardPort2.bus(data);
-      if(memoryCardPort2.acknowledge()) io.ackDelayCounter = memoryCardAckDelay;
-    }
-  }
-  io.receiveData &= (1u << (5 + io.characterLength)) - 1;
+  io.receiveShift &= (1u << (5 + io.characterLength)) - 1;
   if(u32 clocks = nextEvent()) cpu.setNextEvent(clocks);
 }
 
@@ -54,7 +51,8 @@ auto Peripheral::readHalf(u32 address) -> u32 {
 
   //JOY_RX_DATA
   if(address == 0x1f80'1040) {
-    data = receive();
+    data = (u16)io.receiveData;
+    receive();
     return data;
   }
 
@@ -121,24 +119,13 @@ auto Peripheral::readWord(u32 address) -> u32 {
 
   //JOY_RX_DATA
   if(address == 0x1f80'1040) {
-    if(io.receiveSize) {
-      data = io.receiveData;
-      io.receiveData = 0xff;
-      io.receiveSize--;
-    }
+    data = (u32)io.receiveData;
+    for(u32 byte : range(4)) receive();
     return data;
   }
 
-  //JOY_STAT
-  if(address == 0x1f80'1044) {
-    data.bit(0) = io.transmitStarted;
-    data.bit(1) = io.receiveSize > 0;
-    data.bit(2) = io.transmitFinished;
-    data.bit(3) = io.parityError;
-    data.bit(7) = io.acknowledgeAsserted;
-    data.bit(9) = io.interruptRequest;
-    data.bit(11,31) = io.baudrateTimer;
-    return data;
+  if(address >= 0x1f80'1044 && address <= 0x1f80'105c) {
+    return readHalf(address) | readHalf(address + 2) << 16;
   }
 
   debug(unhandled, "Peripheral::readWord(", hex(address, 8L), ") -> ", hex(data, 8L));
@@ -217,8 +204,9 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
       io.clockOutputPolarity = 0;
 
       io.baudrateReloadValue = 0;
-      io.receiveData = 0;
       io.receiveSize = 0;
+      io.transmitPending = 0;
+      io.transmitEnableLatched = 0;
       io.transmitStarted = 1;
       io.transmitFinished = 1;
       io.transferElapses = 0;
@@ -231,6 +219,8 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
       controllerPort2.reset();
       memoryCardPort2.reset();
     }
+    startTransfer();
+    pollInterrupt();
     return;
   }
 
@@ -241,7 +231,7 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
     return;
   }
 
-  if(address == 0x1f80'1042 || address == 0x1f80'1046 || address == 0x1f80'104c) return;
+  if(address == 0x1f80'1042 || address == 0x1f80'1044 || address == 0x1f80'1046 || address == 0x1f80'104c) return;
 
   if(address == 0x1f80'1050 || address == 0x1f80'1052 || address == 0x1f80'1054 || address == 0x1f80'1056) return;
 
@@ -265,5 +255,5 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
 }
 
 auto Peripheral::writeWord(u32 address, u32 data) -> void {
-  debug(unimplemented, "Peripheral::writeWord");
+  writeHalf(address, data);
 }

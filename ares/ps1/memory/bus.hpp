@@ -183,14 +183,6 @@ inline auto Bus::read(u32 address) -> u32 {
       readLatch = lower | upper << 16;
       return readLatch;
     }
-
-    if(address >= 0x1f80'1040 && address <= 0x1f80'105c) {
-      auto lowerAddress = address & ~1;
-      auto upperAddress = lowerAddress + 2;
-      auto lower = mmio(lowerAddress).readCycle({lowerAddress, 0, Half, 0b11}).data;
-      auto upper = mmio(upperAddress).readCycle({upperAddress, 0, Half, 0b11}).data;
-      return lower | upper << 16;
-    }
   }
 
   return mmio(address).readCycle({address, 0, Size, (1u << Size) - 1}).data;
@@ -281,11 +273,6 @@ inline auto Bus::write(u32 address, u32 data) -> void {
       u32 nextAddress = address + busOffset(1);
       mmio(address).writeCycle({address, data >> 0, Half, 0b11});
       return mmio(nextAddress).writeCycle({nextAddress, data >> 16, Half, 0b11});
-    }
-
-    if(writes16BitBus()) {
-      auto aligned = address & ~1;
-      return mmio(aligned).writeCycle({aligned, data, Half, 0b11});
     }
   }
 

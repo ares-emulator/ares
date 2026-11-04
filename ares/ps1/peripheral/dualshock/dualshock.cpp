@@ -41,12 +41,12 @@ auto DualShock::reset() -> void {
   outputData.clear();
 }
 
-auto DualShock::acknowledge() -> bool {
-  return state != State::Idle;
+auto DualShock::acknowledge() -> u32 {
+  return state != State::Idle ? 338 : 0;
 }
 
 auto DualShock::active() -> bool {
-  return _active || acknowledge();
+  return _active || state != State::Idle;
 }
 
 auto DualShock::bus(u8 data) -> u8 {

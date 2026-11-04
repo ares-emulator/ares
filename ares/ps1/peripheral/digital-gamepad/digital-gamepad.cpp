@@ -22,12 +22,12 @@ auto DigitalGamepad::reset() -> void {
   _active = false;
 }
 
-auto DigitalGamepad::acknowledge() -> bool {
-  return state != State::Idle;
+auto DigitalGamepad::acknowledge() -> u32 {
+  return state != State::Idle ? 338 : 0;
 }
 
 auto DigitalGamepad::active() -> bool {
-  return _active || acknowledge();
+  return _active || state != State::Idle;
 }
 
 auto DigitalGamepad::bus(u8 data) -> u8 {

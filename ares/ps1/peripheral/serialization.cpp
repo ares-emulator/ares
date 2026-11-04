@@ -27,6 +27,10 @@ auto Peripheral::serialize(serializer& s) -> void {
   s(io.sioInternal);
   s(io.sioBaudrateReloadValue);
   s(io.transferElapses);
+  s(io.transmitData);
+  s(io.receiveShift);
+  s(io.transmitPending);
+  s(io.transmitEnableLatched);
   s(io.baudrateTimer);
   s(io.ackDelayCounter);
   s(io.ackAssertCounter);

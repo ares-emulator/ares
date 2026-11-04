@@ -10,7 +10,7 @@ struct PeripheralPort {
   auto allocate(string name) -> Node::Peripheral;
 
   auto reset() -> void;
-  auto acknowledge() -> bool;
+  auto acknowledge() -> u32;
   auto active() -> bool;
   auto bus(u8 data) -> u8;
 

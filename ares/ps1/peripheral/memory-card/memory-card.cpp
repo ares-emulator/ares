@@ -31,12 +31,13 @@ auto MemoryCard::reset() -> void {
   _active = false;
 }
 
-auto MemoryCard::acknowledge() -> bool {
-  return state != State::Idle;
+auto MemoryCard::acknowledge() -> u32 {
+  if(state == State::Idle) return 0;
+  return system.frequency() * 12 / 1'000'000 + (command == Command::Read && phase == 7 ? 31'000 : 0);
 }
 
 auto MemoryCard::active() -> bool {
-  return _active || acknowledge();
+  return _active || state != State::Idle;
 }
 
 

@@ -42,7 +42,7 @@ auto PeripheralPort::reset() -> void {
   if(device) return device->reset();
 }
 
-auto PeripheralPort::acknowledge() -> bool {
+auto PeripheralPort::acknowledge() -> u32 {
   if(device) return device->acknowledge();
   return 0;
 }
