@@ -1,30 +1,32 @@
-auto SPU::Envelope::reset(u8 rate, bool decreasing, bool exponential) -> void {
+auto SPU::Envelope::reset(u8 rate, bool decreasing, bool exponential, u8 rateMask) -> void {
   this->rate = rate;
   this->decreasing = decreasing;
   this->exponential = exponential;
-  auto& entry = spu.adsrEntries[decreasing][rate];
-  this->counter = entry.ticks;
+  counter = rate >= 48 && (rate & rateMask) == rateMask ? -1 : 0;
 }
 
 auto SPU::Envelope::tick(s32 level) -> s16 {
-  if(--counter > 0) return level;
+  if(counter < 0) return level;
   auto& entry = spu.adsrEntries[decreasing][rate];
-  counter = entry.ticks;
+  s32 increment = entry.increment;
   s32 step = entry.step;
   if(exponential) {
     if(decreasing) {
       step = amplify(step, level);
-    } else if(level >= 0x6000) {
+    } else if(level > 0x6000) {
       if(rate < 40) {
         step >>= 2;
       } else if(rate >= 44) {
-        counter >>= 2;
+        increment >>= 2;
       } else {
         step >>= 1;
-        counter >>= 1;
+        increment >>= 1;
       }
     }
   }
+  counter += max(1, increment);
+  if(counter < 0x8000) return level;
+  counter = 0;
   level += step;
   if(level < 0x0000) level = 0x0000;
   if(level > 0x7fff) level = 0x7fff;
@@ -36,8 +38,8 @@ auto SPU::VolumeSweep::reset() -> void {
     active = 0;
     current = level << 1;
   } else {
-    active = 1;
     Envelope::reset(rate, decreasing, exponential);
+    active = counter >= 0;
   }
 }
 

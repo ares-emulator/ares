@@ -169,6 +169,7 @@ auto SPU::serialize(serializer& s) -> void {
     s(v.envelope.exponential);
 
     s(v.counter);
+    s(v.keyOnDelay);
     s(v.pmon);
     s(v.non);
     s(v.eon);

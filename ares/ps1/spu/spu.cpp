@@ -59,7 +59,8 @@ auto SPU::main() -> void {
 auto SPU::sample() -> void {
   s32 lsum = 0, lreverb = 0;
   s32 rsum = 0, rreverb = 0;
-  s16 lcdaudio = 0, rcdaudio = 0;
+  s16 lcdaudio = disc.cdda.sample.left  + disc.cdxa.sample.left;
+  s16 rcdaudio = disc.cdda.sample.right + disc.cdxa.sample.right;
   s32 modulation = 0;
   for(auto& voice : this->voice) {
     auto [lvoice, rvoice] = voice.sample(modulation);
@@ -80,11 +81,11 @@ auto SPU::sample() -> void {
     rreverb = 0;
   }
   noise.update();
+  captureVolume(0, lcdaudio);
+  captureVolume(1, rcdaudio);
   if(cdaudio.enable) {
-    lcdaudio = disc.cdda.sample.left  + disc.cdxa.sample.left;
-    rcdaudio = disc.cdda.sample.right + disc.cdxa.sample.right;
-    lcdaudio = amplify(lcdaudio, cdaudio.volume[0]);
-    rcdaudio = amplify(rcdaudio, cdaudio.volume[1]);
+    lcdaudio = amplify(lcdaudio, s16(cdaudio.volume[0]));
+    rcdaudio = amplify(rcdaudio, s16(cdaudio.volume[1]));
     lsum += lcdaudio;
     rsum += rcdaudio;
     if(cdaudio.reverb) {
@@ -97,8 +98,6 @@ auto SPU::sample() -> void {
   rsum = amplify(sclamp<16>(rsum + rfb), volume[1].current);
   volume[0].tick();
   volume[1].tick();
-  captureVolume(0, lcdaudio);
-  captureVolume(1, rcdaudio);
   captureVolume(2, sclamp<16>(voice[1].adsr.lastVolume));
   captureVolume(3, sclamp<16>(voice[3].adsr.lastVolume));
   capture.address += 2;
@@ -187,6 +186,7 @@ auto SPU::power(bool reset) -> void {
     v.volume[1] = {};
     v.envelope = {};
     v.counter = 0;
+    v.keyOnDelay = 0;
     v.pmon = 0;
     v.non = 0;
     v.eon = 0;

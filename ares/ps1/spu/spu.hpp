@@ -78,7 +78,7 @@ struct SPU : Thread, Memory::Interface {
 
   struct ADSREntry {
   //unserialized:
-    s32 ticks;
+    s32 increment;
     s32 step;
   } adsrEntries[2][128];
 
@@ -101,7 +101,7 @@ struct SPU : Thread, Memory::Interface {
 
   struct Envelope {
     //envelope.cpp
-    auto reset(u8 rate, bool decreasing, bool exponential) -> void;
+    auto reset(u8 rate, bool decreasing, bool exponential, u8 rateMask = 0x7f) -> void;
     auto tick(s32 level) -> s16;
 
     i32 counter;
@@ -293,6 +293,7 @@ struct SPU : Thread, Memory::Interface {
     VolumeSweep volume[2];
     Envelope envelope;
     n32 counter;
+    n3 keyOnDelay;
     n1  pmon;
     n1  non;
     n1  eon;
