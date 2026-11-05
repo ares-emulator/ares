@@ -30,6 +30,7 @@ struct System {
     GameBoy,
     GameBoyColor,
     SuperGameBoy,
+    MegaDuck,
   };
   Memory::Readable<n8> bootROM;
 
@@ -67,3 +68,4 @@ extern SuperGameBoyInterface* superGameBoy;
 auto Model::GameBoy() -> bool { return system.model() == System::Model::GameBoy; }
 auto Model::GameBoyColor() -> bool { return system.model() == System::Model::GameBoyColor; }
 auto Model::SuperGameBoy() -> bool { return system.model() == System::Model::SuperGameBoy; }
+auto Model::MegaDuck() -> bool { return system.model() == System::Model::MegaDuck; }

@@ -94,6 +94,7 @@ auto construct() -> void {
   media.push_back("Famicom");
   media.push_back("Famicom Disk System");
   media.push_back("Game Boy");
+  media.push_back("Mega Duck");
   media.push_back("Game Boy Color");
   media.push_back("Game Boy Advance");
   media.push_back("Game Gear");

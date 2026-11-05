@@ -8,6 +8,7 @@ auto enumerate() -> std::vector<string> {
     "[Nintendo] Game Boy",
     "[Nintendo] Game Boy Color",
     "[Nintendo] Super Game Boy",
+    "[Welback] Mega Duck",
   };
 }
 
@@ -57,8 +58,12 @@ auto System::load(Node::System& root, string name) -> bool {
     information.name = "Super Game Boy";
     information.model = Model::SuperGameBoy;
   }
+  if(name.find("Mega Duck")) {
+    information.name = "Mega Duck";
+    information.model = Model::MegaDuck;
+  }
 
-  if(information.name == "Game Boy" || information.name == "Game Boy Color") {
+  if(information.name == "Game Boy" || information.name == "Game Boy Color" || information.name == "Mega Duck") {
     node = std::make_shared<Core::System>(information.name);
     node->setAttribute("configuration", name);
     node->setGame(std::bind_front(&System::game, this));
@@ -131,6 +136,17 @@ auto System::power(bool reset) -> void {
     if(cpu.version->latch() == "CPU CGB C" ) name = "boot.cgb-1.rom";
     if(cpu.version->latch() == "CPU CGB D" ) name = "boot.cgb-1.rom";
     if(cpu.version->latch() == "CPU CGB E" ) name = "boot.cgb-1.rom";
+  }
+
+  //the Mega Duck has no boot ROM: the cartridge is mapped from 0x0000 at power on
+  //and the CPU starts with the state a DMG boot ROM would have left behind
+  if(GameBoy::Model::MegaDuck()) {
+    cartridge.power();
+    cpu.power();
+    ppu.power();
+    apu.power();
+    scheduler.power(cpu);
+    return;
   }
 
   if(auto fp = pak->read(!GameBoy::Model::SuperGameBoy() ? "boot.rom" : "sm83.boot.rom")) {

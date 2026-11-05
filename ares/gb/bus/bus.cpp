@@ -3,21 +3,45 @@
 namespace ares::GameBoy {
 
 Bus bus;
+#include "megaduck.cpp"
 
 auto Bus::read(u32 cycle, n16 address, n8 data) -> n8 {
   if(auto result = platform->cheat(address)) return *result;
-  data &= cpu.readIO(cycle, address, data);
-  data &= apu.readIO(cycle, address, data);
-  data &= ppu.readIO(cycle, address, data);
-  data &= cartridge.read(cycle, address, data);
+
+  n16 target = address;
+  if(Model::MegaDuck()) {
+    auto translated = megaDuckAddress(address);
+    if(!translated) return data;
+    target = *translated;
+    //CPU::read calls this once per cycle and ands the results together, so
+    //data already went out in Mega Duck layout - translate it back before
+    //the components see it, or LCDC's bit order (a five-cycle) compounds
+    //across all five passes back to a no-op
+    data = megaDuckWriteData(address, data);
+  }
+
+  data &= cpu.readIO(cycle, target, data);
+  data &= apu.readIO(cycle, target, data);
+  data &= ppu.readIO(cycle, target, data);
+  data &= cartridge.read(cycle, target, data);
+
+  if(Model::MegaDuck()) data = megaDuckReadData(address, data);
   return data;
 }
 
 auto Bus::write(u32 cycle, n16 address, n8 data) -> void {
-  cpu.writeIO(cycle, address, data);
-  apu.writeIO(cycle, address, data);
-  ppu.writeIO(cycle, address, data);
-  cartridge.write(cycle, address, data);
+  n16 target = address;
+  if(Model::MegaDuck()) {
+    auto translated = megaDuckAddress(address);
+    if(!translated) return;
+    target = *translated;
+    data = megaDuckWriteData(address, data);
+  }
+
+  cpu.writeIO(cycle, target, data);
+  apu.writeIO(cycle, target, data);
+  ppu.writeIO(cycle, target, data);
+  cartridge.write(cycle, target, data);
 }
 
 auto Bus::read(n16 address, n8 data) -> n8 {
