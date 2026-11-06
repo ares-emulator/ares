@@ -5,6 +5,21 @@ auto CPU::GTE::constructTable() -> void {
   unsignedNewtonRaphsonTable[256] = 0;
 }
 
+auto CPU::GTE::wait(bool extra) -> void {
+  if(!remaining) return;
+  self.step(remaining + 1 + (extra ? 1 : 0));
+}
+
+auto CPU::GTE::latency(u32 instruction) const -> u32 {
+  static constexpr u8 clocks[64] = {
+    16, 15, 13, 12,  5, 18,  8,  7,  6,  5, 19, 18,  6,  5, 19, 18,
+     8,  8,  8, 19, 13,  8, 44, 31, 17, 13,  8, 17, 11,  5, 14,  8,
+    30, 17, 15, 14, 12,  8,  6,  5,  5,  8, 17, 13,  8,  5,  6, 18,
+    23, 22, 20, 19, 17, 16, 14, 13, 11,  7,  6,  5, 18,  5,  5, 39,
+  };
+  return clocks[instruction & 0x3f];
+}
+
 auto CPU::GTE::countLeadingZeroes16(u16 value) -> u32 {
   return std::countl_zero(value);
 }
@@ -468,6 +483,7 @@ auto CPU::CDP(bool lm, u8 sf) -> void {
 
 auto CPU::CFC2(u32& rt, u8 rd) -> void {
   if(!scc.status.enable.coprocessor2) return exception.coprocessor();
+  gte.wait(rd == 31 && (gte.command == 0x0a || gte.command == 0x0e) && gte.remaining == 18);
   load(rt, getControlRegister(rd));
 }
 
@@ -556,6 +572,7 @@ auto CPU::LWC2(u8 rt, cu32& rs, s16 imm) -> void {
 
 auto CPU::MFC2(u32& rt, u8 rd) -> void {
   if(!scc.status.enable.coprocessor2) return exception.coprocessor();
+  gte.wait(rd == 28 || rd == 29);
   load(rt, getDataRegister(rd));
 }
 
@@ -753,6 +770,7 @@ auto CPU::SQR(bool lm, u8 sf) -> void {
 auto CPU::SWC2(u8 rt, cu32& rs, s16 imm) -> void {
   if constexpr(Accuracy::CPU::AddressErrors) if((rs + imm) & 3) return write<Word>(rs + imm, 0);
   if(!scc.status.enable.coprocessor2) return exception.coprocessor();
+  gte.wait();
   auto data = getDataRegister(rt);
   write<Word>(rs + imm, data);
 }

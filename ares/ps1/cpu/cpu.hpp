@@ -98,7 +98,7 @@ struct CPU : Thread {
 
   alwaysinline auto step(u32 clocks) -> void {
     if constexpr(!lockstep) {
-      if(likely(!(writeQueue.count | writeQueue.remaining | mulDivRemaining) && (s32)clocks < cyclesUntilForcedSync)) {
+      if(likely(!(writeQueue.count | writeQueue.remaining | mulDivRemaining | gte.remaining) && (s32)clocks < cyclesUntilForcedSync)) {
         accruedCycles += clocks;
         cyclesUntilForcedSync -= clocks;
         return;
@@ -391,6 +391,11 @@ struct CPU : Thread {
   struct GTE {
     CPU& self;
     GTE(CPU& self) : self(self) {}
+
+    u32 remaining = 0;
+    u8 command = 0;
+    auto wait(bool extra = false) -> void;
+    auto latency(u32 instruction) const -> u32;
 
     //color
     struct c32 {

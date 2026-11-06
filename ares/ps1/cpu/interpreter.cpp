@@ -216,6 +216,8 @@ auto CPU::decoderSCC() -> void {
 }
 
 auto CPU::decoderGTE() -> void {
+  if(OPCODE >> 25 & 1) gte.wait();
+
   switch(OPCODE >> 21 & 0x1f) {
   op(0x00, MFC2, RT, RDn);
   op(0x01, INVALID);
@@ -234,6 +236,9 @@ auto CPU::decoderGTE() -> void {
   op(0x0e, INVALID);
   op(0x0f, INVALID);
   }
+
+  gte.command = OPCODE & 0x3f;
+  gte.remaining = gte.latency(OPCODE);
 
   #define LM OPCODE >> 10 & 1
   #define TV OPCODE >> 13 & 3

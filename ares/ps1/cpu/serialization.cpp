@@ -9,6 +9,8 @@ auto CPU::serialize(serializer& s) -> void {
   s(cyclesUntilForcedSync);
   s(instructionsSinceYield);
   s(mulDivRemaining);
+  s(gte.remaining);
+  s(gte.command);
   for(auto& entry : writeQueue.entries) {
     s(entry.address);
     s(entry.data);

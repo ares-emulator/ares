@@ -107,6 +107,7 @@ auto CPU::stepSlow(u32 clocks) -> void {
     if(writeQueue.count | writeQueue.remaining) stepClocks = writeQueueWindow(stepClocks);
 
     mulDivRemaining -= min(mulDivRemaining, stepClocks);
+    gte.remaining -= min(gte.remaining, stepClocks);
     accruedCycles += stepClocks;
     clocks -= stepClocks;
     cyclesUntilForcedSync -= stepClocks;
@@ -170,6 +171,8 @@ auto CPU::power(bool reset) -> void {
   resetNextEvent();
   instructionsSinceYield = 0;
   mulDivRemaining = 0;
+  gte.remaining = 0;
+  gte.command = 0;
   writeQueue = {};
   busAccess = false;
   ioPoll = {};
