@@ -384,13 +384,8 @@ inline auto CPU::read(u32 address) -> u32 {
     if(unlikely(breakpoint.active) && breakpoint.testData<Read, Size>(address)) return 0;
   }
 
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if constexpr(Size == Half) {
-      if(unlikely(address & 1)) return exception.address<Read>(address), 0;
-    }
-    if constexpr(Size == Word) {
-      if(unlikely(address & 3)) return exception.address<Read>(address), 0;
-    }
+  if(Accuracy::CPU::AddressErrors && ((Size == Half && (address & 1)) || (Size == Word && (address & 3)))) {
+    return exception.address<Read>(address), 0;
   }
 
   return readBus<Size>(address);
@@ -516,13 +511,8 @@ inline auto CPU::write(u32 address, u32 data, u32 lanes) -> void {
     if(unlikely(breakpoint.active) && breakpoint.testData<Write, Size>(address)) return;
   }
 
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if constexpr(Size == Half) {
-      if(unlikely(address & 1)) return exception.address<Write>(address);
-    }
-    if constexpr(Size == Word) {
-      if(unlikely(address & 3)) return exception.address<Write>(address);
-    }
+  if(Accuracy::CPU::AddressErrors && ((Size == Half && (address & 1)) || (Size == Word && (address & 3)))) {
+    return exception.address<Write>(address);
   }
 
   return writeBus<Size>(address, data, lanes);

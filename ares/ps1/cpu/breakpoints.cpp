@@ -45,16 +45,12 @@ auto CPU::Breakpoint::testData(u32 address) -> bool {
   self.scc.breakpoint.status.data = 1;
   if constexpr(Mode == Read ) self.scc.breakpoint.status.read  = 1;
   if constexpr(Mode == Write) self.scc.breakpoint.status.write = 1;
-  if(!self.scc.breakpoint.enable.trap) return false;
 
   if constexpr(Accuracy::CPU::AddressErrors) {
-    if constexpr(Size == Half) {
-      if(address & 1) return self.exception.address<Mode>(address), true;
-    }
-    if constexpr(Size == Word) {
-      if(address & 3) return self.exception.address<Mode>(address), true;
-    }
+    if((Size == Half && (address & 1)) || (Size == Word && (address & 3))) return self.exception.address<Mode>(address), true;
   }
+  if(!self.scc.breakpoint.enable.trap) return false;
+
   self.exception.breakpoint(1);
   self.scc.cause.coprocessorError = 0;
   return true;

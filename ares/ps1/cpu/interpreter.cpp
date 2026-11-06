@@ -284,31 +284,37 @@ auto CPU::COP3() -> void {
 }
 
 auto CPU::LWC0(u8 rt, cu32& rs, s16 imm) -> void {
+  if constexpr(Accuracy::CPU::AddressErrors) if((rs + imm) & 3) return (void)read<Word>(rs + imm);
   if(!scc.status.enable.coprocessor0) return exception.coprocessor();
   read<Word>(rs + imm);  //write target unknown
 }
 
 auto CPU::LWC1(u8 rt, cu32& rs, s16 imm) -> void {
+  if constexpr(Accuracy::CPU::AddressErrors) if((rs + imm) & 3) return (void)read<Word>(rs + imm);
   if(!scc.status.enable.coprocessor1) return exception.coprocessor();
   read<Word>(rs + imm);  //write target unknown
 }
 
 auto CPU::LWC3(u8 rt, cu32& rs, s16 imm) -> void {
+  if constexpr(Accuracy::CPU::AddressErrors) if((rs + imm) & 3) return (void)read<Word>(rs + imm);
   if(!scc.status.enable.coprocessor3) return exception.coprocessor();
   read<Word>(rs + imm);  //write target unknown
 }
 
 auto CPU::SWC0(u8 rt, cu32& rs, s16 imm) -> void {
+  if constexpr(Accuracy::CPU::AddressErrors) if((rs + imm) & 3) return write<Word>(rs + imm, 0);
   if(!scc.status.enable.coprocessor0) return exception.coprocessor();
   write<Word>(rs + imm, peek(pipeline.address + 4));
 }
 
 auto CPU::SWC1(u8 rt, cu32& rs, s16 imm) -> void {
+  if constexpr(Accuracy::CPU::AddressErrors) if((rs + imm) & 3) return write<Word>(rs + imm, 0);
   if(!scc.status.enable.coprocessor1) return exception.coprocessor();
   write<Word>(rs + imm, peek(pipeline.address + 4));
 }
 
 auto CPU::SWC3(u8 rt, cu32& rs, s16 imm) -> void {
+  if constexpr(Accuracy::CPU::AddressErrors) if((rs + imm) & 3) return write<Word>(rs + imm, 0);
   if(!scc.status.enable.coprocessor3) return exception.coprocessor();
   write<Word>(rs + imm, peek(pipeline.address + 4));
 }

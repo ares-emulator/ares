@@ -547,6 +547,7 @@ auto CPU::INTPL(bool lm, u8 sf) -> void {
 }
 
 auto CPU::LWC2(u8 rt, cu32& rs, s16 imm) -> void {
+  if constexpr(Accuracy::CPU::AddressErrors) if((rs + imm) & 3) return (void)read<Word>(rs + imm);
   if(!scc.status.enable.coprocessor2) return exception.coprocessor();
   auto data = read<Word>(rs + imm);
   if(exception()) return;
@@ -750,6 +751,7 @@ auto CPU::SQR(bool lm, u8 sf) -> void {
 }
 
 auto CPU::SWC2(u8 rt, cu32& rs, s16 imm) -> void {
+  if constexpr(Accuracy::CPU::AddressErrors) if((rs + imm) & 3) return write<Word>(rs + imm, 0);
   if(!scc.status.enable.coprocessor2) return exception.coprocessor();
   auto data = getDataRegister(rt);
   write<Word>(rs + imm, data);
