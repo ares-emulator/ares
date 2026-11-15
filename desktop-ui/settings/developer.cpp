@@ -2,9 +2,9 @@ auto DeveloperSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  gdbLabel.setText("Debug Server Options").setFont(Font().setBold());
+  gdbLabel.setText("调试服务器选项").setFont(Font().setBold());
   portLayout.setAlignment(0.5).setPadding(12_sx, 0);
-    portLabel.setText("Port:");
+    portLabel.setText("端口：");
 
     port.setText(integer(settings.developer.debugServerPort));
     port.setEditable(true);
@@ -19,11 +19,11 @@ auto DeveloperSettings::construct() -> void {
       infoRefresh();
     });
 
-    portHint.setText("Safe range: 1024 - 32767").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    portHint.setText("安全范围：1024 - 32767").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
     ipv4Layout.setAlignment(0.5).setPadding(12_sx, 0);
     ipv4.setEnabled(true);
-    ipv4.setText("Use IPv4");
+    ipv4.setText("使用 IPv4");
     ipv4.setChecked(settings.developer.debugServerUseIPv4);
     ipv4.onToggle([&](){
       settings.developer.debugServerUseIPv4 = ipv4.checked();
@@ -33,7 +33,7 @@ auto DeveloperSettings::construct() -> void {
 
     enabledLayout.setAlignment(0.5).setPadding(12_sx, 0);
     enabled.setEnabled(true);
-    enabled.setText("Enabled");
+    enabled.setText("启用");
     enabled.setChecked(settings.developer.debugServerEnabled);
     enabled.onToggle([&](){
       settings.developer.debugServerEnabled = enabled.checked();
@@ -43,32 +43,32 @@ auto DeveloperSettings::construct() -> void {
 
   infoRefresh();
 
-  debugOptionsLabel.setText("Debug Options").setFont(Font().setBold());
+  debugOptionsLabel.setText("调试选项").setFont(Font().setBold());
 
-  homebrewMode.setText("Homebrew Development Mode").setChecked(settings.developer.homebrewMode).onToggle([&] {
+  homebrewMode.setText("自制软件开发模式").setChecked(settings.developer.homebrewMode).onToggle([&] {
     settings.developer.homebrewMode = homebrewMode.checked();
   });
   homebrewModeLayout.setAlignment(0.5).setPadding(12_sx, 0);
-    homebrewModeHint.setText("Activate system-specific features to help homebrew developers").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    homebrewModeHint.setText("激活系统特定功能以帮助自制软件开发者").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  deterministicEntropy.setText("Deterministic Entropy").setChecked(settings.developer.deterministicEntropy).onToggle([&] {
+  deterministicEntropy.setText("确定性熵").setChecked(settings.developer.deterministicEntropy).onToggle([&] {
     settings.developer.deterministicEntropy = deterministicEntropy.checked();
   });
   deterministicEntropyLayout.setAlignment(0.5).setPadding(12_sx, 0);
-    deterministicEntropyHint.setText("Seed hardware RNG to zero for reproducible power-on state").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    deterministicEntropyHint.setText("将硬件 RNG 种子设为 0 以获得可重现的开机状态").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  forceInterpreter.setText("Force Interpreter").setChecked(settings.developer.forceInterpreter).onToggle([&] {
+  forceInterpreter.setText("强制解释器").setChecked(settings.developer.forceInterpreter).onToggle([&] {
     settings.developer.forceInterpreter = forceInterpreter.checked();
   });
   forceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
-    forceInterpreterHint.setText("(Slow) Enable interpreter for systems that default to a recompiler").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    forceInterpreterHint.setText("（慢）为默认使用重编译器的系统启用解释器").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 }
 
 auto DeveloperSettings::infoRefresh() -> void {
   if(settings.developer.debugServerEnabled) {
     connectInfo.setText(settings.developer.debugServerUseIPv4 
-      ? "Note: IPv4 mode binds to any device, enabling anyone in your network to access this server"
-      : "Note: localhost only (for Windows/WSL: please use IPv4 instead)"
+      ? "注意：IPv4 模式绑定到所有设备，网络中任何人都可以访问此服务器"
+      : "注意：仅本地主机（Windows/WSL 请改用 IPv4）"
     );
   } else {
     connectInfo.setText("");

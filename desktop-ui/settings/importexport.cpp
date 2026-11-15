@@ -1,13 +1,13 @@
 auto ImportExportSettings::construct() -> void {
   setCollapsible();
-  useImported.setText("Set Imported File As Current Settings File");
+  useImported.setText("将导入的文件设为当前设置文件");
   useImported.setChecked(false).onToggle([&] { imported = useImported.checked(); });
   refresh();
 
-  importButton.setText("Import" ELLIPSIS).onActivate([&] {
+  importButton.setText("导入…").onActivate([&] {
     Program::Guard guard;
     BrowserDialog dialog;
-    dialog.setTitle("Import Settings");
+    dialog.setTitle("导入设置");
     dialog.setPath(settings.paths.home);
     dialog.setFilters({"bml|*.bml"});
     dialog.setAlignment(settingsWindow);
@@ -30,10 +30,10 @@ auto ImportExportSettings::construct() -> void {
     }
   });
   
-  exportButton.setText("Export" ELLIPSIS).onActivate([&] {
+  exportButton.setText("导出…").onActivate([&] {
     Program::Guard guard;
     BrowserDialog dialog;
-    dialog.setTitle("Export Settings");
+    dialog.setTitle("导出设置");
     dialog.setPath(settings.paths.home);  
     dialog.setFilters({"bml|*.bml"});
     dialog.setAlignment(settingsWindow);
@@ -48,7 +48,7 @@ auto ImportExportSettings::construct() -> void {
 
 auto ImportExportSettings::refresh() -> void {
   settings.save();
-  settingsFileLabel.setText({"Current File: ", settings.filePath}).setFont(Font().setBold());
+  settingsFileLabel.setText({"当前文件： ", settings.filePath}).setFont(Font().setBold());
   settingsView.setEditable(false).setFont(Font().setFamily(Font::Mono));
   settingsView.setText(BML::serialize(settings, " "));
 }

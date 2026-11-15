@@ -2,47 +2,47 @@ auto AudioSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  effectsLabel.setText("Sound Effects").setFont(Font().setBold());
+  effectsLabel.setText("音效").setFont(Font().setBold());
   effectsLayout.setSize({3, 2}).setPadding(12_sx, 0);
   effectsLayout.column(0).setAlignment(1.0);
 
-  volumeLabel.setText("Volume:");
+  volumeLabel.setText("音量：");
   volumeValue.setAlignment(0.5);
   volumeSlider.setLength(201).setPosition(settings.audio.volume * 100.0).onChange([&] {
     settings.audio.volume = volumeSlider.position() / 100.0;
     volumeValue.setText({volumeSlider.position(), "%"});
   }).doChange();
 
-  balanceLabel.setText("Balance:");
+  balanceLabel.setText("平衡：");
   balanceValue.setAlignment(0.5);
   balanceSlider.setLength(101).setPosition((settings.audio.balance * 50.0) + 50.0).onChange([&] {
     settings.audio.balance = ((s32)balanceSlider.position() - 50.0) / 50.0;
     balanceValue.setText({balanceSlider.position(), "%"});
   }).doChange();
 
-  audioLabel.setText("Device Settings").setFont(Font().setBold());
-  audioDeviceLabel.setText("Output device:");
+  audioLabel.setText("设备设置").setFont(Font().setBold());
+  audioDeviceLabel.setText("输出设备：");
   audioDeviceList.onChange([&] {
     settings.audio.device = audioDeviceList.selected().text();
     program.audioDeviceUpdate();
     audioRefresh();
   });
 
-  audioFrequencyLabel.setText("Frequency:");
+  audioFrequencyLabel.setText("频率：");
   audioFrequencyList.onChange([&] {
     settings.audio.frequency = audioFrequencyList.selected().text().natural();
     program.audioFrequencyUpdate();
     audioRefresh();
   });
 
-  audioLatencyLabel.setText("Latency:");
+  audioLatencyLabel.setText("延迟：");
   audioLatencyList.onChange([&] {
     settings.audio.latency = audioLatencyList.selected().text().natural();
     program.audioLatencyUpdate();
     audioRefresh();
   });
 
-  audioDynamicToggle.setText("Dynamic rate").onToggle([&] {
+  audioDynamicToggle.setText("动态速率").onToggle([&] {
     Program::Guard guard;
     settings.audio.dynamic = audioDynamicToggle.checked();
     ruby::audio.setDynamic(settings.audio.dynamic);
