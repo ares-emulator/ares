@@ -11,15 +11,15 @@ auto HotkeySettings::construct() -> void {
 
   assignLabel.setFont(Font().setBold());
   spacer.setFocusable();
-  assignButton.setText("Assign").onActivate([&] { eventAssign(inputList.selected().cell(0)); });
-  clearButton.setText("Clear").onActivate([&] { eventClear(); });
+  assignButton.setText("分配").onActivate([&] { eventAssign(inputList.selected().cell(0)); });
+  clearButton.setText("清除").onActivate([&] { eventClear(); });
 }
 
 auto HotkeySettings::reload() -> void {
   inputList.reset();
-  inputList.append(TableViewColumn().setText("Name"));
+  inputList.append(TableViewColumn().setText("名称"));
   for(u32 binding : range(BindingLimit)) {
-    inputList.append(TableViewColumn().setText({"Mapping #", 1 + binding}).setExpandable());
+    inputList.append(TableViewColumn().setText({"映射 #", 1 + binding}).setExpandable());
   }
 
   for(auto& mapping : inputManager.hotkeys) {
@@ -65,8 +65,7 @@ auto HotkeySettings::eventAssign(TableViewCell cell) -> void {
   inputManager.poll(true);  //clear any pending events first
 
   if(ruby::input.driver() == "None") return (void)MessageDialog().setText(
-    "Bindings cannot be set when no input driver has been loaded.\n"
-    "Please go to driver settings and activate an input driver first."
+    "未加载输入驱动时无法设置绑定。\n请先到驱动设置中激活输入驱动。"
   ).setAlignment(settingsWindow).error();
 
   if(auto item = inputList.selected()) {
@@ -74,8 +73,8 @@ auto HotkeySettings::eventAssign(TableViewCell cell) -> void {
     activeMapping = inputManager.hotkeys[item.offset()];
     activeBinding = max(0, (s32)cell.offset() - 1);
 
-    item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText("(assign ...)");
-    assignLabel.setText({"Press a key or button for mapping #", 1 + activeBinding, " [", activeMapping->name, "] ..."});
+    item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText("（分配 ...）");
+    assignLabel.setText({"请按键或按钮设置映射 #", 1 + activeBinding, " [", activeMapping->name, "] ..."});
     refresh();
     settingsWindow.setDismissable(false);
     Application::processEvents();
