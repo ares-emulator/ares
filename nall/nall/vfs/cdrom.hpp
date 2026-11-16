@@ -119,7 +119,7 @@ private:
     s32 lbaIndex = 0;
     for(auto& file : cuesheet->files) {
       for(auto& track : file.tracks) {
-        session.tracks[track.number].control = track.type == "audio" ? 0b0000 : 0b0100;
+        session.tracks[track.number].control = (track.type == "audio" ? 0b0000 : 0b0100) | track.flags;
         if(track.pregap) lbaFileBase += track.pregap();
         for(auto& index : track.indices) {
           if(index.lba >= 0) {
@@ -214,9 +214,9 @@ private:
         fileBuffer = nall::file::open(location, nall::file::mode::read);
         usingFileBuffer = true;
       }
-      if(file.type == "wave") {
-        if(usingFileBuffer) fileBuffer.seek(44); //skip RIFF header
-        else fileDataReadPos = 44;
+      if(auto skip = file.dataOffset + file.skipBytes()) {  //skip RIFF header and cut sectors
+        if(usingFileBuffer) fileBuffer.seek(skip);
+        else fileDataReadPos = skip;
       }
       for(auto& track : file.tracks) {
         if(track.pregap) lbaFileBase += track.pregap();

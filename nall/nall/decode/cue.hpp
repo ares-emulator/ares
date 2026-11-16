@@ -27,15 +27,19 @@ struct CUE {
     std::vector<Index> indices;
     maybe<s32> pregap;
     maybe<s32> postgap;
+    u8 flags = 0;
   };
 
   struct File {
     auto sectorCount() const -> u32;
     auto scan(const string& pathname, const string& archiveFolder, const Decode::ZIP* archive) -> bool;
+    auto skipBytes() const -> u64 { return tracks.empty() ? 0 : (u64)skipSectors * tracks.front().sectorSize(); }
 
     string name;
     string archiveFolder;
     string type;
+    u64 dataOffset = 0;
+    u32 skipSectors = 0;
     std::vector<Track> tracks;
   };
 
@@ -48,7 +52,9 @@ private:
   auto loadFile(std::vector<string>& lines, u32& offset) -> File;
   auto loadTrack(std::vector<string>& lines, u32& offset) -> Track;
   auto loadIndex(std::vector<string>& lines, u32& offset) -> Index;
-  auto toLBA(const string& msf) -> u32;
+  auto toLBA(const string& msf) -> s32;
+
+  bool failed = false;
 };
 
 inline auto CUE::load(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
@@ -76,11 +82,17 @@ inline auto CUE::load(const string& location, const Decode::ZIP* archive, const 
     for (u32 i = 0; i < splitLines.size(); i++) lines.push_back(splitLines[i]);
   }
 
+  for(auto& line : lines) line.replace("\t", " ");
+
+  failed = false;
+  files.clear();
+
   u32 offset = 0;
   while(offset < lines.size()) {
     lines[offset].strip();
     if(lines[offset].ibeginsWith("FILE ")) {
       auto file = loadFile(lines, offset);
+      if(failed) return false;
       if(file.tracks.empty()) continue;
       files.push_back(file);
       continue;
@@ -88,9 +100,18 @@ inline auto CUE::load(const string& location, const Decode::ZIP* archive, const 
     offset++;
   }
 
+  if(failed) return false;
   if(files.empty()) return false;
   if(files.front().tracks.empty()) return false;
   if(files.front().tracks.front().indices.empty()) return false;
+
+  u32 previousTrack = 0;
+  for(auto& file : files) {
+    for(auto& track : file.tracks) {
+      if(previousTrack && track.number != previousTrack + 1) return false;
+      previousTrack = track.number;
+    }
+  }
 
   for(auto& file : files) {
     if(!file.scan(Location::path(location), archiveFolder, archive)) return false;
@@ -131,38 +152,76 @@ inline auto CUE::loadTrack(std::vector<string>& lines, u32& offset) -> Track {
   auto parts = nall::split_and_strip(lines[offset], " ");
   track.type = parts.empty() ? string{} : parts.back().downcase();
   lines[offset].itrimRight(track.type, 1L).strip();
-  track.number = lines[offset].natural();
+  u64 number = lines[offset].natural();
   offset++;
 
+  auto fail = [&]() -> Track { failed = true; return {}; };
+  if(number == 0 || number > 99) return fail();
+  track.number = number;
+  if(!track.sectorSize()) return fail();
+
+  bool hasPostgap = false;
+  s32 lastReal = -1;
   while(offset < lines.size()) {
     lines[offset].strip();
     if(lines[offset].ibeginsWith("FILE ")) break;
     if(lines[offset].ibeginsWith("TRACK ")) break;
     if(lines[offset].ibeginsWith("INDEX ")) {
+      if(hasPostgap) return fail();
       auto index = loadIndex(lines, offset);
+      if(failed) return {};
+      lastReal = index.number;
       track.indices.push_back(index);
       continue;
     }
     if(lines[offset].ibeginsWith("PREGAP ")) {
-      track.pregap = toLBA(lines[offset++].itrimLeft("PREGAP ", 1L));
+      if(track.pregap || lastReal >= 0) return fail();
+      auto lba = toLBA(lines[offset++].itrimLeft("PREGAP ", 1L));
+      if(lba < 0) return fail();
+      track.pregap = lba;
       Index index; index.number = 0; index.lba = -1;
       track.indices.push_back(index); // placeholder
       continue;
     }
     if(lines[offset].ibeginsWith("POSTGAP ")) {
-      track.postgap = toLBA(lines[offset++].itrimLeft("POSTGAP ", 1L));
-      Index index; index.number = track.indices.back().number + 1; index.lba = -1;
+      if(track.postgap || lastReal < 0) return fail();
+      auto lba = toLBA(lines[offset++].itrimLeft("POSTGAP ", 1L));
+      if(lba < 0) return fail();
+      track.postgap = lba;
+      hasPostgap = true;
+      Index index; index.number = lastReal + 1; index.lba = -1;
       track.indices.push_back(index); // placeholder
+      continue;
+    }
+    if(lines[offset].ibeginsWith("FLAGS ")) {
+      auto flags = nall::split_and_strip(lines[offset++], " ");
+      for(u32 n = 1; n < flags.size(); n++) {
+        string flag = flags[n];
+        flag.downcase();
+        if(flag == "pre") track.flags |= 0b0001;
+        if(flag == "dcp") track.flags |= 0b0010;
+        if(flag == "4ch") track.flags |= 0b1000;
+      }
       continue;
     }
     offset++;
   }
 
-  std::sort(track.indices.begin(), track.indices.end(),[](const Index& a, const Index& b) {
+  std::stable_sort(track.indices.begin(), track.indices.end(),[](const Index& a, const Index& b) {
     return a.number < b.number;
   });
 
-  if(track.number == 0 || track.number > 99) return {};
+  bool hasIndex1 = false;
+  s32 previous = -1;
+  for(auto& index : track.indices) {
+    if(index.lba < 0) continue;
+    if(index.number == 0 && track.pregap) return fail();
+    if(previous < 0 ? index.number > 1 : index.number != previous + 1) return fail();
+    previous = index.number;
+    if(index.number == 1) hasIndex1 = true;
+  }
+  if(!hasIndex1) return fail();
+
   return track;
 }
 
@@ -173,20 +232,29 @@ inline auto CUE::loadIndex(std::vector<string>& lines, u32& offset) -> Index {
   auto parts = nall::split_and_strip(lines[offset], " ");
   string sector = parts.empty() ? string{} : parts.back();
   lines[offset].itrimRight(sector, 1L).strip();
-  index.number = lines[offset].natural();
+  u64 number = lines[offset].natural();
   index.lba = toLBA(sector);
   offset++;
 
-  if(index.number > 99) return {};
+  if(number > 99 || index.lba < 0) { failed = true; return {}; }
+  index.number = number;
   return index;
 }
 
-inline auto CUE::toLBA(const string& msf) -> u32 {
+inline auto CUE::toLBA(const string& msf) -> s32 {
   auto parts = nall::split(msf, ":");
-  u32 m = parts.size() > 0 ? parts[0].natural() : 0;
-  u32 s = parts.size() > 1 ? parts[1].natural() : 0;
-  u32 f = parts.size() > 2 ? parts[2].natural() : 0;
-  return m * 60 * 75 + s * 75 + f;
+  if(parts.size() != 3) return -1;
+  u32 value[3];
+  for(u32 n : range(3)) {
+    if(parts[n].size() == 0) return -1;
+    for(u32 c : range(parts[n].size())) {
+      if(parts[n].data()[c] < '0' || parts[n].data()[c] > '9') return -1;
+    }
+    if(parts[n].size() > 3) return -1;
+    value[n] = parts[n].natural();
+  }
+  if(value[0] >= 100 || value[1] >= 60 || value[2] >= 75) return -1;
+  return value[0] * 60 * 75 + value[1] * 75 + value[2];
 }
 
 inline auto CUE::sectorCount() const -> u32 {
@@ -221,6 +289,7 @@ inline auto CUE::File::scan(const string& pathname, const string& archiveFolderP
     if(wav.frequency != 44100) return false;
     if(wav.bitrate != 16) return false;
     size = wav.size();
+    dataOffset = wav.headerSize;
   } else {
     return false;
   }
@@ -284,25 +353,20 @@ inline auto CUE::File::scan(const string& pathname, const string& archiveFolderP
     }
   }
 
-  for(auto& track : tracks) {
-    if(track.number == 1 || track.pregap) continue;
-
-    auto hasIndex0 = false;
-    auto first = -1;
-
-    for(auto& index : track.indices) {
-      if(index.lba < 0) continue;
-      if(index.number == 0) hasIndex0 = true;
-      if(first < 0 || index.lba < first) first = index.lba;
-    }
-
-    if(hasIndex0 || first <= 0) continue;
-
-    for(auto& index : track.indices) {
-      if(index.lba < 0) continue;
-      index.lba -= first;
-      if(index.end >= 0) index.end -= first;
-      if(index.end < index.lba) index.end = index.lba - 1;
+  skipSectors = 0;
+  if(!tracks.empty()) {
+    auto first = firstInFileLBA(tracks.front());
+    if(first > 0) {
+      if((u64)first * tracks.front().sectorSize() > size) return false;
+      skipSectors = first;
+      for(auto& t : tracks) {
+        for(auto& index : t.indices) {
+          if(index.lba < 0) continue;
+          index.lba -= first;
+          if(index.end >= 0) index.end -= first;
+          if(index.end < index.lba) index.end = index.lba - 1;
+        }
+      }
     }
   }
 

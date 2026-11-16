@@ -248,7 +248,7 @@ auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> std::vecto
   if(!cuesheet.load(filename, nullptr, nullptr)) return {};
 
   for(auto& file : cuesheet.files) {
-    u64 offset = 0;
+    u64 offset = file.skipBytes();
     auto location = string{Location::path(filename), file.name};
 
     if(file.type == "binary") {
@@ -325,7 +325,7 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
   if(!cuesheet.load(mmiPath, archive.get(), &archive->findFile(cuePath).get())) return {};
 
   for(auto& file : cuesheet.files) {
-    u64 offset = 0;
+    u64 offset = file.skipBytes();
     if(file.type == "binary") {
       auto filePathInArchive = file.archiveFolder;
       filePathInArchive.append(file.name);
