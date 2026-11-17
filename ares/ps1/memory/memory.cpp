@@ -23,6 +23,7 @@ auto MemoryControl::unload() -> void {
 auto MemoryControl::power(bool reset) -> void {
   bus.readLatch = 0;
   memory.ram = {};
+  memory.ram.value = 0x0000'0b88;
   memory.cache = {};
   memory.exp1Base.value = 0x1f00'0000;
   memory.exp2Base.value = 0x1f80'2000;
@@ -37,6 +38,9 @@ auto MemoryControl::power(bool reset) -> void {
 }
 
 auto MemoryControl::updateConfiguration() -> void {
+  u32 ras0 = 1u << (ram.value.bit(9) << 1 | ram.value.bit(11));
+  u32 ras1 = ram.value.bit(10) ? 1u << (ram.value.bit(8) << 1 | ram.value.bit(11)) : 0;
+  ramLimit = min<u32>(ras0 + ras1, 8) * 1_MiB - 1;
   exp1Mask = (1u << min<u32>(exp1.addrBits, 23)) - 1;
   exp1Address = (0x1f00'0000 | exp1Base.value.bit(0,23)) & ~exp1Mask;
   exp2Mask = (1u << min<u32>(exp2.addrBits, 13)) - 1;

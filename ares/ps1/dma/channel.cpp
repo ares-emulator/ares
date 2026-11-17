@@ -108,12 +108,19 @@ auto DMA::Channel::transferBlock() -> void {
   u32 clocks  = 0;
   u32 wordsTransferred = 0;
 
+  auto unmappedRAM = [&](u32 address) -> bool {
+    address &= 0x1fff'ffff;
+    return address > memory.ramLimit && address <= 0x007f'ffff;
+  };
+
   auto readWord = [&](u32 address) -> u32 {
+    if(unmappedRAM(address)) return 0xffff'ffff;
     if((address & 0x1fff'ffff) <= 0x007f'ffff) return cpu.ram.readWord(address);
     return bus.read<Word>(address);
   };
 
   auto writeWord = [&](u32 address, u32 data) -> void {
+    if(unmappedRAM(address)) return;
     if((address & 0x1fff'ffff) <= 0x007f'ffff) return cpu.ram.writeWord(address, data);
     bus.write<Word>(address, data);
   };

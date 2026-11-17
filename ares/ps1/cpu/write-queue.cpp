@@ -137,9 +137,11 @@ auto CPU::commitWrite(u32 address, u32 data, u32 size, u32 lanes) -> void {
       if(lanes & 1u << byte) memory.template write<Byte>(address + byte, data >> byte * 8);
     }
   };
-  if(likely(address <= 0x007f'ffff)) {
+  if(likely(address <= memory.ramLimit)) {
     return writeMemory(ram);
   }
+  if(address <= 0x007f'ffff) return;
+
   if(address >= 0x1fc0'0000) return writeMemory(bios);
 
   if(size == Byte) return bus.write<Byte>(address, data);

@@ -38,6 +38,12 @@ auto Disc::serialize(serializer& s) -> void {
   s(cdxa.monaural);
   s(cdxa.samples);
   s(cdxa.previousSamples);
+  s(cdxa.resampler.ring);
+  s(cdxa.resampler.frames);
+  s(cdxa.resampler.position);
+  s(cdxa.resampler.phase);
+  s(cdxa.resampler.head);
+  s(cdxa.resampler.count);
 
   s(command.secondResponse.command);
   s(command.secondResponse.pending);

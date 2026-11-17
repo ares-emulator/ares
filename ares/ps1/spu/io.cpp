@@ -608,7 +608,7 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
   //ADPCM repeat address
   if((address & 0x1fff'fe0f) == 0x1f80'1c0e && v < 24) {
     voice[v].adpcm.repeatAddress = data.bit(0,15) << 3;
-    voice[v].adpcm.ignoreLoopAddress = 1;
+    if(voice[v].keyOnDelay <= 1) voice[v].adpcm.ignoreLoopAddress = 1;
     return;
   }
 
@@ -656,21 +656,21 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //KON
   if(address == 0x1f80'1d88) {
-    for(u32 v : range(16)) voice[v].kon = data.bit(v);
+    for(u32 v : range(16)) if(data.bit(v)) voice[v].kon = 1;
     return;
   }
   if(address == 0x1f80'1d8a) {
-    for(u32 v : range( 8)) voice[v + 16].kon = data.bit(v);
+    for(u32 v : range( 8)) if(data.bit(v)) voice[v + 16].kon = 1;
     return;
   }
 
   //KOFF
   if(address == 0x1f80'1d8c) {
-    for(u32 v : range(16)) voice[v].koff = data.bit(v);
+    for(u32 v : range(16)) if(data.bit(v)) voice[v].koff = 1;
     return;
   }
   if(address == 0x1f80'1d8e) {
-    for(u32 v : range( 8)) voice[v + 16].koff = data.bit(v);
+    for(u32 v : range( 8)) if(data.bit(v)) voice[v + 16].koff = 1;
     return;
   }
 

@@ -279,6 +279,8 @@ auto Disc::power(bool reset) -> void {
   cdxa.monaural = 0;
   cdxa.samples.flush();
   for(auto& v : cdxa.previousSamples) v = 0;
+  cdxa.resampler = {};
+  cdxa.resampler.phase = 6;
   command = {};
   irq = {};
   fifo.parameter.flush();

@@ -213,6 +213,8 @@ struct Disc : Memory::Interface {
 
     auto clockSector() -> void;
     auto clockSample() -> void;
+    auto resample(s16 left, s16 right) -> void;
+    auto pullSample() -> void;
     template<bool isStereo, bool is8bit> auto decodeADPCM(n1 halfSampleRate) -> void;
     template<bool isStereo, bool is8bit> auto decodeBlock(s16* output, u16 address) -> void;
 
@@ -229,6 +231,15 @@ struct Disc : Memory::Interface {
     bool monaural;
     queue<s16[4032 * 8]> samples;
     s32 previousSamples[4];
+
+    struct Resampler {
+      s16 ring[2][32];
+      s16 frames[32][2];
+      n32 position;
+      n32 phase;
+      n32 head;
+      n32 count;
+    } resampler;
   } cdxa{*this};
 
   struct Command {

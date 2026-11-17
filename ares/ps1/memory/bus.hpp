@@ -1,5 +1,5 @@
 inline auto Bus::mmio(u32 address) -> Memory::Interface& {
-  if(address <= 0x007f'ffff)                           return cpu.ram;
+  if(address <= memory.ramLimit)                       return cpu.ram;
   if(address >= 0x1fc0'0000)                           return bios;
   if((address & 0xffff'fc00) == 0x1f80'0000)           return cpu.scratchpad;
   if(address >= 0x1f80'1000 && address <= 0x1f80'1023) return memory;

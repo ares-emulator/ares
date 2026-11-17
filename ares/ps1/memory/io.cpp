@@ -113,6 +113,7 @@ auto MemoryControl::writeWord(u32 address, u32 value) -> void {
 
   if(address == 0x1f80'1060) {
     ram.value = data;
+    updateConfiguration();
     return;
   }
 

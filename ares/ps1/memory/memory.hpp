@@ -49,6 +49,8 @@ struct MemoryControl : Memory::Interface {
     n32 value;
   } ram;
 
+  u32 ramLimit = 0x007f'ffff;
+
   struct ExpansionBase {
     n32 value;
   };

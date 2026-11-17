@@ -1,5 +1,6 @@
 auto MemoryControl::serialize(serializer& s) -> void {
   s(ram.value);
+  s(ramLimit);
 
   s(cache.lock);
   s(cache.invalidate);

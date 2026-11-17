@@ -16,7 +16,7 @@ auto CPU::InstructionCache::fetchSlow(u32 address) -> u32 {
     if(!tagMatch) line.valid = 0;
     u32 start = address & ~3u;
     u32 size = Word * (4 - word);
-    if((address & 0x1fff'ffff) <= 0x007f'ffff) {
+    if((address & 0x1fff'ffff) <= memory.ramLimit) {
       cpu.beginBusTransaction(start, size);
       u32 base = (address & ~0xfu) & cpu.ram.maskWord;
       auto* src = (const u32*)&cpu.ram.data[base];
@@ -30,7 +30,7 @@ auto CPU::InstructionCache::fetchSlow(u32 address) -> u32 {
       }
       cpu.endBusTransaction();
     }
-    if((address & 0x1fff'ffff) > 0x007f'ffff && (address & 0x1fff'ffff) < 0x1fc0'0000) {
+    if((address & 0x1fff'ffff) > memory.ramLimit && (address & 0x1fff'ffff) < 0x1fc0'0000) {
       cpu.beginBusTransaction(start, size);
       for(u32 index = word; index < 4; index++) {
         line.words[index] = bus.read<Word>(((address & ~0xfu) | index << 2) & 0x1fff'ffff);

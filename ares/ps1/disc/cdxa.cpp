@@ -47,14 +47,78 @@ auto Disc::CDXA::clockSample() -> void {
   }
 
   if(self.audio.mute || self.audio.muteADPCM) {
-    sample.left  = 0;
-    sample.right = 0;
+    resample(0, 0);
   } else {
-    sample.left  = sclamp<16>((left * self.audio.volume[0] >> 7) + (right * self.audio.volume[2] >> 7));
-    sample.right = sclamp<16>((left * self.audio.volume[1] >> 7) + (right * self.audio.volume[3] >> 7));
+    resample(
+      sclamp<16>((left * self.audio.volume[0] >> 7) + (right * self.audio.volume[2] >> 7)),
+      sclamp<16>((left * self.audio.volume[1] >> 7) + (right * self.audio.volume[3] >> 7))
+    );
   }
+}
 
-//stream->sample(sample.left / 32768.0, sample.right / 32768.0);
+auto Disc::CDXA::resample(s16 left, s16 right) -> void {
+  static constexpr s16 zigzag[29][7] = {
+    {  0x0000,  0x0000,  0x0000,  0x0000, -0x0001,  0x0002, -0x0005},
+    {  0x0000,  0x0000,  0x0000, -0x0001,  0x0003, -0x0008,  0x0011},
+    {  0x0000,  0x0000, -0x0001,  0x0003, -0x0008,  0x0010, -0x0023},
+    {  0x0000, -0x0002,  0x0003, -0x0008,  0x0011, -0x0023,  0x0046},
+    {  0x0000,  0x0000, -0x0002,  0x0006, -0x0010,  0x002b, -0x0017},
+    { -0x0002,  0x0003, -0x0005,  0x0005,  0x000a,  0x001a, -0x0044},
+    {  0x000a, -0x0013,  0x001f, -0x001b,  0x006b, -0x00eb,  0x015b},
+    { -0x0022,  0x003c, -0x004a,  0x00a6, -0x016d,  0x027b, -0x0347},
+    {  0x0041, -0x004b,  0x00b3, -0x01a8,  0x0350, -0x0548,  0x080e},
+    { -0x0054,  0x00a2, -0x0192,  0x0372, -0x0623,  0x0afa, -0x1249},
+    {  0x0034, -0x00e3,  0x02b1, -0x05bf,  0x0bcd, -0x16fa,  0x3c07},
+    {  0x0009,  0x0132, -0x039e,  0x09b8, -0x1780,  0x53e0,  0x53e0},
+    { -0x010a, -0x0043,  0x04f8, -0x11b4,  0x6794,  0x3c07, -0x16fa},
+    {  0x0400, -0x0267, -0x05a6,  0x74bb,  0x234c, -0x1249,  0x0afa},
+    { -0x0a78,  0x0c9d,  0x7939,  0x0c9d, -0x0a78,  0x080e, -0x0548},
+    {  0x234c,  0x74bb, -0x05a6, -0x0267,  0x0400, -0x0347,  0x027b},
+    {  0x6794, -0x11b4,  0x04f8, -0x0043, -0x010a,  0x015b, -0x00eb},
+    { -0x1780,  0x09b8, -0x039e,  0x0132,  0x0009, -0x0044,  0x001a},
+    {  0x0bcd, -0x05bf,  0x02b1, -0x00e3,  0x0034, -0x0017,  0x002b},
+    { -0x0623,  0x0372, -0x0192,  0x00a2, -0x0054,  0x0046, -0x0023},
+    {  0x0350, -0x01a8,  0x00b3, -0x004b,  0x0041, -0x0023,  0x0010},
+    { -0x016d,  0x00a6, -0x004a,  0x003c, -0x0022,  0x0011, -0x0008},
+    {  0x006b, -0x001b,  0x001f, -0x0013,  0x000a, -0x0005,  0x0002},
+    {  0x000a,  0x0005, -0x0005,  0x0003, -0x0001,  0x0000,  0x0000},
+    { -0x0010,  0x0006, -0x0002,  0x0000,  0x0000,  0x0000,  0x0000},
+    {  0x0011, -0x0008,  0x0003, -0x0002,  0x0001,  0x0000,  0x0000},
+    { -0x0008,  0x0003, -0x0001,  0x0000,  0x0000,  0x0000,  0x0000},
+    {  0x0003, -0x0001,  0x0000,  0x0000,  0x0000,  0x0000,  0x0000},
+    { -0x0001,  0x0000,  0x0000,  0x0000,  0x0000,  0x0000,  0x0000},
+  };
+
+  resampler.ring[0][resampler.position & 31] = left;
+  resampler.ring[1][resampler.position & 31] = right;
+  resampler.position++;
+  if(--resampler.phase) return;
+  resampler.phase = 6;
+
+  for(u32 table : range(7)) {
+    u32 slot = resampler.head + resampler.count & 31;
+    if(resampler.count == 32) break;
+    for(u32 channel : range(2)) {
+      s32 sum = 0;
+      for(u32 index : range(29)) {
+        sum += resampler.ring[channel][resampler.position - 1 - index & 31] * zigzag[index][table] >> 15;
+      }
+      resampler.frames[slot][channel] = sclamp<16>(sum);
+    }
+    resampler.count++;
+  }
+}
+
+auto Disc::CDXA::pullSample() -> void {
+  if(!resampler.count) {
+    sample.left = 0;
+    sample.right = 0;
+    return;
+  }
+  sample.left  = resampler.frames[resampler.head][0];
+  sample.right = resampler.frames[resampler.head][1];
+  resampler.head = resampler.head + 1 & 31;
+  resampler.count--;
 }
 
 template<bool isStereo, bool is8bit>
@@ -63,6 +127,8 @@ auto Disc::CDXA::decodeADPCM(n1 halfSampleRate) -> void {
   const u32 BlockSize = 128;
   const u32 WordsPerBlock = 28;
   const u32 SamplesPerBlock = WordsPerBlock * (is8bit ? 4 : 8);
+
+  if(samples.size() + Blocks * SamplesPerBlock * (halfSampleRate ? 2 : 1) > samples.capacity()) return;
 
   s16 output[SamplesPerBlock];
   for(u32 block : range(Blocks)) {
@@ -100,11 +166,11 @@ auto Disc::CDXA::decodeBlock(s16* output, u16 address) -> void {
       s16 sample = is8bit ? s16(nibble << 8) >> shift : s16(nibble << 12) >> shift;
 
       s32* previous = isStereo ? &previousSamples[(block & 1) * 2] : &previousSamples[0];
-      s32 interpolated = s32(sample) + ((previous[0] * positive) + (previous[1] * negative) + 32) / 64;
+      s32 interpolated = sclamp<16>(s32(sample) + ((previous[0] * positive) + (previous[1] * negative) + 32) / 64);
       previous[1] = previous[0];
       previous[0] = interpolated;
 
-      output[index] = sclamp<16>(interpolated);
+      output[index] = interpolated;
       index += isStereo ? 2 : 1;
     }
   }

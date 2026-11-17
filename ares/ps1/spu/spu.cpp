@@ -59,6 +59,7 @@ auto SPU::main() -> void {
 auto SPU::sample() -> void {
   s32 lsum = 0, lreverb = 0;
   s32 rsum = 0, rreverb = 0;
+  disc.cdxa.pullSample();
   s16 lcdaudio = disc.cdda.sample.left  + disc.cdxa.sample.left;
   s16 rcdaudio = disc.cdda.sample.right + disc.cdxa.sample.right;
   s32 modulation = 0;

@@ -24,7 +24,7 @@ inline auto CPU::fetch(u32 address) -> u32 {
 
   //uncached
   case 5: {//$a0000000-$bfffffff  KSEG1
-    if(likely(address <= 0xa07f'ffff)) {
+    if(likely(address <= (0xa000'0000 | memory.ramLimit))) {
       beginBusTransaction(address, Word);
       auto data = ram.read<Word>(address);
       endBusTransaction();
@@ -94,7 +94,7 @@ inline auto CPU::readIO(u32 address) -> u32 {
 //read data from the bus
 template<u32 Size>
 inline auto CPU::readBus(u32 address) -> u32 {
-  if(likely(!scc.status.cache.isolate && (address & 0x7fff'ffff) <= 0x007f'ffff)) {
+  if(likely(!scc.status.cache.isolate && (address & 0x7fff'ffff) <= memory.ramLimit)) {
     beginBusTransaction(address, Size);
     auto data = ram.read<Size>(address);
     endBusTransaction();
@@ -117,7 +117,7 @@ inline auto CPU::readBus(u32 address) -> u32 {
       }
       return 0;  //nop
     }
-    if(likely(address <= 0x007f'ffff)) {
+    if(likely(address <= memory.ramLimit)) {
       beginBusTransaction(address, Size);
       auto data = ram.read<Size>(address);
       endBusTransaction();
@@ -149,7 +149,7 @@ inline auto CPU::readBus(u32 address) -> u32 {
       }
       return 0;  //nop
     }
-    if(likely(address <= 0x807f'ffff)) {
+    if(likely(address <= (0x8000'0000 | memory.ramLimit))) {
       beginBusTransaction(address, Size);
       auto data = ram.read<Size>(address);
       endBusTransaction();
@@ -172,7 +172,7 @@ inline auto CPU::readBus(u32 address) -> u32 {
 
   //uncached
   case 5: {//KSEG1
-    if(likely(address <= 0xa07f'ffff)) {
+    if(likely(address <= (0xa000'0000 | memory.ramLimit))) {
       beginBusTransaction(address, Size);
       auto data = ram.read<Size>(address);
       endBusTransaction();
@@ -241,7 +241,7 @@ inline auto CPU::writeWordPartial(u32 address, u32 data, u32 lanes) -> void {
 
 inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
   const u32 virtualAddress = address;
-  if(likely(!scc.status.cache.isolate && (address & 0x7fff'ffff) <= 0x007f'ffff)) {
+  if(likely(!scc.status.cache.isolate && (address & 0x7fff'ffff) <= memory.ramLimit)) {
     beginBusTransaction(virtualAddress, Word);
     auto data = ram.read<Word>(address);
     endBusTransaction();
@@ -269,7 +269,7 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
       }
       return 0;
     }
-    if(likely(address <= 0x007f'ffff)) {
+    if(likely(address <= memory.ramLimit)) {
       beginBusTransaction(virtualAddress, Word);
       auto data = ram.read<Word>(address);
       endBusTransaction();
@@ -306,7 +306,7 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
       }
       return 0;
     }
-    if(likely(address <= 0x807f'ffff)) {
+    if(likely(address <= (0x8000'0000 | memory.ramLimit))) {
       beginBusTransaction(virtualAddress, Word);
       auto data = ram.read<Word>(address);
       endBusTransaction();
@@ -334,7 +334,7 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
   }
 
   case 5: {
-    if(likely(address <= 0xa07f'ffff)) {
+    if(likely(address <= (0xa000'0000 | memory.ramLimit))) {
       beginBusTransaction(virtualAddress, Word);
       auto data = ram.read<Word>(address);
       endBusTransaction();
@@ -393,7 +393,7 @@ inline auto CPU::read(u32 address) -> u32 {
 
 template<u32 Size>
 inline auto CPU::writeBus(u32 address, u32 data, u32 lanes) -> void {
-  if(likely(!scc.status.cache.isolate && (address & 0x7fff'ffff) <= 0x007f'ffff)) {
+  if(likely(!scc.status.cache.isolate && (address & 0x7fff'ffff) <= memory.ramLimit)) {
     return queueWrite(address, data, Size, lanes);
   }
 
@@ -425,7 +425,7 @@ inline auto CPU::writeBus(u32 address, u32 data, u32 lanes) -> void {
       }
       return;
     }
-    if(likely(address <= 0x007f'ffff)) {
+    if(likely(address <= memory.ramLimit)) {
       return queueWrite(address, data, Size, lanes);
     }
     if(likely(address >= 0x1fc0'0000)) {
@@ -457,7 +457,7 @@ inline auto CPU::writeBus(u32 address, u32 data, u32 lanes) -> void {
       }
       return;
     }
-    if(likely(address <= 0x807f'ffff)) {
+    if(likely(address <= (0x8000'0000 | memory.ramLimit))) {
       return queueWrite(address, data, Size, lanes);
     }
     if(likely(address >= 0x9fc0'0000)) {
@@ -474,7 +474,7 @@ inline auto CPU::writeBus(u32 address, u32 data, u32 lanes) -> void {
 
   //uncached
   case 5: {//KSEG1
-    if(likely(address <= 0xa07f'ffff)) {
+    if(likely(address <= (0xa000'0000 | memory.ramLimit))) {
       return queueWrite(address, data, Size, lanes);
     }
     if(likely(address >= 0xbfc0'0000)) {
