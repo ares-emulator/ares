@@ -75,7 +75,7 @@ auto GPU::main() -> void {
   bool frameEnd = ++io.vcounter >= vtotal();
   if(frameEnd) {
     io.vcounter = 0;
-    io.field = !io.field;
+    io.field = io.interlace && !io.field;
     frame();
   }
 
