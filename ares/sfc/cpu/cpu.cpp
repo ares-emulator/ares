@@ -1,4 +1,5 @@
 #include <sfc/sfc.hpp>
+#include <nall/gdb/server.hpp>
 
 namespace ares::SuperFamicom {
 
@@ -31,6 +32,13 @@ auto CPU::main() -> void {
   if(r.stp) return instructionStop();
 
   if(!status.interruptPending) {
+    // Yield to the desktop worker while halted so its UI/quit guard remains live.
+    while(!nall::GDB::server.reportPC(r.pc.d)) {
+      scheduler.exit(Event::Step);
+      // A save (including the undo snapshot before loading) may resume us here.
+      // This instruction boundary is safe to serialize without advancing the CPU.
+      scheduler.synchronize();
+    }
     debugger.instruction();
     return instruction();
   }
@@ -66,8 +74,12 @@ auto CPU::map() -> void {
 
   reader = std::bind_front(&CPU::readRAM, this);
   writer = std::bind_front(&CPU::writeRAM, this);
-  bus.map(reader, writer, "00-3f,80-bf:0000-1fff", 0x2000);
-  bus.map(reader, writer, "7e-7f:0000-ffff", 0x20000);
+  auto peek = [this](n24 address) -> maybe<n8> {
+    if(address >= 128_KiB) return {};
+    return wram[address];
+  };
+  bus.map(reader, writer, "00-3f,80-bf:0000-1fff", 0x2000, 0, 0, peek);
+  bus.map(reader, writer, "7e-7f:0000-ffff", 0x20000, 0, 0, peek);
 
   reader = std::bind_front(&CPU::readAPU, this);
   writer = std::bind_front(&CPU::writeAPU, this);

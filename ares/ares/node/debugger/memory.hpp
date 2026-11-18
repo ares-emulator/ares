@@ -5,6 +5,11 @@ struct Memory : Debugger {
   }
 
   auto size() const -> u32 { return _size; }
+  // Physical storage access for discovery/transport consumers, no aliasing.
+  auto peek(u64 address) const -> maybe<n8> {
+    if(!_read || address >= _size) return {};
+    return n8{_read((u32)address)};
+  }
   auto read(u32 address) const -> n8 { if(_read) return _read(address); return 0; }
   auto write(u32 address, u8 data) const -> void { if(_write) return _write(address, data); }
 

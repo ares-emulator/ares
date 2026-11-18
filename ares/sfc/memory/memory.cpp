@@ -13,6 +13,7 @@ auto Bus::reset() -> void {
   for(auto id : range(256)) {
     reader[id] = nullptr;
     writer[id] = nullptr;
+    peeker[id] = nullptr;
     counter[id] = 0;
   }
 
@@ -32,7 +33,8 @@ auto Bus::reset() -> void {
 auto Bus::map(
   const std::function<n8   (n24, n8)>& read,
   const std::function<void (n24, n8)>& write,
-  const string& addr, u32 size, u32 base, u32 mask
+  const string& addr, u32 size, u32 base, u32 mask,
+  const std::function<maybe<n8> (n24)>& peek
 ) -> u32 {
   u32 id = 1;
   while(counter[id]) {
@@ -41,6 +43,7 @@ auto Bus::map(
 
   reader[id] = read;
   writer[id] = write;
+  peeker[id] = peek;
 
   auto p = nall::split(addr, ":", 1L);
   p.resize(2);
@@ -61,6 +64,7 @@ auto Bus::map(
           if(pid && --counter[pid] == 0) {
             reader[pid] = nullptr;
             writer[pid] = nullptr;
+            peeker[pid] = nullptr;
           }
 
           u32 offset = reduce(bank << 16 | addr, mask);
@@ -75,6 +79,15 @@ auto Bus::map(
   }
 
   return id;
+}
+
+// Storage inspection never calls bus handlers, cheats, or synchronization.
+// Device backed ranges are unavailable until they supply an explicit safe peek.
+auto Bus::peek(n24 address) const -> maybe<n8> {
+  if(!lookup || !target) return {};
+  auto id = lookup[address];
+  if(!peeker[id]) return {};
+  return peeker[id](target[address]);
 }
 
 auto Bus::unmap(const string& addr) -> void {
@@ -97,6 +110,7 @@ auto Bus::unmap(const string& addr) -> void {
           if(pid && --counter[pid] == 0) {
             reader[pid] = nullptr;
             writer[pid] = nullptr;
+            peeker[pid] = nullptr;
           }
 
           lookup[bank << 16 | addr] = 0;

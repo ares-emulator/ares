@@ -78,7 +78,11 @@ auto Cartridge::loadMap(Markup::Node map, T& memory) -> n32 {
   auto base = map["base"].natural();
   auto mask = map["mask"].natural();
   if(size == 0) size = memory.size();
-  return bus.map(std::bind_front(&T::read, &memory), std::bind_front(&T::write, &memory), address, size, base, mask);
+  return bus.map(std::bind_front(&T::read, &memory), std::bind_front(&T::write, &memory), address, size, base, mask,
+    [&memory](n24 offset) -> maybe<n8> {
+      if(offset >= memory.size()) return {};
+      return memory.data()[offset];
+    });
 }
 
 auto Cartridge::loadMap(
