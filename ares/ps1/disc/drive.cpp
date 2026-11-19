@@ -104,7 +104,6 @@ auto Disc::Drive::clockSector() -> void {
           self.ssr.reading = 1;
           self.ssr.playingCDDA = 1;
           cdda->playMode = CDDA::PlayMode::Normal;
-          self.counter.report = system.frequency() / 75;
         }
 
         if(pendingOperation == PendingOperation::None) {

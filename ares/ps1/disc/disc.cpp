@@ -183,7 +183,7 @@ auto Disc::step(u32 clocks) -> void {
     }
   }
 
-  if(unlikely(drive.mode.report && ssr.playingCDDA)) {
+  if(unlikely(ssr.playingCDDA)) {
     counter.report -= clocks;
     if(counter.report <= 0) {
       counter.report += system.frequency() / 75;
@@ -213,7 +213,7 @@ auto Disc::step(u32 clocks) -> void {
       //sectors 10, 30, 50, 70 report relative time
       //note: bad sector reads report immediately; but bad sectors are not emulated
       u8 frameBCD = BCD::encode(aframe);
-      if((frameBCD & 15) == 0) {
+      if(drive.mode.report && (frameBCD & 15) == 0) {
         bool relative = frameBCD & 16;
 
         queueResponse(ResponseType::Ready, {

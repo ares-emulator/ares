@@ -5,7 +5,7 @@ auto Disc::status() -> u8 {
   data.bit(2) = ssr.seekError;
   data.bit(3) = ssr.idError;
   data.bit(4) = ssr.shellOpen;
-  data.bit(5) = ssr.reading;
+  data.bit(5) = ssr.reading && !ssr.playingCDDA;
   data.bit(6) = drive.seeking != 0 && drive.seekDelay == 0;
   data.bit(7) = ssr.playingCDDA;
   return data;
@@ -305,6 +305,7 @@ auto Disc::commandPlay() -> void {
 
     ssr.reading = 0;
     ssr.playingCDDA = 0;
+    counter.report = 60 * (system.frequency() / 75 >> drive.mode.speed);
 
     drive.seekType = Disc::Drive::SeekType::SeekP;
     drive.pendingOperation = Disc::Drive::PendingOperation::Play;
@@ -319,6 +320,7 @@ auto Disc::commandPlay() -> void {
   if(drive.lba.pending) {
     ssr.reading = 0;
     ssr.playingCDDA = 0;
+    counter.report = 60 * (system.frequency() / 75 >> drive.mode.speed);
 
     drive.seekType = Disc::Drive::SeekType::SeekP;
     drive.pendingOperation = Disc::Drive::PendingOperation::Play;
@@ -334,7 +336,7 @@ auto Disc::commandPlay() -> void {
   ssr.reading = 1;
   ssr.playingCDDA = 1;
   cdda.playMode = CDDA::PlayMode::Normal;
-  counter.report = system.frequency() / 75;
+  counter.report = 60 * (system.frequency() / 75 >> drive.mode.speed);
 
   ack();
 }
@@ -517,7 +519,7 @@ auto Disc::commandGetlocL() -> void {
     return;
   }
 
-  if(!drive.headerValid) {
+  if(drive.seeking || !drive.headerValid) {
     error(ErrorCode_CannotRespondYet);
     return;
   }
