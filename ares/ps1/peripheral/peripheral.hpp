@@ -24,7 +24,7 @@ struct Peripheral : Memory::Interface {
   auto startTransfer() -> void;
   auto pollInterrupt() -> void;
 
-  static constexpr s32 ackPulseWidth = 96;
+  static constexpr s32 ackPulseWidth = 68;
   auto power(bool reset) -> void;
 
   //io.cpp
