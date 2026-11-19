@@ -2,7 +2,9 @@ auto MDEC::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
   s(fifo.input);
+  s(fifo.inputBuffer);
   s(fifo.output);
+  s(fifo.pendingOutput);
 
   s(status.remaining);
   s(status.currentBlock);
@@ -16,6 +18,14 @@ auto MDEC::serialize(serializer& s) -> void {
   s(io.resetPending);
   s(io.offset);
   s(io.outputWord);
+  s(io.remaining);
+  s(io.decodeBlock);
+  s(prefetch.coefficient);
+  s(prefetch.block);
+  s(prefetch.index);
+  s(prefetch.qfactor);
+  s(prefetch.started);
+  s(prefetch.ready);
 
   s(block.luma);
   s(block.chroma);
