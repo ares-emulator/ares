@@ -14,7 +14,7 @@ inline auto DSP::voiceOutput(Voice& v, n1 channel) -> void {
 }
 
 auto DSP::voice1(Voice& v) -> void {
-  brr._address = (brr._bank << 8) + (brr._source << 2);
+  brr._address = (brr._page << 8) + (brr._source << 2);
   brr._source = v.source;
 }
 
