@@ -16412,3 +16412,16 @@ game
       content: Save
     oscillator
       frequency: 21440000
+
+game
+  sha256:   40c08a3c84f46919eb34e5396037d9a942d892ddf7da7882855dc333f7195809
+  name:     DREAM
+  title:    DREAM
+  label:    Project Dream
+  region:   NTSC
+  revision: 1.0
+  board:    SHVC-1J0N-01
+    memory
+      type: ROM
+      size: 0x200000
+      content: Program
