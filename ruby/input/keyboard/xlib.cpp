@@ -7,6 +7,11 @@ struct InputKeyboardXlib {
   std::shared_ptr<HID::Keyboard> hid = std::make_shared<HID::Keyboard>();
 
   Display* display = nullptr;
+  // Focus gate: only process key state when the active X11 window belongs to this PID.
+  Window rootWindow = 0;
+  Atom netActiveWindow = 0;
+  Atom netWmPid = 0;
+  u32 selfPid = 0;
 
   struct Key {
     string name;
@@ -14,6 +19,16 @@ struct InputKeyboardXlib {
     u32 keycode = 0;
   };
   std::vector<Key> keys;
+
+  // Return _NET_WM_PID for an X11 window (0 if missing/invalid).
+  auto getNetWmPid(Window window) -> u32 {
+    Atom actualType; int actualFormat; unsigned long nItems, bytesAfter; unsigned char* propValue = nullptr; u32 pid = 0;
+    if(XGetWindowProperty(display, window, netWmPid, 0, 1, False, XA_CARDINAL, &actualType, &actualFormat, &nItems, &bytesAfter, &propValue) == Success && propValue) {
+      pid = *(u32*)propValue;
+      XFree(propValue);
+    }
+    return pid;
+  }
 
   auto assign(u32 inputID, bool value) -> void {
     auto& group = hid->buttons();
@@ -23,6 +38,20 @@ struct InputKeyboardXlib {
   }
 
   auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
+    Atom actualType; int actualFormat; unsigned long nItems, bytesAfter; unsigned char* propValue = nullptr; Window activeWindow = None;
+      // XQueryKeymap reports global key state; ignore it unless the active window belongs to this PID.
+      if(XGetWindowProperty(display, rootWindow, netActiveWindow, 0, 1, False, XA_WINDOW, &actualType, &actualFormat, &nItems, &bytesAfter, &propValue) == Success && propValue) {
+      activeWindow = *(Window*)propValue;
+      XFree(propValue);
+    }
+
+    bool processInput = false;
+    if(activeWindow == None) processInput = false;
+    else if(getNetWmPid(activeWindow) == selfPid) processInput = true;
+
+    // Not focused: keep device enumerated, but don't update state.
+    if(!processInput) return devices.push_back(hid);
+
     char state[32];
     XQueryKeymap(display, state);
 
@@ -37,6 +66,11 @@ struct InputKeyboardXlib {
 
   auto initialize() -> bool {
     display = XOpenDisplay(0);
+    rootWindow = DefaultRootWindow(display);
+    // Cache atoms + PID for focus gating
+    netActiveWindow = XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
+    netWmPid = XInternAtom(display, "_NET_WM_PID", False);
+    selfPid = (u32)getpid();
 
     keys.push_back({"Escape", XK_Escape});
 
