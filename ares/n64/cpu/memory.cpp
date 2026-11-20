@@ -166,6 +166,7 @@ auto CPU::fetch(PhysAccess access) -> maybe<u32> {
 template<u32 Size>
 auto CPU::read(PhysAccess access) -> maybe<u64> {
   if(!access) return nothing;
+  if(watchAddressHit(access.paddr, scc.watchLo.trapOnRead)) return nothing;
   GDB::server.reportMemRead(access.vaddr, Size);
   u32 paddr = access.paddr;
   if(context.littleEndian()) paddr = reverseEndianPaddr<Size>(paddr);
@@ -186,6 +187,7 @@ auto CPU::readDebug(u64 vaddr) -> u64 {
 template<u32 Size>
 auto CPU::write(PhysAccess access, u64 data) -> bool {
   if(!access) return false;
+  if(watchAddressHit(access.paddr, scc.watchLo.trapOnWrite)) return false;
   GDB::server.reportMemWrite(access.vaddr, Size);
   u32 paddr = access.paddr;
   if(context.littleEndian()) paddr = reverseEndianPaddr<Size>(paddr);
@@ -224,6 +226,15 @@ auto CPU::vaddrAlignedError(u64 vaddr, bool write) -> bool {
     }
   }
   return false;
+}
+
+//WatchLo matches any load or store that touches the same 8-byte doubleword
+//the exception is not taken while EXL is set (eg: inside an exception handler)
+auto CPU::watchAddressHit(u32 paddr, bool trap) -> bool {
+  if(likely(!trap) || scc.status.exceptionLevel) return false;
+  if((paddr ^ (u32)scc.watchLo.physicalAddress) & ~7u) return false;
+  exception.watchAddress();
+  return true;
 }
 
 auto CPU::addressException(u64 vaddr) -> void {

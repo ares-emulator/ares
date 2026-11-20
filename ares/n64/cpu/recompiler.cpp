@@ -100,7 +100,7 @@ at non-branch opcodes that may change key-relevant state.
 computeStateKey() includes:
 - privilege and addressing-mode context;
 - floating-point mode and exception-control bits;
-- watchpoint activity;
+- watchpoint activity (GDB watchpoints and guest WatchLo traps);
 - GP/SP-derived predicates used by memory fast paths;
 - RDRAM DeviceId identity mapping (direct ram.data access is only safe when true).
 
@@ -257,7 +257,7 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   stateKey.setGpAligned8((gp & 7) == 0);
   stateKey.setSpAligned4((sp & 3) == 0);
   stateKey.setSpAligned8((sp & 7) == 0);
-  stateKey.setWatchpointsActive(GDB::server.hasWatchpoints());
+  stateKey.setWatchpointsActive(GDB::server.hasWatchpoints() || self.scc.watchLo.trapOnRead || self.scc.watchLo.trapOnWrite);
   stateKey.setRdramMapIdentity(rdram.mapIdentity);
   return stateKey;
 }
