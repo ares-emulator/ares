@@ -212,6 +212,7 @@ struct Disc : Memory::Interface {
     auto unload(Node::Object) -> void;
 
     auto clockSector() -> void;
+    auto reset() -> void;
     auto clockSample() -> void;
     auto resample(s16 left, s16 right) -> void;
     auto pullSample() -> void;
@@ -222,6 +223,12 @@ struct Disc : Memory::Interface {
       n8 file;
       n8 channel;
     } filter;
+
+    struct Current {
+      n8 file;
+      n8 channel;
+      n1 active;
+    } current;
 
     struct Sample {
       s16 left;

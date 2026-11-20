@@ -362,7 +362,8 @@ auto Disc::commandReadN() -> void {
   if(!drive.lba.pending && ((!ssr.playingCDDA && ssr.reading)
   || drive.pendingOperation == Drive::PendingOperation::Read)) return;
 
-  if(!drive.lba.pending) drive.lba.request = drive.lba.current;
+  if(!drive.lba.pending && !drive.seeking && (!drive.standby || ssr.reading)) drive.lba.request = drive.lba.current;
+  cdxa.reset();
   ssr.reading = 0;
   ssr.playingCDDA = 0;
   drive.seekType = Drive::SeekType::SeekL;
@@ -438,6 +439,7 @@ auto Disc::commandInit() -> void {
   drive.mode.sectorSize = 1;
   drive.mode.xaADPCM    = 0;
   drive.mode.speed      = 0;
+  cdxa.reset();
   drive.lba = {};
   drive.standby = 0;
   drive.seeking = 0;
@@ -472,6 +474,7 @@ auto Disc::commandDemute() -> void {
 auto Disc::commandSetFilter() -> void {
   cdxa.filter.file = fifo.parameter.read(0);
   cdxa.filter.channel = fifo.parameter.read(0);
+  cdxa.current = {};
 
   ack();
 }

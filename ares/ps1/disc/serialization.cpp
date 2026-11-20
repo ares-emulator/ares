@@ -33,6 +33,9 @@ auto Disc::serialize(serializer& s) -> void {
 
   s(cdxa.filter.file);
   s(cdxa.filter.channel);
+  s(cdxa.current.file);
+  s(cdxa.current.channel);
+  s(cdxa.current.active);
   s(cdxa.sample.left);
   s(cdxa.sample.right);
   s(cdxa.monaural);

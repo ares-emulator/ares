@@ -143,13 +143,6 @@ auto Disc::step(u32 clocks) -> void {
   }
   flushDeferredResponse();
 
-  counter.sector += clocks;
-  u32 sectorPeriod = 451584 >> drive.mode.speed;
-  if(unlikely(counter.sector >= sectorPeriod)) {
-    counter.sector -= sectorPeriod;
-    drive.clockSector();
-  }
-
   counter.cdda += clocks;
   while(counter.cdda >= 768) {
     counter.cdda -= 768;
@@ -160,6 +153,13 @@ auto Disc::step(u32 clocks) -> void {
   while(counter.cdxa >= 896) {
     counter.cdxa -= 896;
     cdxa.clockSample();
+  }
+
+  counter.sector += clocks;
+  u32 sectorPeriod = 451584 >> drive.mode.speed;
+  if(unlikely(counter.sector >= sectorPeriod)) {
+    counter.sector -= sectorPeriod;
+    drive.clockSector();
   }
 
   if(unlikely(command.transfer.started) && !irq.pending()
@@ -274,13 +274,7 @@ auto Disc::power(bool reset) -> void {
   cdda.sample.left = 0;
   cdda.sample.right = 0;
   cdxa.filter = {};
-  cdxa.sample.left = 0;
-  cdxa.sample.right = 0;
-  cdxa.monaural = 0;
-  cdxa.samples.flush();
-  for(auto& v : cdxa.previousSamples) v = 0;
-  cdxa.resampler = {};
-  cdxa.resampler.phase = 6;
+  cdxa.reset();
   command = {};
   irq = {};
   fifo.parameter.flush();

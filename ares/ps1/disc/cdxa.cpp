@@ -10,7 +10,27 @@ auto Disc::CDXA::unload(Node::Object parent) -> void {
 //stream.reset();
 }
 
+auto Disc::CDXA::reset() -> void {
+  current = {};
+  sample = {};
+  monaural = false;
+  samples.flush();
+  for(auto& previous : previousSamples) previous = 0;
+  resampler = {};
+  resampler.phase = 6;
+}
+
 auto Disc::CDXA::clockSector() -> void {
+  u8 file = drive->sector.data[16];
+  u8 channel = drive->sector.data[17];
+  if(!current.active) {
+    if(channel == 0xff && (!drive->mode.xaFilter || filter.channel != 0xff)) return;
+    current.file = file;
+    current.channel = channel;
+    current.active = 1;
+  } else if(current.file != file || current.channel != channel) {
+    return;
+  }
   n8 subMode     = drive->sector.data[18];
   n1 endOfRecord = subMode.bit(0);
   n1 video       = subMode.bit(1);
@@ -20,6 +40,10 @@ auto Disc::CDXA::clockSector() -> void {
   n1 form2       = subMode.bit(5);
   n1 realTime    = subMode.bit(6);
   n1 endOfFile   = subMode.bit(7);
+
+  if(endOfFile) current = {};
+
+  if(!samples.empty()) return;
 
   n8  codingInfo    = drive->sector.data[19];
   n1  stereo        = codingInfo.bit(0);
