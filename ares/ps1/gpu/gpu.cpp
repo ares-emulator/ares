@@ -67,6 +67,7 @@ auto GPU::main() -> void {
   scanout.lineStart();
 
   step(htotal);
+  if(io.hcounter != htotal) return;
   io.hcounter = htotal;
   scanout.lineEnd();
   timer.hsync(0);
@@ -248,6 +249,7 @@ auto GPU::step(u32 clocks) -> void {
         stepFifo();
         if(scanout.lineVisible) syncClocks = stepClocks;
       }
+      u32 hcounter = io.hcounter;
       if(scanout.lineVisible) {
         syncClocks -= stepClocks;
         if(!syncClocks) {
@@ -256,6 +258,7 @@ auto GPU::step(u32 clocks) -> void {
       } else {
         Thread::synchronize();
       }
+      if(unlikely(io.hcounter != hcounter)) return;
     }
     return;
   }
@@ -286,7 +289,9 @@ auto GPU::step(u32 clocks) -> void {
     if(io.pcounter < 0) io.pcounter = 0;
     if(io.pcounter == 0) finishPendingRender();
     if(io.pcounter == 0 && (latch.ready || !fifo.empty())) stepFifo();
+    u32 hcounter = io.hcounter;
     Thread::synchronize();
+    if(unlikely(io.hcounter != hcounter)) return;
   }
 }
 

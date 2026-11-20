@@ -41,6 +41,7 @@ auto GPU::writeGP1(u32 value) -> void {
 
   //soft reset
   if(command == 0x00) {
+    bool wasHblank = io.hcounter < io.displayRangeX1 || io.hcounter >= io.displayRangeX2;
     //GP0(e1)
     io.texturePageBaseX = 0;
     io.texturePageBaseY = 0;
@@ -118,6 +119,21 @@ auto GPU::writeGP1(u32 value) -> void {
     io.colorDepth = 0;
     io.interlace = 0;
     io.reverseFlag = 0;
+
+    io.hcounter = 0;
+    io.vcounter = 1023;
+    io.field = 1;
+    io.displayField = 0;
+    io.htotalRemainder = 0;
+    io.dotcounter = 0;
+    io.timerDotcounter = 0;
+    scanout.lineVisible = false;
+    if(!wasHblank) timer.hsync(1);
+    io.hblankFired = 1;
+    if(!interrupt.vblank.line) {
+      timer.vsync(1);
+      interrupt.raise(Interrupt::Vblank);
+    }
 
     queueCacheInvalidation();
     return;
