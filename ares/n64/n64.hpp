@@ -12,6 +12,8 @@
 #include <component/processor/sm5k/sm5k.hpp>
 #include <component/arcade/dip-switches.hpp>
 #include <functional>
+#include <atomic>
+#include <cstring>
 #include <span>
 #include <vector>
 

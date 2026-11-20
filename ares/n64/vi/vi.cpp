@@ -86,12 +86,14 @@ auto VI::main() -> void {
       }
 
       if(io.vcounter == io.vstart >> 1) {
+        rdp.debugger.captureScanout(io.field);
         #if defined(VULKAN)
         if (vulkan.enable) {
           gpuOutputValid = vulkan.scanoutAsync(io.field);
           vulkan.frame();
         }
         #endif
+        rdp.debugger.frameBoundary();
         refreshed = true;
         screen->frame();
         ri.checkRefresh();
