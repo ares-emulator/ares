@@ -31,17 +31,17 @@ auto GPU::Scanout::queue() -> void {
   u32 viewX2 = self.screen->overscan() ? activeX2 : 3168;
   u32 viewY1 = self.screen->overscan() ? activeY1 : (pal ? 31 : 24);
   u32 viewY2 = self.screen->overscan() ? activeY2 : (pal ? 295 : 248);
-  u32 activeWidth = (activeX2 - activeX1 + ClockScale - 1) / ClockScale;
+  u32 activeWidth = activeX2 - activeX1;
   u32 activeHeight = (activeY2 - activeY1) * LineScale;
-  u32 viewWidth = (viewX2 - viewX1 + ClockScale - 1) / ClockScale;
+  u32 viewWidth = viewX2 - viewX1;
   u32 viewHeight = (viewY2 - viewY1) * LineScale;
 
   if(interleaved) self.screen->setInterlace(field);
   else self.screen->setProgressive(1);
-  self.screen->setScale(1.0, 1.0);
-  self.screen->setAspect(4.0 * activeHeight, 3.0 * activeWidth);
+  self.screen->setScale(0.25, 1.0);
+  self.screen->setAspect(16.0 * activeHeight, 3.0 * activeWidth);
   self.screen->setSize(viewWidth, viewHeight);
-  self.screen->setViewport((viewX1 - activeX1) / ClockScale, (viewY1 - activeY1) * LineScale, viewWidth, viewHeight);
+  self.screen->setViewport(viewX1 - activeX1, (viewY1 - activeY1) * LineScale, viewWidth, viewHeight);
   self.screen->frame();
   scheduler.exit(Event::Frame);
 }
@@ -133,12 +133,12 @@ auto GPU::Scanout::renderLine() -> void {
   u32 last = pal ? 3300 : 3288;
   if(first >= last || !divider) return;
 
-  u32 firstX = (first - 488) / ClockScale;
-  u32 lastX = (last - 488) / ClockScale;
-  u32 hclock = 488 + firstX * ClockScale + ClockScale - 1;
+  u32 firstX = first - 488;
+  u32 lastX = last - 488;
+  u32 hclock = first;
   if(hclock < rangeX1) {
     firstX++;
-    hclock += ClockScale;
+    ++hclock;
   }
   if(firstX >= lastX) return;
 
@@ -155,7 +155,7 @@ auto GPU::Scanout::renderLine() -> void {
       : readRGB24(sourceX);
     outputPtr[x] = color;
     if(!interleaved && targetY + 1 < OutputHeight) outputPtr[OutputPitch + x] = color;
-    phase += ClockScale;
+    ++phase;
     if(phase >= divider) {
       phase -= divider;
       sourcePixel++;
@@ -172,8 +172,8 @@ alwaysinline auto GPU::Scanout::flushPixel(u32 hclock) -> void {
   start = max(start, activeX1);
   u32 end = min(hclock, activeX2);
   if(end > start && targetY < OutputHeight) {
-    u32 first = (start - activeX1) / ClockScale;
-    u32 last = (end - activeX1) / ClockScale;
+    u32 first = start - activeX1;
+    u32 last = end - activeX1;
     u32 color = self.io.displayDisable ? (depth == 0 ? 1u << 24 : 0u) : prevPixelColor;
     if(last > first) {
       if(!interleaved && targetY + 1 < OutputHeight) {

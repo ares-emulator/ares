@@ -498,8 +498,7 @@ struct GPU : Thread, Memory::Interface {
     auto renderLine() -> void;
     auto power() -> void;
 
-    static constexpr u32 ClockScale = 4;
-    static constexpr u32 OutputPitch = 2812 / ClockScale;
+    static constexpr u32 OutputPitch = 2812;
     static constexpr u32 OutputHeight = 576;
     static constexpr u32 LineScale = 2;
 
