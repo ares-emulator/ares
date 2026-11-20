@@ -9,11 +9,6 @@ auto SPU::Voice::sample(s32 modulation) -> std::pair<s32, s32> {
     adsr.lastVolume = 0;
     return {0, 0};
   }
-  if(adsr.phase == ADSR::Phase::Off && !self.irq.enable) {
-    adsr.lastVolume = 0;
-    return {0, 0};
-  }
-
   s32 l = 0;
   s32 r = 0;
 
@@ -28,12 +23,14 @@ auto SPU::Voice::sample(s32 modulation) -> std::pair<s32, s32> {
   }
 
   s32 volume = 0;
-  if(non) {
-    volume = self.noise.level;
-  } else {
-    volume = gaussianInterpolate();
+  if(adsr.volume) {
+    if(non) {
+      volume = self.noise.level;
+    } else {
+      volume = gaussianInterpolate();
+    }
+    volume = amplify(volume, adsr.volume);
   }
-  volume = amplify(volume, adsr.volume);
   adsr.lastVolume = volume;
   if(adsr.phase != ADSR::Phase::Off) tickEnvelope();
 
