@@ -77,13 +77,17 @@ auto Bus::calcAccessTime(u32 address, u32 bytesCount) -> u32 const {
       return 4 * words;
     }
 
-    return 3 + words;
+    return ramReadAccessTime * words;
   }
 
   if(address >= 0x1fc0'0000) return memory.bios.calcAccessTime<isWrite, isDMA>(bytesCount);
   if((address & ~memory.exp1Mask) == memory.exp1Address) return memory.exp1.calcAccessTime<isWrite, isDMA>(bytesCount);
   u32 internalTime = isDMA ? 1 : internalRegisterAccessTime;
   u32 devicePortTime = isDMA ? 1 : devicePortAccessTime;
+  if constexpr(!isWrite) {
+    if(address >= 0x1f80'1000 && address <= 0x1f80'112f) return internalTime * words;
+    if(address >= 0x1f80'1820 && address <= 0x1f80'1827) return internalTime * words;
+  }
   if(address >= 0x1f80'1070 && address <= 0x1f80'1077) return internalTime * words;
   if((address & 0xffff'fff0) >= 0x1f80'1100 && (address & 0xffff'fff0) <= 0x1f80'113f) return internalTime * words;
   if(address >= 0x1f80'1800 && address <= 0x1f80'1803) return memory.cdrom.calcAccessTime<isWrite, isDMA>(bytesCount);

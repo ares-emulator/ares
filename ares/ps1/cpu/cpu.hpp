@@ -46,8 +46,8 @@ struct CPU : Thread {
   auto ioSynchronize() -> void;
   auto waitDMA() -> void;
   auto idle(u32 clocks = 0) -> void;
-  alwaysinline auto beginBusTransaction(u32 address, u32 size) -> void;
-  alwaysinline auto endBusTransaction() -> void;
+  alwaysinline auto beginBusTransaction(u32 address, u32 size, bool instruction = false) -> void;
+  alwaysinline auto endBusTransaction(bool overlap = false) -> void;
   auto flushWriteQueue() -> void;
   auto writeQueueWindow(u32 clocks) -> u32;
   auto writeQueueAdvance(u32 clocks) -> void;
@@ -76,6 +76,10 @@ struct CPU : Thread {
   } ioPoll;
   bool busAccess = false;
   u32 busTransactionClocks = 0;
+  u32 readRemaining = 0;
+  u32 readLatency = 0;
+  u32 readTarget = 0;
+  auto readInterlock(u32 instruction) -> void;
 
   alwaysinline auto instructionPrologue(u32 instruction) -> void;
   alwaysinline auto instructionEpilogue() -> void;
@@ -98,7 +102,7 @@ struct CPU : Thread {
 
   alwaysinline auto step(u32 clocks) -> void {
     if constexpr(!lockstep) {
-      if(likely(!(writeQueue.count | writeQueue.remaining | mulDivRemaining | gte.remaining) && (s32)clocks < cyclesUntilForcedSync)) {
+      if(likely(!(writeQueue.count | writeQueue.remaining | mulDivRemaining | gte.remaining | readRemaining | readLatency) && (s32)clocks < cyclesUntilForcedSync)) {
         accruedCycles += clocks;
         cyclesUntilForcedSync -= clocks;
         return;

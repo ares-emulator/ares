@@ -36,6 +36,8 @@ auto CPU::unload() -> void {
 alwaysinline auto CPU::instructionPrologue(u32 instruction) -> void {
   pipeline.address = ipu.pc;
   pipeline.instruction = instruction;
+  u32 opcode = instruction >> 26;
+  if(opcode >= 0x20 && opcode <= 0x26 && (instruction >> 16 & 31) == readTarget) readTarget = 0;
   if(unlikely(ipu.pc == 0xa0 || ipu.pc == 0xb0)) {
     if(unlikely(debugger.tracer.message->enabled())) debugger.message();
   }
@@ -103,16 +105,22 @@ auto CPU::stepSlow(u32 clocks) -> void {
 
   while(clocks > 0) {
     u32 stepClocks = clocks;
+    if(readRemaining) stepClocks = min(stepClocks, readRemaining);
     if constexpr(!lockstep) stepClocks = min<u32>(stepClocks, cyclesUntilForcedSync);
     if(writeQueue.count | writeQueue.remaining) stepClocks = writeQueueWindow(stepClocks);
 
     mulDivRemaining -= min(mulDivRemaining, stepClocks);
     gte.remaining -= min(gte.remaining, stepClocks);
+    readLatency -= min(readLatency, stepClocks);
     accruedCycles += stepClocks;
     clocks -= stepClocks;
     cyclesUntilForcedSync -= stepClocks;
 
     if(writeQueue.remaining) writeQueueAdvance(stepClocks);
+    if(readRemaining) {
+      readRemaining -= stepClocks;
+      if(!readRemaining) busAccess = false;
+    }
     if(lockstep || writeQueue.stalled || cyclesUntilForcedSync <= 0) synchronize();
   }
 }
@@ -175,6 +183,7 @@ auto CPU::power(bool reset) -> void {
   gte.command = 0;
   writeQueue = {};
   busAccess = false;
+  busTransactionClocks = readRemaining = readLatency = readTarget = 0;
   ioPoll = {};
 
   pipeline = {};

@@ -89,7 +89,9 @@ template<bool isWrite, bool isDMA>
 auto MemoryControl::MemPort::calcAccessTime(u32 bytesCount) -> u32 const {
   auto& value = timing[(isDMA ? 2 : 0) | (isWrite ? 1 : 0)];
   u32 accesses = bytesCount ? (bytesCount + (1u << value.widthShift) - 1) >> value.widthShift : 1;
-  return value.first + value.sequential * (accesses - 1);
+  u32 first = value.first;
+  if constexpr(!isWrite && !isDMA) first = max(first, 8u);
+  return first + value.sequential * (accesses - 1);
 }
 
 //explicit instantiations to prevent linker errors

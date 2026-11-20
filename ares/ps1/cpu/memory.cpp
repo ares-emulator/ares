@@ -25,13 +25,13 @@ inline auto CPU::fetch(u32 address) -> u32 {
   //uncached
   case 5: {//$a0000000-$bfffffff  KSEG1
     if(likely(address <= (0xa000'0000 | memory.ramLimit))) {
-      beginBusTransaction(address, Word);
+      beginBusTransaction(address, Word, true);
       auto data = ram.read<Word>(address);
       endBusTransaction();
       return data;
     }
     if(likely(address >= 0xbfc0'0000)) {
-      beginBusTransaction(address, Word);
+      beginBusTransaction(address, Word, true);
       auto data = bios.read<Word>(address);
       endBusTransaction();
       return data;
@@ -84,7 +84,7 @@ inline auto CPU::readIO(u32 address) -> u32 {
   beginBusTransaction(address, Size);
   if(!bus.busConfiguration(address).width) {
     auto data = bus.read<Size>(address);
-    endBusTransaction();
+    endBusTransaction(true);
     return data;
   }
   endBusTransaction();
@@ -97,7 +97,7 @@ inline auto CPU::readBus(u32 address) -> u32 {
   if(likely(!scc.status.cache.isolate && (address & 0x7fff'ffff) <= memory.ramLimit)) {
     beginBusTransaction(address, Size);
     auto data = ram.read<Size>(address);
-    endBusTransaction();
+    endBusTransaction(true);
     return data;
   }
 
@@ -120,13 +120,13 @@ inline auto CPU::readBus(u32 address) -> u32 {
     if(likely(address <= memory.ramLimit)) {
       beginBusTransaction(address, Size);
       auto data = ram.read<Size>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0x1fc0'0000)) {
       beginBusTransaction(address, Size);
       auto data = bios.read<Size>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0x1f00'0000)) {
@@ -152,13 +152,13 @@ inline auto CPU::readBus(u32 address) -> u32 {
     if(likely(address <= (0x8000'0000 | memory.ramLimit))) {
       beginBusTransaction(address, Size);
       auto data = ram.read<Size>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0x9fc0'0000)) {
       beginBusTransaction(address, Size);
       auto data = bios.read<Size>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0x9f00'0000)) {
@@ -175,13 +175,13 @@ inline auto CPU::readBus(u32 address) -> u32 {
     if(likely(address <= (0xa000'0000 | memory.ramLimit))) {
       beginBusTransaction(address, Size);
       auto data = ram.read<Size>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0xbfc0'0000)) {
       beginBusTransaction(address, Size);
       auto data = bios.read<Size>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0xbf00'0000)) {
@@ -244,7 +244,7 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
   if(likely(!scc.status.cache.isolate && (address & 0x7fff'ffff) <= memory.ramLimit)) {
     beginBusTransaction(virtualAddress, Word);
     auto data = ram.read<Word>(address);
-    endBusTransaction();
+    endBusTransaction(true);
     return data;
   }
 
@@ -272,13 +272,13 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
     if(likely(address <= memory.ramLimit)) {
       beginBusTransaction(virtualAddress, Word);
       auto data = ram.read<Word>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0x1fc0'0000)) {
       beginBusTransaction(virtualAddress, Word);
       auto data = bios.read<Word>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0x1f00'0000)) {
@@ -309,13 +309,13 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
     if(likely(address <= (0x8000'0000 | memory.ramLimit))) {
       beginBusTransaction(virtualAddress, Word);
       auto data = ram.read<Word>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0x9fc0'0000)) {
       beginBusTransaction(virtualAddress, Word);
       auto data = bios.read<Word>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0x9f00'0000)) {
@@ -337,13 +337,13 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
     if(likely(address <= (0xa000'0000 | memory.ramLimit))) {
       beginBusTransaction(virtualAddress, Word);
       auto data = ram.read<Word>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0xbfc0'0000)) {
       beginBusTransaction(virtualAddress, Word);
       auto data = bios.read<Word>(address);
-      endBusTransaction();
+      endBusTransaction(true);
       return data;
     }
     if(likely(address >= 0xbf00'0000)) {

@@ -12,6 +12,7 @@ struct BusConfiguration {
 };
 
 struct Bus {
+  static constexpr u32 ramReadAccessTime = 6;
   static constexpr u32 internalRegisterAccessTime = 4;
 
   static constexpr u32 devicePortAccessTime = 2;
@@ -68,7 +69,7 @@ struct MemoryControl : Memory::Interface {
     n1  readPriority;       //not emulated
     n1  noWaitState;        //not emulated
     n1  busGrant;           //not emulated
-    n1  loadScheduling;     //not emulated
+    n1  loadScheduling;
     n1  noStreaming;        //not emulated
     n14 reserved;           //not used
   } cache;

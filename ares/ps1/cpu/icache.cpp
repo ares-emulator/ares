@@ -2,6 +2,13 @@ alwaysinline auto CPU::InstructionCache::fetch(u32 address) -> u32 {
   auto& line = lines[address >> 4 & 0xff];
   u32 word = address >> 2 & 3;
   if(likely(line.tag == (address & TagMask) && (line.valid & (1u << word)))) {
+    if(unlikely(cpu.readRemaining)) {
+      //RAM may have changed since this line was filled.
+      //Another load cannot issue until the prior read has released the bus.
+      u32 opcode = line.words[word] >> 26;
+      if((opcode >= 0x20 && opcode <= 0x26) || (opcode >= 0x30 && opcode <= 0x33)) cpu.step(cpu.readRemaining);
+    }
+    if(unlikely(cpu.readLatency && cpu.readTarget)) cpu.readInterlock(line.words[word]);
     cpu.step(1);
     return line.words[word];
   }
@@ -17,21 +24,21 @@ auto CPU::InstructionCache::fetchSlow(u32 address) -> u32 {
     u32 start = address & ~3u;
     u32 size = Word * (4 - word);
     if((address & 0x1fff'ffff) <= memory.ramLimit) {
-      cpu.beginBusTransaction(start, size);
+      cpu.beginBusTransaction(start, size, true);
       u32 base = (address & ~0xfu) & cpu.ram.maskWord;
       auto* src = (const u32*)&cpu.ram.data[base];
       for(u32 index = word; index < 4; index++) line.words[index] = src[index];
       cpu.endBusTransaction();
     }
     if((address & 0x1fff'ffff) >= 0x1fc0'0000) {
-      cpu.beginBusTransaction(start, size);
+      cpu.beginBusTransaction(start, size, true);
       for(u32 index = word; index < 4; index++) {
         line.words[index] = bios.read<Word>((address & ~0xfu) | index << 2);
       }
       cpu.endBusTransaction();
     }
     if((address & 0x1fff'ffff) > memory.ramLimit && (address & 0x1fff'ffff) < 0x1fc0'0000) {
-      cpu.beginBusTransaction(start, size);
+      cpu.beginBusTransaction(start, size, true);
       for(u32 index = word; index < 4; index++) {
         line.words[index] = bus.read<Word>(((address & ~0xfu) | index << 2) & 0x1fff'ffff);
       }

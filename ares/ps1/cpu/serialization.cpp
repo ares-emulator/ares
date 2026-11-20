@@ -22,6 +22,10 @@ auto CPU::serialize(serializer& s) -> void {
   s(writeQueue.remaining);
   s(writeQueue.page);
   s(busAccess);
+  s(busTransactionClocks);
+  s(readRemaining);
+  s(readLatency);
+  s(readTarget);
 
   s(pipeline.address);
   s(pipeline.instruction);
