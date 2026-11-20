@@ -153,6 +153,7 @@ auto Disc::Drive::clockSector() -> void {
     self.debugger.read(lba.current);
     self.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lba.current++)));
     self.fd->read({sector.data, 2448});
+    firstSectorPending = 0;
 
     if(auto trackID = session->inTrack(lba.current)) {
       sector.track = *trackID;

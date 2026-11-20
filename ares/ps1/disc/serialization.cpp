@@ -21,6 +21,7 @@ auto Disc::serialize(serializer& s) -> void {
   s(drive.seekRetries);
   s(drive.seekType);
   s(drive.pendingOperation);
+  s(drive.firstSectorPending);
 
   s(audio.mute);
   s(audio.muteADPCM);

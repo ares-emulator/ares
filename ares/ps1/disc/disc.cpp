@@ -110,6 +110,7 @@ auto Disc::disconnect() -> void {
   drive.seekRetries = 0;
   drive.headerValid = 0;
   drive.standby = 0;
+  drive.firstSectorPending = 0;
   drive.lba.pending = 0;
 
   ssr = {};
@@ -264,6 +265,7 @@ auto Disc::power(bool reset) -> void {
   drive.pendingOperation = Drive::PendingOperation::None;
   drive.headerValid = 0;
   drive.standby = 0;
+  drive.firstSectorPending = 0;
   audio = {};
   //configure for stereo sound at 100% volume level
   audio.volume[0] = audio.volumeLatch[0] = 0x80;

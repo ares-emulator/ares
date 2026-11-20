@@ -308,6 +308,7 @@ auto Disc::commandPlay() -> void {
     counter.report = 60 * (system.frequency() / 75 >> drive.mode.speed);
 
     drive.seekType = Disc::Drive::SeekType::SeekP;
+    drive.firstSectorPending = 1;
     drive.pendingOperation = Disc::Drive::PendingOperation::Play;
     drive.seekRetries = 0;
     drive.seeking = drive.distance();
@@ -323,6 +324,7 @@ auto Disc::commandPlay() -> void {
     counter.report = 60 * (system.frequency() / 75 >> drive.mode.speed);
 
     drive.seekType = Disc::Drive::SeekType::SeekP;
+    drive.firstSectorPending = 1;
     drive.pendingOperation = Disc::Drive::PendingOperation::Play;
     drive.seekRetries = 0;
     drive.seeking = drive.distance();
@@ -333,6 +335,7 @@ auto Disc::commandPlay() -> void {
     return;
   }
 
+  if(!ssr.reading || !ssr.playingCDDA) drive.firstSectorPending = 1;
   ssr.reading = 1;
   ssr.playingCDDA = 1;
   cdda.playMode = CDDA::PlayMode::Normal;
@@ -367,6 +370,7 @@ auto Disc::commandReadN() -> void {
   ssr.reading = 0;
   ssr.playingCDDA = 0;
   drive.seekType = Drive::SeekType::SeekL;
+  drive.firstSectorPending = 1;
   drive.pendingOperation = Drive::PendingOperation::Read;
   drive.seekRetries = 0;
   drive.seeking = drive.distance();
@@ -394,6 +398,7 @@ auto Disc::commandStop() -> void {
   drive.seeking = 0;
   drive.seekDelay = 0;
   drive.seekType = Drive::SeekType::None;
+  drive.firstSectorPending = 0;
   drive.pendingOperation = Drive::PendingOperation::None;
   fifo.deferred.ready = {};
   ssr.reading = 0;
@@ -405,6 +410,11 @@ auto Disc::commandStop() -> void {
 
 //0x09
 auto Disc::commandPause() -> void {
+  if(drive.seeking || (ssr.reading && drive.firstSectorPending)) {
+    error(ErrorCode_CannotRespondYet);
+    return;
+  }
+
   ack();
   drive.standby = 0;
   fifo.deferred.ready = {};
@@ -445,6 +455,7 @@ auto Disc::commandInit() -> void {
   drive.seeking = 0;
   drive.seekDelay = 0;
   drive.seekType = Drive::SeekType::None;
+  drive.firstSectorPending = 0;
   drive.pendingOperation = Drive::PendingOperation::None;
   drive.seekRetries = 0;
   fifo.deferred.ready = {};
@@ -626,6 +637,7 @@ auto Disc::commandSeekL() -> void {
   ssr.playingCDDA = 0;
 
   drive.seekType = Drive::SeekType::SeekL;
+  drive.firstSectorPending = 0;
   drive.pendingOperation = Drive::PendingOperation::None;
   drive.seekRetries = 0;
   drive.seeking = drive.distance();
@@ -644,6 +656,7 @@ auto Disc::commandSeekP() -> void {
   ssr.playingCDDA = 0;
 
   drive.seekType = Drive::SeekType::SeekP;
+  drive.firstSectorPending = 0;
   drive.pendingOperation = Drive::PendingOperation::None;
   drive.seekRetries = 0;
   drive.seeking = drive.distance();

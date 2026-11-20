@@ -160,6 +160,7 @@ struct Disc : Memory::Interface {
     n1 headerValid;
     n2 headerLag;
     n1 standby;
+    n1 firstSectorPending;
     u32 seeking;
     u32 seekDelay;
     u16 seekRetries;
