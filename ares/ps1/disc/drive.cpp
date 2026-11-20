@@ -24,6 +24,14 @@ auto Disc::Drive::updateSubQ() -> void {
   const u8 adr = qbuf[0] & 0x0f;
   const u16 crc = (u16)qbuf[10] << 8 | qbuf[11];
   if(adr != 0x01 || CD::CRC16({qbuf, 10}) != crc) return;
+  if(self.ssr.reading && self.ssr.playingCDDA && mode.autoPause && !seeking && !seekDelay
+  && sector.subq[1] && sector.subq[1] != qbuf[1]) {
+    self.ssr.reading = 0;
+    self.ssr.playingCDDA = 0;
+    self.fifo.deferred.ready = {};
+    self.queueResponse(ResponseType::End, {self.status()});
+    return;
+  }
   for(int i = 0; i < 10; i++) sector.subq[i] = qbuf[i];
 }
 
