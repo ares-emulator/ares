@@ -17,7 +17,8 @@ auto Disc::Drive::distance() const -> u32 {
 
 auto Disc::Drive::updateSubQ() -> void {
   u8 qbuf[12];
-  self.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lba.current)) + 2352 + 12);
+  s32 target = lba.current + (self.ssr.reading && !seeking && !seekDelay ? 2 : 0);
+  self.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(target)) + 2352 + 12);
   self.fd->read({qbuf, 12});
 
   const u8 adr = qbuf[0] & 0x0f;
