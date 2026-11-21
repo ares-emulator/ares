@@ -199,7 +199,6 @@ auto GPU::writeGP0(u32 value, bool isThread, bool isDMA) -> void {
 
 auto GPU::executeGP0(u32 value, bool isThread) -> void {
   if(io.mode == Mode::CopyToVRAM) {
-    vram.mutex.lock();
     for(u32 loop : range(2)) {
       n10 x = io.copy.x + io.copy.px;
       n9  y = io.copy.y + io.copy.py;
@@ -218,7 +217,6 @@ auto GPU::executeGP0(u32 value, bool isThread) -> void {
         }
       }
     }
-    vram.mutex.unlock();
     return;
   }
 
