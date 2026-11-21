@@ -172,14 +172,17 @@ auto MDEC::decodeBlock(s16 target[64]) -> bool {
 template<u32 Pass>
 auto MDEC::decodeIDCT(s16 source[64], s16 target[64]) -> void {
   for(u32 x : range(8)) {
-    for(u32 y : range(8)) {
-      s32 sum = 0;
-      for(u32 z : range(8)) {
+    s32 sums[8] = {};
+    for(u32 z : range(8)) {
+      s32 scale = block.scale[x + z * 8] >> (Pass == 0 ? 3 : 4);
+      for(u32 y : range(8)) {
         s32 coefficient = source[y + z * 8];
         if constexpr(Pass == 0) coefficient >>= 3;
-        s32 scale = block.scale[x + z * 8] >> (Pass == 0 ? 3 : 4);
-        sum = sclip<17>(sum + (coefficient * scale >> 7));
+        sums[y] += coefficient * scale >> 7;
       }
+    }
+    for(u32 y : range(8)) {
+      s32 sum = sclip<17>(sums[y]);
       if constexpr(Pass == 0) target[x + y * 8] = sclip<13>(sum >> 4);
       if constexpr(Pass == 1) target[x + y * 8] = sclamp<8>((sclip<10>(sum >> 7) + 1) >> 1);
     }
