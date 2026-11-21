@@ -34,7 +34,13 @@ auto DMA::main() -> void {
     }
   }
 
-  step(blocked ? 1u : counter > 0 ? (u32)counter : 128u);
+  if(blocked) {
+    //state cannot change until another device runs, so step to the next boundary
+    u64 deadline = min(cpu.clock(), gpu.clock(), spu.clock(), mdec.clock());
+    u32 clocks = deadline >= clock() ? (deadline - clock()) / scalar() + 1 : 1;
+    return step(clocks);
+  }
+  step(counter > 0 ? (u32)counter : 128u);
 }
 
 
