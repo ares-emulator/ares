@@ -148,6 +148,7 @@ struct CPU : Thread {
 
   //memory.cpp
   auto fetch(u32 address) -> u32;
+  auto fetchSlow(u32 address) -> u32;
   auto peek(u32 address) -> u32;
 
   template<u32 Size> auto read(u32 address) -> u32;
