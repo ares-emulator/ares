@@ -1,9 +1,13 @@
 //read code from the bus
-inline auto CPU::fetch(u32 address) -> u32 {
+alwaysinline auto CPU::fetch(u32 address) -> u32 {
   if(likely((address & 0x7fff'ffff) <= 0x007f'ffff)) {
     return icache.fetch(address);
   }
 
+  return fetchSlow(address);
+}
+
+auto CPU::fetchSlow(u32 address) -> u32 {
   auto physicalAddress = address & 0x1fff'ffff;
   if((physicalAddress & 0xffff'fc00) == 0x1f80'0000
   || (physicalAddress & 0xffff'fff0) == 0x1f80'1070
