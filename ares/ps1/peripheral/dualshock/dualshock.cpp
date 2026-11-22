@@ -1,7 +1,3 @@
-// NOTE: A real Dual Shock starts up in Digital Mode
-// However, we start up in Analog Mode due to there not being
-// enough buttons to properly map the "Analog" button on the controller
-
 DualShock::DualShock(Node::Port parent) {
   node = parent->append<Node::Peripheral>("DualShock");
 
@@ -30,15 +26,92 @@ DualShock::DualShock(Node::Port parent) {
   mode     = node->append<Node::Input::Button>("Mode");
   rumble   = node->append<Node::Input::Rumble>("Rumble");
 
-  analogMode = 1;
+  power(false);
+}
+
+auto DualShock::power(bool reset) -> void {
+  if(reset) return;
+  this->reset();
+  analogMode = 0;
   newRumbleMode = 0;
   configMode = 0;
+  modeLocked = modePressed = false;
+  watchdogEnabled = false;
+  watchdogRemaining = 0;
+  statusByte = 0x5a;
+  command = commandStep = 0;
+  for(auto& value : rumbleConfig) value = 0xff;
+  inputData.clear();
+  rumble->setValues(0, 0);
+}
+
+auto DualShock::toggleMode() -> void {
+  if(modeLocked) return;
+  if(newRumbleMode) statusByte = 0;
+  analogMode ^= 1;
+  configMode = 0;
+  for(auto& value : rumbleConfig) value = 0xff;
+  rumble->setValues(0, 0);
+  platform->input(rumble);
+}
+
+auto DualShock::pollMode() -> void {
+  platform->input(mode);
+  bool pressed = mode->value();
+  if(pressed && !modePressed) toggleMode();
+  modePressed = pressed;
+}
+
+auto DualShock::selectChanged(bool selected) -> void {
+  reset();
+  if(selected && watchdogEnabled) watchdogRemaining = system.frequency() * 5 / 2;
+}
+
+auto DualShock::step(u32 clocks) -> void {
+  if(!watchdogRemaining) return;
+  watchdogRemaining -= min(watchdogRemaining, clocks);
+  if(watchdogRemaining) return;
+  bool pressed = modePressed;
+  power(false);
+  modePressed = pressed;
+  newRumbleMode = 1;
+  platform->input(rumble);
 }
 
 auto DualShock::reset() -> void {
   state = State::Idle;
   _active = false;
   outputData.clear();
+  inputData.clear();
+  command = commandStep = 0;
+}
+
+auto DualShock::serialize(serializer& s) -> void {
+  s(state);
+  s(analogMode);
+  s(newRumbleMode);
+  s(configMode);
+  s(modeLocked);
+  s(modePressed);
+  s(watchdogEnabled);
+  s(watchdogRemaining);
+  s(statusByte);
+  s(command);
+  s(commandStep);
+  s(rumbleConfig);
+  s(_active);
+  auto queue = [&](auto& values) {
+    u8 count = values.size();
+    s(count);
+    if(s.reading()) values.clear();
+    for(u32 index : range(8)) {
+      u8 value = s.writing() && index < values.size() ? (u8)values[index] : 0;
+      s(value);
+      if(s.reading() && index < count) values.push_back(value);
+    }
+  };
+  queue(outputData);
+  queue(inputData);
 }
 
 auto DualShock::acknowledge() -> u32 {
@@ -57,7 +130,7 @@ auto DualShock::bus(u8 data) -> u8 {
   if(!newRumbleMode && command == 0x42) {
     switch(commandStep) {
       case 1: inputData.clear(); inputData.push_back(input); break;
-      case 2: rumble->setEnable(inputData[0].bit(6, 7) == 1 && input.bit(0) == 1); break;
+      case 2: rumble->setValues(0, inputData[0].bit(6, 7) == 1 && input.bit(0) == 1 ? 0xffff : 0); break;
     }
     platform->input(rumble);
   }
@@ -71,20 +144,29 @@ auto DualShock::bus(u8 data) -> u8 {
   }
 
   //config Mode Enable/Disable
-  if(command == 0x43 && commandStep == 1) {
-    configMode = input;
+  if(command == 0x43 && commandStep == 1 && input <= 1) {
+    configMode = input != 0;
     newRumbleMode = 1;
+    if(input == 1) {
+      statusByte = 0x5a;
+      watchdogEnabled = true;
+      watchdogRemaining = system.frequency() * 5 / 2;
+    }
   }
 
   //set led state
   if(command == 0x44 && commandStep == 1) {
-    //TODO: set LED state to commandStep[1] if commandStep[2] is set
-    for(auto n : range(6)) rumbleConfig[n] = 0xff;
+    if(input <= 1) {
+      analogMode = input;
+    } else if(outputData.size() > 2) {
+      outputData[2] = 0xff;
+    }
   }
+  if(command == 0x44 && commandStep == 2) modeLocked = (input & 3) == 3;
 
   //variable response A
   if(command == 0x46 && commandStep == 1) {
-    if(input == 0x00)      { outputData.insert(outputData.end(), {0x01,0x02,0x00,0x00}); }
+    if(input == 0x00)      { outputData.insert(outputData.end(), {0x01,0x02,0x00,0x0a}); }
     else if(input == 0x01) { outputData.insert(outputData.end(), {0x01,0x01,0x01,0x14}); }
     else                   { outputData.insert(outputData.end(), {0x00,0x00,0x00,0x00}); }
   }
@@ -99,6 +181,11 @@ auto DualShock::bus(u8 data) -> u8 {
 
   if(command == 0x4d && commandStep >= 1) {
     rumbleConfig[commandStep - 1] = input;
+    if(commandStep == 6 && inputData.size() == 6) {
+      bool query = true;
+      for(auto value : rumbleConfig) query &= value == 0xff;
+      if(query) for(u32 index : range(6)) rumbleConfig[index] = inputData[index];
+    }
   }
 
   //if there is data in the output queue, return that
@@ -122,6 +209,7 @@ auto DualShock::bus(u8 data) -> u8 {
       break;
     }
 
+    pollMode();
     output = 0xff;
     state = State::IDLower;
     _active = true;
@@ -133,7 +221,7 @@ auto DualShock::bus(u8 data) -> u8 {
 
     if(configMode) output = 0xf3;
     else output = analogMode ? 0x73 : 0x41;
-    outputData.push_back(0x5a);
+    outputData.push_back(statusByte);
 
     //Global commands: these work during any operation mode
     switch(input) {
@@ -154,18 +242,29 @@ auto DualShock::bus(u8 data) -> u8 {
             case 0x45: { outputData.insert(outputData.end(), {0x01,0x02,(u8)analogMode,0x02,0x01,0x00}); } break;
             case 0x46: { outputData.insert(outputData.end(), {0x00,0x00}); } break; // Partial response, will be completed on step 1
             case 0x47: { outputData.insert(outputData.end(), {0x00,0x00,0x02,0x00,0x01,0x00}); } break;
+            case 0x48: { outputData.insert(outputData.end(), {0x00,0x00,0x00,0x00,0x01,0x00}); } break;
             case 0x4c: { outputData.insert(outputData.end(), {0x00,0x00,0x00}); } break; // Partial response, will be completed on step 1
-            case 0x4d: for(auto n : range(6)) outputData.push_back(rumbleConfig[n]); break;
+            case 0x4d:
+              inputData.clear();
+              for(auto n : range(6)) {
+                outputData.push_back(rumbleConfig[n]);
+                inputData.push_back(rumbleConfig[n]);
+              }
+              break;
             default:
-              outputData.clear();
-              output = invalid(input);
+              if(input >= 0x40 && input <= 0x4f) {
+                outputData.insert(outputData.end(), {0x00,0x00,0x00,0x00,0x00,0x00});
+              } else {
+                outputData.clear();
+                invalid(input);
+              }
               break;
           }
           break;
         }
 
         outputData.clear();
-        output = invalid(input);
+        invalid(input);
         break;
       }
     }
@@ -295,9 +394,8 @@ auto DualShock::readPad() -> std::vector<u8> {
   return result;
 }
 
-auto DualShock::invalid(u8 data) -> u8 {
+auto DualShock::invalid(u8 data) -> void {
   debug(unusual, "[DualShock] Invalid command byte ", hex(data));
   _active = false;
   state = State::Idle;
-  return 0xff;
 }

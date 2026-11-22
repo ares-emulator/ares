@@ -71,6 +71,7 @@ struct GPU : Thread, Memory::Interface {
   auto executeLatch() -> void;
   auto stepFifo() -> void;
   auto stepFill(u32 clocks) -> void;
+  auto flushUploadRow(u32 count) -> void;
 
   //gp1.cpp
   auto readGP1() -> u32;
@@ -138,6 +139,8 @@ struct GPU : Thread, Memory::Interface {
     //internal:
       n16 px;
       n16 py;
+      u16 row[1024] = {};
+      bool pendingHalf = false;
     } copy;
 
     //GP0(e1): draw mode
@@ -237,7 +240,6 @@ struct GPU : Thread, Memory::Interface {
     auto full() const -> bool { return size() >= Depth; }
 
     auto write(u32 word) -> void {
-      if(full()) readPointer = (readPointer + 1) & PtrMask;
       buffer[writePointer & (Depth - 1)] = word;
       writePointer = (writePointer + 1) & PtrMask;
     }
@@ -470,6 +472,7 @@ struct GPU : Thread, Memory::Interface {
     queue_spsc<Render[65536]> fifo;
     std::atomic<u32> workSequence = 0;
     std::atomic<u32> completedSequence = 0;
+    std::atomic<bool> sleeping = false;
     u32 textureCycles = 0;
     u32 textureBlendPixels = 0;
   } renderer{*this};

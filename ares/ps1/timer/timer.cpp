@@ -151,6 +151,17 @@ auto Timer::Source::step(u32 clocks) -> void {
     return;
   }
 
+  if(!resetPending && !wait && clocks > 0) {
+    u32 toTarget   = (target - u16(counter)) & 0xffff;
+    u32 toSaturate = (0xffff - u16(counter)) & 0xffff;
+    if(toTarget   == 0) toTarget   = 0x10000;
+    if(toSaturate == 0) toSaturate = 0x10000;
+    if(clocks < toTarget && clocks < toSaturate) {
+      counter += clocks;
+      return;
+    }
+  }
+
   while(clocks > 0) {
     if(resetPending) {
       counter = 0;
@@ -198,7 +209,8 @@ auto Timer::Source::step(u32 clocks) -> void {
     }
 
     if(hitTarget && resetMode == 1) {
-      resetPending = 1;
+      if(id == 2 && divider) counter = 0;
+      else resetPending = 1;
     }
   }
 }

@@ -1,5 +1,6 @@
 #include <ps1/ps1.hpp>
 #include <bit>
+#include <array>
 
 namespace ares::PlayStation {
 
@@ -49,8 +50,10 @@ alwaysinline auto CPU::instructionEpilogue() -> void {
   ipu.pc = ipu.pd;
   ipu.pd = ipu.pd + 4;
 
-  if(unlikely(delay.loadPending)) processDelayLoad();
-  if(unlikely(delay.branchPending)) processDelayBranch();
+  if(unlikely(delay.loadPending | delay.branchPending)) {
+    if(delay.loadPending) processDelayLoad();
+    if(delay.branchPending) processDelayBranch();
+  }
   ipu.r[0] = 0;
 
   if(unlikely(exception.interruptsPending())) {
@@ -58,6 +61,31 @@ alwaysinline auto CPU::instructionEpilogue() -> void {
     exception.interrupt();
   }
   if(unlikely(exception.triggered)) exception.triggered = 0;
+}
+
+static constexpr auto controlFlowClass = []() {
+  std::array<u8, 64> t{};
+  for(u32 o = 1; o <= 7; o++) t[o] = 1;
+  t[0x00] = 2;
+  t[0x10] = 3;
+  t[0x12] = 3;
+  return t;
+}();
+
+alwaysinline auto CPU::fetchAhead(u32 address, PrefetchedInstruction& slot) -> void {
+  if(likely(!(address & 3) && (address & 0x7fff'ffff) <= memory.ramLimit)) {
+    slot.address = address;
+    slot.instruction = fetch(address);
+    return;
+  }
+  u32 physical = address & 0x1fff'ffff;
+  if((address & 3) || (address >> 29 != 0 && address >> 29 != 4 && address >> 29 != 5)
+  || (physical > memory.ramLimit && physical < 0x1fc0'0000)) {
+    slot = {};
+    return;
+  }
+  slot.address = address;
+  slot.instruction = fetch(address);
 }
 
 auto CPU::main() -> void {
@@ -77,20 +105,41 @@ auto CPU::main() -> void {
       }
     }
 
-    u32 instruction = fetch(ipu.pc);
+    u32 instruction;
+    if(prefetched[0].address == ipu.pc) instruction = prefetched[0].instruction;
+    else {
+      prefetched[0] = prefetched[1] = {};
+      instruction = fetch(ipu.pc);
+    }
     if(unlikely(exception())) return (void)instructionEpilogue();
-
+    if(unlikely(readRemaining)) {
+      u32 opcode = instruction >> 26;
+      if((opcode >= 0x20 && opcode <= 0x26) || (opcode >= 0x30 && opcode <= 0x33)) step(readRemaining);
+    }
+    if(unlikely((readLatency | readWritebackRemaining) && readTarget)) readInterlock(instruction);
     instructionPrologue(instruction);
+    u32 opcode = instruction >> 26;
+    u32 flowClass = controlFlowClass[opcode];
+    bool controlFlow = flowClass == 1
+                    || (flowClass == 2 && ((0x300ull >> (instruction & 63)) & 1))
+                    || (flowClass == 3 && (instruction >> 21 & 31) == 8);
+    if(likely(!controlFlow)) {
+      if(prefetched[1].address == ipu.pd) prefetched[0] = prefetched[1];
+      else fetchAhead(ipu.pd, prefetched[0]);
+      fetchAhead(ipu.pd + 4, prefetched[1]);
+      if(unlikely(exception())) return (void)instructionEpilogue();
+    }
     decoderEXECUTE();
+    if(unlikely(controlFlow)) {
+      if(unlikely(exception())) return (void)instructionEpilogue();
+      if(prefetched[1].address == ipu.pd) prefetched[0] = prefetched[1];
+      else fetchAhead(ipu.pd, prefetched[0]);
+      fetchAhead(delay.branch[1].take ? (u32)delay.branch[1].address : ipu.pd + 4, prefetched[1]);
+      if(unlikely(exception())) return (void)instructionEpilogue();
+    }
     instructionEpilogue();
 
-    if constexpr(lockstep) {
-      if(unlikely(++instructionsSinceYield >= 512 || ipu.pb + 4 != ipu.pc)) {
-        instructionsSinceYield = 0;
-        synchronize();
-        break;
-      }
-    } else if(unlikely(++instructionsSinceYield >= 512)) {
+    if(unlikely(++instructionsSinceYield >= 512)) {
       instructionsSinceYield = 0;
       synchronize();
       break;
@@ -106,12 +155,13 @@ auto CPU::stepSlow(u32 clocks) -> void {
   while(clocks > 0) {
     u32 stepClocks = clocks;
     if(readRemaining) stepClocks = min(stepClocks, readRemaining);
-    if constexpr(!lockstep) stepClocks = min<u32>(stepClocks, cyclesUntilForcedSync);
+    stepClocks = min<u32>(stepClocks, cyclesUntilForcedSync);
     if(writeQueue.count | writeQueue.remaining) stepClocks = writeQueueWindow(stepClocks);
 
     mulDivRemaining -= min(mulDivRemaining, stepClocks);
     gte.remaining -= min(gte.remaining, stepClocks);
     readLatency -= min(readLatency, stepClocks);
+    readWritebackRemaining -= min(readWritebackRemaining, stepClocks);
     accruedCycles += stepClocks;
     clocks -= stepClocks;
     cyclesUntilForcedSync -= stepClocks;
@@ -121,7 +171,7 @@ auto CPU::stepSlow(u32 clocks) -> void {
       readRemaining -= stepClocks;
       if(!readRemaining) busAccess = false;
     }
-    if(lockstep || writeQueue.stalled || cyclesUntilForcedSync <= 0) synchronize();
+    if(writeQueue.stalled || cyclesUntilForcedSync <= 0) synchronize();
   }
 }
 
@@ -149,18 +199,34 @@ auto CPU::setNextEvent(u32 clocks) -> void {
 }
 
 auto CPU::ioSynchronize() -> void {
-  synchronize();
+    synchronize();
+}
+
+auto CPU::dmaStallSlices(u32 slice) -> u32 {
+  if(readRemaining || cyclesUntilForcedSync <= (s32)slice * 2 || timer.sysclockGated()) return 1;
+  u64 now = clock() + (u64)accruedCycles * scalar();
+  if(dma.clock() < now) return 1;
+  u64 slices = (dma.clock() - now) / ((u64)slice * scalar());
+  return max<u64>(1, min<u64>(slices, ((u64)cyclesUntilForcedSync - 1) / slice));
 }
 
 auto CPU::waitDMA() -> void {
   while(dma.active()) {
-    step(min<u32>(dmaStallGranularity, dma.cpuReleaseWindow()));
+    u32 slice = min<u32>(dmaStallGranularity, dma.cpuReleaseWindow());
+    u32 clocks = slice * dmaStallSlices(slice);
+    if(clocks > slice && (writeQueue.count | writeQueue.remaining)) {
+      if(!busAccess) writeQueue.page = ~0u;
+      writeQueue.stalled = !busAccess;
+      advance(clocks);
+    } else {
+      step(clocks);
+    }
     synchronize();
   }
 }
 
 auto CPU::idle(u32 clocks) -> void {
-  while(writeQueue.count | writeQueue.remaining) {
+    while(writeQueue.count | writeQueue.remaining) {
     step(writeQueue.remaining ? writeQueue.remaining : 1);
   }
   if(clocks == 0) {
@@ -183,10 +249,11 @@ auto CPU::power(bool reset) -> void {
   gte.command = 0;
   writeQueue = {};
   busAccess = false;
-  busTransactionClocks = readRemaining = readLatency = readTarget = 0;
+  busTransactionClocks = readRemaining = readLatency = readWritebackRemaining = readTarget = 0;
   ioPoll = {};
 
   pipeline = {};
+  prefetched[0] = prefetched[1] = {};
   delay = {};
   icache.power(reset);
   fastBooted = 0;

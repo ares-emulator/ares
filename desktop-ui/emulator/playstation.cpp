@@ -11,6 +11,7 @@ struct PlayStation : Emulator {
   std::shared_ptr<mia::Pak> memoryCard;
   u32 regionID = 0;
   sTimer discTrayTimer;
+  InputDigital analogButtons[2];
   string expansionSavePath, expansionFirmwareHash;
 };
 
@@ -71,13 +72,15 @@ PlayStation::PlayStation() {
     device.digital("R1",       virtualPorts[id].pad.r_bumper);
     device.digital("R2",       virtualPorts[id].pad.r_trigger);
     device.digital("R3",       virtualPorts[id].pad.rstick_click);
+    device.digital("Mode",     analogButtons[id]);
+    device.inputs.back().label = "Analog Button";
     device.digital("Select",   virtualPorts[id].pad.select);
     device.digital("Start",    virtualPorts[id].pad.start);
     device.analog("L-Stick X", virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
     device.analog("L-Stick Y", virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
     device.analog("R-Stick X", virtualPorts[id].pad.rstick_left, virtualPorts[id].pad.rstick_right);
     device.analog("R-Stick Y", virtualPorts[id].pad.rstick_up,   virtualPorts[id].pad.rstick_down);
-    device.rumble("Rumble",    virtualPorts[0].pad.rumble);
+    device.rumble("Rumble",    virtualPorts[id].pad.rumble);
     port.append(device); }
 
     ports.push_back(port);

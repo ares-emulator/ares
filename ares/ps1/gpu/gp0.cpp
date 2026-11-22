@@ -45,7 +45,7 @@ auto GPU::readGP0() -> u32 {
 }
 
 static constexpr auto commandUsesFifo(u8 command) -> bool {
-  if(command == 0x01 || command == 0x02 || command == 0x1f) return true;
+  if(command == 0x01 || command == 0x02 || command == 0x03 || command == 0x1f) return true;
   if(command >= 0x20 && command <= 0xdf) return true;
   return command == 0xe1 || command == 0xe2 || command == 0xe6;
 }
@@ -89,8 +89,8 @@ static auto occupiesFifo(u8 command) -> bool { return commandInfo[command] & 0x1
 auto GPU::commandLength(u32 word) -> u32 { return commandInfo[word >> 24] & 0x0f; }
 
 auto GPU::stepFifo() -> void {
-  if((!drawBusy() || !fill.active) && latch.ready) executeLatch();
-  while((!drawBusy() || !fill.active) && !fifo.empty()) {
+  if(!drawBusy() && latch.ready) executeLatch();
+  while(!drawBusy() && !fifo.empty()) {
     if(io.mode == Mode::CopyFromVRAM) break;
     u32 word = fifo.read();
     executeGP0(word);
@@ -199,15 +199,14 @@ auto GPU::writeGP0(u32 value, bool isThread, bool isDMA) -> void {
 
 auto GPU::executeGP0(u32 value, bool isThread) -> void {
   if(io.mode == Mode::CopyToVRAM) {
+    io.copy.pendingHalf = false;
     for(u32 loop : range(2)) {
-      n10 x = io.copy.x + io.copy.px;
-      n9  y = io.copy.y + io.copy.py;
-      u16 pixel = vram2D[y & 511][x & 1023];
-      if((pixel >> 15 & io.checkMaskBit) == 0) {
-        vram2D[y & 511][x & 1023] = value | io.forceMaskBit << 15;
-      }
+      io.copy.pendingHalf = loop == 1 && io.copy.px == 0;
+      io.copy.row[io.copy.px] = value;
       value >>= 16;
       if(++io.copy.px >= io.copy.width) {
+        io.copy.pendingHalf = false;
+        flushUploadRow(io.copy.width);
         io.copy.px = 0;
         if(++io.copy.py >= io.copy.height) {
           io.copy.py = 0;
@@ -660,6 +659,7 @@ auto GPU::executeGP0(u32 value, bool isThread) -> void {
     if(!io.copy.height) io.copy.height =  512;
     io.copy.px     = 0;
     io.copy.py     = 0;
+    io.copy.pendingHalf = false;
     io.mode        = Mode::CopyToVRAM;
     return queue.reset();
   }
@@ -680,7 +680,6 @@ auto GPU::executeGP0(u32 value, bool isThread) -> void {
     io.mode        = io.copy.width && io.copy.height ? Mode::CopyFromVRAM : Mode::Normal;
     io.vramReadLatchValid = 0;
     io.vramReadWordValid = 0;
-    io.vramReadWord = cpu.cycleCount();
     io.readTransferFifoLength = 0;
     return queue.reset();
   }
@@ -763,6 +762,17 @@ auto GPU::executeGP0(u32 value, bool isThread) -> void {
   if(command >= 0xf0 && command <= 0xff) {
     return;
   }
+}
+
+auto GPU::flushUploadRow(u32 count) -> void {
+  vram.mutex.lock();
+  u32 y = (io.copy.y + io.copy.py) & 511;
+  for(u32 column : range(count)) {
+    u32 x = (io.copy.x + column) & 1023;
+    if(!(vram2D[y][x] >> 15 & io.checkMaskBit))
+      vram2D[y][x] = io.copy.row[column] | io.forceMaskBit << 15;
+  }
+  vram.mutex.unlock();
 }
 
 auto GPU::stepFill(u32 clocks) -> void {

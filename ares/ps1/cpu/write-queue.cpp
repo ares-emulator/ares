@@ -65,15 +65,15 @@ alwaysinline auto CPU::beginBusTransaction(u32 address, u32 size, bool instructi
   if(unlikely((physical & 0xffff'fc00) == 0x1f80'0000)) return;
 
   if(unlikely(writeQueue.count)) {
-    auto wordAddress = [&](u32 value) -> u32 {
+    auto hazardAddress = [&](u32 value) -> u32 {
       if(value <= 0x007f'ffff) value &= ram.maskByte;
-      return value & ~3u;
+      return value & ~63u;
     };
-    u32 first = wordAddress(physical);
-    u32 last  = first + (size - 1 & ~3u);
+    u32 first = hazardAddress(physical);
+    u32 last  = hazardAddress(physical + size - 1);
     for(u32 index = 0; index < writeQueue.count; index++) {
       auto& entry = writeQueue.entries[(writeQueue.head + index) & 3];
-      u32 target = wordAddress(entry.address);
+      u32 target = hazardAddress(entry.address);
       if(target >= first && target <= last) { flushWriteQueue(); break; }
     }
   }
@@ -104,9 +104,9 @@ alwaysinline auto CPU::endBusTransaction(bool overlap) -> void {
   u32 tail = overlap && memory.cache.loadScheduling && busTransactionClocks > 2 ? min(2u, busTransactionClocks - 2) : 0;
   step(busTransactionClocks - tail);
   readRemaining = tail;
-  if(tail) {
-    //The register-file return follows the bus tail by one clock.
-    readLatency = tail + 1;
+  if(tail || (overlap && memory.cache.loadScheduling && busTransactionClocks == 2)) {
+    readLatency = tail ? tail + 1 : 3;
+    readWritebackRemaining = readLatency + 1;
     u32 opcode = pipeline.instruction >> 26;
     readTarget = opcode >= 0x20 && opcode <= 0x26 ? pipeline.instruction >> 16 & 31 : 0;
   }

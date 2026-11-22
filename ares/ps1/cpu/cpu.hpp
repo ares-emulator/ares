@@ -45,6 +45,7 @@ struct CPU : Thread {
   auto setNextEvent(u32 clocks) -> void;
   auto ioSynchronize() -> void;
   auto waitDMA() -> void;
+  auto dmaStallSlices(u32 slice) -> u32;
   auto idle(u32 clocks = 0) -> void;
   alwaysinline auto beginBusTransaction(u32 address, u32 size, bool instruction = false) -> void;
   alwaysinline auto endBusTransaction(bool overlap = false) -> void;
@@ -78,6 +79,7 @@ struct CPU : Thread {
   u32 busTransactionClocks = 0;
   u32 readRemaining = 0;
   u32 readLatency = 0;
+  u32 readWritebackRemaining = 0;
   u32 readTarget = 0;
   auto readInterlock(u32 instruction) -> void;
 
@@ -94,19 +96,34 @@ struct CPU : Thread {
   u32 mulDivRemaining = 0;
   auto cycleCount() const -> u64 { return clock() / scalar() + accruedCycles; }
   auto mulDivStall() -> void { if(mulDivRemaining) step(mulDivRemaining); }
-  static constexpr bool lockstep = false;
   const s32 forceSyncInterval = 1024;
   const s32 relaxedSyncInterval = 4096;
   const s32 branchCooldownCycles = 512;
   static constexpr u32 dmaStallGranularity = 4;
 
-  alwaysinline auto step(u32 clocks) -> void {
-    if constexpr(!lockstep) {
-      if(likely(!(writeQueue.count | writeQueue.remaining | mulDivRemaining | gte.remaining | readRemaining | readLatency) && (s32)clocks < cyclesUntilForcedSync)) {
-        accruedCycles += clocks;
-        cyclesUntilForcedSync -= clocks;
-        return;
+  alwaysinline auto advance(u32 clocks) -> void {
+    accruedCycles += clocks;
+    cyclesUntilForcedSync -= clocks;
+    if(unlikely(readRemaining)) {
+      if(clocks >= readRemaining) {
+        readRemaining = 0;
+        busAccess = false;
+      } else {
+        readRemaining -= clocks;
       }
+    }
+    if(unlikely(mulDivRemaining | gte.remaining | readLatency | readWritebackRemaining)) {
+      mulDivRemaining -= min(mulDivRemaining, clocks);
+      gte.remaining -= min<u32>(gte.remaining, clocks);
+      readLatency -= min(readLatency, clocks);
+      readWritebackRemaining -= min(readWritebackRemaining, clocks);
+    }
+  }
+
+  alwaysinline auto step(u32 clocks) -> void {
+    if(likely(!(writeQueue.count | writeQueue.remaining | writeQueue.stalled) && (s32)clocks < cyclesUntilForcedSync)) {
+      advance(clocks);
+      return;
     }
     stepSlow(clocks);
   }
@@ -116,6 +133,12 @@ struct CPU : Thread {
     u32 address = 0;
     n32 instruction = 0;
   } pipeline;
+  struct PrefetchedInstruction {
+    u32 address = ~0u;
+    u32 instruction = 0;
+  };
+  PrefetchedInstruction prefetched[2];
+  alwaysinline auto fetchAhead(u32 address, PrefetchedInstruction& slot) -> void;
 
   //delay-slots.cpp
   struct Delay {

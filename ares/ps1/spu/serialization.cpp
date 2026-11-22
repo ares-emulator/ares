@@ -8,6 +8,7 @@ auto SPU::serialize(serializer& s) -> void {
 
   s(noise.step);
   s(noise.shift);
+  s(noise.enableUnused);
   s(noise.level);
   s(noise.count);
 

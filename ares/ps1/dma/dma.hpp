@@ -16,6 +16,7 @@ struct DMA : Thread, Memory::Interface {
   auto unload() -> void;
 
   auto main() -> void;
+  auto requestChanged(u64 time) -> void;
   auto canSkipWait() const -> bool;
   auto skipBusWait(u64 time) -> void;
   auto skipBusWait(u64 time, bool allowed) -> void;

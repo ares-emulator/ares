@@ -23,37 +23,36 @@ inline auto CPU::store(u32& target, u32 source) -> void {
   target = source;
 }
 
+static constexpr auto interlockOpcode = []() {
+  std::array<u8, 64> t{};
+  for(u32 o : {0x01, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x30, 0x31, 0x32, 0x33, 0x38, 0x39, 0x3a, 0x3b}) t[o] = 1;
+  for(u32 o : {0x04, 0x05, 0x28, 0x29, 0x2a, 0x2b, 0x2e}) t[o] = 3;
+  return t;
+}();
+static constexpr auto interlockSpecial = []() {
+  std::array<u8, 64> t{};
+  for(u32 f : {0x00, 0x02, 0x03}) t[f] = 2;
+  for(u32 f : {0x08, 0x09, 0x11, 0x13}) t[f] = 1;
+  for(u32 f : {0x04, 0x06, 0x07, 0x18, 0x19, 0x1a, 0x1b, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x2a, 0x2b}) t[f] = 3;
+  return t;
+}();
+
 auto CPU::readInterlock(u32 instruction) -> void {
   //The load delay slot reads the old register value.
   if(delay.load[0].target == &ipu.r[readTarget]) return;
   u32 rs = instruction >> 21 & 31;
   u32 rt = instruction >> 16 & 31;
   bool sourceRS = false, sourceRT = false;
-  switch(instruction >> 26) {
-  case 0x00:  //SPECIAL
-    switch(instruction & 63) {
-    case 0x00: case 0x02: case 0x03: sourceRT = true; break;                    //SLL, SRL, SRA
-    case 0x08: case 0x09: case 0x11: case 0x13: sourceRS = true; break;         //JR, JALR, MTHI, MTLO
-    case 0x04: case 0x06: case 0x07:                                            //SLLV, SRLV, SRAV
-    case 0x18: case 0x19: case 0x1a: case 0x1b:                                 //MULT, MULTU, DIV, DIVU
-    case 0x20: case 0x21: case 0x22: case 0x23:                                 //ADD, ADDU, SUB, SUBU
-    case 0x24: case 0x25: case 0x26: case 0x27: case 0x2a: case 0x2b:           //AND, OR, XOR, NOR, SLT, SLTU
-      sourceRS = sourceRT = true;
-    }
-    break;
-  case 0x01: case 0x06: case 0x07:                                              //REGIMM, BLEZ, BGTZ
-  case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d: case 0x0e:  //ADDI/U, SLTI/U, ANDI, ORI, XORI
-  case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26:  //LB, LH, LWL, LW, LBU, LHU, LWR
-  case 0x30: case 0x31: case 0x32: case 0x33:                                   //LWC0..3
-  case 0x38: case 0x39: case 0x3a: case 0x3b:                                   //SWC0..3
-    sourceRS = true; break;
-  case 0x04: case 0x05:                                                         //BEQ, BNE
-  case 0x28: case 0x29: case 0x2a: case 0x2b: case 0x2e:                        //SB, SH, SWL, SW, SWR
-    sourceRS = sourceRT = true; break;
-  case 0x10: case 0x12:                                                         //COP0, COP2
-    sourceRT = rs == 4 || rs == 6; break;                                       //MTC, CTC
+  u8 flags;
+  u32 opcode = instruction >> 26;
+  if(opcode == 0x00) flags = interlockSpecial[instruction & 63];
+  else if(opcode == 0x10 || opcode == 0x12) flags = (rs == 4 || rs == 6) ? 2 : 0;
+  else flags = interlockOpcode[opcode];
+  sourceRS = flags & 1;
+  sourceRT = flags & 2;
+  if((sourceRS && rs == readTarget) || (sourceRT && rt == readTarget)) {
+    step(readLatency > 1 ? readLatency : readWritebackRemaining);
   }
-  if((sourceRS && rs == readTarget) || (sourceRT && rt == readTarget)) step(readLatency);
 }
 
 template<u32 N>

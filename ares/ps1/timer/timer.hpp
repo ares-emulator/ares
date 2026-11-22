@@ -9,6 +9,7 @@ struct Timer : Memory::Interface {
   auto hsync(bool line) -> void;
   auto vsync(bool line) -> void;
   auto updateNextEvent() -> void;
+  auto sysclockGated() const -> bool { return (timers[0].clock == 0 && timers[0].synchronize) || (timers[1].clock == 0 && timers[1].synchronize) || (timers[2].synchronize && timers[2].divider == 0); }
   auto power(bool reset) -> void;
 
   //io.cpp

@@ -1,4 +1,5 @@
 struct DualShock : PeripheralDevice {
+  DualShock() { timer = &watchdogRemaining; }
   Node::Input::Axis axis;
   Node::Input::Axis lx;
   Node::Input::Axis ly;
@@ -27,8 +28,15 @@ struct DualShock : PeripheralDevice {
   auto reset() -> void override;
   auto acknowledge() -> u32 override;
   auto bus(u8 data) -> u8 override;
-  auto invalid(u8 data) -> u8;
+  auto invalid(u8 data) -> void;
   auto active() -> bool override;
+  auto power(bool reset) -> void override;
+  auto toggleMode() -> void;
+  auto pollMode() -> void;
+  auto serialize(serializer&) -> void override;
+  auto selectChanged(bool) -> void override;
+  auto step(u32) -> void override;
+  auto nextEvent() const -> u32 override { return watchdogRemaining; }
 
   std::vector<u8> readPad();
 
@@ -47,6 +55,11 @@ struct DualShock : PeripheralDevice {
   n1 analogMode;
   n1 newRumbleMode;
   n1 configMode;
+  bool modeLocked = false;
+  bool modePressed = false;
+  bool watchdogEnabled = false;
+  u32 watchdogRemaining = 0;
+  n8 statusByte = 0x5a;
   n8 command;
   i8 commandStep;
   n8 rumbleConfig[6];

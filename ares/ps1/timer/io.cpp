@@ -14,14 +14,10 @@ auto Timer::readWord(u32 address) -> u32 {
   n32 data;
   u32 c = address >> 4 & 3;
   u32 addr = address & 0x1fff'ffcf;
+  if(c == 3) return bus.readLatch;
 
   if(addr == 0x1f80'1100 && c <= 2) {
     data.bit(0,15) = timers[c].counter;
-    return data;
-  }
-
-  if(addr == 0x1f80'1100 && c == 3) {
-    data.bit(0,15) = 0x0030;
     return data;
   }
 
@@ -43,14 +39,10 @@ auto Timer::readWord(u32 address) -> u32 {
     return data;
   }
 
-  if(addr == 0x1f80'1104 && c == 3) return data;
-
   if(addr == 0x1f80'1108 && c <= 2) {
     data.bit(0,15) = timers[c].target;
     return data;
   }
-
-  if(addr == 0x1f80'1108 && c == 3) return data;
 
   debug(unhandled, "Timer::readWord(", hex(address, 8L), ") -> ", hex(data, 8L));
   return data;

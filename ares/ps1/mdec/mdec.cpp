@@ -44,6 +44,7 @@ auto MDEC::main() -> void {
 
 auto MDEC::step(u32 clocks) -> void {
   prefetchInput();
+  notifyDMA();
   u32 halfBlock = status.outputDepth == 3 ? 16 : 24;
   if(io.mode == Mode::DecodeMacroblock && fifo.pendingOutput.size() <= halfBlock + 1)
     status.currentBlock = io.decodeBlock;

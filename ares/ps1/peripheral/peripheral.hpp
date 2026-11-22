@@ -2,11 +2,17 @@ struct PeripheralDevice {
   Node::Peripheral node;
 
   virtual ~PeripheralDevice() = default;
+  const u32* timer = nullptr;
   virtual auto save() -> void {}
+  virtual auto power(bool reset) -> void {}
   virtual auto reset() -> void {}
   virtual auto acknowledge() -> u32 { return 0; }
   virtual auto active() -> bool { return 0; }
   virtual auto bus(u8 data) -> u8 { return 0xff; }
+  virtual auto serialize(serializer&) -> void {}
+  virtual auto selectChanged(bool) -> void {}
+  virtual auto step(u32) -> void {}
+  virtual auto nextEvent() const -> u32 { return 0; }
 };
 
 struct Peripheral : Memory::Interface {

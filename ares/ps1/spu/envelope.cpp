@@ -44,8 +44,27 @@ auto SPU::VolumeSweep::reset() -> void {
 }
 
 auto SPU::VolumeSweep::tick() -> void {
-  if(active) {
-    current = Envelope::tick(current);
-    active = decreasing ? current > 0x0000 : current < 0x7fff;
+  if(!active) return;
+  bool subtract = exponential && decreasing ? true : bool(decreasing ^ negative);
+  auto& entry = spu.adsrEntries[subtract][rate];
+  s32 increment = entry.increment;
+  s32 step = entry.step;
+  if(exponential) {
+    if(decreasing) {
+      step = amplify(step, current);
+    } else if(current > 0x6000) {
+      if(rate < 40) step >>= 2;
+      else if(rate >= 44) increment >>= 2;
+      else { step >>= 1; increment >>= 1; }
+    }
   }
+  counter += max(1, increment);
+  if(counter < 0x8000) return;
+  counter = 0;
+  s32 next = current + step;
+  if(!decreasing) next = sclamp<16>(next);
+  else if(negative) next = min(0, max(-0x8000, next));
+  else next = max(0, next);
+  current = next;
+  active = decreasing ? current != 0 : current != (negative ? -0x8000 : 0x7fff);
 }

@@ -7,6 +7,8 @@ auto MDEC::serialize(serializer& s) -> void {
   s(fifo.pendingOutput);
 
   s(status.remaining);
+  s(status.noOperation);
+  s(status.noOperationValue);
   s(status.currentBlock);
   s(status.outputMaskBit);
   s(status.outputSigned);

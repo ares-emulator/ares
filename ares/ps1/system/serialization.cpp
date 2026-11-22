@@ -1,4 +1,4 @@
-static const string SerializerVersion = "v161";
+static const string SerializerVersion = "v162";
 
 auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
@@ -15,6 +15,8 @@ auto System::serialize(bool synchronize) -> serializer {
   s(description);
   u32 device = expansion.type();
   s(device);
+  u32 controllers = controllerPort1.deviceID() | controllerPort2.deviceID() << 8;
+  s(controllers);
 
   serialize(s, synchronize);
   return s;
@@ -36,6 +38,9 @@ auto System::unserialize(serializer& s) -> bool {
   u32 device = 0;
   s(device);
   if(device != expansion.type()) return false;
+  u32 controllers = 0;
+  s(controllers);
+  if(controllers != (controllerPort1.deviceID() | controllerPort2.deviceID() << 8)) return false;
 
   if(synchronize) power(/* reset = */ false);
   serialize(s, synchronize);

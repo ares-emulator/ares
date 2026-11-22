@@ -1,3 +1,8 @@
+auto MDEC::notifyDMA() -> void {
+  if(!dma.enabledMask || !dma.blocked || dma.runningMask) return;
+  dma.requestChanged(cpu.active() ? cpu.clock() + (u64)cpu.accruedCycles * cpu.scalar() : clock());
+}
+
 auto MDEC::canReadDMA() -> bool {
   if(io.mode == Mode::DrainOutput) return status.outputRequest && fifo.output.size() > 1;
   return status.outputRequest && fifo.output.size() >= 26;
@@ -57,7 +62,7 @@ auto MDEC::readWord(u32 address) -> u32 {
   }
 
   if(address == 0x1f80'1824) {
-    data.bit( 0,15) = (status.remaining / 2) - 1;
+    data.bit( 0,15) = status.noOperation ? (u32)status.noOperationValue : (status.remaining / 2) - 1;
     data.bit(16,18) = status.currentBlock;
     data.bit(19,22) = 0;  //unused
     data.bit(23)     = status.outputMaskBit;
@@ -89,6 +94,7 @@ auto MDEC::processInput() -> void {
     n32 data = fifo.input.read(0);
     data |= u32(fifo.input.read(0)) << 16;
     if(io.mode == Mode::Idle) {
+      status.noOperation = 0;
       switch(data >> 29) {
       case 1:
         io.mode = Mode::DecodeMacroblock;
@@ -97,13 +103,9 @@ auto MDEC::processInput() -> void {
         io.decodeBlock = 4;
         prefetch = {};
         prefetch.block = 4;
-        status.remaining = data.bit(0,15) * 2;
+        status.remaining = ((u32)data.bit(0,15) ? (u32)data.bit(0,15) : 0x10000u) * 2;
         io.remaining = status.remaining;
         status.remaining -= min<u32>(status.remaining, fifo.input.size());
-        if(io.remaining == 0) {
-          io.mode = Mode::Idle;  //treat as 0; though it may be 65536
-          debug(unhandled, "MDEC macroblock length=0");
-        }
         break;
       case 2:
         io.mode = Mode::SetQuantTable;
@@ -115,13 +117,16 @@ auto MDEC::processInput() -> void {
         io.offset = 0;
         status.remaining = 64;
         break;
+      default:
+        status.noOperation = 1;
+        status.noOperationValue = data.bit(0,15);
+        break;
       }
 
+      status.outputMaskBit = data.bit(25);
+      status.outputSigned  = data.bit(26);
+      status.outputDepth   = data.bit(27,28);
       if(io.mode != Mode::Idle) {
-        //output bits are set in status register regardless of mode
-        status.outputMaskBit = data.bit(25);
-        status.outputSigned  = data.bit(26);
-        status.outputDepth   = data.bit(27,28);
         fifo.output.flush();
         fifo.pendingOutput.flush();
       }
@@ -162,6 +167,7 @@ auto MDEC::writeWord(u32 address, u32 value) -> void {
     fifo.input.write(data >> 16);
     if(io.mode == Mode::DecodeMacroblock && status.remaining) status.remaining -= 2;
     processInput();
+    notifyDMA();
     return;
   }
 
@@ -180,6 +186,8 @@ auto MDEC::writeWord(u32 address, u32 value) -> void {
       io.resetPending = 1;
 
       status.remaining     = 0;
+      status.noOperation   = 0;
+      status.noOperationValue = 0;
       io.remaining         = 0;
       status.currentBlock  = 4;
       status.outputMaskBit = 0;
@@ -187,10 +195,12 @@ auto MDEC::writeWord(u32 address, u32 value) -> void {
       status.outputDepth   = 0;
       status.outputRequest = 0;
       status.inputRequest  = 0;
+      return;
     }
 
     status.outputRequest = data.bit(29);
     status.inputRequest  = data.bit(30);
+    notifyDMA();
     return;
   }
 
@@ -228,5 +238,6 @@ auto MDEC::refillOutputFifo() -> void {
   while(!fifo.output.full() && !fifo.pendingOutput.empty()) {
     fifo.output.write(*fifo.pendingOutput.read());
   }
+  notifyDMA();
 }
 

@@ -117,6 +117,7 @@ auto SPU::power(bool reset) -> void {
   master = {};
   noise.step = 0;
   noise.shift = 0;
+  noise.enableUnused = 0;
   noise.level = 0;
   noise.count = 0;
   transfer = {};

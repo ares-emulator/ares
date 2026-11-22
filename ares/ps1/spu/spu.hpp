@@ -71,6 +71,7 @@ struct SPU : Thread, Memory::Interface {
 
     n2  step;
     n4  shift;
+    n8  enableUnused;
   //internal:
     i16 level;
     n32 count;

@@ -30,6 +30,10 @@ auto PeripheralPort::save() -> void {
   if(device) device->save();
 }
 
+auto PeripheralPort::power(bool reset) -> void {
+  if(device) device->power(reset);
+}
+
 auto PeripheralPort::allocate(string name) -> Node::Peripheral {
   if(name == "Digital Gamepad") device = std::make_unique<DigitalGamepad>(port);
   if(name == "DualShock"      ) device = std::make_unique<DualShock>(port);
@@ -58,4 +62,12 @@ auto PeripheralPort::bus(u8 data) -> u8 {
 }
 
 auto PeripheralPort::serialize(serializer& s) -> void {
+  if(device) device->serialize(s);
+}
+
+auto PeripheralPort::deviceID() const -> u32 {
+  if(!device) return 0;
+  if(device->node->name() == "Digital Gamepad") return 1;
+  if(device->node->name() == "DualShock") return 2;
+  return 0;
 }

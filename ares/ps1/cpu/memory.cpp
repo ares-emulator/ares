@@ -30,7 +30,7 @@ auto CPU::fetchSlow(u32 address) -> u32 {
   case 5: {//$a0000000-$bfffffff  KSEG1
     if(likely(address <= (0xa000'0000 | memory.ramLimit))) {
       beginBusTransaction(address, Word, true);
-      auto data = ram.read<Word>(address);
+      auto data = bus.readLatch = ram.read<Word>(address);
       endBusTransaction();
       return data;
     }

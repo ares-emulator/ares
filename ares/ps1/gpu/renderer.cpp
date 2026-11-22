@@ -819,8 +819,8 @@ auto GPU::Render::execute() -> void {
 auto GPU::Renderer::queue(Render& render) -> void {
   if constexpr(Accuracy::GPU::Threaded) {
     fifo.await_write(render);
-    workSequence.fetch_add(1, std::memory_order_release);
-    workSequence.notify_one();
+    workSequence.fetch_add(1, std::memory_order_seq_cst);
+    if(sleeping.load(std::memory_order_seq_cst)) workSequence.notify_one();
   } else if constexpr(true) {
     render.execute();
   }
@@ -835,10 +835,12 @@ auto GPU::Renderer::synchronize() -> void {
 
 auto GPU::Renderer::main(uintptr_t) -> void {
   while(true) {
-    for(u32 spins = 0; spins < 1024 && fifo.empty(); spins++) spinloop();
+    for(u32 spins = 0; spins < 16384 && fifo.empty(); spins++) spinloop();
     while(fifo.empty()) {
       u32 sequence = workSequence.load(std::memory_order_acquire);
+      sleeping.store(true, std::memory_order_seq_cst);
       if(fifo.empty()) workSequence.wait(sequence, std::memory_order_acquire);
+      sleeping.store(false, std::memory_order_relaxed);
     }
     auto render = fifo.await_read();
     self.vram.mutex.lock();

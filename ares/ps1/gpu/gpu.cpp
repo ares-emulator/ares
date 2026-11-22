@@ -122,7 +122,6 @@ auto GPU::frame() -> void {
 
 auto GPU::step(u32 clocks) -> void {
   static constexpr u32 SyncQuantum = 128;
-  const double clocksPerTime = 1.0 / (double)scalar();
   bool timerDotclock = timer.timers[0].clock == 1;
   bool needsPixelStepping = timerDotclock || scanout.lineVisible || io.dividerClocks;
 
@@ -164,10 +163,7 @@ auto GPU::step(u32 clocks) -> void {
             if(delta >= (u64)clocks * scalar()) {
               syncClocks = clocks;
             } else {
-              u32 ticks = (double)delta * clocksPerTime;
-              while((u64)ticks * scalar() > delta) --ticks;
-              while((u64)(ticks + 1) * scalar() <= delta) ++ticks;
-              syncClocks = ticks + 1;
+              syncClocks = (u32)(delta / scalar()) + 1;
             }
           }
         }

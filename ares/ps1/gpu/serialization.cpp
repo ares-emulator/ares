@@ -52,6 +52,8 @@ auto GPU::serialize(serializer& s) -> void {
   s(io.copy.height);
   s(io.copy.px);
   s(io.copy.py);
+  s(io.copy.row);
+  s(io.copy.pendingHalf);
   s(io.texturePageBaseX);
   s(io.texturePageBaseY);
   s(io.semiTransparency);

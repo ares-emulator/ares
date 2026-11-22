@@ -32,11 +32,13 @@ auto CPU::Exception::trigger(u32 code, n1 hardwareBreakpoint) -> void {
   //hardware bug: if an interrupt is triggered when a GTE instruction is next,
   //the GTE instruction is erroneously executed
   if(self.scc.cause.exceptionCode == 0) {
-    self.pipeline.instruction = self.peek(self.ipu.pc);
+    self.pipeline.instruction = self.prefetched[0].address == self.ipu.pc
+      ? self.prefetched[0].instruction : self.peek(self.ipu.pc);
     if(self.pipeline.instruction >> 25 == 37) self.decoderEXECUTE();
   }
 
   //exceptions and interrupts discard the execution of delay slots
+  self.prefetched[0] = self.prefetched[1] = {};
   self.delay.branch[0] = {};
   self.delay.branch[1] = {};
   self.delay.branchPending = 0;

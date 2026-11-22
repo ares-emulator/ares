@@ -7,6 +7,7 @@ struct PeripheralPort {
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto save() -> void;
+  auto power(bool reset) -> void;
   auto allocate(string name) -> Node::Peripheral;
 
   auto reset() -> void;
@@ -15,6 +16,7 @@ struct PeripheralPort {
   auto bus(u8 data) -> u8;
 
   auto serialize(serializer&) -> void;
+  auto deviceID() const -> u32;
 
   const string name;
   const string type;

@@ -24,7 +24,7 @@ auto Peripheral::startTransfer() -> void {
   io.transferElapses = 2 * (5 + io.characterLength + io.parityEnable);
 
   auto transfer = [&](PeripheralPort& port) {
-    io.receiveShift = port.bus(data);
+    io.receiveShift &= port.bus(data);
     if(u32 clocks = port.acknowledge()) io.ackDelayCounter = clocks;
   };
 
@@ -161,6 +161,8 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
   if(address == 0x1f80'104a) {
     bool acknowledge = data.bit(4);
     bool reset = data.bit(6);
+    bool oldSelect = io.joyOutput;
+    u32 oldSlot = io.slotNumber;
     io.transmitEnable             = data.bit( 0);
     io.joyOutput                  = data.bit( 1);
     io.receiveEnable              = data.bit( 2);
@@ -219,6 +221,12 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
       controllerPort2.reset();
       memoryCardPort2.reset();
     }
+    for(u32 slot : range(2)) {
+      bool selected = io.joyOutput && io.slotNumber == slot;
+      if(selected == (oldSelect && oldSlot == slot)) continue;
+      auto& port = slot ? controllerPort2 : controllerPort1;
+      if(port.device) port.device->selectChanged(selected);
+    }
     startTransfer();
     pollInterrupt();
     return;
@@ -247,7 +255,14 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
     return;
   }
 
-  if(address == 0x1f80'105c) { io.sioInternal = data; return; }
+  if(address == 0x1f80'105c) {
+    u32 length = 5 + io.sioMode.bit(2,3);
+    u32 mask = (1u << length) - 1;
+    u32 high = length < 7 ? (0xffu << (length + 1)) & 0xff : 0;
+    io.sioInternal = ((data >> 8 & mask) | high)
+                   | ((data & mask) | high) << 8;
+    return;
+  }
 
   if(address == 0x1f80'105e) { io.sioBaudrateReloadValue = data; return; }
 

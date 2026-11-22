@@ -44,6 +44,9 @@ auto Peripheral::pollInterrupt() -> void {
 }
 
 auto Peripheral::step(u32 clocks) -> void {
+  for(auto* port : {&controllerPort1, &controllerPort2}) {
+    if(port->device && port->device->timer && *port->device->timer) port->device->step(clocks);
+  }
   while(clocks > 0) {
     auto pending = [&](i32 counter, bool active) {
       return active && counter > 0 ? counter : (i32)INT32_MAX;
@@ -103,10 +106,19 @@ auto Peripheral::nextEvent() const -> u32 {
     next = (u32)io.ackDelayCounter;
   }
   if(io.ackAssertCounter > 0) next = min(next, (u32)io.ackAssertCounter);
+  for(auto* port : {&controllerPort1, &controllerPort2}) {
+    if(port->device && port->device->timer && *port->device->timer) {
+      if(u32 clocks = port->device->nextEvent()) next = min(next, clocks);
+    }
+  }
   return next == ~0u ? 0 : max(1u, next);
 }
 
 auto Peripheral::power(bool reset) -> void {
+  controllerPort1.power(reset);
+  controllerPort2.power(reset);
+  memoryCardPort1.power(reset);
+  memoryCardPort2.power(reset);
   io = {};
   io.transmitStarted = 1;
   io.transmitFinished = 1;

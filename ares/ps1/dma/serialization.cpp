@@ -14,6 +14,7 @@ auto DMA::serialize(serializer& s) -> void {
   s(counter);
   s(runningMask);
   s(enabledMask);
+  s(blocked);
   if(s.reading()) sortChannelsByPriority();
 }
 

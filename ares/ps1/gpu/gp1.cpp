@@ -1,8 +1,7 @@
 //GPUSTAT
 auto GPU::readGP1() -> u32 {
   n32 data;
-  bool readReady = io.mode == Mode::CopyFromVRAM
-    && (io.vramReadWordValid || (u32)(cpu.cycleCount() - io.vramReadWord) >= 256);
+  bool readReady = io.mode == Mode::CopyFromVRAM;
   data.bit( 0, 3) = io.texturePageBaseX;
   data.bit( 4)    = io.texturePageBaseY;
   data.bit( 5, 6) = io.semiTransparency;
@@ -28,7 +27,9 @@ auto GPU::readGP1() -> u32 {
   data.bit(27)    = readReady;
   data.bit(28)    = writeFifoEmpty();
   data.bit(29,30) = io.dmaDirection;
-  data.bit(31)    = interlace() ? ((io.displayStartY + (vblank() ? 0u : (u32)io.displayField)) & 1) : (!vblank() && (io.vcounter & 1));
+  u32 row = io.displayStartY;
+  if(!vblank()) row += interlace() ? (u32)io.displayField : (u32)io.vcounter - (u32)io.displayRangeY1;
+  data.bit(31) = row & 1;
 
   return data;
 }
@@ -36,8 +37,10 @@ auto GPU::readGP1() -> u32 {
 auto GPU::writeGP1(u32 value) -> void {
 //thread.fifo.await_empty();
 
-  n8  command = value >> 24 & 0x3f;
+  n8  command = value >> 24;
   n24 data    = value >>  0;
+
+  if((command & 0x30) == 0x10) command &= 0x3f;
 
   //soft reset
   if(command == 0x00) {
@@ -83,6 +86,7 @@ auto GPU::writeGP1(u32 value) -> void {
     io.polylineActive = 0;
     io.copy.px = 0;
     io.copy.py = 0;
+    io.copy.pendingHalf = false;
     io.readTransferFifoLength = 0;
     io.mode = Mode::Normal;
     if(fill.active) { fill.active = false; io.pcounter = 0; }
@@ -141,6 +145,8 @@ auto GPU::writeGP1(u32 value) -> void {
 
   //reset command buffer
   if(command == 0x01) {
+    if(io.mode == Mode::CopyToVRAM)
+      flushUploadRow((u32)io.copy.px - (io.copy.pendingHalf ? 1u : 0u));
     fifo.reset();
     ingress.reset();
     latch.reset();
@@ -148,6 +154,7 @@ auto GPU::writeGP1(u32 value) -> void {
     io.polylineActive = 0;
     io.copy.px = 0;
     io.copy.py = 0;
+    io.copy.pendingHalf = false;
     io.readTransferFifoLength = 0;
     io.mode = Mode::Normal;
     if(fill.active) { fill.active = false; io.pcounter = 0; }

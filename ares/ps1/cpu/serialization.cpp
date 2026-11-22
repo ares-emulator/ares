@@ -25,10 +25,18 @@ auto CPU::serialize(serializer& s) -> void {
   s(busTransactionClocks);
   s(readRemaining);
   s(readLatency);
+  s(readWritebackRemaining);
   s(readTarget);
 
   s(pipeline.address);
   s(pipeline.instruction);
+  for(auto& instruction : prefetched) {
+    s(instruction.address);
+    s(instruction.instruction);
+    bool valid = instruction.address != ~0u;
+    s(valid);
+    if(s.reading() && !valid) instruction.address = ~0u;
+  }
 
   for(auto& load : delay.load) {
     u32 index = load.target ? load.target - ipu.r : ~0;

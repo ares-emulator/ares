@@ -148,20 +148,40 @@ auto GPU::Scanout::renderLine() -> void {
   u32 pixelBytes = depth == 0 ? 2 : 3;
   u32 sourceX = (sourceStartX * 2 + sourcePixel * pixelBytes) & 2047;
   u32 blank = depth == 0 ? 1u << 24 : 0u;
-  for(u32 x = firstX; x < lastX; x++) {
-    if(sourcePixel >= displayPixelsRemaining) break;
+  bool duplicate = !interleaved && targetY + 1 < OutputHeight;
+  u32* row0 = outputPtr;
+  u32* row1 = outputPtr + OutputPitch;
+  u32 x = firstX;
+  while(x < lastX && sourcePixel < displayPixelsRemaining) {
     u32 color = disabled ? blank : depth == 0
       ? 1u << 24 | (self.vram2D[sourceBase >> 11][sourceX >> 1] & 0x7fff)
       : readRGB24(sourceX);
-    outputPtr[x] = color;
-    if(!interleaved && targetY + 1 < OutputHeight) outputPtr[OutputPitch + x] = color;
-    ++phase;
+    u32* out = row0 + x;
+    if(phase == 0 && x + divider <= lastX) {
+      switch(divider) {
+      case 4: for(u32 i = 0; i < 4; i++) out[i] = color; break;
+      case 5: for(u32 i = 0; i < 5; i++) out[i] = color; break;
+      case 7: for(u32 i = 0; i < 7; i++) out[i] = color; break;
+      case 8: for(u32 i = 0; i < 8; i++) out[i] = color; break;
+      case 10: for(u32 i = 0; i < 10; i++) out[i] = color; break;
+      default: for(u32 i = 0; i < divider; i++) out[i] = color; break;
+      }
+      x += divider;
+      sourcePixel++;
+      sourceX = (sourceX + pixelBytes) & 2047;
+      continue;
+    }
+    u32 run = min(divider - phase, lastX - x);
+    for(u32 i = 0; i < run; i++) out[i] = color;
+    x += run;
+    phase += run;
     if(phase >= divider) {
       phase -= divider;
       sourcePixel++;
       sourceX = (sourceX + pixelBytes) & 2047;
     }
   }
+  if(duplicate && x > firstX) memcpy(row1 + firstX, row0 + firstX, (x - firstX) * sizeof(u32));
 }
 
 alwaysinline auto GPU::Scanout::flushPixel(u32 hclock) -> void {

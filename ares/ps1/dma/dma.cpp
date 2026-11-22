@@ -22,6 +22,7 @@ auto DMA::unload() -> void {
 auto DMA::main() -> void {
   u8 active = enabledMask | runningMask;
   if(!active) {
+    blocked = true;
     return step(counter > 0 ? (u32)counter : 128u);
   }
 
@@ -43,6 +44,16 @@ auto DMA::main() -> void {
   step(counter > 0 ? (u32)counter : 128u);
 }
 
+
+auto DMA::requestChanged(u64 time) -> void {
+  if(!enabledMask || !blocked || runningMask) return;
+  for(u32 id : channelsByPriority) {
+    if(!(enabledMask & (1 << id)) || !channels[id].dmaRequest()) continue;
+    if(clock() > time) setClock(time);
+    cpu.setNextEvent(1);
+    return;
+  }
+}
 
 auto DMA::canSkipWait() const -> bool {
   if(!blocked || runningMask) return false;

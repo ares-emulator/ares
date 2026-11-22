@@ -172,6 +172,7 @@ auto SPU::readHalf(u32 address) -> u32 {
     return data;
   }
   if(address == 0x1f80'1d96) {
+    data.bit(8,15) = noise.enableUnused;
     for(u32 v : range( 8)) data.bit(v) = voice[v + 16].non;
     return data;
   }
@@ -690,6 +691,7 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
     return;
   }
   if(address == 0x1f80'1d96) {
+    noise.enableUnused = data.bit(8,15);
     for(u32 v : range( 8)) voice[v + 16].non = data.bit(v);
     return;
   }

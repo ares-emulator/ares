@@ -21,6 +21,7 @@ struct MDEC : Thread, Memory::Interface {
   auto convertYUV(u32 output[256], s16 luma[64], u32 bx, u32 by) -> void;
 
   //io.cpp
+  auto notifyDMA() -> void;
   auto canReadDMA() -> bool;
   auto canWriteDMA() -> bool;
   auto readDMA() -> u32;
@@ -51,6 +52,8 @@ struct MDEC : Thread, Memory::Interface {
 
   struct Status {
     n32 remaining;
+    n1  noOperation;
+    n16 noOperationValue;
     n3  currentBlock;
     n1  outputMaskBit;
     n1  outputSigned;
