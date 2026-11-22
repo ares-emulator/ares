@@ -167,7 +167,7 @@ auto Disc::executeSecondResponse(u8 operation) -> void {
     break;
 
   case 0x12:
-    ack();
+    queueResponse(ResponseType::Complete, {status()});
     break;
 
   case 0x1a:
