@@ -24,6 +24,9 @@ namespace hiro {
 auto pComboButton::construct() -> void {
   cocoaView = cocoaComboButton = [[CocoaComboButton alloc] initWith:self()];
   pWidget::construct();
+  // The model can receive items before attachment to a window creates the native control.
+  for(auto& item : state().items) append(item);
+  if(auto selected = self().selected()) [cocoaComboButton selectItemAtIndex:selected.offset()];
 }
 
 auto pComboButton::destruct() -> void {
