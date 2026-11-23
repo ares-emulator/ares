@@ -107,7 +107,7 @@ auto Arcade::load(string location) -> LoadResult {
       Pak::load("dips.bml", ".dip");
       return successful;
     }
-    auto result = loadGeneric(location, document);
+    auto result = document["game/board"].string() == "nintendo/vs" ? loadVs(location, document) : loadGeneric(location, document);
     if(result == successful) {
       pak->append("dips.bml", 0);
       Pak::load("dips.bml", ".dip");
