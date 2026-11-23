@@ -529,3 +529,44 @@ component_sources(
   PRIMARY eeprom/parallel-flash/parallel-flash.cpp
   INCLUDED eeprom/parallel-flash/parallel-flash.hpp
 )
+
+component_sources(
+  COMPONENT scsi
+  PRIMARY scsi/scsi.cpp
+  INCLUDED scsi/scsi.hpp
+)
+
+component_sources(
+  COMPONENT ncr53cf96
+  PRIMARY scsi/ncr53cf96/ncr53cf96.cpp
+  INCLUDED scsi/ncr53cf96/ncr53cf96.hpp
+           scsi/ncr53cf96/serialization.cpp
+)
+
+component_sources(
+  COMPONENT scsi-cdrom
+  PRIMARY scsi/cdrom/cdrom.cpp
+  INCLUDED scsi/cdrom/cdrom.hpp
+           scsi/cdrom/serialization.cpp
+)
+
+component_sources(
+  COMPONENT mbm29f016a
+  PRIMARY flash/mbm29f016a/mbm29f016a.cpp
+  INCLUDED flash/mbm29f016a/mbm29f016a.hpp
+           flash/mbm29f016a/serialization.cpp
+)
+
+component_sources(
+  COMPONENT lh28f400
+  PRIMARY flash/lh28f400/lh28f400.cpp
+  INCLUDED flash/lh28f400/lh28f400.hpp
+           flash/lh28f400/serialization.cpp
+)
+
+component_sources(
+  COMPONENT upd4701
+  PRIMARY io/upd4701/upd4701.cpp
+  INCLUDED io/upd4701/upd4701.hpp
+           io/upd4701/serialization.cpp
+)

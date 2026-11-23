@@ -22,12 +22,14 @@ auto DMA::Channel::dmaRequest() const -> bool {
     case 2: return gpu.canReadDMA();
     case 3: return disc.canReadDMA();
     case 4: return spu.canReadDMA();
+    case 5: return expansion.canReadDMA();
     }
   } else {
     switch(id) {
     case 0: return mdec.canWriteDMA();
     case 2: return gpu.canWriteDMA();
     case 4: return spu.canWriteDMA();
+    case 5: return expansion.canWriteDMA();
     }
   }
   return false;
@@ -156,6 +158,13 @@ auto DMA::Channel::transferBlock() -> void {
         wordsTransferred++;
       } while(--length && --timeout);
       break;
+    case 5:
+      do {
+        writeWord(address, expansion.readDMA());
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
     case 6:
       do {
         u32 data = (address - 4) & 0xfffffc;
@@ -187,6 +196,13 @@ auto DMA::Channel::transferBlock() -> void {
     case 4:
       do {
         spu.writeDMA(readWord(address));
+        address += step;
+        wordsTransferred++;
+      } while(--length && --timeout);
+      break;
+    case 5:
+      do {
+        expansion.writeDMA(readWord(address));
         address += step;
         wordsTransferred++;
       } while(--length && --timeout);

@@ -8,6 +8,7 @@ auto enumerate() -> std::vector<string> {
     "[Sony] PlayStation (NTSC-J)",
     "[Sony] PlayStation (NTSC-U)",
     "[Sony] PlayStation (PAL)",
+    "[Konami] GV",
   };
 }
 
@@ -47,6 +48,13 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.find("PlayStation")) {
     information.name = "PlayStation";
   }
+  if(name.find("Konami")) {
+    information.name = "Konami GV";
+    information.arcade = true;
+    information.konamiGV = true;
+    information.region = Region::NTSCJ;
+    information.gpuFrequency = 53'693'175;
+  }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;
     information.gpuFrequency = 53'693'175;
@@ -80,10 +88,12 @@ auto System::load(Node::System& root, string name) -> bool {
   spu.load(node);
   mdec.load(node);
   disc.load(node);
-  controllerPort1.load(node);
-  memoryCardPort1.load(node);
-  controllerPort2.load(node);
-  memoryCardPort2.load(node);
+  if(!arcade()) {
+    controllerPort1.load(node);
+    memoryCardPort1.load(node);
+    controllerPort2.load(node);
+    memoryCardPort2.load(node);
+  }
   interrupt.load(node);
   peripheral.load(node);
   dma.load(node);
@@ -95,6 +105,7 @@ auto System::load(Node::System& root, string name) -> bool {
   }
 
   expansion.load(node);
+  if(information.konamiGV) expansion.device = std::make_unique<KonamiGV>(node);
   return true;
 }
 

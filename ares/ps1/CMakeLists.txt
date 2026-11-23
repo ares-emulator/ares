@@ -1,4 +1,4 @@
-ares_components(m68hc05 parallel-flash)
+ares_components(m68hc05 parallel-flash m93lcx6 scsi ncr53cf96 scsi-cdrom upd4701 lh28f400 mbm29f016a)
 
 ares_add_sources(
   CORE #

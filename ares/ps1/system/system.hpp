@@ -3,6 +3,8 @@ struct System {
   Node::Setting::Boolean fastBoot;
   VFS::Pak pak;
   bool homebrewMode = false;
+  auto arcade() const -> bool { return information.arcade; }
+  auto konamiGV() const -> bool { return information.konamiGV; }
 
   enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
@@ -28,6 +30,8 @@ private:
     string name = "PlayStation";
     Region region = Region::NTSCJ;
     u32 gpuFrequency = 53'693'175;
+    bool arcade = false;
+    bool konamiGV = false;
   } information;
 
   //serialization.cpp

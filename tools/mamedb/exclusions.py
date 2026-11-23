@@ -40,4 +40,8 @@ EXCLUDED_GAMES = {
     "nitdbl": "bootleg",
     "pbobblenb": "bootleg",
     "zintrckb": "bootleg",
+    "tmosh": "Requires a sticker printer and heart-rate sensor",
+    "tmoshs": "Requires a sticker printer and heart-rate sensor",
+    "tmoshsp": "Requires a sticker printer and heart-rate sensor",
+    "tmoshspa": "Requires a sticker printer and heart-rate sensor",
 }

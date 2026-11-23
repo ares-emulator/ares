@@ -7,6 +7,13 @@
 #include <nall/hashset.hpp>
 #include <component/processor/m68hc05/m68hc05.hpp>
 #include <component/eeprom/parallel-flash/parallel-flash.hpp>
+#include <component/eeprom/m93lcx6/m93lcx6.hpp>
+#include <component/scsi/scsi.hpp>
+#include <component/scsi/ncr53cf96/ncr53cf96.hpp>
+#include <component/scsi/cdrom/cdrom.hpp>
+#include <component/flash/mbm29f016a/mbm29f016a.hpp>
+#include <component/flash/lh28f400/lh28f400.hpp>
+#include <component/io/upd4701/upd4701.hpp>
 
 namespace ares::PlayStation {
   #include <ares/inline.hpp>

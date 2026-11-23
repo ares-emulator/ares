@@ -26,3 +26,17 @@ for name in ("vliner", "vliner53", "vliner54", "vliner6e", "vliner7e"):
         "cslot1-maincpu": Layout("load16_word_swap", (0x80000,)),
         "cslot1-sprites": Layout("load16_byte", (0x80000,) * 2),
     }
+
+
+@dataclass(frozen=True)
+class NVRAM:
+    name: str
+    size: int
+    fill: int
+
+
+NVRAM_MAP = {
+    "simpbowl": NVRAM("save.flash", 8 * 1024 * 1024, 0xFF),
+    "btchamp": NVRAM("save.flash", 512 * 1024, 0xFF),
+    "kdeadeye": NVRAM("save.flash", 512 * 1024, 0xFF),
+}

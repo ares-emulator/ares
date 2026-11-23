@@ -189,6 +189,48 @@ auto Arcade::loadGeneric(string location, Markup::Node& document) -> LoadResult 
     return successful;
   }
 
+  if(document["game/board"].string() == "konami/konamigv") {
+    auto bios = loadRoms(location, document, "maincpu-rom", resolver);
+    if(!bios) return {invalidROM, assemblyError(bios)};
+    if(bios.data.empty()) return {invalidROM, "Ensure your ROM is in a MAME-compatible .zip format and that konamigv.zip is available."};
+    auto eeprom = loadRoms(location, document, "eeprom", resolver);
+    if(!eeprom) return {invalidROM, assemblyError(eeprom)};
+
+    this->location = location;
+    pak = std::make_shared<vfs::directory>();
+    pak->setAttribute("board", document["game/board"].string());
+    pak->setAttribute("name", document["game/name"].string());
+    pak->setAttribute("title", document["game/title"].string());
+    pak->setAttribute("region", "NTSC-J");
+    pak->append("manifest.bml", manifest);
+    pak->append("bios.rom", bios.data);
+    for(auto nvram : document["game"].find("nvram")) {
+      auto name = nvram["name"].string();
+      if(!name) continue;
+      pak->append(name, std::vector<u8>(nvram["size"].natural(), nvram["fill"].natural()));
+      Pak::load(name, Location::suffix(name));
+    }
+    if(!eeprom.data.empty()) pak->append("eeprom.rom", eeprom.data);
+    pak->append("save.eeprom", eeprom.data.empty() ? std::vector<u8>(128, 0xff) : eeprom.data);
+    Pak::load("save.eeprom", ".eeprom");
+
+    auto flash = loadRoms(location, document, "flash", resolver);
+    if(!flash) return {invalidROM, assemblyError(flash)};
+    if(!flash.data.empty()) pak->append("flash.rom", flash.data);
+
+    auto disks = document["game"].find("disk");
+    if(!disks.empty()) {
+      auto disc = locateDisk(location, document, resolver);
+      if(!disc) {
+        return {romNotFound, {"CD image not found. Expected ", Location::dir(location), document["game/name"].string(), "/", disks.front()["name"].string(), ".chd"}};
+      }
+      auto cdrom = vfs::cdrom::open(disc);
+      if(!cdrom) return {invalidROM, {"CD image ", Location::file(disc), " could not be read."}};
+      pak->append("cd.rom", cdrom);
+    }
+    return successful;
+  }
+
   // Aleck 64
   if(document["game/board"].string() == "nintendo/aleck64") {
     auto rom = loadRoms(location, document, "user2", resolver);
@@ -278,5 +320,11 @@ auto Arcade::loadVs(string location, Markup::Node& document) -> LoadResult {
 
 auto Arcade::save(string location) -> bool {
   Pak::save("dips.bml", ".dip");
+  Pak::save("save.eeprom", ".eeprom");
+  if(auto document = BML::unserialize(manifest)) {
+    for(auto nvram : document["game"].find("nvram")) {
+      if(auto name = nvram["name"].string()) Pak::save(name, Location::suffix(name));
+    }
+  }
   return true;
 }

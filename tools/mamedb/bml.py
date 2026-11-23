@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Set, Tuple
 from . import inputs, mame
 from .config import SOURCE_FILES
 from .exclusions import EXCLUDED_GAMES
-from .overrides import ROM_LAYOUTS, ROM_REPLACEMENTS
+from .overrides import NVRAM_MAP, ROM_LAYOUTS, ROM_REPLACEMENTS
 
 
 def _parse_int(value: str) -> int:
@@ -292,6 +292,23 @@ def convert_machine_list(
                 output.append(f"      size:   {int(rom.get('size', '0'))}\n")
                 output.append(f"      crc:    {rom.get('crc', '')}\n")
                 output.append(f"      sha1:   {rom.get('sha1', '')}\n")
+
+        for disk in machine.findall("disk"):
+            if not disk.get("name") or disk.get("status") == "nodump":
+                continue
+            output.append("  disk\n")
+            output.append(f"    name:   {disk.get('name')}\n")
+            if disk.get("region"):
+                output.append(f"    region: {disk.get('region').replace(':', '-')}\n")
+            if disk.get("sha1"):
+                output.append(f"    sha1:   {disk.get('sha1')}\n")
+
+        if name in NVRAM_MAP:
+            nvram = NVRAM_MAP[name]
+            output.append("  nvram\n")
+            output.append(f"    name: {nvram.name}\n")
+            output.append(f"    size: {nvram.size}\n")
+            output.append(f"    fill: {nvram.fill}\n")
 
     if existing_text:
         _preserve_custom_entries(existing_text, imported_names, output)

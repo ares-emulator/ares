@@ -8,6 +8,7 @@ DRIVERS = [
     "sega/segae.cpp",
     "nintendo/aleck64.cpp",
     "snk/neogeo.cpp",
+    "konami/konamigv.cpp",
 ]
 
 # Extra source files needed for input definitions and ROM_COPY records.
@@ -24,5 +25,8 @@ SOURCE_FILES = {
     ],
     "nintendo/aleck64": [
         "src/mame/nintendo/aleck64.cpp",
+    ],
+    "konami/konamigv": [
+        "src/mame/konami/konamigv.cpp",
     ],
 }

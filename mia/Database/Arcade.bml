@@ -1,7 +1,7 @@
 database
   revision: 2026-10-28
   romset: 0.289 (mame0289)
-  drivers: sega/sg1000a.cpp, sega/segae.cpp, nintendo/aleck64.cpp, snk/neogeo.cpp
+  drivers: sega/sg1000a.cpp, sega/segae.cpp, nintendo/aleck64.cpp, snk/neogeo.cpp, konami/konamigv.cpp
 game
   name:    11beat
   title:   Eleven Beat
@@ -115887,3 +115887,2764 @@ game
       size:   2097152
       crc:    a8610100
       sha1:   aded6eaa17a518a8f4af9c3779c41ef8dd32a316
+game
+  name:    btchamp
+  title:   Beat the Champ (GV053 UAA01)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  konamigv
+  input
+    players: 4
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  3
+      ways:     8
+    control
+      type:     trackball
+      player:   1
+      minimum:  0
+      maximum:  4095
+    control
+      type:     joy
+      player:   2
+      buttons:  3
+      ways:     8
+    control
+      type:     trackball
+      player:   2
+      minimum:  0
+      maximum:  4095
+    control
+      type:     joy
+      player:   3
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   4
+      buttons:  3
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 1 X-Axis
+      label: P1 Track X
+      token: P1_TRACKBALL_X
+      player: 1
+    action
+      name: Player 1 Y-Axis
+      label: P1 Track Y
+      token: P1_TRACKBALL_Y
+      player: 1
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 2 X-Axis
+      label: P2 Track X
+      token: P2_TRACKBALL_X
+      player: 2
+    action
+      name: Player 2 Y-Axis
+      label: P2 Track Y
+      token: P2_TRACKBALL_Y
+      player: 2
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   btchmp.25c
+      offset: 0x0
+      size:   128
+      crc:    6d02ea54
+      sha1:   d3babf481fd89db3aec17f589d0d3d999a2aa6e1
+  disk
+    name:   btchamp
+    region: cdrom
+    sha1:   c9c858e9034826e1a12c3c003dd068a49a3577e1
+  nvram
+    name: save.flash
+    size: 524288
+    fill: 255
+game
+  name:    hyperath
+  title:   Hyper Athlete (GV021 Japan 1.00)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  konamigv
+  input
+    players: 4
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   3
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   4
+      buttons:  3
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   hyperath.25c
+      offset: 0x0
+      size:   128
+      crc:    20a8c435
+      sha1:   a0f203a999757fba68b391c525ac4b9684a57ba9
+  disk
+    name:   gv021-j1
+    region: cdrom
+    sha1:   579442444025b18da658cd6455c51459fbc3de0e
+game
+  name:    kdeadeye
+  title:   Dead Eye (GV054 UAA01)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  konamigv
+  input
+    players: 2
+    coins:   2
+    service: yes
+    control
+      type:     lightgun
+      player:   1
+      buttons:  1
+      minimum:  76
+      maximum:  239
+    control
+      type:     lightgun
+      player:   2
+      buttons:  1
+      minimum:  76
+      maximum:  239
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 1 X-Axis
+      label: P1 Gun X
+      token: P1_LIGHTGUN_X
+      player: 1
+    action
+      name: Player 1 Y-Axis
+      label: P1 Gun Y
+      token: P1_LIGHTGUN_Y
+      player: 1
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 2 X-Axis
+      label: P2 Gun X
+      token: P2_LIGHTGUN_X
+      player: 2
+    action
+      name: Player 2 Y-Axis
+      label: P2 Gun Y
+      token: P2_LIGHTGUN_Y
+      player: 2
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   kdeadeye.25c
+      offset: 0x0
+      size:   128
+      crc:    3935d2df
+      sha1:   cbb855c475269077803c380dbc3621e522efe51e
+  flash
+    rom
+      name:   kdeadeye.flash
+      offset: 0x0
+      size:   524288
+      crc:    f87f18cf
+      sha1:   67e5f76eb2b938942bd67dbb30508d4603e35f15
+  disk
+    name:   054uaa01
+    region: cdrom
+    sha1:   a05079e4e5024ca66b7f6b81de74695d86c62dd8
+  nvram
+    name: save.flash
+    size: 524288
+    fill: 255
+game
+  name:    konamigv
+  title:   Baby Phoenix/GV System
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    bios
+  input
+    players: 4
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   3
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   4
+      buttons:  3
+      ways:     8
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+game
+  name:    lacrazyc
+  title:   Let's Attack Crazy Cross (GV027 Asia 1.10)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  konamigv
+  input
+    players: 4
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   3
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   4
+      buttons:  3
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   lacrazyc.25c
+      offset: 0x0
+      size:   128
+      crc:    e20e5730
+      sha1:   066b49236c658a4ef2930f7bacc4b2354dd7f240
+  disk
+    name:   gv027-a1
+    region: cdrom
+    sha1:   840d0d4876cf1b814c9d8db975aa6c92e1fe4039
+game
+  name:    nagano98
+  title:   Nagano Winter Olympics '98 (GX720 EAA)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  konamigv
+  input
+    players: 4
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   3
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   4
+      buttons:  3
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   nagano98.25c
+      offset: 0x0
+      size:   128
+      crc:    b64b7451
+      sha1:   a77a37e0cc580934d1e7e05d523bae0acd2c1480
+  disk
+    name:   nagano98
+    region: cdrom
+    sha1:   1be7bd4531f249ff2233dd40a206c8d60054a8c6
+game
+  name:    naganoj
+  title:   Hyper Olympic in Nagano (GX720 JAA)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  nagano98
+  input
+    players: 4
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   3
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   4
+      buttons:  3
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 3 Coin
+      label: Coin 3
+      token: COIN3
+      player: 3
+      default: select
+    action
+      name: Player 4 Coin
+      label: Coin 4
+      token: COIN4
+      player: 4
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+      default: start
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+      default: start
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   720ja.25c
+      offset: 0x0
+      size:   128
+      crc:    34c473ba
+      sha1:   768225b04a293bdbc114a092d14dee28d52044e9
+  disk
+    name:   720jaa01
+    region: cdrom
+    sha1:   437160996551ef4dfca43899d1d14beca62eb4c9
+game
+  name:    powyak96
+  title:   Jikkyou Powerful Pro Yakyuu '96 (GV017 Japan 1.03)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  konamigv
+  input
+    players: 4
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   3
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   4
+      buttons:  3
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   powyak96.25c
+      offset: 0x0
+      size:   128
+      crc:    405a7fc9
+      sha1:   e2d978f49748ba3c4a425188abcd3d272ec23907
+  disk
+    name:   powyak96
+    region: cdrom
+    sha1:   ebd0ea18ff9ce300ea1e30d66a739a96acfb0621
+game
+  name:    simpbowl
+  title:   The Simpsons Bowling (GQ829 UAA)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  konamigv
+  input
+    players: 4
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  3
+      ways:     8
+    control
+      type:     trackball
+      player:   1
+      minimum:  0
+      maximum:  4095
+    control
+      type:     joy
+      player:   2
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   3
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   4
+      buttons:  3
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 1 X-Axis
+      label: P1 Track X
+      token: P1_TRACKBALL_X
+      player: 1
+    action
+      name: Player 1 Y-Axis
+      label: P1 Track Y
+      token: P1_TRACKBALL_Y
+      player: 1
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   simpbowl.25c
+      offset: 0x0
+      size:   128
+      crc:    2c61050c
+      sha1:   16ae7f81cbe841c429c5c7326cf83e87db1782bf
+  disk
+    name:   829uaa02
+    region: cdrom
+    sha1:   2ec4cc608d5582e478ee047b60ccee67b52f060c
+  nvram
+    name: save.flash
+    size: 8388608
+    fill: 255
+game
+  name:    susume
+  title:   Susume! Taisen Puzzle-Dama (GV027 Japan 1.20)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  lacrazyc
+  input
+    players: 4
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   3
+      buttons:  3
+      ways:     8
+    control
+      type:     joy
+      player:   4
+      buttons:  3
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 3 Coin
+      label: Coin 3
+      token: COIN3
+      player: 3
+      default: select
+    action
+      name: Player 4 Coin
+      label: Coin 4
+      token: COIN4
+      player: 4
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+      default: start
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+      default: start
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   susume.25c
+      offset: 0x0
+      size:   128
+      crc:    52f17df7
+      sha1:   b8ad7787b0692713439d7d9bebfa0c801c806006
+  disk
+    name:   gv027j1
+    region: cdrom
+    sha1:   e7e6749ac65de7771eb8fed7d5eefaec3f902255
+game
+  name:    weddingr
+  title:   Wedding Rhapsody (GX624 JAA)
+  board:   konami/konamigv
+  cpu:     Sony CXD8530BQ
+  type:    game
+  parent:  konamigv
+  input
+    players: 2
+    coins:   2
+    service: yes
+    control
+      type:     joy
+      player:   1
+      buttons:  4
+      ways:     8
+    control
+      type:     joy
+      player:   2
+      buttons:  4
+      ways:     8
+    action
+      name: Player 1 Coin
+      label: Coin 1
+      token: COIN1
+      player: 1
+      default: select
+    action
+      name: Player 2 Coin
+      label: Coin 2
+      token: COIN2
+      player: 2
+      default: select
+    action
+      name: Player 1 Button 1
+      label: P1 Button 1
+      token: P1_BUTTON1
+      player: 1
+      default: south
+    action
+      name: Player 1 Button 2
+      label: P1 Button 2
+      token: P1_BUTTON2
+      player: 1
+      default: east
+    action
+      name: Player 1 Button 3
+      label: P1 Button 3
+      token: P1_BUTTON3
+      player: 1
+      default: west
+    action
+      name: Player 1 Down
+      label: P1 Down
+      token: P1_JOYSTICK_DOWN
+      player: 1
+      default: down
+    action
+      name: Player 1 Left
+      label: P1 Left
+      token: P1_JOYSTICK_LEFT
+      player: 1
+      default: left
+    action
+      name: Player 1 Right
+      label: P1 Right
+      token: P1_JOYSTICK_RIGHT
+      player: 1
+      default: right
+    action
+      name: Player 1 Up
+      label: P1 Up
+      token: P1_JOYSTICK_UP
+      player: 1
+      default: up
+    action
+      name: Player 2 Button 1
+      label: P2 Button 1
+      token: P2_BUTTON1
+      player: 2
+      default: south
+    action
+      name: Player 2 Button 2
+      label: P2 Button 2
+      token: P2_BUTTON2
+      player: 2
+      default: east
+    action
+      name: Player 2 Button 3
+      label: P2 Button 3
+      token: P2_BUTTON3
+      player: 2
+      default: west
+    action
+      name: Player 2 Down
+      label: P2 Down
+      token: P2_JOYSTICK_DOWN
+      player: 2
+      default: down
+    action
+      name: Player 2 Left
+      label: P2 Left
+      token: P2_JOYSTICK_LEFT
+      player: 2
+      default: left
+    action
+      name: Player 2 Right
+      label: P2 Right
+      token: P2_JOYSTICK_RIGHT
+      player: 2
+      default: right
+    action
+      name: Player 2 Up
+      label: P2 Up
+      token: P2_JOYSTICK_UP
+      player: 2
+      default: up
+    action
+      name: Player 3 Button 1
+      label: P3 Button 1
+      token: P3_BUTTON1
+      player: 3
+      default: south
+    action
+      name: Player 3 Button 2
+      label: P3 Button 2
+      token: P3_BUTTON2
+      player: 3
+      default: east
+    action
+      name: Player 3 Button 3
+      label: P3 Button 3
+      token: P3_BUTTON3
+      player: 3
+      default: west
+    action
+      name: Player 3 Down
+      label: P3 Down
+      token: P3_JOYSTICK_DOWN
+      player: 3
+      default: down
+    action
+      name: Player 3 Left
+      label: P3 Left
+      token: P3_JOYSTICK_LEFT
+      player: 3
+      default: left
+    action
+      name: Player 3 Right
+      label: P3 Right
+      token: P3_JOYSTICK_RIGHT
+      player: 3
+      default: right
+    action
+      name: Player 3 Up
+      label: P3 Up
+      token: P3_JOYSTICK_UP
+      player: 3
+      default: up
+    action
+      name: Player 4 Button 1
+      label: P4 Button 1
+      token: P4_BUTTON1
+      player: 4
+      default: south
+    action
+      name: Player 4 Button 2
+      label: P4 Button 2
+      token: P4_BUTTON2
+      player: 4
+      default: east
+    action
+      name: Player 4 Button 3
+      label: P4 Button 3
+      token: P4_BUTTON3
+      player: 4
+      default: west
+    action
+      name: Player 4 Down
+      label: P4 Down
+      token: P4_JOYSTICK_DOWN
+      player: 4
+      default: down
+    action
+      name: Player 4 Left
+      label: P4 Left
+      token: P4_JOYSTICK_LEFT
+      player: 4
+      default: left
+    action
+      name: Player 4 Right
+      label: P4 Right
+      token: P4_JOYSTICK_RIGHT
+      player: 4
+      default: right
+    action
+      name: Player 4 Up
+      label: P4 Up
+      token: P4_JOYSTICK_UP
+      player: 4
+      default: up
+    action
+      name: Test
+      label: Service Mode
+      token: SERVICE
+      player: 1
+      default: rstick_click
+    action
+      name: Service
+      label: Service 1
+      token: SERVICE1
+      player: 1
+      default: lstick_click
+    action
+      name: Player 1 Start
+      label: 1 Player Start
+      token: START1
+      player: 1
+      default: start
+    action
+      name: Player 2 Start
+      label: 2 Players Start
+      token: START2
+      player: 2
+      default: start
+    action
+      name: Player 3 Start
+      label: 3 Players Start
+      token: START3
+      player: 3
+    action
+      name: Player 4 Start
+      label: 4 Players Start
+      token: START4
+      player: 4
+  maincpu-rom
+    rom
+      name:   999a01.7e
+      offset: 0x0
+      size:   524288
+      crc:    ad498d2d
+      sha1:   02a82a2fe1fba0404517c3602324bfa64e23e478
+  eeprom
+    rom
+      name:   weddingr.25c
+      offset: 0x0
+      size:   128
+      crc:    b90509a0
+      sha1:   41510a0ceded81dcb26a70eba97636d38d3742c3
+  disk
+    name:   weddingr
+    region: cdrom
+    sha1:   4e7122b191747ab7220fe4ce1b4483d62ab579af

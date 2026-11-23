@@ -174,6 +174,12 @@ auto M93LCx6::ShiftRegister::write(n1 bit) -> void {
 
 //
 
+auto M93LCx6::OutputShiftRegister::write(n1 bit) -> void {
+  value <<= 1;
+  value.bit(0) = bit;
+  count++;
+}
+
 auto M93LCx6::InputShiftRegister::start() -> maybe<n1> {
   if(count < 1) return nothing;
   return {value >> count - 1 & 1};

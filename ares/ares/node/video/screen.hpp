@@ -10,6 +10,10 @@ struct Screen : Video {
 
   auto canvasWidth() const -> u32 { return _canvasWidth; }
   auto canvasHeight() const -> u32 { return _canvasHeight; }
+  auto viewportX() const -> u32 { return _viewportX; }
+  auto viewportY() const -> u32 { return _viewportY; }
+  auto viewportWidth() const -> u32 { return _viewportWidth; }
+  auto viewportHeight() const -> u32 { return _viewportHeight; }
   auto width() const -> u32 { return _width; }
   auto height() const -> u32 { return _height; }
   auto scaleX() const -> f64 { return _scaleX; }

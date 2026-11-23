@@ -66,6 +66,8 @@ struct M93LCx6 {
   } input;
 
   struct OutputShiftRegister : ShiftRegister {
+    auto write(n1 data) -> void;
+
     //serialization.cpp
     auto serialize(serializer&) -> void;
   } output;

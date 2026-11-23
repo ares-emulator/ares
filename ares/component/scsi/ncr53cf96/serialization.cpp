@@ -1,0 +1,29 @@
+auto NCR53CF96::serialize(serializer& s) -> void {
+  s(fifo);
+  s(fifoRead);
+  s(fifoWrite);
+  s(fifoCount);
+  s(counter);
+  s(counterStart);
+  s(command);
+  s(intr);
+  s(seqStep);
+  s(busID);
+  s(timeout);
+  s(syncPeriod);
+  s(syncOffset);
+  s(config1);
+  s(config2);
+  s(config3);
+  s(config4);
+  s(clockConversion);
+  s(test);
+  s(phase);
+  s(target);
+  s(selectMode);
+  s(dma);
+  s(transferring);
+  s(terminalCount);
+  s(messageCommandComplete);
+  for(auto* device : devices) if(device) device->serialize(s);
+}

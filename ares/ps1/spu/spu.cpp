@@ -102,7 +102,8 @@ auto SPU::sample() -> void {
   captureVolume(2, sclamp<16>(voice[1].adsr.lastVolume));
   captureVolume(3, sclamp<16>(voice[3].adsr.lastVolume));
   capture.address += 2;
-  stream->frame(lsum / 32768.0, rsum / 32768.0);
+  double gain = system.konamiGV() ? 5.0 : 1.0;
+  stream->frame(sclamp<16>(lsum * gain) / 32768.0, sclamp<16>(rsum * gain) / 32768.0);
 }
 
 auto SPU::step(u32 clocks) -> void {

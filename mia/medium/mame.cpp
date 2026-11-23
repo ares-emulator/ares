@@ -40,10 +40,39 @@ struct Mame : Medium {
 
   auto loadRoms(string location, Markup::Node& info, string sectionName, std::function<Markup::Node (string)> resolver = {}) -> AssemblyResult;
   auto loadRomFile(string location, string filename, string region, Markup::Node currentInfo, std::function<Markup::Node (string)> resolver, maybe<u32> checksum = nothing, bool extract = true) -> AssemblyResult;
+  auto locateDisk(string location, Markup::Node& info, std::function<Markup::Node (string)> resolver = {}) -> string;
   auto parseNatural(Markup::Node node, u64& value) const -> bool;
   auto assemblyError(const AssemblyResult& result) const -> string;
   auto endianSwap(std::vector<u8>& memory, u64 address = 0, u64 size = std::numeric_limits<u64>::max()) -> bool;
 };
+
+auto Mame::locateDisk(string location, Markup::Node& info, std::function<Markup::Node (string)> resolver) -> string {
+  if(!resolver) {
+    resolver = [&](string parent) -> Markup::Node {
+      return BML::unserialize(manifestDatabaseArcade(parent));
+    };
+  }
+  std::vector<string> names;
+  names.push_back(info["game/name"].string());
+  auto current = info;
+  for(u32 depth : range(8)) {
+    auto parent = current["game/parent"].string();
+    if(!parent) break;
+    names.push_back(parent);
+    current = resolver(parent);
+    if(!current) break;
+  }
+  auto directory = Location::dir(location);
+  for(auto disk : info["game"].find("disk")) {
+    auto diskName = disk["name"].string();
+    if(!diskName) continue;
+    for(auto& name : names) {
+      auto path = string{directory, name, "/", diskName, ".chd"};
+      if(file::exists(path)) return path;
+    }
+  }
+  return {};
+}
 
 auto Mame::parseNatural(Markup::Node node, u64& value) const -> bool {
   if(!node) return false;

@@ -1,10 +1,12 @@
 #include <ps1/ps1.hpp>
+#include <ares/resource/resource.hpp>
 
 namespace ares::PlayStation {
 
 ExpansionPort expansion;
 #include "datel/datel.cpp"
 #include "xplorer/xplorer.cpp"
+#include "konami-gv/konami-gv.cpp"
 
 auto ExpansionDevice::readHalf(u32 address) -> u32 { return readByte(address) | readByte(address + 1) << 8; }
 auto ExpansionDevice::readWord(u32 address) -> u32 { return readHalf(address) | readHalf(address + 2) << 16; }

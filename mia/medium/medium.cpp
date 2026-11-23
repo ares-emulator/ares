@@ -153,13 +153,15 @@ auto Medium::manifestDatabaseArcade(string rom) -> string {
 auto Medium::arcadeRomAvailable(string location, Markup::Node info) -> bool {
   Media::Mame loader;
   auto resolver = [&](string parent) { return BML::unserialize(manifestDatabaseArcade(parent)); };
-  for(auto region : {"maincpu", "cslot1-maincpu", "prg", "user1"}) {
+  for(auto region : {"maincpu", "maincpu-rom", "cslot1-maincpu", "prg", "user1"}) {
     for(auto rom : info[{"game/", region}].find("rom")) {
       auto filename = rom["name"].string();
       if(!filename) continue;
       maybe<u32> checksum;
       if(rom["crc"]) checksum = (u32)rom["crc"].string().hex();
-      return bool(loader.loadRomFile(location, filename, region, info, resolver, checksum, false));
+      bool available = bool(loader.loadRomFile(location, filename, region, info, resolver, checksum, false));
+      if(available && !info["game"].find("disk").empty()) available = (bool)loader.locateDisk(location, info, resolver);
+      return available;
     }
   }
   return false;

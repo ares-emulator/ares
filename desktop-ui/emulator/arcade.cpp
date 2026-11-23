@@ -101,6 +101,8 @@ auto Arcade::buildDefaultInputs() -> void {
       device.analog ({"Player ", n + 1, " X-Axis"  }, virtualPorts[n].pad.lstick_left, virtualPorts[n].pad.lstick_right);
       device.analog ({"Player ", n + 1, " Y-Axis"  }, virtualPorts[n].pad.lstick_up,   virtualPorts[n].pad.lstick_down);
       device.analog ({"Player ", n + 1, " Accelerator"}, virtualPorts[n].pad.r_trigger);
+      device.relative({"Player ", n + 1, " X-Axis (Mouse)"}, virtualPorts[n].mouse.x);
+      device.relative({"Player ", n + 1, " Y-Axis (Mouse)"}, virtualPorts[n].mouse.y);
     }
 
     device.relative("X-Axis",  virtualPorts[0].mouse.x);
@@ -206,6 +208,9 @@ auto Arcade::buildInputs(string manifest) -> void {
     return nullptr;
   };
 
+  bool gunGame = false;
+  for(auto& def : controls) gunGame |= def.type == "lightgun";
+
   { InputDevice device{"Controls"};
     if(hasActions) {
       for(auto action : actions) {
@@ -227,6 +232,16 @@ auto Arcade::buildInputs(string manifest) -> void {
           device.inputs.back().label = {"P", p + 1, " Accelerator"};
           continue;
         }
+        if(token.endsWith("_LIGHTGUN_X") || token.endsWith("_LIGHTGUN_Y")) {
+          device.relative({name, " (Mouse)"}, axisY ? virtualPorts[p].mouse.y : virtualPorts[p].mouse.x);
+          device.inputs.back().label = {"P", p + 1, axisY ? " Gun Y (Mouse)" : " Gun X (Mouse)"};
+          continue;
+        }
+        if(token.endsWith("_TRACKBALL_X") || token.endsWith("_TRACKBALL_Y")) {
+          device.relative({name, " (Mouse)"}, axisY ? virtualPorts[p].mouse.y : virtualPorts[p].mouse.x);
+          device.inputs.back().label = {"P", p + 1, axisY ? " Trackball Y (Mouse)" : " Trackball X (Mouse)"};
+          continue;
+        }
         if(axisX || axisY) {
           auto& lo = axisY ? pad.lstick_up : pad.lstick_left;
           auto& hi = axisY ? pad.lstick_down : pad.lstick_right;
@@ -241,6 +256,12 @@ auto Arcade::buildInputs(string manifest) -> void {
         }
 
         auto* mapping = resolveMapping(binding, player);
+        if(gunGame) {
+          auto& mouse = virtualPorts[p].mouse;
+          if(token.endsWith("_BUTTON1")) mapping = &mouse.left;
+          if(token.endsWith("_BUTTON2")) mapping = &mouse.right;
+          if(token.endsWith("_BUTTON3")) mapping = &mouse.middle;
+        }
         if(!mapping) mapping = &unmapped;
         device.digital(name, *mapping);
         auto& input = device.inputs.back();
@@ -271,7 +292,10 @@ auto Arcade::buildInputs(string manifest) -> void {
           device.relative({"Player ", n + 1, " X-Axis"}, virtualPorts[n].mouse.x);
           device.relative({"Player ", n + 1, " Y-Axis"}, virtualPorts[n].mouse.y);
           device.digital ({"Player ", n + 1, " Trigger"}, virtualPorts[n].mouse.left);
-        } else if(controlType == "trackball" || controlType == "dial" || controlType == "paddle") {
+        } else if(controlType == "trackball") {
+          device.relative({"Player ", n + 1, " X-Axis (Mouse)"}, virtualPorts[n].mouse.x);
+          device.relative({"Player ", n + 1, " Y-Axis (Mouse)"}, virtualPorts[n].mouse.y);
+        } else if(controlType == "dial" || controlType == "paddle") {
           device.digital({"Player ", n + 1, " Up"   }, virtualPorts[n].pad.up);
           device.digital({"Player ", n + 1, " Down" }, virtualPorts[n].pad.down);
           device.digital({"Player ", n + 1, " Left" }, virtualPorts[n].pad.left);
@@ -282,6 +306,8 @@ auto Arcade::buildInputs(string manifest) -> void {
           device.analog ({"Player ", n + 1, " Y-Axis +"}, virtualPorts[n].pad.lstick_down);
           device.analog ({"Player ", n + 1, " X-Axis"  }, virtualPorts[n].pad.lstick_left, virtualPorts[n].pad.lstick_right);
           device.analog ({"Player ", n + 1, " Y-Axis"  }, virtualPorts[n].pad.lstick_up,   virtualPorts[n].pad.lstick_down);
+          device.relative({"Player ", n + 1, " X-Axis (Mouse)"}, virtualPorts[n].mouse.x);
+          device.relative({"Player ", n + 1, " Y-Axis (Mouse)"}, virtualPorts[n].mouse.y);
         } else {
           device.digital({"Player ", n + 1, " Up"   }, virtualPorts[n].pad.up);
           device.digital({"Player ", n + 1, " Down" }, virtualPorts[n].pad.down);
@@ -416,7 +442,7 @@ auto Arcade::reloadInputBindings() -> void {
 }
 
 auto Arcade::available() -> bool {
-#if defined(CORE_SG) || defined(CORE_N64) || defined(CORE_FC) || defined(CORE_MS) || defined(CORE_NG)
+#if defined(CORE_SG) || defined(CORE_N64) || defined(CORE_FC) || defined(CORE_MS) || defined(CORE_NG) || defined(CORE_PS1)
   return true;
 #endif
   return false;
@@ -439,6 +465,9 @@ auto Arcade::gameBrowserCategories() -> std::vector<GameBrowserCategory> {
 #ifdef CORE_MS
   categories.push_back({"Sega System E", "sega/segae"});
 #endif
+#ifdef CORE_PS1
+  categories.push_back({"Konami GV", "konami/konamigv"});
+#endif
   return categories;
 }
 
@@ -452,6 +481,22 @@ auto Arcade::load() -> LoadResult {
   if(result != successful) return result;
 
   buildInputs(game->manifest);
+
+#ifdef CORE_PS1
+  if(game->pak->attribute("board") == "konami/konamigv") {
+    system = game;
+    systemPakName = "Konami GV";
+    gamePakName = "PlayStation Disc";
+    if(!ares::PlayStation::load(root, "[Konami] GV")) return otherError;
+    if(game->pak->read("cd.rom")) {
+      if(auto port = root->find<ares::Node::Port>("PlayStation/Disc Tray")) {
+        port->allocate();
+        port->connect();
+      }
+    }
+    return successful;
+  }
+#endif
 
 #ifdef CORE_NG
   if(game->pak->attribute("arcade") == "neogeo") {
@@ -575,7 +620,7 @@ auto Arcade::load() -> LoadResult {
 
 auto Arcade::save() -> bool {
   root->save();
-  system->save(system->location);
+  if(system != game) system->save(system->location);
   game->save(game->location);
   return true;
 }
