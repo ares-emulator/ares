@@ -64,10 +64,17 @@ _PORT_NAME_RE = re.compile(r'PORT_NAME\s*\(\s*"([^"]+)"\s*\)')
 _PORT_START_RE = re.compile(r'PORT_START\s*\(\s*"([^"]+)"\s*\)')
 _PORT_MODIFY_RE = re.compile(r'PORT_MODIFY\s*\(\s*"([^"]+)"\s*\)')
 _INPUT_PORTS_START_RE = re.compile(r"INPUT_PORTS_START\s*\(\s*(\w+)\s*\)")
+_GAME_RE = re.compile(
+    r"^\s*(?:GAME|GAMEL|GAMEB)\s*\(\s*[\w?]+\s*,\s*(\w+)\s*,\s*(\w+)\s*,"
+    r"\s*(\w+)\s*,\s*(\w+)\s*,",
+    re.M,
+)
 _PORT_INCLUDE_RE = re.compile(r"PORT_INCLUDE\s*\(\s*(\w+)\s*\)")
 _PORT_SERVICE_RE = re.compile(
-    r"PORT_SERVICE_NO_TOGGLE\s*\(\s*(0x[0-9a-fA-F]+|\d+)\s*,"
-    r"\s*(IP_ACTIVE_LOW|IP_ACTIVE_HIGH)\s*\)"
+    r"PORT_SERVICE(?:_NO_TOGGLE|_DIPLOC)?\s*\(\s*(0x[0-9a-fA-F]+|\d+)\s*,"
+)
+_GLOBAL_IPT_RE = re.compile(
+    r"IPT_(?:COIN\d*|START\d+|SERVICE\d*|TILT\d*|BOOKKEEPING|POWER_ON|POWER_OFF)"
 )
 
 
@@ -82,7 +89,9 @@ class PortBit:
     def token(self) -> Optional[str]:
         spec = _IPT_MAP.get(self.ipt_type)
         if spec is None:
-            return None
+            if not self.ipt_type.startswith("IPT_"):
+                return None
+            spec = (self.ipt_type[4:], not _GLOBAL_IPT_RE.fullmatch(self.ipt_type))
         base, player_relative = spec
         if player_relative:
             return f"P{self.player}_{base}"
@@ -119,7 +128,7 @@ def _parse_port_bit_line(line: str) -> Optional[PortBit]:
         return None
     mask = _parse_int(m[1])
     ipt_type = m[3]
-    if ipt_type in ("IPT_UNUSED", "IPT_UNKNOWN", "IPT_CUSTOM", "IPT_OTHER"):
+    if ipt_type in ("IPT_UNUSED", "IPT_UNKNOWN", "IPT_CUSTOM", "IPT_OTHER", "IPT_OUTPUT"):
         return None
     rest = m[4]
     player_m = _PORT_PLAYER_RE.search(rest)
@@ -215,7 +224,7 @@ def _resolve_player(token: str, parser_player: int) -> int:
     m = re.fullmatch(r"(COIN|START)(\d+)", token)
     if m:
         return int(m[2])
-    if token in ("SERVICE", "SERVICE1"):
+    if _GLOBAL_IPT_RE.fullmatch(f"IPT_{token}"):
         return 1
     return parser_player
 
@@ -245,8 +254,10 @@ def _token_to_label(token: str, player: int) -> str:
         "START1": "1 Player Start", "START2": "2 Players Start",
         "START3": "3 Players Start", "START4": "4 Players Start",
         "SERVICE": "Service Mode", "SERVICE1": "Service 1",
+        "SERVICE2": "Service 2", "SERVICE3": "Service 3", "SERVICE4": "Service 4",
+        "TILT": "Tilt",
     }
-    return global_labels.get(token, token)
+    return global_labels.get(token, token.replace("_", " ").title())
 
 
 def _token_to_name(token: str, player: int) -> str:
@@ -274,8 +285,10 @@ def _token_to_name(token: str, player: int) -> str:
         "START1": "Player 1 Start", "START2": "Player 2 Start",
         "START3": "Player 3 Start", "START4": "Player 4 Start",
         "SERVICE": "Test", "SERVICE1": "Service",
+        "SERVICE2": "Service 2", "SERVICE3": "Service 3", "SERVICE4": "Service 4",
+        "TILT": "Tilt",
     }
-    return global_names.get(token, token)
+    return global_names.get(token, token.replace("_", " ").title())
 
 
 def _token_to_default(token: str) -> str:
@@ -306,25 +319,43 @@ def _token_to_default(token: str) -> str:
 
 def inputs_to_actions(ports: InputPorts) -> List[Dict[str, str]]:
     actions = []
-    seen_tokens = set()
+    by_token: Dict[str, Dict[str, object]] = {}
     for port in ports.ports.values():
         for bit in port.bits:
             token = bit.token
-            if token is None or token in seen_tokens:
+            if token is None:
                 continue
-            seen_tokens.add(token)
             player = _resolve_player(token, bit.player)
-            name = _token_to_name(token, player)
-            label = bit.name.replace("%p", f"P{player}") if bit.name else _token_to_label(token, player)
-            default = _token_to_default(token)
-            entry = {
-                "token": token, "name": name,
-                "label": label, "player": str(player),
-            }
-            if default:
-                entry["default"] = default
-            actions.append(entry)
-    return actions
+            entry = by_token.get(token)
+            if entry is None:
+                entry = {"player": player, "labels": []}
+                by_token[token] = entry
+                actions.append((token, entry))
+            if bit.name:
+                label = bit.name.replace("%p", f"P{player}")
+                if label not in entry["labels"]:
+                    entry["labels"].append(label)
+    result = []
+    for token, entry in actions:
+        player = entry["player"]
+        labels = entry["labels"]
+        label = " / ".join(labels) if labels else _token_to_label(token, player)
+        action = {
+            "token": token, "name": _token_to_name(token, player),
+            "label": label, "player": str(player),
+        }
+        default = _token_to_default(token)
+        if default:
+            action["default"] = default
+        result.append(action)
+    return result
+
+
+def parse_game_inputs(source: str) -> Dict[str, str]:
+    games = {}
+    for match in _GAME_RE.finditer(source):
+        games[match[1]] = match[4]
+    return games
 
 
 def fetch_ports(board: str) -> Dict[str, InputPorts]:
@@ -332,6 +363,13 @@ def fetch_ports(board: str) -> Dict[str, InputPorts]:
     for path in SOURCE_FILES.get(board, [f"src/mame/{board}.cpp"]):
         ports.update(parse_input_ports(mame.fetch_source(path)))
     return ports
+
+
+def fetch_game_inputs(board: str) -> Dict[str, str]:
+    games = {}
+    for path in SOURCE_FILES.get(board, [f"src/mame/{board}.cpp"]):
+        games.update(parse_game_inputs(mame.fetch_source(path)))
+    return games
 
 
 _SIX_BUTTON_LAYOUT = (
@@ -487,6 +525,7 @@ def _enrich_game_block(
     block: str,
     board_inputs: Dict[str, Dict[str, InputPorts]],
     game_filter: Optional[List[str]],
+    board_games: Optional[Dict[str, Dict[str, str]]] = None,
 ) -> str:
     name_m = re.search(r"  name:\s+(.+)", block)
     if not name_m:
@@ -504,20 +543,21 @@ def _enrich_game_block(
     if "  input\n" not in block:
         return block
 
-    type_m = re.search(r"  type:\s+(.+)", block)
-    if type_m and type_m[1].strip() == "bios":
-        return block
-
     players, button_count, control_type = _parse_game_input_meta(block)
     if button_count == 0:
         button_count = 4
 
     all_blocks = board_inputs.get(board, {})
     game_ports = all_blocks.get(name)
+    if game_ports is None and board_games:
+        game_ports = all_blocks.get(board_games.get(board, {}).get(name, ""))
     if game_ports is None:
         parent_m = re.search(r"  parent:\s+(.+)", block)
         if parent_m:
-            game_ports = all_blocks.get(parent_m[1].strip())
+            parent = parent_m[1].strip()
+            game_ports = all_blocks.get(parent)
+            if game_ports is None and board_games:
+                game_ports = all_blocks.get(board_games.get(board, {}).get(parent, ""))
 
     if game_ports is not None:
         actions = _generate_actions_from_ports(game_ports, button_count)
@@ -574,4 +614,5 @@ def enrich(blocks: List[str], game_filter: Optional[List[str]] = None) -> List[s
 
     print(f"Fetching MAME source for {len(boards)} boards...", file=sys.stderr)
     ports = {board: fetch_ports(board) for board in sorted(boards)}
-    return [_enrich_game_block(block, ports, game_filter) for block in blocks]
+    games = {board: fetch_game_inputs(board) for board in sorted(boards)}
+    return [_enrich_game_block(block, ports, game_filter, games) for block in blocks]

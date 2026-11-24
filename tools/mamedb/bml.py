@@ -217,7 +217,12 @@ def convert_machine_list(
 
         for dip in machine.findall("dipswitch"):
             output.append("  dip\n")
-            output.append(f"    name:    {dip.get('name', '')}\n")
+            dip_name = dip.get("name", "")
+            if dip_name == "Unknown":
+                locations = [f"{loc.get('name', '')}:{loc.get('number', '')}" for loc in dip.findall("diplocation")]
+                if locations:
+                    dip_name = "/".join(locations)
+            output.append(f"    name:    {dip_name}\n")
             output.append(f"    port:    {dip.get('tag', '')}\n")
             output.append(f"    mask:    {int(dip.get('mask', '0'))}\n")
             for option in dip.findall("dipvalue"):
