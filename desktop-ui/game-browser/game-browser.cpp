@@ -49,6 +49,9 @@ auto GameBrowserWindow::show(std::shared_ptr<Emulator> emulator) -> void {
   }
 
   auto categories = emulator->gameBrowserCategories();
+  std::ranges::sort(categories, [](const auto& x, const auto& y) {
+    return string::icompare(x.name, y.name) < 0;
+  });
   if(categories.size() > 1) {
     ListViewItem all{&categoryList};
     all.setText("All");
