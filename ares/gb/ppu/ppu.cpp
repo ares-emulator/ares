@@ -21,7 +21,7 @@ auto PPU::load(Node::Object parent) -> void {
 
   node = parent->append<Node::Object>("PPU");
 
-  if(Model::GameBoy() || Model::GameBoyColor()) {
+  if(Model::GameBoy() || Model::GameBoyColor() || Model::MegaDuck()) {
     screen = node->append<Node::Video::Screen>("Screen", 160, 144);
     screen->setViewport(0, 0, 160, 144);
     screen->setSize(160, 144);
@@ -29,11 +29,12 @@ auto PPU::load(Node::Object parent) -> void {
     screen->setAspect(1.0, 1.0);
     screen->refreshRateHint(4 * 1024 * 1024, 456, 154);
 
-    if(Model::GameBoy()) {
-      colorEmulationDMG = screen->append<Node::Setting::String>("Color Emulation", "Game Boy", [&](auto value) {
+    if(Model::GameBoy() || Model::MegaDuck()) {
+      colorEmulationDMG = screen->append<Node::Setting::String>("Color Emulation",
+        Model::MegaDuck() ? "Mega Duck" : "Game Boy", [&](auto value) {
         screen->resetPalette();
       });
-      colorEmulationDMG->setAllowedValues({"Game Boy", "Game Boy Pocket", "RGB"});
+      colorEmulationDMG->setAllowedValues({"Game Boy", "Game Boy Pocket", "Mega Duck", "RGB"});
       colorEmulationDMG->setDynamic(true);
 
       screen->colors(1 << 2, std::bind_front(&PPU::colorGameBoy, this));

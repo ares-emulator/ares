@@ -5,7 +5,9 @@ CartridgeSlot::CartridgeSlot(string name) : name(name) {
 
 auto CartridgeSlot::load(Node::Object parent) -> void {
   port = parent->append<Node::Port>(name);
-  port->setFamily(!Model::GameBoyColor() ? "Game Boy" : "Game Boy Color");
+  port->setFamily(Model::GameBoyColor() ? "Game Boy Color"
+                : Model::MegaDuck()     ? "Mega Duck"
+                                        : "Game Boy");
   port->setType("Cartridge");
   port->setAllocate([&](auto name) { return cartridge.allocate(port); });
   port->setConnect([&] { return cartridge.connect(); });

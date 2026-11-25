@@ -6,6 +6,7 @@ namespace Systems {
   #include "myvision.cpp"
   #include "famicom.cpp"
   #include "game-boy.cpp"
+  #include "mega-duck.cpp"
   #include "game-boy-color.cpp"
   #include "game-boy-advance.cpp"
   #include "master-system.cpp"
@@ -46,6 +47,7 @@ auto System::create(string name) -> std::shared_ptr<Pak> {
   if(name == "MyVision") return std::make_shared<Systems::MyVision>();
   if(name == "Famicom") return std::make_shared<Systems::Famicom>();
   if(name == "Game Boy") return std::make_shared<Systems::GameBoy>();
+  if(name == "Mega Duck") return std::make_shared<Systems::MegaDuck>();
   if(name == "Game Boy Color") return std::make_shared<Systems::GameBoyColor>();
   if(name == "Game Boy Advance") return std::make_shared<Systems::GameBoyAdvance>();
   if(name == "Master System") return std::make_shared<Systems::MasterSystem>();
