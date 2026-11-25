@@ -96,7 +96,7 @@ auto MegaCD::load() -> LoadResult {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    port->allocate("Control Pad");
+    port->allocate("Fighting Pad");
     port->connect();
   }
 
@@ -108,7 +108,7 @@ auto MegaCD::load() -> LoadResult {
       // No supported lightgun devices are currently emulated (Sega Menacer, ALG GameGun).
       peripheralConfigurationBlacklist.push_back("Controller Port 2");
     } else {
-      port->allocate("Control Pad");
+      port->allocate("Fighting Pad");
       port->connect();
     }
   }
