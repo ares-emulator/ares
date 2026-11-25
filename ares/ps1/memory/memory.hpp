@@ -20,6 +20,9 @@ struct Bus {
   //bus.hpp
   auto mmio(u32 address) -> Memory::Interface&;
   auto busConfiguration(u32 address) const -> BusConfiguration;
+  auto portId(u32 address) const -> u32;
+  auto isOnDie(u32 address) const -> bool;
+  auto portRecovery(u32 id) const -> u32;
   template<bool isWrite, bool isDMA> auto calcAccessTime(u32 address, u32 bytesCount = 0) -> u32 const;
   template<u32 Size> auto read(u32 address) -> u32;
   template<u32 Size> auto write(u32 address, u32 data) -> void;

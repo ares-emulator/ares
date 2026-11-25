@@ -48,7 +48,12 @@ auto CPU::flushWriteQueue() -> void {
 }
 
 alwaysinline auto CPU::beginBusTransaction(u32 address, u32 size, bool instruction) -> void {
-  if(unlikely(readRemaining)) step(readRemaining);
+  if(unlikely(readRemaining)) {
+    readHold = 0;
+    if(onDieHalf && size == Word && readRemaining > 1 && bus.isOnDie(address)) readRemaining--;
+    step(readRemaining);
+  }
+  onDieHalf = false;
   u32 physical = address & 0x1fff'ffff;
   if(likely(physical <= 0x007f'ffff && !(writeQueue.count | writeQueue.remaining))) {
     if(likely(!dma.active() && (!dma.enabledMask || clock() + (u64)accruedCycles * scalar() < dma.clock()))) {
@@ -94,6 +99,14 @@ alwaysinline auto CPU::beginBusTransaction(u32 address, u32 size, bool instructi
     busTransactionClocks = instruction ? 3 + ((size + 3) / 4) : Bus::ramReadAccessTime;
   } else {
     busTransactionClocks = bus.calcAccessTime<false, false>(physical, size);
+    if(u32 port = bus.portId(physical)) {
+      if(recoveryPort == port && recoveryWait) step(recoveryWait);
+      u32 recovery = bus.portRecovery(port);
+      u32 hidden = recovery > 3 ? recovery - 3 : 0;
+      busTransactionClocks -= hidden;
+      recoveryPort = port;
+      recoveryWait = hidden ? busTransactionClocks + hidden + 1 : 0;
+    }
   }
 }
 
@@ -101,9 +114,10 @@ alwaysinline auto CPU::endBusTransaction(bool overlap) -> void {
   if(!busAccess) return;
   //The last two read-response clocks can overlap independent instructions.
   //Keep the bus reserved until they expire, including across a cache miss.
-  u32 tail = overlap && memory.cache.loadScheduling && busTransactionClocks > 2 ? min(2u, busTransactionClocks - 2) : 0;
+  u32 tail = overlap && memory.cache.loadScheduling && busTransactionClocks > 2 ? busTransactionClocks - 2 : 0;
   step(busTransactionClocks - tail);
   readRemaining = tail;
+  readHold = tail ? 2 : 0;
   if(tail || (overlap && memory.cache.loadScheduling && busTransactionClocks == 2)) {
     readLatency = tail ? tail + 1 : 3;
     readWritebackRemaining = readLatency + 1;
@@ -124,7 +138,10 @@ auto CPU::queueWrite(u32 address, u32 data, u32 size, u32 lanes) -> void {
     return;
   }
   if(!buffered) {
-    if(unlikely(readRemaining)) step(readRemaining);
+    if(unlikely(readRemaining)) {
+      readHold = 0;
+      step(readRemaining);
+    }
     busAccess = true;
     if(dma.active()) waitDMA();
     writeQueue.page = ~0u;

@@ -29,6 +29,11 @@ struct GPU : Thread, Memory::Interface {
   auto hblank() const -> bool { return io.hcounter >= hblankStart(); }
   auto vblank() const -> bool { return io.vcounter < vstart() || io.vcounter >= vend(); }
   auto interlace() const -> bool { return io.verticalResolution && io.interlace; }
+  auto displayLineLSB() const -> u32 {
+    u32 row = io.displayStartY;
+    if(!vblank()) row += interlace() ? (u32)io.displayField : (u32)io.vcounter - (u32)io.displayRangeY1;
+    return row & 1;
+  }
   auto htotalNumerator() const -> u64 { return io.videoMode ? 6'812 : 6'825; }
   auto htotalDenominator() const -> u32 { return 2; }
   auto htotal() const -> u32 { return htotalNumerator() / htotalDenominator(); }
@@ -51,6 +56,7 @@ struct GPU : Thread, Memory::Interface {
   //io.cpp
   auto writeFifoEmpty() const -> bool;
   auto dmaRequest() const -> bool;
+  auto canLag(u64 now) const -> bool;
   auto canReadDMA() -> bool;
   auto canWriteDMA() -> bool;
   auto readDMA() -> u32;
@@ -127,6 +133,7 @@ struct GPU : Thread, Memory::Interface {
     i32 dotcounter;
     i32 timerDotcounter;
     u32 hblankClock;
+    u32 lineClocks;
     n1  hblankFired;
 
     //GP0(a0): copy rectangle (CPU to VRAM)

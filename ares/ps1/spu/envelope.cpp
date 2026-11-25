@@ -24,9 +24,7 @@ auto SPU::Envelope::tick(s32 level) -> s16 {
       }
     }
   }
-  counter += max(1, increment);
-  if(counter < 0x8000) return level;
-  counter = 0;
+  if(increment < 0x8000 && (spu.envelopeClock & (0x8000 / max(1, increment) - 1))) return level;
   level += step;
   if(level < 0x0000) level = 0x0000;
   if(level > 0x7fff) level = 0x7fff;
@@ -58,9 +56,7 @@ auto SPU::VolumeSweep::tick() -> void {
       else { step >>= 1; increment >>= 1; }
     }
   }
-  counter += max(1, increment);
-  if(counter < 0x8000) return;
-  counter = 0;
+  if(increment < 0x8000 && (spu.envelopeClock & (0x8000 / max(1, increment) - 1))) return;
   s32 next = current + step;
   if(!decreasing) next = sclamp<16>(next);
   else if(negative) next = min(0, max(-0x8000, next));

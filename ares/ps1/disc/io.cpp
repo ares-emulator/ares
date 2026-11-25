@@ -8,6 +8,7 @@ auto Disc::readDMA() -> u32 {
   data |= fifo.data.read(0) <<  8;
   data |= fifo.data.read(0) << 16;
   data |= fifo.data.read(0) << 24;
+  if(fifo.data.empty()) { io.sectorBufferReadRequest = 0; io.sectorBufferLoaded = 0; }
   return data;
 }
 
@@ -20,7 +21,7 @@ auto Disc::readByte(u32 address) -> u32 {
     data.bit(2) = !cdxa.samples.empty();
     data.bit(3) = fifo.parameter.empty();  //1 when empty
     data.bit(4) = !fifo.parameter.full();  //0 when full
-    data.bit(5) = !fifo.response.empty();  //0 when empty
+    data.bit(5) = (fifo.responseReads & 15) != (fifo.responseLength & 15);  //0 when empty
     data.bit(6) = io.sectorBufferReadRequest && io.sectorBufferLoaded && !fifo.data.empty();      //0 when empty
     data.bit(7) = command.transfer.started; //command/parameter busy (0 = ready)
     return data;
@@ -28,14 +29,17 @@ auto Disc::readByte(u32 address) -> u32 {
 
   //response FIFO
   if(address == 0x1f80'1801 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
-    data = fifo.response.read(data);
+    data = fifo.responseRing[fifo.responseReads++ & 15];
+    fifo.response.read(data);
     if(fifo.response.empty()) flushDeferredResponse();
     return data;
   }
 
   //data FIFO
   if(address == 0x1f80'1802 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
-    return data = fifo.data.read(data);
+    data = fifo.data.read(data);
+    if(fifo.data.empty()) { io.sectorBufferReadRequest = 0; io.sectorBufferLoaded = 0; }
+    return data;
   }
 
   //interrupt enable

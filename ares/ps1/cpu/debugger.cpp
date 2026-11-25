@@ -104,13 +104,13 @@ auto CPU::Debugger::messageText(u32 address) -> void {
 }
 
 auto CPU::Debugger::message() -> void {
-  u32 pc = cpu.ipu.pc;
+  u32 pc = cpu.ipu.pc & 0x1fff'ffff;
   if(pc != 0xa0 && pc != 0xb0) return;
 
-  if(cpu.ipu.pc == 0xa0 && cpu.ipu.r[9] == 0x3c) messageChar((char)cpu.ipu.r[4]);
-  if(cpu.ipu.pc == 0xb0 && cpu.ipu.r[9] == 0x3d) messageChar((char)cpu.ipu.r[4]);
-  if(cpu.ipu.pc == 0xa0 && cpu.ipu.r[9] == 0x3e) messageText(cpu.ipu.r[4]);
-  if(cpu.ipu.pc == 0xb0 && cpu.ipu.r[9] == 0x3f) messageText(cpu.ipu.r[4]);
+  if(pc == 0xa0 && cpu.ipu.r[9] == 0x3c) messageChar((char)cpu.ipu.r[4]);
+  if(pc == 0xb0 && cpu.ipu.r[9] == 0x3d) messageChar((char)cpu.ipu.r[4]);
+  if(pc == 0xa0 && cpu.ipu.r[9] == 0x3e) messageText(cpu.ipu.r[4]);
+  if(pc == 0xb0 && cpu.ipu.r[9] == 0x3f) messageText(cpu.ipu.r[4]);
 }
 
 auto CPU::Debugger::function() -> void {

@@ -73,10 +73,7 @@ auto Disc::CDXA::clockSample() -> void {
   if(self.audio.mute || self.audio.muteADPCM) {
     resample(0, 0);
   } else {
-    resample(
-      sclamp<16>((left * self.audio.volume[0] >> 7) + (right * self.audio.volume[2] >> 7)),
-      sclamp<16>((left * self.audio.volume[1] >> 7) + (right * self.audio.volume[3] >> 7))
-    );
+    resample(left, right);
   }
 }
 
@@ -139,8 +136,12 @@ auto Disc::CDXA::pullSample() -> void {
     sample.right = 0;
     return;
   }
-  sample.left  = resampler.frames[resampler.head][0];
-  sample.right = resampler.frames[resampler.head][1];
+  s32 frameLeft  = resampler.frames[resampler.head][0];
+  s32 frameRight = resampler.frames[resampler.head][1];
+  s32 mixLeft  = (frameLeft  * self.audio.volume[0] >> 7) + (frameRight * self.audio.volume[2] >> 7);
+  s32 mixRight = (frameLeft  * self.audio.volume[1] >> 7) + (frameRight * self.audio.volume[3] >> 7);
+  sample.left  = (s16)std::clamp<s32>(mixLeft,  -31900, 31900);
+  sample.right = (s16)std::clamp<s32>(mixRight, -31900, 31900);
   resampler.head = resampler.head + 1 & 31;
   resampler.count--;
 }

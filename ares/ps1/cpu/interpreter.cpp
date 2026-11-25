@@ -200,7 +200,7 @@ auto CPU::decoderSCC() -> void {
   op(0x05, INVALID);
   op(0x06, INVALID);
   op(0x07, INVALID);
-  br(0x08, branchCoprocessor, false, IMMi16);
+  case 0x08: if(!scc.status.enable.coprocessor0) return exception.coprocessor(); return branchCoprocessor(false, IMMi16);
   op(0x09, INVALID);
   op(0x0a, INVALID);
   op(0x0b, INVALID);
@@ -227,7 +227,7 @@ auto CPU::decoderGTE() -> void {
   op(0x05, INVALID);
   op(0x06, CTC2, RT, RDn);
   op(0x07, INVALID);
-  br(0x08, branchCoprocessor, false, IMMi16);
+  case 0x08: if(!scc.status.enable.coprocessor2) return exception.coprocessor(); return branchCoprocessor(false, IMMi16);
   op(0x09, INVALID);
   op(0x0a, INVALID);
   op(0x0b, INVALID);
@@ -239,7 +239,11 @@ auto CPU::decoderGTE() -> void {
 
   gte.command = OPCODE & 0x3f;
   gte.remaining = gte.latency(OPCODE);
+  gte.latchBegin(OPCODE);
+  executeGTE();
+}
 
+auto CPU::executeGTE() -> void {
   #define LM OPCODE >> 10 & 1
   #define TV OPCODE >> 13 & 3
   #define MV OPCODE >> 15 & 3

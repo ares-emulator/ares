@@ -5,7 +5,7 @@ struct Timer : Memory::Interface {
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
-  auto step(u32 clocks) -> void;
+  auto step(u32 clocks, bool update = true) -> void;
   auto hsync(bool line) -> void;
   auto vsync(bool line) -> void;
   auto updateNextEvent() -> void;

@@ -171,6 +171,7 @@ auto SPU::serialize(serializer& s) -> void {
 
     s(v.counter);
     s(v.keyOnDelay);
+    s(v.firstOutput);
     s(v.pmon);
     s(v.non);
     s(v.eon);
@@ -180,6 +181,7 @@ auto SPU::serialize(serializer& s) -> void {
   }
 
   s(capture.address);
+  s(envelopeClock);
   for(auto& half : unknown1dbc) s(half);
   for(auto& half : unknown1e60) s(half);
 

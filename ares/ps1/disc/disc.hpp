@@ -73,6 +73,8 @@ struct Disc : Memory::Interface {
   auto ack() -> void;
   auto error(u8 code) -> void;
   auto queueResponse(ResponseType type, std::initializer_list<u8> response) -> void;
+  auto queueResponse(ResponseType type, const u8* response, u32 size) -> void;
+  auto loadResponseRing(const u8* response, u32 size) -> void;
   auto flushDeferredResponse() -> void;
 
   auto executeCommand(u8 operation) -> void;
@@ -104,6 +106,8 @@ struct Disc : Memory::Interface {
   auto commandTestStartReadSCEX() -> void;
   auto commandTestStopReadSCEX() -> void;
   auto commandTestControllerDate() -> void;
+  auto commandTestString(const char* text) -> void;
+  auto commandReset() -> void;
   auto commandGetID() -> void;
   auto commandReadS() -> void;
   auto commandReadToc() -> void;
@@ -161,6 +165,7 @@ struct Disc : Memory::Interface {
     n2 headerLag;
     n1 standby;
     n1 firstSectorPending;
+    u32 sectorsRead;
     u32 seeking;
     u32 seekDelay;
     u16 seekRetries;
@@ -178,6 +183,7 @@ struct Disc : Memory::Interface {
   struct CDDA {
     Disc& self;
     CDDA(Disc& self) : self(self) {}
+    s32 peak = 0;
 
     maybe<Drive&> drive;
     Node::Audio::Stream stream;
@@ -255,6 +261,7 @@ struct Disc : Memory::Interface {
       u8  command;
       n1  pending;
       s32 counter;
+      u8 session;
     } secondResponse;
 
     struct Transfer {
@@ -291,6 +298,9 @@ struct Disc : Memory::Interface {
   struct FIFO {
     queue<u8[16]> parameter;
     queue<u8[16]> response;
+    u8 responseRing[16] = {};
+    u32 responseReads = 0;
+    u32 responseLength = 0;
     queue<u8[2340]> data;
 
     struct DeferredData {

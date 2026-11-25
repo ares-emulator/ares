@@ -15,29 +15,30 @@ auto CPU::InstructionCache::fetchSlow(u32 address) -> u32 {
   if(unlikely(!tagMatch || !(line.valid & 1 << word))) {
     if(!tagMatch) line.valid = 0;
     u32 start = address & ~3u;
-    u32 size = Word * (4 - word);
+    u32 end = memory.cache.codeSize == 0 ? (word | 1) + 1 : 4;
+    u32 size = Word * (end - word);
     if((address & 0x1fff'ffff) <= memory.ramLimit) {
       cpu.beginBusTransaction(start, size, true);
       u32 base = (address & ~0xfu) & cpu.ram.maskWord;
       auto* src = (const u32*)&cpu.ram.data[base];
-      for(u32 index = word; index < 4; index++) line.words[index] = bus.readLatch = src[index];
+      for(u32 index = word; index < end; index++) line.words[index] = bus.readLatch = src[index];
       cpu.endBusTransaction();
     }
     if((address & 0x1fff'ffff) >= 0x1fc0'0000) {
       cpu.beginBusTransaction(start, size, true);
-      for(u32 index = word; index < 4; index++) {
+      for(u32 index = word; index < end; index++) {
         line.words[index] = bios.read<Word>((address & ~0xfu) | index << 2);
       }
       cpu.endBusTransaction();
     }
     if((address & 0x1fff'ffff) > memory.ramLimit && (address & 0x1fff'ffff) < 0x1fc0'0000) {
       cpu.beginBusTransaction(start, size, true);
-      for(u32 index = word; index < 4; index++) {
+      for(u32 index = word; index < end; index++) {
         line.words[index] = bus.read<Word>(((address & ~0xfu) | index << 2) & 0x1fff'ffff);
       }
       cpu.endBusTransaction();
     }
-    for(u32 index = word; index < 4; index++) line.valid |= 1 << index;
+    for(u32 index = word; index < end; index++) line.valid |= 1 << index;
     line.tag = tag | (line.tag & 2);
   } else {
     cpu.step(1);
@@ -48,6 +49,12 @@ auto CPU::InstructionCache::fetchSlow(u32 address) -> u32 {
 inline auto CPU::InstructionCache::read(u32 address) -> u32 {
   auto& line = lines[address >> 4 & 0xff];
   return line.words[address >> 2 & 3];
+}
+
+inline auto CPU::InstructionCache::readTag(u32 address) -> u32 {
+  auto& line = lines[address >> 4 & 0xff];
+  bool match = ((line.tag ^ address) & 0x1fff'f000) == 0;
+  return (line.valid & 0x0f) | match << 4;
 }
 
 inline auto CPU::InstructionCache::writeTag(u32 address, u32 data) -> void {

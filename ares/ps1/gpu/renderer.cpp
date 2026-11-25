@@ -642,8 +642,6 @@ auto GPU::Render::fill() -> void {
 }
 
 static constexpr double FittedWidth = 320.0;
-static constexpr double RectScanline = 5.00 * CpuToGpuClocks;
-static constexpr double PolyScanline = 4.75 * CpuToGpuClocks;
 
 auto GPU::drawCycles(const Render& render) const -> u32 {
   u32 command = render.command;
@@ -654,13 +652,28 @@ auto GPU::drawCycles(const Render& render) const -> u32 {
   u32 pixels = 0;
   u32 scanlines = 0;
 
+  double setup = 0.0;
+  if(command >= 0x20 && command <= 0x3f) {
+    bool quad = command & 8, shaded = command & 0x10;
+    setup = quad ? (shaded ? (textured ? 495 : 335) : (textured ? 215 : 50))
+                 : (shaded ? (textured ? 295 : 200) : (textured ? 130 : 50));
+  } else if(command >= 0x40 && command <= 0x5f) {
+    setup = command & 0x10 ? 125 : 60;
+  } else if(command >= 0x60 && command <= 0x7f) {
+    setup = 50;
+  }
+  setup *= CpuToGpuClocks;
+
   if(command == 0x02) {
     pixels = render.size.w * render.size.h;
-    perPixel = 0.137;
+    scanlines = render.size.h;
+    setup = 10 * CpuToGpuClocks;
+    perScanline = 5 * CpuToGpuClocks;
+    perPixel = 0.137 - perScanline / FittedWidth;
   } else if(command >= 0x20 && command <= 0x3f) {
     s32 first = render.drawableArea(render.v0, render.v1, render.v2);
     s32 second = command & 8 ? render.drawableArea(render.v1, render.v2, render.v3) : 0;
-    if(!first && !second) return 0;
+    if(!first && !second) return (u32)setup;
     pixels = (u32)abs(first) >> 1;
     if(second) pixels += (u32)abs(second) >> 1;
     s32 ox = render.drawingAreaOffsetX, oy = render.drawingAreaOffsetY;
@@ -676,20 +689,23 @@ auto GPU::drawCycles(const Render& render) const -> u32 {
     s32 cx0 = max(x0, render.drawingAreaOriginX1), cx1 = min(x1, render.drawingAreaOriginX2);
     s32 cy0 = max(y0, render.drawingAreaOriginY1), cy1 = min(y1, render.drawingAreaOriginY2);
     s64 clipped = (s64)max(0, cx1 - cx0 + 1) * max(0, cy1 - cy0 + 1);
-    if(!clipped) return 0;
+    if(!clipped) return (u32)(setup + (y1 - y0 + 1) * CpuToGpuClocks);
     if(full > 0) pixels = (u32)((s64)pixels * clipped / full);
     scanlines = max(0, min(cy1, y1) - max(cy0, y0) + 1);
-    perScanline = PolyScanline;
-    perPixel = (textured || (command & 0x10) ? 1.746 : (semi ? 1.314 : 0.873)) - PolyScanline / FittedWidth;
+    bool quad = command & 8, shaded = command & 0x10;
+    double row = quad ? (semi && !textured && !shaded ? 11 : (shaded || textured ? (shaded && textured ? 4 : 3) : 5))
+                      : (semi && !textured && !shaded ? 5 : (semi ? 3 : 2));
+    perScanline = row * CpuToGpuClocks;
+    perPixel = (textured || (command & 0x10) ? 1.746 : (semi ? 1.314 : 0.873)) - perScanline / FittedWidth;
   } else if(command >= 0x40 && command <= 0x5f) {
     s32 dx = render.v1.x - render.v0.x, dy = render.v1.y - render.v0.y;
-    if(abs(dx) >= 1024 || abs(dy) >= 512) return 0;
+    if(abs(dx) >= 1024 || abs(dy) >= 512) return (u32)setup;
     s32 x0 = i11(render.v0.x + render.drawingAreaOffsetX);
     s32 y0 = i11(render.v0.y + render.drawingAreaOffsetY);
     s32 x1 = i11(render.v1.x + render.drawingAreaOffsetX);
     s32 y1 = i11(render.v1.y + render.drawingAreaOffsetY);
     if(max(x0, x1) < render.drawingAreaOriginX1 || min(x0, x1) > render.drawingAreaOriginX2
-    || max(y0, y1) < render.drawingAreaOriginY1 || min(y0, y1) > render.drawingAreaOriginY2) return 0;
+    || max(y0, y1) < render.drawingAreaOriginY1 || min(y0, y1) > render.drawingAreaOriginY2) return (u32)setup;
     pixels = max(dx < 0 ? -dx : dx, dy < 0 ? -dy : dy);
     perPixel = 1.0;
   } else if(command >= 0x60 && command <= 0x7f) {
@@ -699,11 +715,11 @@ auto GPU::drawCycles(const Render& render) const -> u32 {
     s32 y1 = y0 + render.size.h;
     u32 width = max(0, min(x1, render.drawingAreaOriginX2 + 1) - max(x0, render.drawingAreaOriginX1));
     u32 height = max(0, min(y1, render.drawingAreaOriginY2 + 1) - max(y0, render.drawingAreaOriginY1));
-    if(!width || !height) return 0;
+    if(!width || !height) return (u32)setup;
     pixels = width * height;
     scanlines = height;
-    perScanline = RectScanline;
-    perPixel = (!textured && semi ? 1.298 : 0.858) - RectScanline / FittedWidth;
+    perScanline = (!textured && semi ? 8 : 2) * CpuToGpuClocks;
+    perPixel = (!textured && semi ? 1.298 : 0.858) - perScanline / FittedWidth;
   } else {
     return 0;
   }
@@ -714,7 +730,7 @@ auto GPU::drawCycles(const Render& render) const -> u32 {
     if(scanlines) scanlines = max(1u, scanlines / 2);
   }
 
-  return (u32)(pixels * perPixel + scanlines * perScanline);
+  return (u32)(pixels * perPixel + scanlines * perScanline + setup);
 }
 
 template<u32 Flags>

@@ -86,12 +86,13 @@ inline auto CPU::peek(u32 address) -> u32 {
 template<u32 Size>
 inline auto CPU::readIO(u32 address) -> u32 {
   beginBusTransaction(address, Size);
+  onDieHalf = Size == Half && bus.isOnDie(address);
   if(!bus.busConfiguration(address).width) {
     auto data = bus.read<Size>(address);
     endBusTransaction(true);
     return data;
   }
-  endBusTransaction();
+  endBusTransaction(true);
   return bus.read<Size>(address);
 }
 
@@ -102,6 +103,9 @@ inline auto CPU::readBus(u32 address) -> u32 {
     beginBusTransaction(address, Size);
     auto data = ram.read<Size>(address);
     endBusTransaction(true);
+    if(unlikely(memory.cache.dataEnable & !memory.cache.scratchpadEnable)) {
+      scratchpad.write<Word>(address & 0x3fc, ram.read<Word>(address & ~3u));
+    }
     return data;
   }
 
@@ -113,6 +117,9 @@ inline auto CPU::readBus(u32 address) -> u32 {
   //cached
   case 0: {//KUSEG
     if(unlikely(scc.status.cache.isolate)) {
+      if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
+        return icache.readTag(address);
+      }
       if(memory.cache.codeEnable == 1) {
         return icache.read(address);
       }
@@ -145,6 +152,9 @@ inline auto CPU::readBus(u32 address) -> u32 {
   //cached
   case 4: {//KSEG0
     if(unlikely(scc.status.cache.isolate)) {
+      if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
+        return icache.readTag(address);
+      }
       if(memory.cache.codeEnable == 1) {
         return icache.read(address);
       }
@@ -235,7 +245,7 @@ inline auto CPU::writeWordPartial(u32 address, u32 data, u32 lanes) -> void {
   if constexpr(Accuracy::CPU::Breakpoints) {
     if(unlikely(breakpoint.active)) {
       u32 start = lanes & 1 ? address & ~3u : address;
-      if(breakpoint.testData<Write, Byte>(start)) return;
+      breakpoint.testData<Write, Byte>(start);
     }
   }
 
@@ -265,6 +275,9 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
   switch(address >> 29) {
   case 0: {
     if(unlikely(scc.status.cache.isolate)) {
+      if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
+        return icache.readTag(address);
+      }
       if(memory.cache.codeEnable == 1) {
         return icache.read(address);
       }
@@ -302,6 +315,9 @@ inline auto CPU::readBusWordPartial(u32 address, u32 lanes) -> u32 {
 
   case 4: {
     if(unlikely(scc.status.cache.isolate)) {
+      if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
+        return icache.readTag(address);
+      }
       if(memory.cache.codeEnable == 1) {
         return icache.read(address);
       }
@@ -511,11 +527,18 @@ inline auto CPU::writeBus(u32 address, u32 data, u32 lanes) -> void {
 template<u32 Size>
 inline auto CPU::write(u32 address, u32 data, u32 lanes) -> void {
   ioPoll = {};
+  bool misaligned = Accuracy::CPU::AddressErrors && ((Size == Half && (address & 1)) || (Size == Word && (address & 3)));
   if constexpr(Accuracy::CPU::Breakpoints) {
-    if(unlikely(breakpoint.active) && breakpoint.testData<Write, Size>(address)) return;
+    if(unlikely(breakpoint.active)) {
+      if(misaligned) {
+        if(breakpoint.testData<Write, Size>(address)) return;
+      } else {
+        breakpoint.testData<Write, Size>(address);
+      }
+    }
   }
 
-  if(Accuracy::CPU::AddressErrors && ((Size == Half && (address & 1)) || (Size == Word && (address & 3)))) {
+  if(misaligned) {
     return exception.address<Write>(address);
   }
 

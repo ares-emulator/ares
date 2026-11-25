@@ -93,7 +93,12 @@ auto SPU::Reverb::address(u32 address) -> u32 {
 }
 
 auto SPU::Reverb::read(u32 virtualAddress, s32 offset) -> s16 {
-  u32 realAddress = address((virtualAddress << 2) + offset);
+  u32 realAddress = address(virtualAddress << 2);
+  if(offset < 0) {
+    u32 index = realAddress >> 1;
+    index = index <= baseAddress ? 0x3ffff : index - 1;
+    realAddress = index << 1;
+  }
   return self.readRAM(realAddress);
 }
 

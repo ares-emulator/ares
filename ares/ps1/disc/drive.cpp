@@ -149,11 +149,19 @@ auto Disc::Drive::clockSector() -> void {
   }
 
   if(self.ssr.reading) {
+    if(self.ssr.playingCDDA && lba.current >= session->leadOut.lba) {
+      self.ssr.reading = 0;
+      self.ssr.playingCDDA = 0;
+      self.fifo.deferred.ready = {};
+      self.queueResponse(ResponseType::End, {self.status()});
+      return;
+    }
     headerLag = 0;
     self.debugger.read(lba.current);
     self.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lba.current++)));
     self.fd->read({sector.data, 2448});
     firstSectorPending = 0;
+    sectorsRead++;
 
     if(auto trackID = session->inTrack(lba.current)) {
       sector.track = *trackID;
@@ -208,7 +216,7 @@ auto Disc::Drive::clockSector() -> void {
     //any remaining FIFO data is lost if a new sector is clocked
     //before all data from the previous sector was read by the CPU
     self.fifo.data.flush();
-    self.io.sectorBufferLoaded = 0;
+    self.io.sectorBufferLoaded = self.io.sectorBufferReadRequest;
 
     if(mode.sectorSize == 0) {
       for(u32 offset : range(2048)) {

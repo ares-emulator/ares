@@ -69,7 +69,8 @@ auto CPU::BREAK() -> void {
 }
 
 auto CPU::DIV(cs32& rs, cs32& rt) -> void {
-  mulDivRemaining = 36;
+  mulDivRemaining = 37;
+  mulOperand = rs;
   if(rt) {
     //cast to s64 to prevent exception on INT32_MIN / -1
     LO = s64(rs) / s64(rt);
@@ -81,7 +82,8 @@ auto CPU::DIV(cs32& rs, cs32& rt) -> void {
 }
 
 auto CPU::DIVU(cu32& rs, cu32& rt) -> void {
-  mulDivRemaining = 36;
+  mulDivRemaining = 37;
+  mulOperand = rs;
   if(rt) {
     LO = rs / rt;
     HI = rs % rt;
@@ -202,23 +204,33 @@ auto CPU::MFLO(u32& rd) -> void {
 }
 
 auto CPU::MTHI(cu32& rs) -> void {
+  if(mulDivRemaining) {
+    mulDivRemaining = 0;
+    LO = mulOperand;
+  }
   HI = rs;
 }
 
 auto CPU::MTLO(cu32& rs) -> void {
+  if(mulDivRemaining) {
+    mulDivRemaining = 0;
+    HI = 0;
+  }
   LO = rs;
 }
 
 auto CPU::MULT(cs32& rs, cs32& rt) -> void {
   u32 timing = rs < 0 ? ~rs : rs;
-  mulDivRemaining = (timing >> 11 == 0 ? 6 : timing >> 20 == 0 ? 9 : 13);
+  mulDivRemaining = (timing >> 11 == 0 ? 7 : timing >> 20 == 0 ? 10 : 14);
+  mulOperand = rs;
   u64 result = s64(rs) * s64(rt);
   LO = result >>  0;
   HI = result >> 32;
 }
 
 auto CPU::MULTU(cu32& rs, cu32& rt) -> void {
-  mulDivRemaining = (rs >> 11 == 0 ? 6 : rs >> 20 == 0 ? 9 : 13);
+  mulDivRemaining = (rs >> 11 == 0 ? 7 : rs >> 20 == 0 ? 10 : 14);
+  mulOperand = rs;
   u64 result = u64(rs) * u64(rt);
   LO = result >>  0;
   HI = result >> 32;

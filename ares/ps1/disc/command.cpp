@@ -35,11 +35,23 @@ auto Disc::ack() -> void {
   queueResponse(ResponseType::Acknowledge, {status()});
 }
 
+auto Disc::loadResponseRing(const u8* response, u32 size) -> void {
+  for(auto& byte : fifo.responseRing) byte = 0;
+  u32 count = min(size, 16u);
+  for(u32 n : range(count)) fifo.responseRing[n] = response[n];
+  fifo.responseReads = 0;
+  fifo.responseLength = count;
+}
+
 auto Disc::queueResponse(ResponseType type, std::initializer_list<u8> response) -> void {
+  queueResponse(type, response.begin(), (u32)response.size());
+}
+
+auto Disc::queueResponse(ResponseType type, const u8* response, u32 size) -> void {
   auto defer = [&](FIFO::DeferredData& slot) {
     slot.type = type;
     slot.data.flush();
-    for(auto n : response) slot.data.write(n);
+    for(u32 n : range(size)) slot.data.write(response[n]);
   };
 
   if(irq.pending()) {
@@ -53,7 +65,8 @@ auto Disc::queueResponse(ResponseType type, std::initializer_list<u8> response) 
   }
 
   fifo.response.flush();
-  for(auto n : response) fifo.response.write(n);
+  loadResponseRing(response, size);
+  for(u32 n : range(size)) fifo.response.write(response[n]);
 
   switch(type) {
   case ResponseType::Ready:       irq.ready.flag       = 1; break;
@@ -75,7 +88,10 @@ auto Disc::flushDeferredResponse() -> void {
     if(slot.type == ResponseType::None) return false;
 
     fifo.response.flush();
-    for(u32 n : range(slot.data.size())) fifo.response.write(slot.data.read(0));
+    u8 bytes[16] = {};
+    u32 count = 0;
+    for(u32 n : range(slot.data.size())) { u8 byte = slot.data.read(0); if(count < 16) bytes[count++] = byte; fifo.response.write(byte); }
+    loadResponseRing(bytes, count);
 
     auto type = slot.type;
     slot.type = ResponseType::None;
@@ -130,6 +146,7 @@ auto Disc::executeCommand(u8 operation) -> void {
   case 0x19: commandTest(); break;
   case 0x1a: commandGetID(); break;
   case 0x1b: commandReadS(); break;
+  case 0x1c: commandReset(); break;
   case 0x1e: commandReadToc(); break;
   case range48(0x20, 0x4f): commandInvalid(); break;
   case range8(0x50, 0x57): commandInvalid(); break;  //secret unlock commands
@@ -167,7 +184,12 @@ auto Disc::executeSecondResponse(u8 operation) -> void {
     break;
 
   case 0x12:
-    queueResponse(ResponseType::Complete, {status()});
+    if(command.secondResponse.session > 1) {
+      ssr.seekError = 1;
+      queueResponse(ResponseType::Error, {status(), ErrorCode_InvalidParameterCount});
+    } else {
+      queueResponse(ResponseType::Complete, {status()});
+    }
     break;
 
   case 0x1a:
@@ -193,7 +215,7 @@ auto Disc::executeSecondResponse(u8 operation) -> void {
     break;
 
   case 0x1e:
-    ack();
+    queueResponse(ResponseType::Complete, {status()});
     break;
   }
 }
@@ -220,6 +242,26 @@ auto Disc::commandTest() -> void {
   case 0x20:
     if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); break; }
     commandTestControllerDate();
+    break;
+  case 0x21:
+    if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); break; }
+    queueResponse(ResponseType::Acknowledge, {(u8)((ssr.shellOpen ? 2 : 0) | (ssr.motorOn ? 0 : 1))});
+    break;
+  case 0x22:
+    if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); break; }
+    commandTestString(Region::NTSCJ() ? "for Japan" : Region::PAL() ? "for Europe" : "for U/C");
+    break;
+  case 0x23:
+    if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); break; }
+    commandTestString("CXD2545Q");
+    break;
+  case 0x24:
+    if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); break; }
+    commandTestString("CXD2510Q");
+    break;
+  case 0x25:
+    if(!fifo.parameter.empty()) { error(ErrorCode_InvalidParameterCount); break; }
+    commandTestString("CXD1815Q");
     break;
   default:
     error(fifo.parameter.empty() ? ErrorCode_InvalidParameterValue : ErrorCode_InvalidParameterCount);
@@ -274,7 +316,11 @@ auto Disc::commandSetLoc() -> void {
 
   ack();
 
-  drive.lba.request = CD::MSF(minute, second, frame).toLBA();
+  s32 target = CD::MSF(minute, second, frame).toLBA();
+  bool inFlight = (drive.seeking && drive.pendingOperation == Drive::PendingOperation::Read)
+    || (ssr.reading && !ssr.playingCDDA && drive.firstSectorPending);
+  if(inFlight && target == drive.lba.request) return;
+  drive.lba.request = target;
   drive.lba.pending = 1;
 }
 
@@ -335,18 +381,21 @@ auto Disc::commandPlay() -> void {
     return;
   }
 
+  bool wasReading = ssr.reading;
+  if(!wasReading) ack();
   if(!ssr.reading || !ssr.playingCDDA) drive.firstSectorPending = 1;
   ssr.reading = 1;
   ssr.playingCDDA = 1;
   cdda.playMode = CDDA::PlayMode::Normal;
   counter.report = 60 * (system.frequency() / 75 >> drive.mode.speed);
+  if(wasReading) ack();
 
-  ack();
 }
 
 
 //0x04
 auto Disc::commandForward() -> void {
+  if(!ssr.playingCDDA) return error(ErrorCode_CannotRespondYet);
   cdda.playMode = CDDA::PlayMode::FastForward;
 
   ack();
@@ -354,6 +403,7 @@ auto Disc::commandForward() -> void {
 
 //0x05
 auto Disc::commandBackward() -> void {
+  if(!ssr.playingCDDA) return error(ErrorCode_CannotRespondYet);
   cdda.playMode = CDDA::PlayMode::Rewind;
 
   ack();
@@ -365,16 +415,21 @@ auto Disc::commandReadN() -> void {
   if(!drive.lba.pending && ((!ssr.playingCDDA && ssr.reading)
   || drive.pendingOperation == Drive::PendingOperation::Read)) return;
 
-  if(!drive.lba.pending && !drive.seeking && (!drive.standby || ssr.reading)) drive.lba.request = drive.lba.current;
+  if(!drive.lba.pending && !drive.seeking && (!drive.standby || ssr.reading)) {
+    drive.lba.request = drive.lba.current;
+    if(!ssr.reading && drive.sectorsRead && drive.lba.current >= 2) drive.lba.request = drive.lba.current - 2;
+  }
   cdxa.reset();
   ssr.reading = 0;
   ssr.playingCDDA = 0;
   drive.seekType = Drive::SeekType::SeekL;
   drive.firstSectorPending = 1;
+  drive.sectorsRead = 0;
   drive.pendingOperation = Drive::PendingOperation::Read;
   drive.seekRetries = 0;
   drive.seeking = drive.distance();
   drive.seekDelay = max<u32>(drive.seekDelay, 3 << drive.mode.speed);
+  if(!ssr.motorOn) drive.seekDelay = max<u32>(drive.seekDelay, 165 << drive.mode.speed);
   drive.lba.pending = 0;
 }
 
@@ -387,7 +442,7 @@ auto Disc::commandStandby() -> void {
   }
   drive.standby = 1;
   command.secondResponse.command = 0x07;
-  command.secondResponse.counter = 50'000;
+  command.secondResponse.counter = 80'000'000;
   command.secondResponse.pending = 1;
   ack();
 }
@@ -415,6 +470,8 @@ auto Disc::commandPause() -> void {
     return;
   }
 
+  bool active = ssr.reading || ssr.playingCDDA;
+  bool cdda = ssr.playingCDDA;
   ack();
   drive.standby = 0;
   fifo.deferred.ready = {};
@@ -422,6 +479,12 @@ auto Disc::commandPause() -> void {
   ssr.playingCDDA = 0;
   command.secondResponse.command = 0x09;
   command.secondResponse.counter = system.frequency() * (drive.mode.speed ? 35 : 70) / 1000;
+  if(active) {
+    f64 sectorsPerRevolution = 7.25 * std::sqrt(1.0 + (f64)max(0, (s32)drive.lba.current) * 1.41e-5);
+    f64 periods = sectorsPerRevolution - 2.0;
+    if(!cdda) periods += 1.5 * ((f64)min<u32>(max<u32>(drive.sectorsRead, 1), 3) - 1.0);
+    command.secondResponse.counter = (s32)(periods * (451584 >> drive.mode.speed));
+  }
   command.secondResponse.pending = 1;
 }
 
@@ -437,7 +500,7 @@ auto Disc::commandInit() -> void {
   }
 
   command.secondResponse.command = 0x0a;
-  command.secondResponse.counter = 4'000'000;
+  command.secondResponse.counter = !ssr.motorOn ? 80'000'000 : drive.mode.speed ? 20'000'000 : 4'000'000;
   command.secondResponse.pending = 1;
   ack();
 
@@ -458,6 +521,7 @@ auto Disc::commandInit() -> void {
   drive.firstSectorPending = 0;
   drive.pendingOperation = Drive::PendingOperation::None;
   drive.seekRetries = 0;
+  drive.headerValid = 1;
   fifo.deferred.ready = {};
   fifo.deferred.complete = {};
 
@@ -571,13 +635,19 @@ auto Disc::commandGetlocP() -> void {
 
 //0x12
 auto Disc::commandSetSession() -> void {
+  if(fifo.parameter.size() != 1) {
+    error(ErrorCode_InvalidParameterCount);
+    return;
+  }
   u8 session = fifo.parameter.read(0);
-  if(session != 1) {
-    debug(unimplemented, "Disc::commandSetSession(): session != 1");
+  if(session == 0) {
+    error(ErrorCode_InvalidParameterValue);
+    return;
   }
 
   command.secondResponse.command = 0x12;
-  command.secondResponse.counter = 50'000;
+  command.secondResponse.session = session;
+  command.secondResponse.counter = session == 1 ? 88'000'000 : 135'000'000;
   command.secondResponse.pending = 1;
 
   ack();
@@ -675,6 +745,14 @@ auto Disc::commandTestStopReadSCEX() -> void {
   queueResponse(ResponseType::Acknowledge, {0, 0});
 }
 
+auto Disc::commandTestString(const char* text) -> void {
+  u32 length = 0;
+  while(text[length]) length++;
+  ssr.error = 0;
+  ssr.seekError = 0;
+  queueResponse(ResponseType::Acknowledge, (const u8*)text, min(length, 16u));
+}
+
 //0x19 0x20
 auto Disc::commandTestControllerDate() -> void {
   queueResponse(ResponseType::Acknowledge, {0x95, 0x05, 0x16, 0xC1 });
@@ -700,10 +778,34 @@ auto Disc::commandReadS() -> void {
   return commandReadN();
 }
 
+//0x1c
+auto Disc::commandReset() -> void {
+  if(!fifo.parameter.empty()) {
+    error(ErrorCode_InvalidParameterCount);
+    return;
+  }
+
+  ack();
+
+  drive.mode = {};
+  drive.mode.sectorSize = 1;
+  cdxa.reset();
+  drive.standby = 0;
+  drive.seeking = 0;
+  drive.seekDelay = 0;
+  drive.seekType = Drive::SeekType::None;
+  drive.firstSectorPending = 0;
+  drive.pendingOperation = Drive::PendingOperation::None;
+  drive.seekRetries = 0;
+  ssr.reading = 0;
+  ssr.playingCDDA = 0;
+  ssr.shellOpen = 1;
+}
+
 //0x1e
 auto Disc::commandReadToc() -> void {
   command.secondResponse.command = 0x1e;
-  command.secondResponse.counter = 475'000;
+  command.secondResponse.counter = 33'000'000;
   command.secondResponse.pending = 1;
 
   ack();

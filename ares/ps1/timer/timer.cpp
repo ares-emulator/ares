@@ -16,7 +16,7 @@ auto Timer::unload() -> void {
   node.reset();
 }
 
-auto Timer::step(u32 clocks) -> void {
+auto Timer::step(u32 clocks, bool update) -> void {
   u32 timerClocks[3] = {clocks, clocks, clocks};
 
   for(u32 id : range(3)) {
@@ -57,7 +57,7 @@ auto Timer::step(u32 clocks) -> void {
     }
   }
 
-  updateNextEvent();
+  if(update) updateNextEvent();
 }
 
 auto Timer::hsync(bool line) -> void {

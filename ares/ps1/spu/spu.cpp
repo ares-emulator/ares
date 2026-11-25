@@ -82,6 +82,7 @@ auto SPU::sample() -> void {
     rreverb = 0;
   }
   noise.update();
+  envelopeClock++;
   captureVolume(0, lcdaudio);
   captureVolume(1, rcdaudio);
   if(cdaudio.enable) {

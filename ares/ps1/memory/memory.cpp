@@ -73,10 +73,14 @@ auto MemoryControl::MemPort::updateTiming() -> void {
         sequential += memory.common.com2;
       }
     }
-    if(preStrobe) minimum = memory.common.com3;
+    if(preStrobe) minimum = max<u32>(memory.common.com3, 3);
 
     first += delay + 2;
     sequential += delay + 2;
+    if(!isWrite && !isDMA && dataWidth) {
+      s32 gap = recovery ? max<s32>((s32)memory.common.com0 - 1, 0) : 0;
+      if(gap < 3) sequential += 3 - gap;
+    }
 
     first = max(first, minimum + 6);
     sequential = max(sequential, minimum + 2);

@@ -5,7 +5,7 @@ inline auto Bus::mmio(u32 address) -> Memory::Interface& {
   if(address >= 0x1f80'1000 && address <= 0x1f80'1023) return memory;
   if(address >= 0x1f80'1060 && address <= 0x1f80'1063) return memory;
 
-  if(cpu.active()) cpu.ioSynchronize();
+  if(cpu.active()) cpu.ioSynchronize(address);
 
   if(address >= 0x1f80'1070 && address <= 0x1f80'1077)                                 return interrupt;
   if((address & ~memory.exp1Mask) == memory.exp1Address) {
@@ -58,6 +58,42 @@ inline auto Bus::busConfiguration(u32 address) const -> BusConfiguration {
   return {};
 }
 
+inline auto Bus::portId(u32 address) const -> u32 {
+  address &= 0x1fff'ffff;
+  if(address <= 0x007f'ffff) return 0;
+  if(address >= 0x1fc0'0000) return 1;
+  if((address & ~memory.exp1Mask) == memory.exp1Address) return 2;
+  if(address >= 0x1f80'1000 && address <= 0x1f80'1023) return 0;
+  if(address >= 0x1f80'1800 && address <= 0x1f80'1803) return 3;
+  if((address & 0xffff'fc00) == 0x1f80'1c00) return 4;
+  if(memory.exp2Enabled && (address & ~memory.exp2Mask) == 0x1f80'2000) return 5;
+  if((address & 0xffe0'0000) == 0x1fa0'0000) return 6;
+  return 0;
+}
+
+inline auto Bus::isOnDie(u32 address) const -> bool {
+  address &= 0x1fff'ffff;
+  if(address >= 0x1f80'1000 && address <= 0x1f80'112f) return true;
+  if(address >= 0x1f80'1810 && address <= 0x1f80'1817) return true;
+  if(address >= 0x1f80'1820 && address <= 0x1f80'1827) return true;
+  return false;
+}
+
+inline auto Bus::portRecovery(u32 id) const -> u32 {
+  const MemoryControl::MemPort* port = nullptr;
+  switch(id) {
+  case 1: port = &memory.bios; break;
+  case 2: port = &memory.exp1; break;
+  case 3: port = &memory.cdrom; break;
+  case 4: port = &memory.spu; break;
+  case 5: port = &memory.exp2; break;
+  case 6: port = &memory.exp3; break;
+  default: return 0;
+  }
+  if(!port->recovery) return 0;
+  return max<s32>((s32)memory.common.com0 - 1, 0);
+}
+
 template<bool isWrite, bool isDMA>
 auto Bus::calcAccessTime(u32 address, u32 bytesCount) -> u32 const {
   address &= 0x1fff'ffff;
@@ -86,6 +122,7 @@ auto Bus::calcAccessTime(u32 address, u32 bytesCount) -> u32 const {
   u32 devicePortTime = isDMA ? 1 : devicePortAccessTime;
   if constexpr(!isWrite) {
     if(address >= 0x1f80'1000 && address <= 0x1f80'112f) return internalTime * words;
+    if(address >= 0x1f80'1810 && address <= 0x1f80'1817) return internalTime * words;
     if(address >= 0x1f80'1820 && address <= 0x1f80'1827) return internalTime * words;
   }
   if(address >= 0x1f80'1070 && address <= 0x1f80'1077) return internalTime * words;

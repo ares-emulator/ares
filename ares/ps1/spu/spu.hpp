@@ -295,6 +295,7 @@ struct SPU : Thread, Memory::Interface {
     Envelope envelope;
     n32 counter;
     n3 keyOnDelay;
+    n1 firstOutput;
     n1  pmon;
     n1  non;
     n1  eon;
@@ -313,6 +314,7 @@ struct SPU : Thread, Memory::Interface {
   struct Capture {
     n10 address;
   } capture;
+  u32 envelopeClock = 0;
 
   n16 unknown1dbc[2];
   n16 unknown1e60[16];

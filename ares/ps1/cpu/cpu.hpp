@@ -43,7 +43,7 @@ struct CPU : Thread {
   auto synchronize() -> void;
   auto resetNextEvent() -> void;
   auto setNextEvent(u32 clocks) -> void;
-  auto ioSynchronize() -> void;
+  auto ioSynchronize(u32 address) -> void;
   auto waitDMA() -> void;
   auto dmaStallSlices(u32 slice) -> u32;
   auto idle(u32 clocks = 0) -> void;
@@ -78,6 +78,10 @@ struct CPU : Thread {
   bool busAccess = false;
   u32 busTransactionClocks = 0;
   u32 readRemaining = 0;
+  u32 readHold = 0;
+  u32 recoveryWait = 0;
+  bool onDieHalf = false;
+  u32 recoveryPort = 0;
   u32 readLatency = 0;
   u32 readWritebackRemaining = 0;
   u32 readTarget = 0;
@@ -91,9 +95,11 @@ struct CPU : Thread {
   n1 fastBooted = 0;
 
   u32 accruedCycles = 0;
+  u32 timerStepped = 0;
   s32 cyclesUntilForcedSync = 0;
   u32 instructionsSinceYield = 0;
   u32 mulDivRemaining = 0;
+  u32 mulOperand = 0;
   auto cycleCount() const -> u64 { return clock() / scalar() + accruedCycles; }
   auto mulDivStall() -> void { if(mulDivRemaining) step(mulDivRemaining); }
   const s32 forceSyncInterval = 1024;
@@ -105,16 +111,25 @@ struct CPU : Thread {
     accruedCycles += clocks;
     cyclesUntilForcedSync -= clocks;
     if(unlikely(readRemaining)) {
-      if(clocks >= readRemaining) {
+      u32 drain = clocks;
+      if(readHold) {
+        u32 held = min(readHold, drain);
+        readHold -= held;
+        drain -= held;
+      }
+      if(drain >= readRemaining) {
         readRemaining = 0;
+        readHold = 0;
         busAccess = false;
       } else {
-        readRemaining -= clocks;
+        readRemaining -= drain;
       }
     }
-    if(unlikely(mulDivRemaining | gte.remaining | readLatency | readWritebackRemaining)) {
+    if(unlikely(mulDivRemaining | gte.remaining | gte.lzcrDelay | readLatency | readWritebackRemaining | recoveryWait)) {
       mulDivRemaining -= min(mulDivRemaining, clocks);
+      recoveryWait -= min(recoveryWait, clocks);
       gte.remaining -= min<u32>(gte.remaining, clocks);
+      if(unlikely(gte.lzcrDelay)) { if(clocks >= gte.lzcrDelay) { gte.lzcr = gte.lzcrNext; gte.lzcrDelay = 0; } else gte.lzcrDelay -= clocks; }
       readLatency -= min(readLatency, clocks);
       readWritebackRemaining -= min(readWritebackRemaining, clocks);
     }
@@ -161,6 +176,20 @@ struct CPU : Thread {
     u8  loadPending = 0;
   } delay;
 
+  struct GTEPending {
+    u8 count = 0;
+    struct Entry {
+      u8  control;
+      u8  reg;
+      u8  timer;
+      u32 data;
+    } entry[3];
+  } gtePending;
+
+  auto queueGTEWrite(bool control, u8 reg, u32 data) -> void;
+  auto processGTEWrites() -> void;
+  auto flushGTEWrites() -> void;
+
   auto load(u32& target) const -> u32;
   auto load(u32& target, u32 source) -> void;
   auto store(u32& target, u32 source) -> void;
@@ -190,6 +219,7 @@ struct CPU : Thread {
     alwaysinline auto fetch(u32 address) -> u32;
     auto fetchSlow(u32 address) -> u32;
     auto read(u32 address) -> u32;
+    auto readTag(u32 address) -> u32;
     auto writeTag(u32 address, u32 data) -> void;
     auto writeData(u32 address, u32 data) -> void;
     auto enable(bool) -> void;
@@ -422,8 +452,35 @@ struct CPU : Thread {
 
     u32 remaining = 0;
     u8 command = 0;
+    u32 lzcrDelay = 0;
+    u32 lzcrNext = 0;
     auto wait(bool extra = false) -> void;
+    u32 pendingSnapshot[3];
     auto latency(u32 instruction) const -> u32;
+
+    struct Latch {
+      struct Write {
+        u8 control;
+        u8 reg;
+        u8 latched;
+        u32 value;
+      };
+      bool active = false;
+      bool dirty = false;
+      u32 instruction = 0;
+      u32 count = 0;
+      u32 slots = 0;
+      u32 flag = 0;
+      bool lm = false;
+      u8 tv = 0, mv = 0, mm = 0, sf = 0;
+      u8 snapshot[512];
+      Write log[64];
+    } latch;
+    u8 latchTable[64][2][32];
+    auto latchBegin(u32 instruction) -> void;
+    auto latchBoundary(u32 instruction, bool control, u32 reg) const -> u32;
+    auto latchWrite(bool control, u32 reg, u32 value) -> void;
+    auto latchFinish() -> void;
 
     //color
     struct c32 {
@@ -559,6 +616,7 @@ struct CPU : Thread {
   } gte{*this};
 
   //interpreter-gte.cpp
+  auto executeGTE() -> void;
   auto AVSZ3() -> void;
   auto AVSZ4() -> void;
   auto CC(bool lm, u8 sf) -> void;

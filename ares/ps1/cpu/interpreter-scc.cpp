@@ -159,10 +159,8 @@ auto CPU::setControlRegisterSCC(u8 index, u32 value) -> void {
     scc.status.cache.swap               = data.bit(17);
     scc.status.cache.parityZero         = data.bit(18);
     scc.status.cache.loadWasData        = data.bit(19);
-    scc.status.cache.parityError        = data.bit(20);
   //scc.status.tlbShutdown              = data.bit(21);  //read-only
     scc.status.vectorLocation           = data.bit(22);
-    scc.status.reverseEndian            = data.bit(25);
     scc.status.enable.coprocessor0      = data.bit(28);
     scc.status.enable.coprocessor1      = data.bit(29);
     scc.status.enable.coprocessor2      = data.bit(30);

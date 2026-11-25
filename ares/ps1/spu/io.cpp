@@ -754,6 +754,10 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
     external.enable = data.bit( 1);
     cdaudio.reverb  = data.bit( 2);
     external.reverb = data.bit( 3);
+    if(transfer.mode == 2 && data.bit(4,5) != 2) {
+      while(fifo.size() >= 8) fifoWriteBlock();
+      if(!fifo.empty() && transfer.type == 2) fifoWriteManual();
+    }
     if(transfer.mode != data.bit(4,5)) {
       transfer.request = data.bit(4,5) == 2 && fifo.empty();
     }

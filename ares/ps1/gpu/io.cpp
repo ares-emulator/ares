@@ -15,6 +15,16 @@ inline auto GPU::dmaRequest() const -> bool {
   return false;
 }
 
+auto GPU::canLag(u64 now) const -> bool {
+  if(io.mode != Mode::Normal || fill.active || latch.ready || !fifo.empty()) return false;
+  if(io.dividerClocks || timer.timers[0].clock != 0) return false;
+  if(now <= clock()) return true;
+  u64 lag = (now - clock()) / scalar() + 1;
+  u64 limit = io.lineClocks;
+  if(!io.hblankFired) limit = min<u64>(limit, io.hblankClock);
+  return io.hcounter + lag < limit;
+}
+
 auto GPU::canReadDMA() -> bool {
   return dmaRequest();
 }

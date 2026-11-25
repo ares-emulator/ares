@@ -21,7 +21,7 @@ auto CPU::Exception::trigger(u32 code, n1 hardwareBreakpoint) -> void {
 
   self.scc.epc = self.ipu.pc;
   if(self.scc.cause.branchDelay) {
-    self.scc.epc -= 4;
+    self.scc.epc = self.ipu.pb;
     if(self.scc.cause.branchTaken) {
       self.scc.targetAddress = self.delay.branch[0].address;
     } else {

@@ -26,12 +26,20 @@ auto Disc::CDDA::clockSample() -> void {
     right |= drive->sector.data[drive->sector.offset++] << 8;
   }
 
+  if(self.ssr.reading && self.ssr.playingCDDA && !isData) {
+    s32 absLeft = left < 0 ? -(s32)left : left;
+    s32 absRight = right < 0 ? -(s32)right : right;
+    peak = max(peak, max(absLeft, absRight));
+  }
+
   if(self.audio.mute) {
     sample.left  = 0;
     sample.right = 0;
   } else {
-    sample.left  = sclamp<16>((left * self.audio.volume[0] >> 7) + (right * self.audio.volume[2] >> 7));
-    sample.right = sclamp<16>((left * self.audio.volume[1] >> 7) + (right * self.audio.volume[3] >> 7));
+    s32 mixLeft  = (left * self.audio.volume[0] >> 7) + (right * self.audio.volume[2] >> 7);
+    s32 mixRight = (left * self.audio.volume[1] >> 7) + (right * self.audio.volume[3] >> 7);
+    sample.left  = (s16)std::clamp<s32>((mixLeft  * 30294) >> 15, -31900, 31900);
+    sample.right = (s16)std::clamp<s32>((mixRight * 30294) >> 15, -31900, 31900);
   }
 
 //stream->sample(sample.left / 32768.0, sample.right / 32768.0);

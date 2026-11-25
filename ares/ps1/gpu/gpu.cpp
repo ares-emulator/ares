@@ -63,6 +63,7 @@ auto GPU::main() -> void {
 
   io.dotcounter = 0;
   io.hblankClock = timerHblankClock;
+  io.lineClocks = htotal;
   io.hblankFired = timerHblankClock >= htotal;
   scanout.lineStart();
 
@@ -76,7 +77,7 @@ auto GPU::main() -> void {
   bool frameEnd = ++io.vcounter >= vtotal();
   if(frameEnd) {
     io.vcounter = 0;
-    io.field = io.interlace && !io.field;
+    if(io.interlace) io.field = !io.field;
     frame();
   }
 

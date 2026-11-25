@@ -1,14 +1,27 @@
 auto CPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
+  if(s.writing()) {
+    if(gtePending.count) flushGTEWrites();
+    gte.latchFinish();
+  } else {
+    gte.latch.active = false;
+  }
+
   s(ram);
   s(scratchpad);
 
   s(fastBooted);
   s(accruedCycles);
+  s(timerStepped);
   s(cyclesUntilForcedSync);
   s(instructionsSinceYield);
   s(mulDivRemaining);
+  s(mulOperand);
+  s(readHold);
+  s(recoveryWait);
+  s(onDieHalf);
+  s(recoveryPort);
   s(gte.remaining);
   s(gte.command);
   for(auto& entry : writeQueue.entries) {
@@ -51,6 +64,13 @@ auto CPU::serialize(serializer& s) -> void {
   s(delay.branch[1].take);
   s(delay.branch[1].address);
   s(delay.interrupt);
+  s(gtePending.count);
+  for(auto& entry : gtePending.entry) {
+    s(entry.control);
+    s(entry.reg);
+    s(entry.timer);
+    s(entry.data);
+  }
   delay.branchPending = (delay.branch[0].slot ? 1 : 0) | (delay.branch[1].slot ? 2 : 0);
   delay.loadPending = (delay.load[0].target ? 1 : 0) | (delay.load[1].target ? 2 : 0);
 
@@ -160,6 +180,8 @@ auto CPU::serialize(serializer& s) -> void {
   s(gte.mac.t);
   s(gte.lzcs);
   s(gte.lzcr);
+  s(gte.lzcrNext);
+  s(gte.lzcrDelay);
   s(gte.rotation.a.x);
   s(gte.rotation.a.y);
   s(gte.rotation.a.z);

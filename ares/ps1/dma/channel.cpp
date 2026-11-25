@@ -188,7 +188,8 @@ auto DMA::Channel::transferBlock() -> void {
       break;
     case 2:
       do {
-        gpu.writeDMA(readWord(address));
+        u32 data = readWord(address);
+        if(synchronization != 1 || gpu.io.dmaDirection != 0 || !(wordsTransferred & 1)) gpu.writeDMA(data);
         address += step;
         wordsTransferred++;
       } while(--length && --timeout);
@@ -221,8 +222,7 @@ auto DMA::Channel::transferBlock() -> void {
       clocks += bus.calcAccessTime<false,true>(0x1f801820, bytes);
       break;
     case 2: // GPU
-      clocks += bus.calcAccessTime<true,true>(startingAddress, bytes);
-      clocks += bus.calcAccessTime<false,true>(0x1f801810, bytes);
+      clocks = max<u32>(bus.calcAccessTime<true,true>(startingAddress, bytes), (u32)(wordsTransferred * 1.56 + 2.8));
       break;
     case 3: // CDROM
       clocks += bus.calcAccessTime<true,true>(startingAddress, bytes);
@@ -246,6 +246,7 @@ auto DMA::Channel::transferBlock() -> void {
       clocks += max(bus.calcAccessTime<false,true>(startingAddress, bytes),
                     bus.calcAccessTime<true,true>(0x1f801810, bytes));
       clocks += bus.calcAccessTime<true,true>(0x1f801810, 4);
+      clocks = max<u32>(clocks, (u32)(wordsTransferred * 1.10 + 2.5));
       break;
     case 4: // SPU
       clocks += bus.calcAccessTime<false,true>(startingAddress, bytes);
@@ -332,6 +333,7 @@ auto DMA::Channel::transferChain() -> void {
 
   this->address = address;
   if(address & 0x800000) {
+    if((address & 0xffffff) != 0xffffff) dma.irq.force = 1;
     enable = 0;
     trigger = 0;
     dma.enabledMask &= ~(1 << id);

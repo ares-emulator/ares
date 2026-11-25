@@ -10,7 +10,7 @@ auto GPU::readGP1() -> u32 {
   data.bit(10)    = io.drawToDisplay;
   data.bit(11)    = io.forceMaskBit;
   data.bit(12)    = io.checkMaskBit;
-  data.bit(13)    = !io.interlace || !io.displayField;
+  data.bit(13)    = !io.field;
   data.bit(14)    = io.reverseFlag;
   data.bit(15)    = io.texturePageBaseY2;
   data.bit(16)    = io.horizontalResolution.bit(2);
@@ -27,9 +27,7 @@ auto GPU::readGP1() -> u32 {
   data.bit(27)    = readReady;
   data.bit(28)    = writeFifoEmpty();
   data.bit(29,30) = io.dmaDirection;
-  u32 row = io.displayStartY;
-  if(!vblank()) row += interlace() ? (u32)io.displayField : (u32)io.vcounter - (u32)io.displayRangeY1;
-  data.bit(31) = row & 1;
+  data.bit(31) = displayLineLSB();
 
   return data;
 }
@@ -126,7 +124,7 @@ auto GPU::writeGP1(u32 value) -> void {
 
     io.hcounter = 0;
     io.vcounter = 1023;
-    io.field = 1;
+    io.field = 0;
     io.displayField = 0;
     io.htotalRemainder = 0;
     io.dotcounter = 0;

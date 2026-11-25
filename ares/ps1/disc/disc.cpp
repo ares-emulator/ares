@@ -122,6 +122,7 @@ auto Disc::disconnect() -> void {
 
   fifo.parameter.flush();
   fifo.response.flush();
+  loadResponseRing(nullptr, 0);
   fifo.data.flush();
   io.sectorBufferLoaded = 0;
   fifo.deferred = {};
@@ -188,6 +189,8 @@ auto Disc::step(u32 clocks) -> void {
     counter.report -= clocks;
     if(counter.report <= 0) {
       counter.report += system.frequency() / 75;
+      s32 reportPeak = cdda.peak;
+      cdda.peak = 0;
 
       s32 lba = drive.lba.current;
       s32 lbaTrack = 0;
@@ -206,7 +209,7 @@ auto Disc::step(u32 clocks) -> void {
       }
 
       auto amsf = CD::MSF::fromABA(CD::LBAtoABA(lba));
-      auto rmsf = CD::MSF::fromLBA(lba - lbaTrack);
+      auto rmsf = CD::MSF::fromABA(lba - lbaTrack);
       u8 aminute = amsf.minute, asecond = amsf.second, aframe = amsf.frame;
       u8 rminute = rmsf.minute, rsecond = rmsf.second, rframe = rmsf.frame;
 
@@ -224,8 +227,8 @@ auto Disc::step(u32 clocks) -> void {
           BCD::encode(!relative ? aminute : rminute),
           u8(BCD::encode(!relative ? asecond : rsecond) | (relative << 7)),
           BCD::encode(!relative ? aframe  : rframe),
-          0xff,  //todo: peak lo
-          u8(0x7f | relative << 7),  //todo: peak hi + left/right channel
+          u8(min(reportPeak, 0x7fff) & 0xff),
+          u8((min(reportPeak, 0x7fff) >> 8) | relative << 7),
         });
       }
     }
@@ -266,6 +269,7 @@ auto Disc::power(bool reset) -> void {
   drive.headerValid = 0;
   drive.standby = 0;
   drive.firstSectorPending = 0;
+  drive.sectorsRead = 0;
   audio = {};
   //configure for stereo sound at 100% volume level
   audio.volume[0] = audio.volumeLatch[0] = 0x80;
@@ -281,6 +285,7 @@ auto Disc::power(bool reset) -> void {
   irq = {};
   fifo.parameter.flush();
   fifo.response.flush();
+  loadResponseRing(nullptr, 0);
   fifo.data.flush();
   io.sectorBufferLoaded = 0;
   fifo.deferred = {};

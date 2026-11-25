@@ -236,7 +236,7 @@ auto GPU::executeGP0(u32 value, bool isThread) -> void {
   render.command = command;
   render.dithering = io.dithering;
   render.interlacedRendering = io.verticalResolution && io.interlace && !io.drawToDisplay;
-  render.activeLineLSB = (io.displayStartY + (u32)io.displayField) & 1;
+  render.activeLineLSB = displayLineLSB();
   render.semiTransparency = io.semiTransparency;
   render.checkMaskBit = io.checkMaskBit;
   render.forceMaskBit = io.forceMaskBit;
@@ -625,7 +625,7 @@ auto GPU::executeGP0(u32 value, bool isThread) -> void {
     u16 height  = queue.data[3].bit(16,31) & 0x1ff;
     if(!width ) width  = 1024;
     if(!height) height =  512;
-    io.pcounter += (u32)(width * height * 2.172);
+    io.pcounter += (u32)((50.0 + 21.0 * height) * (53'693'175.0 / 33'868'800.0) + width * height * (2.172 - 21.0 * (53'693'175.0 / 33'868'800.0) / 256.0));
     for(u32 y : range(height)) {
       for(u32 x : range(0, width, 0x80)) {
         u16 buffer[128];

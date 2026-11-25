@@ -38,10 +38,25 @@ static constexpr auto interlockSpecial = []() {
 }();
 
 auto CPU::readInterlock(u32 instruction) -> void {
-  //The load delay slot reads the old register value.
-  if(delay.load[0].target == &ipu.r[readTarget]) return;
   u32 rs = instruction >> 21 & 31;
   u32 rt = instruction >> 16 & 31;
+  auto wait = [&]() -> void {
+    if(readRemaining) {
+      readHold = 0;
+      step(readRemaining);
+    } else {
+      step(readLatency > 1 ? readLatency : readWritebackRemaining);
+    }
+  };
+  if(delay.load[0].target == &ipu.r[readTarget]) {
+    u32 opcode = instruction >> 26;
+    u32 funct = instruction & 63;
+    u32 destination = 32;
+    if(opcode >= 0x08 && opcode <= 0x0f) destination = rt;
+    else if(opcode == 0x00 && (funct < 0x08 || funct == 0x10 || funct == 0x12 || (funct >= 0x20 && funct <= 0x2b))) destination = instruction >> 11 & 31;
+    if(destination == readTarget) wait();
+    return;
+  }
   bool sourceRS = false, sourceRT = false;
   u8 flags;
   u32 opcode = instruction >> 26;
@@ -51,7 +66,7 @@ auto CPU::readInterlock(u32 instruction) -> void {
   sourceRS = flags & 1;
   sourceRT = flags & 2;
   if((sourceRS && rs == readTarget) || (sourceRT && rt == readTarget)) {
-    step(readLatency > 1 ? readLatency : readWritebackRemaining);
+    wait();
   }
 }
 

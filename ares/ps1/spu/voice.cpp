@@ -12,6 +12,13 @@ auto SPU::Voice::sample(s32 modulation) -> std::pair<s32, s32> {
   s32 l = 0;
   s32 r = 0;
 
+  if(firstOutput) {
+    firstOutput = 0;
+    counter += 0x1000;
+  }
+
+  if(adsr.phase != ADSR::Phase::Off) self.testIRQ(adpcm.currentAddress);
+
   if(!adpcm.hasSamples) {
     readBlock();
     decodeBlock();
@@ -60,7 +67,7 @@ auto SPU::Voice::tickEnvelope() -> void {
   adsr.volume = envelope.tick(adsr.volume);
   if(adsr.phase == ADSR::Phase::Sustain) return;
   if(envelope.decreasing == 0 && adsr.volume >= adsr.target) advancePhase();
-  if(envelope.decreasing == 1 && adsr.volume <= adsr.target) advancePhase();
+  if(envelope.decreasing == 1 && (adsr.phase == ADSR::Phase::Decay ? adsr.volume < adsr.target : adsr.volume <= adsr.target)) advancePhase();
 }
 
 auto SPU::Voice::advancePhase() -> void {
@@ -120,7 +127,10 @@ auto SPU::Voice::keyOn() -> void {
   adpcm.ignoreLoopAddress = 0;
   adpcm.lastSamples[0] = 0;
   adpcm.lastSamples[1] = 0;
+  for(auto& v : adpcm.currentSamples) v = 0;
+  for(auto& v : adpcm.previousSamples) v = 0;
   keyOnDelay = 4;
+  firstOutput = 1;
   adsr.phase = ADSR::Phase::Attack;
   adsr.volume = 0;
   updateEnvelope();

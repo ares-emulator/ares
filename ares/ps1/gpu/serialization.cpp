@@ -45,6 +45,7 @@ auto GPU::serialize(serializer& s) -> void {
   s(io.dotcounter);
   s(io.timerDotcounter);
   s(io.hblankClock);
+  s(io.lineClocks);
   s(io.hblankFired);
   s(io.copy.x);
   s(io.copy.y);
