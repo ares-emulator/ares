@@ -362,10 +362,10 @@ auto KonamiGV::pollInputs() -> void {
 
   auto joystick = [&](u32 player) -> u32 {
     u32 bits = 0;
-    bits |= up[player]->value()    << 0;
-    bits |= down[player]->value()  << 1;
-    bits |= left[player]->value()  << 2;
-    bits |= right[player]->value() << 3;
+    bits |= left[player]->value()  << 0;
+    bits |= right[player]->value() << 1;
+    bits |= up[player]->value()    << 2;
+    bits |= down[player]->value()  << 3;
     for(u32 index : range(3)) bits |= button[player][index]->value() << 4 + index;
     return bits;
   };
