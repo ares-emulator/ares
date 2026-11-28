@@ -367,6 +367,7 @@ struct CPU : Thread {
     return write<Size>(devirtualize<Write, Size>(vaddr, alignedError), data);
   }
   template<u32 Size> auto vaddrAlignedError(u64 vaddr, bool write) -> bool;
+  auto watchAddressHit(u32 paddr, bool trap) -> bool;
   auto addressException(u64 vaddr) -> void;
   auto emuxException(u8 kind) -> void;
 
