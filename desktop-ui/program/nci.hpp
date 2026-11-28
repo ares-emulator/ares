@@ -37,6 +37,8 @@ private:
   auto commandQuit(struct sockaddr* sender, socklen_t senderLen) -> void;
   auto commandCloseContent(struct sockaddr* sender, socklen_t senderLen) -> void;
   auto commandLoadContent(string_view args, struct sockaddr* sender, socklen_t senderLen) -> void;
+  auto commandRecordStart(string_view args, struct sockaddr* sender, socklen_t senderLen) -> void;
+  auto commandRecordStop(struct sockaddr* sender, socklen_t senderLen) -> void;
   auto commandDiskEjectToggle(struct sockaddr* sender, socklen_t senderLen) -> void;
   auto commandDiskLoad(string_view args, struct sockaddr* sender, socklen_t senderLen) -> void;
 

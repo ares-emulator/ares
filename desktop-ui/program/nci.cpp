@@ -62,6 +62,8 @@ auto NetworkControlInterface::processCommand(string_view command, sockaddr* send
   if(name == "STATE_SLOT_PLUS") return commandStateSlotPlus(sender, senderLen);
   if(name == "STATE_SLOT_MINUS") return commandStateSlotMinus(sender, senderLen);
   if(name == "SCREENSHOT") return commandScreenshot(sender, senderLen);
+  if(name == "RECORD_START") return commandRecordStart(args, sender, senderLen);
+  if(name == "RECORD_STOP") return commandRecordStop(sender, senderLen);
   if(name == "FULLSCREEN_TOGGLE") return commandFullscreenToggle(sender, senderLen);
   if(name == "RESET") return commandReset(sender, senderLen);
   if(name == "QUIT") return commandQuit(sender, senderLen);
@@ -414,6 +416,27 @@ auto NetworkControlInterface::commandScreenshot(sockaddr* sender, socklen_t send
   }
   program.requestScreenshot = true;
   reply("SCREENSHOT OK", sender, senderLen);
+}
+
+auto NetworkControlInterface::commandRecordStart(string_view args, sockaddr* sender, socklen_t senderLen) -> void {
+  string target = args;
+  target.strip();
+  if(!emulator || !target) {
+    reply("RECORD_START -1", sender, senderLen);
+    return;
+  }
+  if(!target.endsWith("/")) target.append("/");
+  directory::create(target);
+  program.recordIndex = 0;
+  program.recordTick = 0;
+  program.recordDirectory = target;
+  reply("RECORD_START OK", sender, senderLen);
+}
+
+auto NetworkControlInterface::commandRecordStop(sockaddr* sender, socklen_t senderLen) -> void {
+  u32 frames = program.recordIndex;
+  program.recordDirectory = "";
+  reply({"RECORD_STOP ", frames}, sender, senderLen);
 }
 
 auto NetworkControlInterface::commandFullscreenToggle(sockaddr* sender, socklen_t senderLen) -> void {

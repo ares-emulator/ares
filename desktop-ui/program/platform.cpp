@@ -85,6 +85,10 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
     captureScreenshot(data, pitch, width, height);
   }
 
+  if(recordDirectory && (recordTick++ % 2) == 0) {
+    Encode::PNG::RGB8({recordDirectory, pad(recordIndex++, 5, '0'), ".png"}, data, pitch, width, height);
+  }
+
   if(node->width() != emulator->latch.width || node->height() != emulator->latch.height || node->rotation() != emulator->latch.rotation) {
     emulator->latch.width = node->width();
     emulator->latch.height = node->height();

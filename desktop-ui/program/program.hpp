@@ -82,6 +82,9 @@ struct Program : ares::Platform {
   bool runAhead = false;
   bool requestFrameAdvance = false;
   bool requestScreenshot = false;
+  string recordDirectory;  //NCI RECORD_START: write every other frame here as PNG
+  u32 recordIndex = 0;
+  u32 recordTick = 0;
   bool keyboardCaptured = false;
   atomic<bool> pendingKioskExit = false;
   atomic<bool> requestFullscreenToggle = false;

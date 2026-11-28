@@ -94,6 +94,8 @@ Format: `COMMAND[;HOST[;PORT]]` (defaults: localhost, 55355)
 |---------|----------|-------------|
 | `FULLSCREEN_TOGGLE` | `FULLSCREEN_TOGGLE OK` | Toggle fullscreen |
 | `SCREENSHOT` | `SCREENSHOT OK` | Capture screenshot |
+| `RECORD_START <dir>` | `RECORD_START OK` | Write every other video frame (30 fps on NTSC) to `<dir>/00000.png`, `00001.png`, ... until stopped |
+| `RECORD_STOP` | `RECORD_STOP <frames>` | Stop recording; replies with the number of frames written |
 | `SET_SHADER <path>` | `SET_SHADER <path>` | Load shader preset |
 | `SHOW_MSG <text>` | `SHOW_MSG OK` | Display OSD message |
 
